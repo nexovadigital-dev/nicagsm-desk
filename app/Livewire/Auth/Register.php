@@ -112,7 +112,7 @@ class Register extends Component
         // Auto-login and redirect to admin
         auth()->login($user);
 
-        $this->redirect('/admin');
+        $this->redirect('/app');
     }
 
     public function resend(): void

@@ -21,7 +21,7 @@ class Login extends Component
             return;
         }
 
-        $this->redirect(Auth::user()->isSuperAdmin() ? '/superadmin' : '/admin');
+        $this->redirect(Auth::user()->isSuperAdmin() ? '/superadmin' : '/app');
     }
 
     public function render()

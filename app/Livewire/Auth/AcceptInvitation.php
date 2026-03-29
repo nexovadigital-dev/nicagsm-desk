@@ -66,7 +66,7 @@ class AcceptInvitation extends Component
 
         $this->accepted = true;
 
-        $this->redirect('/admin', navigate: false);
+        $this->redirect('/app', navigate: false);
     }
 
     public function render()

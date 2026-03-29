@@ -37,7 +37,7 @@ Route::get('/chat-demo', function () {
 Route::get('/superadmin/stop-impersonate', function () {
     $adminId = session('superadmin_impersonating');
     if (! $adminId) {
-        return redirect('/admin');
+        return redirect('/app');
     }
     auth()->logout();
     session()->forget('superadmin_impersonating');

@@ -158,6 +158,6 @@ class Organizations extends Page
         session(['superadmin_impersonating' => auth()->id()]);
         auth()->login($owner);
 
-        $this->redirect('/admin');
+        $this->redirect('/app');
     }
 }

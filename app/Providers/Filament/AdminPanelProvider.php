@@ -31,7 +31,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path('admin')
+            ->path('app')
             ->login(\App\Filament\Pages\CustomLogin::class)
             ->brandName('')
             ->brandLogo(null)
