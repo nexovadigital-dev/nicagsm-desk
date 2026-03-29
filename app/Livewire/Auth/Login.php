@@ -21,6 +21,12 @@ class Login extends Component
             return;
         }
 
+        $redirect = request()->query('redirect');
+        if ($redirect && str_starts_with($redirect, '/')) {
+            $this->redirect($redirect);
+            return;
+        }
+
         $this->redirect(Auth::user()->isSuperAdmin() ? '/superadmin' : '/app');
     }
 

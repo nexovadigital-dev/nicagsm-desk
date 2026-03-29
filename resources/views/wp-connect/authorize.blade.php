@@ -107,7 +107,7 @@
 <body>
 <div class="card">
     <div class="brand">
-        <img src="{{ asset('images/nexovadesklogo.png') }}" alt="Nexova Desk">
+        <img src="{{ asset('images/nexovadeskicon.png') }}" alt="Nexova Desk">
         <span class="brand-name">Nexova<span>Desk</span></span>
     </div>
 
