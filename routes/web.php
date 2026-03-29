@@ -34,7 +34,7 @@ Route::get('/chat-demo', function () {
 });
 
 // ── Super-admin impersonation return ─────────────────────────────────────────
-Route::get('/superadmin/stop-impersonate', function () {
+Route::get('/nx-hq/stop-impersonate', function () {
     $adminId = session('superadmin_impersonating');
     if (! $adminId) {
         return redirect('/app');
@@ -42,7 +42,7 @@ Route::get('/superadmin/stop-impersonate', function () {
     auth()->logout();
     session()->forget('superadmin_impersonating');
     auth()->loginUsingId($adminId);
-    return redirect('/superadmin');
+    return redirect('/nx-hq');
 })->middleware('web');
 
 // ── Survey público (sin auth) ─────────────────────────────────────────────────

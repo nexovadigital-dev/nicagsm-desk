@@ -1,2 +1,7 @@
 User-agent: *
-Disallow:
+Disallow: /nx-hq
+Disallow: /nx-hq/
+Disallow: /app/
+Disallow: /login
+Disallow: /register
+Disallow: /connect

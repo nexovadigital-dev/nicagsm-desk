@@ -62,7 +62,7 @@
         // Normalizar URL
         serverUrl = serverUrl.replace(/\/+$/, '');
 
-        var popupUrl  = serverUrl + '/wp-connect?origin=' + encodeURIComponent(window.location.origin);
+        var popupUrl  = serverUrl + '/connect?origin=' + encodeURIComponent(window.location.origin);
         var popupW    = 520;
         var popupH    = 620;
         var popupLeft = Math.round(window.screenX + (window.outerWidth - popupW) / 2);

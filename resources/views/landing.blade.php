@@ -224,7 +224,7 @@
     </div>
     <div class="nav-actions">
         @auth
-            <a href="{{ auth()->user()?->is_super_admin ? '/superadmin' : '/app' }}"
+            <a href="{{ auth()->user()?->is_super_admin ? '/nx-hq' : '/app' }}"
                class="btn btn-sm btn-primary" style="display:inline-flex;align-items:center;gap:7px">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 Mi panel
@@ -246,7 +246,7 @@
         </p>
         <div class="hero-actions">
             @auth
-                <a href="{{ auth()->user()?->is_super_admin ? '/superadmin' : '/app' }}" class="btn btn-lg btn-primary">
+                <a href="{{ auth()->user()?->is_super_admin ? '/nx-hq' : '/app' }}" class="btn btn-lg btn-primary">
                     Ir a mi panel
                 </a>
             @else
@@ -543,7 +543,7 @@
     @auth
         <h2 class="cta-h2">Bienvenido de nuevo, {{ auth()->user()->name }}</h2>
         <p class="cta-sub">Tu panel está listo. Gestiona conversaciones, widgets y agentes.</p>
-        <a href="{{ auth()->user()?->is_super_admin ? '/superadmin' : '/app' }}" class="btn btn-lg btn-primary" style="display:inline-flex;margin-inline:auto">
+        <a href="{{ auth()->user()?->is_super_admin ? '/nx-hq' : '/app' }}" class="btn btn-lg btn-primary" style="display:inline-flex;margin-inline:auto">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
             Ir a mi panel
         </a>
@@ -567,7 +567,7 @@
     <div class="footer-copy">© {{ date('Y') }} Nexova Digital Solutions. Todos los derechos reservados.</div>
     <div class="footer-links">
         @auth
-            <a href="{{ auth()->user()?->is_super_admin ? '/superadmin' : '/app' }}">Mi cuenta</a>
+            <a href="{{ auth()->user()?->is_super_admin ? '/nx-hq' : '/app' }}">Mi cuenta</a>
         @else
             <a href="/login">Iniciar sesión</a>
             <a href="/register">Registro</a>

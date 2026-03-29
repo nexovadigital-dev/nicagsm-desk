@@ -34,7 +34,7 @@ class SuperAdminPanelProvider extends PanelProvider
     {
         return $panel
             ->id('superadmin')
-            ->path('superadmin')
+            ->path('nx-hq')
             ->login()
             ->brandName('Nexova Desk')
             ->brandLogo(asset('images/nexovadesklogo.svg'))

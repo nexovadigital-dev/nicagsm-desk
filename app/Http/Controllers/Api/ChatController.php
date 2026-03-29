@@ -78,6 +78,8 @@ class ChatController extends Controller
             'button_image'            => $cfg->button_image,
             'pre_chat_enabled'        => $cfg->pre_chat_enabled ?? false,
             'pre_chat_fields'         => $cfg->pre_chat_fields ?? [],
+            'bot_enabled'             => $cfg->bot_enabled ?? true,
+            'bot_avatar'              => $cfg->bot_avatar ?? null,
         ]);
     }
 

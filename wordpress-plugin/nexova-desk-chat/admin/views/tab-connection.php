@@ -130,7 +130,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
             <div id="nexova-desk-connect-notice" class="nexova-desk-notice" style="display:none;"></div>
 
-            <input type="hidden" id="nexova-desk-server-url" value="<?php echo esc_attr( $server_url ?: 'http://localhost:8000' ); ?>">
+            <input type="hidden" id="nexova-desk-server-url" value="<?php echo esc_attr( $server_url ?: 'https://nexovadesk.com' ); ?>">
         </div>
 
     <?php endif; ?>

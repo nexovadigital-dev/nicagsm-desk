@@ -26,14 +26,22 @@ if ( ! defined( 'ABSPATH' ) ) exit;
             </svg>
             <?php esc_html_e( 'Contactar por WhatsApp', 'nexova-desk-chat' ); ?>
         </a>
-        <a href="https://nexova.digital"
+        <a href="mailto:info@nexovadesk.com"
+           class="nexova-desk-btn nexova-desk-btn--secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.8" width="16" height="16">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            info@nexovadesk.com
+        </a>
+        <a href="https://nexovadesk.com"
            target="_blank" rel="noopener noreferrer"
            class="nexova-desk-btn nexova-desk-btn--secondary">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="1.8" width="16" height="16">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
             </svg>
-            <?php esc_html_e( 'nexova.digital', 'nexova-desk-chat' ); ?>
+            nexovadesk.com
         </a>
     </div>
 </div>

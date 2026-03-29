@@ -86,7 +86,7 @@ class AdminPanelProvider extends PanelProvider
 <div style="background:#1e293b;border-bottom:2px solid #22c55e;padding:10px 20px;font-size:13px;color:#f1f5f9;display:flex;align-items:center;gap:10px">
     <svg fill="none" stroke="#22c55e" viewBox="0 0 24 24" width="15" height="15" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
     <span>Modo impersonación activo — estás viendo el panel como <strong>{$user?->name}</strong></span>
-    <a href="/superadmin/stop-impersonate" style="margin-left:auto;background:#22c55e;color:#0d1117;padding:5px 14px;border-radius:6px;font-weight:700;font-size:12px;text-decoration:none">
+    <a href="/nx-hq/stop-impersonate" style="margin-left:auto;background:#22c55e;color:#0d1117;padding:5px 14px;border-radius:6px;font-weight:700;font-size:12px;text-decoration:none">
         ← Volver a Super Admin
     </a>
 </div>

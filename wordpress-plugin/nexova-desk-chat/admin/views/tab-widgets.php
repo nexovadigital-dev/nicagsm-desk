@@ -35,8 +35,8 @@ $plan_colors = [
 ][ $plan ] ?? [ 'bg' => '#f3f4f6', 'color' => '#6b7280' ];
 
 $edit_widget_url = $selected_id && $server_url
-    ? $server_url . '/widgets/' . intval( $selected_id ) . '/edit'
-    : $server_url . '/widgets';
+    ? $server_url . '/app/chat-widgets/' . intval( $selected_id ) . '/edit'
+    : $server_url . '/app/chat-widgets';
 ?>
 
 <div class="nexova-desk-card">

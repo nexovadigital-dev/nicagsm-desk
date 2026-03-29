@@ -27,7 +27,7 @@ class Login extends Component
             return;
         }
 
-        $this->redirect(Auth::user()->isSuperAdmin() ? '/superadmin' : '/app');
+        $this->redirect(Auth::user()->isSuperAdmin() ? '/nx-hq' : '/app');
     }
 
     public function render()
