@@ -65,8 +65,8 @@ Route::get('/widget.js', function () {
 });
 
 // ── WP Plugin connect (OAuth-like popup) ─────────────────────────────────────
-Route::get('/wp-connect',           [WpConnectController::class, 'show'])->name('wp-connect.show');
-Route::post('/wp-connect/authorize',[WpConnectController::class, 'authorize'])->name('wp-connect.authorize');
+Route::get('/connect',           [WpConnectController::class, 'show'])->name('wp-connect.show');
+Route::post('/connect/authorize',[WpConnectController::class, 'authorize'])->name('wp-connect.authorize');
 
 // MercadoPago return pages
 Route::get('/payment/mp/success', [PaymentController::class, 'mpSuccess']);
