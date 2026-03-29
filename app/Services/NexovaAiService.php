@@ -53,9 +53,16 @@ class NexovaAiService
             }
         }
 
+        // ── Verificar cuota mensual de mensajes del bot ───────────────────────
+        if ($org && ! $org->hasMonthlyBotQuota()) {
+            Log::info("[NexovaBot] Cuota mensual alcanzada — ticket #{$ticket->id}");
+            return 'Has alcanzado el límite de mensajes del bot para este mes. Por favor contacta soporte o actualiza tu plan.' . self::ESCALATE_FLAG;
+        }
+
         // ── Interceptar saludos básicos (sin consumir API ni KB) ──────────────
         $greetingReply = $this->tryGreetingReply($ticket, $org);
         if ($greetingReply !== null) {
+            $org?->incrementBotMessageCount();
             Log::info("[NexovaBot] Respondido con saludo — ticket #{$ticket->id}");
             return $greetingReply;
         }
@@ -71,6 +78,7 @@ class NexovaAiService
         if ($kbAnswer !== null) {
             // Small delay for KB/FAQ answers — avoids feeling robotic/instant
             sleep(random_int(1, 2));
+            $org?->incrementBotMessageCount();
             Log::info("[NexovaBot] Respondido desde KB local — ticket #{$ticket->id}");
             return $kbAnswer;
         }
@@ -113,6 +121,7 @@ class NexovaAiService
                     if (str_contains($lowerReply, $kw)) { $aiSuggestsEscalation = true; break; }
                 }
 
+                $org?->incrementBotMessageCount();
                 Log::info("[NexovaBot] Respuesta OK via {$type} — ticket #{$ticket->id}");
                 return $aiSuggestsEscalation ? $reply . self::ESCALATE_FLAG : $reply;
 

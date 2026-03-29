@@ -14,7 +14,7 @@ class Organization extends Model
         'name', 'slug', 'website', 'support_email', 'support_name',
         'ai_groq_key', 'ai_gemini_key', 'ai_use_own_keys',
         'max_messages_per_session', 'max_bot_sessions_per_day',
-        'bot_sessions_today', 'usage_date',
+        'bot_sessions_today', 'bot_messages_this_month', 'bot_messages_month_reset', 'usage_date',
         'plan', 'trial_ends_at', 'is_active', 'accent_color', 'logo_path',
     ];
 
@@ -23,9 +23,11 @@ class Organization extends Model
         'ai_use_own_keys'         => 'boolean',
         'trial_ends_at'           => 'datetime',
         'usage_date'              => 'date',
-        'max_messages_per_session'=> 'integer',
-        'max_bot_sessions_per_day'=> 'integer',
-        'bot_sessions_today'      => 'integer',
+        'max_messages_per_session'  => 'integer',
+        'max_bot_sessions_per_day'  => 'integer',
+        'bot_sessions_today'        => 'integer',
+        'bot_messages_this_month'   => 'integer',
+        'bot_messages_month_reset'  => 'date',
     ];
 
     protected $hidden = ['ai_groq_key', 'ai_gemini_key'];
@@ -72,6 +74,34 @@ class Organization extends Model
     public function isAiBlocked(): bool
     {
         return $this->plan === 'free' || $this->plan === 'trial';
+    }
+
+    public function hasMonthlyBotQuota(): bool
+    {
+        $plan = \App\Models\Plan::where('slug', $this->plan)->first();
+        if (! $plan || $plan->max_bot_messages_monthly === 0) {
+            return true; // unlimited
+        }
+        $this->resetMonthlyCounterIfNeeded();
+        return $this->bot_messages_this_month < $plan->max_bot_messages_monthly;
+    }
+
+    public function incrementBotMessageCount(): void
+    {
+        $this->resetMonthlyCounterIfNeeded();
+        $this->increment('bot_messages_this_month');
+    }
+
+    private function resetMonthlyCounterIfNeeded(): void
+    {
+        $now = now()->toDateString();
+        $reset = $this->bot_messages_month_reset;
+        if (! $reset || $reset->format('Y-m') !== now()->format('Y-m')) {
+            $this->update([
+                'bot_messages_this_month'  => 0,
+                'bot_messages_month_reset' => $now,
+            ]);
+        }
     }
 
     public function isPro(): bool

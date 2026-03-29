@@ -11,7 +11,7 @@ class Plan extends Model
 {
     protected $fillable = [
         'slug', 'name', 'description', 'price_usd',
-        'max_agents', 'max_widgets', 'max_sessions_per_day', 'max_messages_per_session',
+        'max_agents', 'max_widgets', 'max_sessions_per_day', 'max_messages_per_session', 'max_bot_messages_monthly',
         'features', 'is_active', 'ai_blocked', 'sort',
     ];
 
@@ -23,7 +23,8 @@ class Plan extends Model
         'max_agents'               => 'integer',
         'max_widgets'              => 'integer',
         'max_sessions_per_day'     => 'integer',
-        'max_messages_per_session' => 'integer',
+        'max_messages_per_session'      => 'integer',
+        'max_bot_messages_monthly'     => 'integer',
         'sort'                     => 'integer',
     ];
 
