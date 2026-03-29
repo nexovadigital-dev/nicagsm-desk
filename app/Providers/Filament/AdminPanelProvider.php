@@ -440,7 +440,7 @@ HTML
                     $roleMap    = ['owner'=>'Propietario','admin'=>'Admin','agent'=>'Agente'];
                     $roleLabel  = $roleMap[$user?->role ?? 'agent'] ?? 'Agente';
                     $logoutUrl  = route('filament.admin.auth.logout');
-                    $profileUrl = '/admin/agent-profile';
+                    $profileUrl = '/app/agent-profile';
                     $csrfToken  = csrf_token();
                     $avatarUrl  = $user?->avatar_path ? e(Storage::url($user->avatar_path)) : null;
                     $avatarHtml = $avatarUrl

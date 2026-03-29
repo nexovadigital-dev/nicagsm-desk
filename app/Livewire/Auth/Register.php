@@ -4,6 +4,7 @@ namespace App\Livewire\Auth;
 
 use App\Models\EmailVerification;
 use App\Models\Organization;
+use App\Models\SystemSetting;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -30,6 +31,13 @@ class Register extends Component
     {
         $this->error   = '';
         $this->success = '';
+
+        // Check if registrations are open
+        $settings = SystemSetting::instance();
+        if (! $settings->allow_registrations) {
+            $this->error = $settings->registration_closed_message;
+            return;
+        }
 
         // Basic validation
         if (strlen(trim($this->name)) < 2) { $this->error = 'El nombre es obligatorio.'; return; }

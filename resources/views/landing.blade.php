@@ -430,6 +430,17 @@
         @php
             $isFeatured = ! $plan->isFree();
             $features   = is_array($plan->features) ? $plan->features : [];
+            $featLabels = [
+                'kb_manual'        => 'Artículos manuales en KB',
+                'kb_scrape'        => 'Escaneo automático del sitio',
+                'kb_wordpress'     => 'Integración WordPress / WooCommerce',
+                'ai_enabled'       => 'IA generativa activada',
+                'own_api_keys'     => 'Usa tus propias claves de IA',
+                'unlimited_agents' => 'Agentes ilimitados',
+                'telegram'         => 'Telegram incluido',
+                'woocommerce'      => 'Plugin WooCommerce',
+                'priority_support' => 'Soporte prioritario',
+            ];
         @endphp
         <div class="plan-card {{ $isFeatured ? 'featured' : '' }}">
             @if($isFeatured)<div class="plan-badge">Recomendado</div>@endif
@@ -454,7 +465,7 @@
                     <li class="off">{!! $xSvg !!}Sin IA generativa</li>
                 @endif
                 @foreach($features as $feat)
-                    <li>{!! $checkSvg !!}{{ $feat }}</li>
+                    <li>{!! $checkSvg !!}{{ $featLabels[$feat] ?? ucfirst(str_replace('_', ' ', $feat)) }}</li>
                 @endforeach
             </ul>
             @if($plan->isFree())

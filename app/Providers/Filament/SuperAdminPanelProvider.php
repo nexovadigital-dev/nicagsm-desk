@@ -10,6 +10,7 @@ use App\Filament\SuperAdmin\Pages\PlansManager;
 use App\Filament\SuperAdmin\Pages\PaymentConfigPage;
 use App\Filament\SuperAdmin\Pages\TransactionsPage;
 use App\Filament\SuperAdmin\Pages\WidgetsOverview;
+use App\Filament\SuperAdmin\Pages\SystemSettingsPage;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -62,6 +63,7 @@ class SuperAdminPanelProvider extends PanelProvider
                 PlansManager::class,
                 PaymentConfigPage::class,
                 TransactionsPage::class,
+                SystemSettingsPage::class,
             ])
             ->middleware([
                 EncryptCookies::class,
