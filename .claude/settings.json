@@ -12,7 +12,8 @@
       "Bash(ssh -o StrictHostKeyChecking=no u164741808@82.25.113.102 -p 65002 'echo connected && pwd')",
       "Bash(python3 -c \"import paramiko; print\\(''''ok''''\\)\")",
       "Bash(python3 -c \":*)",
-      "Bash(python3 -m pip install paramiko)"
+      "Bash(python3 -m pip install paramiko)",
+      "Bash(python3:*)"
     ]
   }
 }
