@@ -37,9 +37,14 @@ $planColors = [
      @close-plan-modal.window="planModal = false">
 
     {{-- Header --}}
-    <div>
-        <h1 style="font-size:20px;font-weight:800;color:var(--c-text,#111827);margin:0">Planes</h1>
-        <p style="font-size:13px;color:var(--c-sub,#6b7280);margin:4px 0 0">Gestiona los planes de suscripción disponibles para organizaciones</p>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+            <h1 style="font-size:20px;font-weight:800;color:var(--c-text,#111827);margin:0">Planes</h1>
+            <p style="font-size:13px;color:var(--c-sub,#6b7280);margin:4px 0 0">Gestiona los planes de suscripción disponibles para organizaciones</p>
+        </div>
+        <button wire:click="createPlan" class="sa-btn" style="background:#22c55e;color:#fff">
+            + Nuevo plan
+        </button>
     </div>
 
     {{-- Plan cards --}}
@@ -107,10 +112,10 @@ $planColors = [
         @endforeach
     </div>
 
-    {{-- Edit modal --}}
+    {{-- Create / Edit modal --}}
     <div class="sa-overlay" x-show="planModal" x-cloak @click.self="planModal=false" style="display:none">
         <div class="sa-modal">
-            <div class="sa-modal-head">Editar plan</div>
+            <div class="sa-modal-head" x-text="$wire.creating ? 'Nuevo plan' : 'Editar plan'">Plan</div>
             <div class="sa-modal-body">
                 <div class="sa-grid2">
                     <div>
@@ -120,6 +125,16 @@ $planColors = [
                     <div>
                         <div class="sa-label">Precio USD / mes</div>
                         <input wire:model="editPriceUsd" type="number" step="0.01" min="0" class="sa-input" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="sa-grid2">
+                    <div>
+                        <div class="sa-label">Slug <span style="font-size:11px;color:#9ca3af">(auto si vacío)</span></div>
+                        <input wire:model="editSlug" class="sa-input" placeholder="starter">
+                    </div>
+                    <div>
+                        <div class="sa-label">Orden (sort)</div>
+                        <input wire:model="editSort" type="number" min="0" class="sa-input">
                     </div>
                 </div>
                 <div>
@@ -146,18 +161,31 @@ $planColors = [
                         <input wire:model="editMaxMsgPerSession" type="number" min="1" class="sa-input">
                     </div>
                 </div>
-                <div class="sa-grid2">
-                    <div>
-                        <div class="sa-label">Msgs bot / mes <span style="font-size:11px;color:#9ca3af">(0 = ilimitado)</span></div>
-                        <input wire:model="editMaxBotMessages" type="number" min="0" class="sa-input">
+                <div>
+                    <div class="sa-label">Msgs bot / mes <span style="font-size:11px;color:#9ca3af">(0 = ilimitado)</span></div>
+                    <input wire:model="editMaxBotMessages" type="number" min="0" class="sa-input">
+                </div>
+
+                {{-- Feature flags --}}
+                <div>
+                    <div class="sa-label" style="margin-bottom:8px">Funcionalidades incluidas</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                        @foreach(\App\Filament\SuperAdmin\Pages\PlansManager::AVAILABLE_FEATURES as $key => $label)
+                        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:6px 8px;border:1px solid var(--c-border,#e5e7eb);border-radius:7px;transition:background .1s"
+                               onmouseover="this.style.background='rgba(34,197,94,.06)'" onmouseout="this.style.background='transparent'">
+                            <input type="checkbox" wire:model="editFeatures" value="{{ $key }}" style="width:14px;height:14px;accent-color:#22c55e">
+                            {{ $label }}
+                        </label>
+                        @endforeach
                     </div>
                 </div>
+
                 <div style="display:flex;align-items:center;gap:10px">
-                    <input type="checkbox" wire:model="editIsActive" id="editIsActive" style="width:16px;height:16px">
+                    <input type="checkbox" wire:model="editIsActive" id="editIsActive" style="width:16px;height:16px;accent-color:#22c55e">
                     <label for="editIsActive" style="font-size:13px;font-weight:600">Plan activo (visible para comprar)</label>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px">
-                    <input type="checkbox" wire:model="editAiBlocked" id="editAiBlocked" style="width:16px;height:16px">
+                    <input type="checkbox" wire:model="editAiBlocked" id="editAiBlocked" style="width:16px;height:16px;accent-color:#ef4444">
                     <label for="editAiBlocked" style="font-size:13px;font-weight:600;color:#ef4444">Bloquear IA (solo responde desde KB)</label>
                 </div>
             </div>

@@ -11,6 +11,13 @@ class SystemSetting extends Model
     protected $fillable = [
         'allow_registrations',
         'registration_closed_message',
+        'smtp_host',
+        'smtp_port',
+        'smtp_username',
+        'smtp_password',
+        'smtp_encryption',
+        'smtp_from_address',
+        'smtp_from_name',
     ];
 
     protected $casts = [

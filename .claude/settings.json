@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(export SSH_PASS='Pm16567733**')",
+      "Bash(export DISPLAY=:0)",
+      "Bash(export SSH_ASKPASS_REQUIRE=force)",
+      "Bash(export SSH_ASKPASS=/tmp/sshpass.sh)",
+      "Bash(chmod +x /tmp/sshpass.sh)",
+      "Bash(nslookup nexovadesk.com)",
+      "Bash(/tmp/sshpass.sh:*)",
+      "Bash(ssh -o StrictHostKeyChecking=no u853924409@srv797593.hstgr.cloud -p 22 'echo connected')",
+      "Bash(ssh -o StrictHostKeyChecking=no u164741808@82.25.113.102 -p 65002 'echo connected && pwd')",
+      "Bash(python3 -c \"import paramiko; print\\(''''ok''''\\)\")",
+      "Bash(python3 -c \":*)",
+      "Bash(python3 -m pip install paramiko)"
+    ]
+  }
+}
