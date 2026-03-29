@@ -141,10 +141,77 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
     </div>
     <div x-show="open" x-transition style="padding:0 20px 22px">
 
-        {{-- Bot name --}}
+        {{-- Bot name + avatar + on/off --}}
         <div class="wc-field" style="margin-top:18px">
             <label class="wc-label">Nombre del bot</label>
             <input type="text" class="wc-input" wire:model.live="botName" placeholder="Nexova IA">
+        </div>
+
+        {{-- Bot avatar upload --}}
+        <div class="wc-field" style="margin-top:12px">
+            <label class="wc-label">Foto / avatar del bot</label>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
+                @php $avatarSrc = $botAvatarPreview ?: ($botAvatar ?: null); @endphp
+                <div style="width:48px;height:48px;border-radius:50%;background:{{ $accentColor }}22;border:2px solid {{ $accentColor }}44;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    @if($avatarSrc)
+                        <img src="{{ $avatarSrc }}" style="width:100%;height:100%;object-fit:cover">
+                    @else
+                        <span style="font-size:18px;font-weight:700;color:{{ $accentColor }}">{{ strtoupper(substr($botName ?: 'N',0,1)) }}</span>
+                    @endif
+                </div>
+                <div style="flex:1">
+                    <input type="file" wire:model="botAvatarFile" accept="image/*"
+                           style="font-size:12px;color:var(--c-sub);width:100%">
+                    <p style="font-size:11px;color:var(--c-sub);margin:4px 0 0">JPG, PNG o GIF · máx 1 MB</p>
+                </div>
+                @if($botAvatar)
+                <button type="button" wire:click="$set('botAvatar','')" style="font-size:11px;color:#ef4444;background:none;border:none;cursor:pointer;padding:0">Eliminar</button>
+                @endif
+            </div>
+        </div>
+
+        {{-- Bot IA toggle --}}
+        @php
+            $org = auth()->user()?->organization;
+            $plan = $org?->plan ?? 'free';
+            $isAiBlocked = $org?->isAiBlocked() ?? true;
+            $botMsgUsed  = $org?->bot_messages_this_month ?? 0;
+            $planModel   = \App\Models\Plan::where('slug', $plan)->first();
+            $botMsgLimit = $planModel?->max_bot_messages_monthly ?? 0;
+            $planLabel   = ['free'=>'Gratuito','trial'=>'Prueba','pro'=>'Pro','enterprise'=>'Enterprise'][$plan] ?? ucfirst($plan);
+        @endphp
+        <div style="margin-top:16px;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                <div>
+                    <div style="font-size:13px;font-weight:600;color:#111827">Bot de IA</div>
+                    <div style="font-size:11.5px;color:var(--c-sub);margin-top:1px">
+                        @if($isAiBlocked) Solo responde con FAQ y base de conocimiento @else Responde con IA (Groq / Gemini) @endif
+                    </div>
+                </div>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                    <div x-data="{ on: @entangle('botEnabled') }"
+                         @click="on = !on; $wire.set('botEnabled', on)"
+                         :style="on ? 'background:{{ $accentColor }}' : 'background:#d1d5db'"
+                         style="width:40px;height:22px;border-radius:11px;transition:background .2s;position:relative;cursor:pointer">
+                        <div :style="on ? 'left:20px' : 'left:2px'"
+                             style="position:absolute;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></div>
+                    </div>
+                    <span style="font-size:12px;font-weight:500;color:#374151">{{ $botEnabled ? 'Activado' : 'Desactivado' }}</span>
+                </label>
+            </div>
+
+            {{-- Plan info --}}
+            <div style="border-top:1px solid #e5e7eb;padding-top:10px;display:flex;flex-wrap:wrap;gap:8px">
+                <span style="font-size:11px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:6px;padding:3px 8px;color:#374151;font-weight:500">
+                    Plan: <strong>{{ $planLabel }}</strong>
+                </span>
+                <span style="font-size:11px;background:{{ $isAiBlocked ? '#fef3c7' : '#dcfce7' }};border:1px solid {{ $isAiBlocked ? '#fde68a' : '#bbf7d0' }};border-radius:6px;padding:3px 8px;color:{{ $isAiBlocked ? '#92400e' : '#166534' }};font-weight:500">
+                    IA: {{ $isAiBlocked ? 'Solo KB/FAQ' : 'Completa' }}
+                </span>
+                <span style="font-size:11px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:3px 8px;color:#1e40af;font-weight:500">
+                    Mensajes bot: {{ $botMsgUsed }} / {{ $botMsgLimit === 0 ? '∞' : number_format($botMsgLimit) }}
+                </span>
+            </div>
         </div>
 
         {{-- Widget name (internal) --}}

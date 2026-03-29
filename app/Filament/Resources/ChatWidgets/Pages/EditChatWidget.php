@@ -26,6 +26,10 @@ class EditChatWidget extends Page
     // ── Form fields ──────────────────────────────────────────────────────────
     public string $name           = '';
     public string $botName        = 'Nexova IA';
+    public bool   $botEnabled     = true;
+    public string $botAvatar      = '';
+    public $botAvatarFile         = null;
+    public string $botAvatarPreview = '';
     public string $welcomeMessage = 'Hola, ¿en qué te puedo ayudar?';
     public string $accentColor    = '#7c3aed';
     public string $widgetPosition = 'right';
@@ -74,6 +78,8 @@ class EditChatWidget extends Page
         $this->widgetToken         = $w->token;
         $this->name                = $w->name;
         $this->botName             = $w->bot_name;
+        $this->botEnabled          = (bool) ($w->bot_enabled ?? true);
+        $this->botAvatar           = $w->bot_avatar ?? '';
         $this->welcomeMessage      = $w->welcome_message;
         $this->accentColor         = $w->accent_color;
         $this->widgetPosition      = $w->widget_position;
@@ -108,6 +114,13 @@ class EditChatWidget extends Page
         }
     }
 
+    public function updatedBotAvatarFile(): void
+    {
+        if ($this->botAvatarFile) {
+            $this->botAvatarPreview = $this->botAvatarFile->temporaryUrl();
+        }
+    }
+
     public function updatedButtonImageFile(): void
     {
         if (! $this->buttonImageFile) {
@@ -126,6 +139,18 @@ class EditChatWidget extends Page
             return;
         }
 
+        // Save bot avatar if uploaded
+        if ($this->botAvatarFile) {
+            $widget = ChatWidget::find($this->widgetId);
+            if ($widget?->bot_avatar && str_starts_with((string) $widget->bot_avatar, '/storage/')) {
+                Storage::disk('public')->delete(str_replace('/storage/', '', $widget->bot_avatar));
+            }
+            $path = $this->botAvatarFile->store('bot-avatars', 'public');
+            $this->botAvatar     = Storage::url($path);
+            $this->botAvatarFile = null;
+            $this->botAvatarPreview = '';
+        }
+
         // If there's a pending image upload, persist it now
         if ($this->buttonImageFile) {
             $widget = ChatWidget::find($this->widgetId);
@@ -142,6 +167,8 @@ class EditChatWidget extends Page
         ChatWidget::findOrFail($this->widgetId)->update([
             'name'                    => $this->name,
             'bot_name'                => $this->botName,
+            'bot_enabled'             => $this->botEnabled,
+            'bot_avatar'              => $this->botAvatar ?: null,
             'welcome_message'         => $this->welcomeMessage,
             'accent_color'            => $this->accentColor,
             'widget_position'         => $this->widgetPosition,
