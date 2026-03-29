@@ -69,6 +69,8 @@ class NexovaAiService
             $kbAnswer = $this->tryKbDirectAnswer($ticket, $ragContext);
         }
         if ($kbAnswer !== null) {
+            // Small delay for KB/FAQ answers — avoids feeling robotic/instant
+            sleep(random_int(1, 2));
             Log::info("[NexovaBot] Respondido desde KB local — ticket #{$ticket->id}");
             return $kbAnswer;
         }
@@ -91,8 +93,8 @@ class NexovaAiService
 
         $messages = $this->buildMessageHistory($ticket, $ragContext);
 
-        // Delay "pensando" solo cuando se llama a la IA real (2-4 s)
-        sleep(random_int(2, 4));
+        // Delay "pensando" cuando se llama a la IA real (3-5 s)
+        sleep(random_int(3, 5));
 
         foreach ($providers as $provider) {
             ['type' => $type, 'key' => $key] = $provider;
