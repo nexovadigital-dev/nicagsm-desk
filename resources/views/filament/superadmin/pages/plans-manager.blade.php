@@ -83,6 +83,10 @@ $planColors = [
                     <span class="sa-plan-val">{{ $plan->max_messages_per_session >= 999 ? 'Ilimitado' : $plan->max_messages_per_session }}</span>
                 </div>
                 <div class="sa-plan-row">
+                    <span class="sa-plan-key">Msgs bot/mes</span>
+                    <span class="sa-plan-val">{{ ($plan->max_bot_messages_monthly ?? 0) === 0 ? '∞ Ilimitado' : number_format($plan->max_bot_messages_monthly) }}</span>
+                </div>
+                <div class="sa-plan-row">
                     <span class="sa-plan-key">IA bloqueada</span>
                     <span class="sa-plan-val">
                         @if($plan->ai_blocked)
@@ -140,6 +144,12 @@ $planColors = [
                     <div>
                         <div class="sa-label">Msgs / sesión</div>
                         <input wire:model="editMaxMsgPerSession" type="number" min="1" class="sa-input">
+                    </div>
+                </div>
+                <div class="sa-grid2">
+                    <div>
+                        <div class="sa-label">Msgs bot / mes <span style="font-size:11px;color:#9ca3af">(0 = ilimitado)</span></div>
+                        <input wire:model="editMaxBotMessages" type="number" min="0" class="sa-input">
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px">

@@ -217,7 +217,7 @@ const THINKING_MSGS = [
     'Un momento, procesando…',
 ];
 
-const TypingIndicator = ({ initial, color }) => {
+const TypingIndicator = ({ initial, color, botAvatar }) => {
     const [msgIdx, setMsgIdx] = useState(0);
     useEffect(() => {
         const t = setInterval(() => setMsgIdx(i => (i + 1) % THINKING_MSGS.length), 2200);
@@ -225,7 +225,9 @@ const TypingIndicator = ({ initial, color }) => {
     }, []);
     return (
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
-            <div style={s.avatar(initial, color)}>{initial}</div>
+            <div style={s.avatar(initial, color)}>
+                {botAvatar ? <img src={botAvatar} style={{ width:'100%', height:'100%', objectFit:'cover' }} alt="" /> : initial}
+            </div>
             <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '16px 16px 16px 3px',
                 padding: '9px 14px', display: 'flex', gap: 6, alignItems: 'center',
                 boxShadow: '0 1px 3px rgba(0,0,0,.06)', minWidth: 0 }}>
@@ -257,6 +259,7 @@ const s = {
         width: size, height: size, borderRadius: '50%', background: bg,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         color: '#fff', fontSize: size * 0.42, fontWeight: 700, flexShrink: 0, userSelect: 'none',
+        overflow: 'hidden',
     }),
     input: {
         flex: 1, background: 'transparent', border: 'none', outline: 'none',
@@ -908,7 +911,7 @@ function ClosedScreen({ messages, ticketRating, accentColor, onNewChat, onViewHi
 // ---------------------------------------------------------------------------
 // Formulario pre-chat (Chatway-style)
 // ---------------------------------------------------------------------------
-function PreChatForm({ fields, onSubmit, accentColor, botName, welcomeMessage }) {
+function PreChatForm({ fields, onSubmit, accentColor, botName, welcomeMessage, botAvatar }) {
     const [values,  setValues]  = useState({});
     const [errors,  setErrors]  = useState({});
     const [loading, setLoading] = useState(false);
@@ -959,7 +962,9 @@ function PreChatForm({ fields, onSubmit, accentColor, botName, welcomeMessage })
             {/* Header strip */}
             <div style={{ background: accentColor, padding: '18px 18px 20px', color: '#fff' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <div style={s.avatar(initial, 'rgba(255,255,255,.25)', 36)}>{initial}</div>
+                    <div style={s.avatar(initial, 'rgba(255,255,255,.25)', 36)}>
+                        {botAvatar ? <img src={botAvatar} style={{ width:'100%', height:'100%', objectFit:'cover' }} alt="" /> : initial}
+                    </div>
                     <div>
                         <p style={{ margin: 0, fontWeight: 700, fontSize: 14 }}>{botName || 'Nexova IA'}</p>
                         <p style={{ margin: 0, fontSize: 11, opacity: .85 }}>En línea · Asistente IA</p>
@@ -1280,6 +1285,7 @@ export default function NexovaChatWidget() {
     const ratingMessage  = cfg?.rating_message   || '¿Cómo fue tu experiencia?';
     const soundEnabled   = cfg?.sound_enabled    ?? true;
     const initial        = botName[0].toUpperCase();
+    const botAvatar      = cfg?.bot_avatar || null;
     const isClosed       = ticketStatus === 'closed';
 
     // ── Chatway-parity config ─────────────────────────────────────────────
@@ -1904,7 +1910,9 @@ export default function NexovaChatWidget() {
                             </button>
                         )}
 
-                        <div style={s.avatar(initial, 'rgba(255,255,255,.2)', 38)}>{initial}</div>
+                        <div style={s.avatar(initial, 'rgba(255,255,255,.2)', 38)}>
+                            {botAvatar ? <img src={botAvatar} style={{ width:'100%', height:'100%', objectFit:'cover' }} alt="" /> : initial}
+                        </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <p style={{ color: '#fff', fontWeight: 600, fontSize: 14, margin: 0, lineHeight: 1.3 }}>
                                 {botName}
@@ -1966,7 +1974,7 @@ export default function NexovaChatWidget() {
                     {screen === 'prechat' && (
                         <PreChatForm fields={cfg.pre_chat_fields} onSubmit={initSession}
                             accentColor={accentColor} botName={botName}
-                            welcomeMessage={cfg.welcome_message} />
+                            welcomeMessage={cfg.welcome_message} botAvatar={botAvatar} />
                     )}
 
                     {/* ── Pantalla: Historial de conversaciones ── */}
@@ -2044,7 +2052,9 @@ export default function NexovaChatWidget() {
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column',
                                         alignItems: 'center', justifyContent: 'center',
                                         gap: 8, textAlign: 'center', color: '#9ca3af', userSelect: 'none' }}>
-                                        <div style={s.avatar(initial, accentColor, 48)}>{initial}</div>
+                                        <div style={s.avatar(initial, accentColor, 48)}>
+                                            {botAvatar ? <img src={botAvatar} style={{ width:'100%', height:'100%', objectFit:'cover' }} alt="" /> : initial}
+                                        </div>
                                         <p style={{ fontSize: 13, fontWeight: 600, color: '#374151', margin: '8px 0 0' }}>
                                             {cfg.welcome_message || '¡Hola! ¿En qué te puedo ayudar?'}
                                         </p>
@@ -2088,7 +2098,11 @@ export default function NexovaChatWidget() {
                                     return (
                                         <div key={msg.id} style={{ display: 'flex', alignItems: 'flex-end', gap: 8,
                                             justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
-                                            {!isUser && <div style={s.avatar(initial, accentColor)}>{initial}</div>}
+                                            {!isUser && (
+                                                <div style={s.avatar(initial, accentColor)}>
+                                                    {botAvatar ? <img src={botAvatar} style={{ width:'100%', height:'100%', objectFit:'cover' }} alt="" /> : initial}
+                                                </div>
+                                            )}
                                             <div style={{ display: 'flex', flexDirection: 'column',
                                                 alignItems: isUser ? 'flex-end' : 'flex-start',
                                                 gap: 3, maxWidth: '76%' }}>
@@ -2138,7 +2152,7 @@ export default function NexovaChatWidget() {
                                     );
                                 })}
 
-                                {isTyping && <TypingIndicator initial={initial} color={accentColor} />}
+                                {isTyping && <TypingIndicator initial={initial} color={accentColor} botAvatar={botAvatar} />}
                                 <div ref={messagesEndRef} />
                             </div>
 

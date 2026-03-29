@@ -444,6 +444,8 @@
                 @if($plan->max_agents)  <li>{!! $checkSvg !!}{{ $plan->max_agents >= 999 ? 'Agentes ilimitados' : 'Hasta '.$plan->max_agents.' agentes' }}</li> @endif
                 <li>{!! $checkSvg !!}Base de conocimiento</li>
                 @if($plan->max_sessions_per_day) <li>{!! $checkSvg !!}{{ $plan->max_sessions_per_day >= 9999 ? 'Sesiones ilimitadas' : number_format($plan->max_sessions_per_day).' sesiones bot/día' }}</li> @endif
+                @php $botMsgs = $plan->max_bot_messages_monthly ?? 0; @endphp
+                <li>{!! $checkSvg !!}{{ $botMsgs === 0 ? 'Mensajes bot ilimitados' : number_format($botMsgs).' mensajes bot/mes' }}</li>
                 @if(! $plan->ai_blocked)
                     <li>{!! $checkSvg !!}IA con Groq + Gemini</li>
                     <li>{!! $checkSvg !!}Telegram incluido</li>
@@ -471,6 +473,7 @@
                 <li>{!! $checkSvg !!}1 widget · 3 agentes</li>
                 <li>{!! $checkSvg !!}Base de conocimiento</li>
                 <li>{!! $checkSvg !!}50 sesiones bot/día</li>
+                <li>{!! $checkSvg !!}1.000 mensajes bot/mes</li>
                 <li class="off">{!! $xSvg !!}Sin IA generativa</li>
             </ul>
             <a href="/register" class="btn btn-md btn-dark" style="width:100%;justify-content:center">Comenzar gratis</a>
@@ -484,6 +487,7 @@
                 <li>{!! $checkSvg !!}Widgets y agentes ilimitados</li>
                 <li>{!! $checkSvg !!}IA con Groq + Gemini</li>
                 <li>{!! $checkSvg !!}Sesiones ilimitadas</li>
+                <li>{!! $checkSvg !!}Mensajes bot ilimitados</li>
                 <li>{!! $checkSvg !!}Telegram + WooCommerce</li>
             </ul>
             <a href="/register" class="btn btn-md btn-primary" style="width:100%;justify-content:center">Empezar con Pro</a>

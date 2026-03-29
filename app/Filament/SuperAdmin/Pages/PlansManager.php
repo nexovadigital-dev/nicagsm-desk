@@ -37,6 +37,7 @@ class PlansManager extends Page
     public int     $editMaxMsgPerSession    = 20;
     public bool    $editIsActive            = true;
     public bool    $editAiBlocked          = false;
+    public int     $editMaxBotMessages     = 1000;
 
     public function getPlansProperty()
     {
@@ -58,6 +59,7 @@ class PlansManager extends Page
         $this->editMaxMsgPerSession  = $p->max_messages_per_session;
         $this->editIsActive          = $p->is_active;
         $this->editAiBlocked         = (bool) $p->ai_blocked;
+        $this->editMaxBotMessages    = $p->max_bot_messages_monthly ?? 0;
         $this->dispatch('open-plan-modal');
     }
 
@@ -71,8 +73,9 @@ class PlansManager extends Page
             'max_widgets'              => $this->editMaxWidgets,
             'max_sessions_per_day'     => $this->editMaxSessionsPerDay,
             'max_messages_per_session' => $this->editMaxMsgPerSession,
-            'is_active'                => $this->editIsActive,
-            'ai_blocked'               => $this->editAiBlocked,
+            'is_active'                    => $this->editIsActive,
+            'ai_blocked'                   => $this->editAiBlocked,
+            'max_bot_messages_monthly'     => $this->editMaxBotMessages,
         ]);
 
         $this->editingId = null;
