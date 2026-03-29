@@ -24,17 +24,25 @@
             max-width: 400px;
             text-align: center;
         }
-        .logo {
-            display: inline-flex;
+        .brand {
+            display: flex;
             align-items: center;
             justify-content: center;
-            width: 52px;
-            height: 52px;
-            background: #22c55e;
-            border-radius: 12px;
+            gap: 10px;
             margin-bottom: 18px;
         }
-        .logo svg { color: #fff; }
+        .brand img {
+            width: 38px;
+            height: 38px;
+            object-fit: contain;
+        }
+        .brand-name {
+            font-size: 22px;
+            font-weight: 800;
+            color: #1a1f14;
+            letter-spacing: -0.5px;
+        }
+        .brand-name span { color: #22c55e; }
         h1 { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 8px; }
         p  { font-size: 13.5px; color: #6b7280; line-height: 1.6; margin-bottom: 0; }
         .origin {
@@ -98,15 +106,12 @@
 </head>
 <body>
 <div class="card">
-    <div class="logo">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="1.8" width="26" height="26">
-            <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
-        </svg>
+    <div class="brand">
+        <img src="{{ asset('images/nexovadesklogo.png') }}" alt="Nexova Desk">
+        <span class="brand-name">Nexova<span>Desk</span></span>
     </div>
 
-    <h1>Conectar con Nexova Desk</h1>
+    <h1>Conectar con tu tienda</h1>
     <p>Autoriza la conexión desde tu tienda:</p>
 
     @if($origin)
@@ -128,11 +133,17 @@
             </div>
         </div>
 
-        <form method="POST" action="{{ url('/wp-connect/authorize') }}">
+        <p style="font-size:13px;color:#374151;margin-bottom:6px;">¿Deseas conectar la organización:</p>
+        <p style="font-weight:700;font-size:15px;color:#111827;margin-bottom:4px;">
+            "{{ $user->organization?->name ?? $user->name }}"
+        </p>
+        <p style="font-size:12.5px;color:#6b7280;margin-bottom:20px;">a la tienda <strong>{{ $origin }}</strong>?</p>
+
+        <form method="POST" action="{{ route('wp-connect.authorize') }}">
             @csrf
             <input type="hidden" name="origin" value="{{ $origin }}">
             <button type="submit" class="btn btn-primary">
-                Autorizar conexión
+                Sí, autorizar conexión
             </button>
         </form>
 
@@ -141,7 +152,7 @@
         <form method="POST" action="{{ route('auth.logout') }}" style="margin-bottom:0">
             @csrf
             <button type="submit" class="btn btn-ghost">
-                Iniciar sesión con otra cuenta
+                No es mi organización — cambiar cuenta
             </button>
         </form>
     @else
