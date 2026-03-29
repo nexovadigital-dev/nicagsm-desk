@@ -33,7 +33,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('app')
             ->login(\App\Filament\Pages\CustomLogin::class)
-            ->brandName('')
+            ->brandName('Nexova Desk')
             ->brandLogo(null)
             ->brandLogoHeight('0')
             ->favicon(asset('images/nexovadesklogo.svg'))
