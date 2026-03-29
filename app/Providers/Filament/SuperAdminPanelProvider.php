@@ -78,7 +78,6 @@ class SuperAdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-                \App\Http\Middleware\SuperAdminMiddleware::class,
             ])
             ->renderHook(
                 PanelsRenderHook::BODY_END,

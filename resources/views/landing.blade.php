@@ -433,7 +433,7 @@
             $featLabels = [
                 'kb_manual'        => 'Artículos manuales en KB',
                 'kb_scrape'        => 'Escaneo automático del sitio',
-                'kb_wordpress'     => 'Integración WordPress / WooCommerce',
+                'kb_wordpress'     => 'Integración WooCommerce',
                 'ai_enabled'       => 'IA generativa activada',
                 'own_api_keys'     => 'Usa tus propias claves de IA',
                 'unlimited_agents' => 'Agentes ilimitados',
