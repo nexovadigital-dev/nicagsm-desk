@@ -1,0 +1,535 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services;
+
+use App\Models\ApiSetting;
+use App\Models\KnowledgeBase;
+use App\Models\Message;
+use App\Models\Ticket;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
+class NexovaAiService
+{
+    /** Sufijo interno que indica que el job debe ofrecer escalación. */
+    public const ESCALATE_FLAG = '__ESCALATE__';
+
+    // -------------------------------------------------------------------------
+    // Constantes de configuración por proveedor
+    // -------------------------------------------------------------------------
+    private const PROVIDERS = ['groq', 'gemini'];
+
+    private const GROQ_ENDPOINT   = 'https://api.groq.com/openai/v1/chat/completions';
+    private const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s';
+
+    private const GROQ_MODEL   = 'llama-3.3-70b-versatile';
+    private const GEMINI_MODEL = 'gemini-1.5-flash';
+
+    private const MAX_TOKENS    = 600;
+    private const TEMPERATURE   = 0.7;
+    private const HTTP_TIMEOUT  = 45; // segundos
+
+    /**
+     * Punto de entrada principal.
+     * Itera los proveedores activos ordenados por prioridad.
+     * Si uno falla, intenta el siguiente (fallback automático).
+     */
+    public function generateReply(Ticket $ticket): string
+    {
+        $org = $ticket->organization_id ? $ticket->organization : null;
+
+        // ── Límite de mensajes por sesión ──────────────────────────────────────
+        if ($org) {
+            $maxPerSession = $org->max_messages_per_session ?: 30;
+            $botMsgCount   = $ticket->messages()
+                ->where('sender_type', 'bot')
+                ->count();
+            if ($botMsgCount >= $maxPerSession) {
+                Log::info("[NexovaBot] Límite de mensajes por sesión alcanzado — ticket #{$ticket->id}");
+                return 'Has alcanzado el límite de mensajes con el asistente.' . self::ESCALATE_FLAG;
+            }
+        }
+
+        // ── Interceptar saludos básicos (sin consumir API ni KB) ──────────────
+        $greetingReply = $this->tryGreetingReply($ticket, $org);
+        if ($greetingReply !== null) {
+            Log::info("[NexovaBot] Respondido con saludo — ticket #{$ticket->id}");
+            return $greetingReply;
+        }
+
+        // ── Intentar responder desde la KB primero (solo si NO hay store_context) ──
+        // Si hay store_context (WooCommerce), la IA es quien debe procesar la info.
+        $ragContext = $this->buildRagContext($ticket->organization_id);
+        $hasStoreCtx = ! empty($ticket->store_context);
+        $kbAnswer = null;
+        if ($ragContext && ! $hasStoreCtx) {
+            $kbAnswer = $this->tryKbDirectAnswer($ticket, $ragContext);
+        }
+        if ($kbAnswer !== null) {
+            Log::info("[NexovaBot] Respondido desde KB local — ticket #{$ticket->id}");
+            return $kbAnswer;
+        }
+
+        // ── Plan Free: IA bloqueada, solo KB ───────────────────────────────────
+        // Excepción: si hay store_context (plugin WooCommerce), permitir IA para
+        // responder sobre el catálogo de la tienda aunque el plan sea Free.
+        if ($org && $org->isAiBlocked() && ! $hasStoreCtx) {
+            Log::info("[NexovaBot] IA bloqueada por plan Free — ticket #{$ticket->id}");
+            return 'No encontré información en nuestra base de conocimiento para tu consulta. ¿Te gustaría hablar con un agente?' . self::ESCALATE_FLAG;
+        }
+
+        // ── Construir providers: org keys tienen prioridad ──────────────────────
+        $providers = $this->buildProviders($org);
+
+        if ($providers->isEmpty()) {
+            Log::warning('[NexovaBot] No hay proveedores de IA activos.');
+            return 'El asistente IA no está configurado en este momento.' . self::ESCALATE_FLAG;
+        }
+
+        $messages = $this->buildMessageHistory($ticket, $ragContext);
+
+        // Delay "pensando" solo cuando se llama a la IA real (2-4 s)
+        sleep(random_int(2, 4));
+
+        foreach ($providers as $provider) {
+            ['type' => $type, 'key' => $key] = $provider;
+            try {
+                $reply = match ($type) {
+                    'groq'   => $this->callGroq($key, $messages),
+                    'gemini' => $this->callGemini($key, $messages),
+                    default  => throw new \RuntimeException("Proveedor no soportado: {$type}"),
+                };
+
+                // If the AI itself suggests talking to an agent, flag for escalation offer
+                $lowerReply = mb_strtolower($reply);
+                $escalationKeywords = ['agente', 'agent', 'representante', 'asesor', 'no tengo información', 'no sé', 'no puedo'];
+                $aiSuggestsEscalation = false;
+                foreach ($escalationKeywords as $kw) {
+                    if (str_contains($lowerReply, $kw)) { $aiSuggestsEscalation = true; break; }
+                }
+
+                Log::info("[NexovaBot] Respuesta OK via {$type} — ticket #{$ticket->id}");
+                return $aiSuggestsEscalation ? $reply . self::ESCALATE_FLAG : $reply;
+
+            } catch (\Throwable $e) {
+                Log::warning("[NexovaBot] {$type} falló (ticket #{$ticket->id}): {$e->getMessage()}");
+            }
+        }
+
+        Log::error("[NexovaBot] Todos los proveedores fallaron para ticket #{$ticket->id}.");
+        return 'No pude obtener respuesta en este momento.' . self::ESCALATE_FLAG;
+    }
+
+    /**
+     * Build ordered list of providers.
+     * If org has own keys enabled, those go first; platform keys are fallback.
+     *
+     * @return \Illuminate\Support\Collection<int, array{type: string, key: string}>
+     */
+    private function buildProviders(?\App\Models\Organization $org): \Illuminate\Support\Collection
+    {
+        $list = collect();
+
+        // Org-own keys (highest priority)
+        if ($org?->ai_use_own_keys) {
+            if ($key = $org->effectiveGroqKey()) {
+                $list->push(['type' => 'groq',   'key' => $key]);
+            }
+            if ($key = $org->effectiveGeminiKey()) {
+                $list->push(['type' => 'gemini', 'key' => $key]);
+            }
+        }
+
+        // Platform keys (fallback)
+        $platform = ApiSetting::query()
+            ->where('is_active', true)
+            ->whereIn('provider', self::PROVIDERS)
+            ->orderBy('priority')
+            ->get();
+
+        foreach ($platform as $p) {
+            // Avoid duplicating if org already added the same provider
+            if ($org?->ai_use_own_keys && $list->contains('type', $p->provider)) continue;
+            $list->push(['type' => $p->provider, 'key' => $p->api_key]);
+        }
+
+        return $list;
+    }
+
+    /**
+     * Try to answer directly from KB content without calling the AI API.
+     * Returns a string if a confident direct answer is found, null otherwise.
+     * This saves API tokens when the KB has an exact match.
+     */
+    private function tryKbDirectAnswer(Ticket $ticket, string $ragContext): ?string
+    {
+        // Get the last user message
+        $lastMsg = $ticket->messages()
+            ->where('sender_type', 'user')
+            ->orderByDesc('created_at')
+            ->value('content');
+
+        if (! $lastMsg || strlen($lastMsg) < 3) return null;
+
+        // Simple keyword matching: load active KB articles
+        $articles = KnowledgeBase::query()
+            ->where('is_active', true)
+            ->when($ticket->organization_id, fn ($q) => $q->where('organization_id', $ticket->organization_id))
+            ->get(['title', 'content', 'source']);
+
+        if ($articles->isEmpty()) return null;
+
+        $msgLower = mb_strtolower($lastMsg);
+        // Palabras significativas del mensaje (>3 chars, sin stopwords básicas)
+        $stopwords = ['como', 'cual', 'cuál', 'que', 'qué', 'para', 'por', 'con', 'una', 'uno', 'los', 'las', 'del', 'hay', 'tiene', 'puedo', 'puede', 'quiero', 'necesito', 'favor', 'hola', 'gracias'];
+        $msgWords  = array_filter(
+            explode(' ', preg_replace('/[^a-záéíóúüñ\s]/u', '', $msgLower)),
+            fn ($w) => mb_strlen($w) > 3 && ! in_array($w, $stopwords)
+        );
+
+        $bestScore   = 0;
+        $bestArticle = null;
+
+        foreach ($articles as $article) {
+            $titleLower   = mb_strtolower($article->title);
+            $contentLower = mb_strtolower($article->content);
+
+            // Score 1: palabras del título encontradas en el mensaje
+            $titleWords = array_filter(explode(' ', $titleLower), fn ($w) => mb_strlen($w) > 3);
+            $titleScore = 0;
+            if (! empty($titleWords)) {
+                $hits = 0;
+                foreach ($titleWords as $w) {
+                    if (str_contains($msgLower, $w)) $hits++;
+                }
+                $titleScore = $hits / count($titleWords);
+            }
+
+            // Score 2: palabras del mensaje encontradas en el contenido
+            $contentScore = 0;
+            if (! empty($msgWords)) {
+                $hits = 0;
+                foreach ($msgWords as $w) {
+                    if (str_contains($contentLower, $w)) $hits++;
+                }
+                $contentScore = $hits / count($msgWords);
+            }
+
+            // Peso: título vale más (0.7) que contenido (0.3)
+            $score = ($titleScore * 0.7) + ($contentScore * 0.3);
+
+            if ($score > $bestScore) {
+                $bestScore   = $score;
+                $bestArticle = $article;
+            }
+        }
+
+        // Umbral: 0.45 (más sensible que el 60% anterior, pero combinado)
+        if ($bestArticle && $bestScore >= 0.45) {
+            return $bestArticle->content;
+        }
+
+        return null;
+    }
+
+    // =========================================================================
+    // Store Context — convierte el JSON de WooCommerce a texto para el prompt
+    // =========================================================================
+
+    /**
+     * Convierte el array store_context (enviado por el plugin WP) a un bloque
+     * de texto que se inyecta en el system prompt de la IA.
+     */
+    private function buildStoreContextBlock(array $ctx): string
+    {
+        $lines = ['=== INFORMACIÓN DE LA TIENDA (usa esto para responder sobre productos, precios y servicios) ==='];
+
+        if (! empty($ctx['store_name'])) {
+            $lines[] = "Tienda: {$ctx['store_name']}";
+        }
+        if (! empty($ctx['store_description'])) {
+            $lines[] = "Descripción: {$ctx['store_description']}";
+        }
+        if (! empty($ctx['store_url'])) {
+            $lines[] = "URL: {$ctx['store_url']}";
+        }
+        if (! empty($ctx['currency'])) {
+            $lines[] = "Moneda: {$ctx['currency']}";
+        }
+
+        if (! empty($ctx['categories']) && is_array($ctx['categories'])) {
+            $cats  = implode(', ', array_column($ctx['categories'], 'name'));
+            $lines[] = "Categorías de productos: {$cats}";
+        }
+
+        if (! empty($ctx['current_product']) && is_array($ctx['current_product'])) {
+            $p       = $ctx['current_product'];
+            $lines[] = '';
+            $lines[] = '--- PRODUCTO EN ESTA PÁGINA ---';
+            $lines[] = "Nombre: {$p['name']}";
+            if (! empty($p['price']))       $lines[] = "Precio: {$p['price']} {$ctx['currency']}";
+            if (! empty($p['sku']))         $lines[] = "SKU: {$p['sku']}";
+            if (! empty($p['stock']))       $lines[] = "Stock: {$p['stock']}";
+            if (! empty($p['description'])) $lines[] = "Descripción: {$p['description']}";
+            if (! empty($p['url']))         $lines[] = "URL: {$p['url']}";
+        }
+
+        if (! empty($ctx['products']) && is_array($ctx['products'])) {
+            $lines[] = '';
+            $lines[] = '--- CATÁLOGO DE PRODUCTOS ---';
+            foreach ($ctx['products'] as $p) {
+                $entry = "• {$p['name']}";
+                if (! empty($p['price']))       $entry .= " — {$p['price']} {$ctx['currency']}";
+                if (! empty($p['sku']))         $entry .= " (SKU: {$p['sku']})";
+                if (! empty($p['stock']))       $entry .= " | Stock: {$p['stock']}";
+                if (! empty($p['description'])) $entry .= "\n  {$p['description']}";
+                if (! empty($p['url']))         $entry .= "\n  Enlace: {$p['url']}";
+                $lines[] = $entry;
+            }
+        }
+
+        $lines[] = '';
+        $lines[] = 'Cuando el cliente pregunte por productos, precios o disponibilidad, usa la información de arriba.';
+        $lines[] = 'Si el cliente pregunta por un producto que no aparece en el catálogo, dile que puede verlo en la tienda o hablar con un agente.';
+
+        return implode("\n", $lines);
+    }
+
+    // =========================================================================
+    // Saludos — respuestas sin IA para mensajes de bienvenida
+    // =========================================================================
+
+    /**
+     * Si el mensaje del usuario es un saludo simple, responde con una
+     * bienvenida amistosa sin consumir API ni KB.
+     * Retorna null si el mensaje no es un saludo.
+     */
+    private function tryGreetingReply(Ticket $ticket, ?\App\Models\Organization $org): ?string
+    {
+        $lastMsg = $ticket->messages()
+            ->where('sender_type', 'user')
+            ->orderByDesc('created_at')
+            ->value('content');
+
+        if (! $lastMsg) return null;
+
+        // Solo aplica si es el PRIMER mensaje del usuario en la conversación
+        $userMsgCount = $ticket->messages()->where('sender_type', 'user')->count();
+        if ($userMsgCount > 1) return null;
+
+        $greetings = [
+            'hola', 'hi', 'hello', 'hey', 'buenas', 'buenos dias', 'buenos días',
+            'buenas tardes', 'buenas noches', 'good morning', 'good afternoon',
+            'saludos', 'qué tal', 'que tal', 'cómo estás', 'como estas',
+            'ola', 'alo', 'aló',
+        ];
+
+        $normalized = mb_strtolower(trim($lastMsg));
+        $normalized = preg_replace('/[^a-záéíóúüñ\s]/u', '', $normalized);
+        $normalized = trim($normalized);
+
+        $isGreeting = false;
+        foreach ($greetings as $g) {
+            if ($normalized === $g || str_starts_with($normalized, $g . ' ') || str_ends_with($normalized, ' ' . $g)) {
+                $isGreeting = true;
+                break;
+            }
+        }
+
+        if (! $isGreeting) return null;
+
+        $botName = $org?->name ? "Soy el asistente de {$org->name}" : 'Soy Nexova, tu asistente virtual';
+        return "{$botName}. ¡Hola! 👋 ¿En qué puedo ayudarte hoy?";
+    }
+
+    // =========================================================================
+    // RAG — Base de Conocimientos
+    // =========================================================================
+
+    /**
+     * Trae todos los artículos activos y los concatena como contexto de sistema.
+     * RAG básico: inyección total. Para colecciones grandes se puede añadir
+     * búsqueda por embeddings más adelante.
+     */
+    private function buildRagContext(?int $orgId = null): string
+    {
+        $articles = KnowledgeBase::query()
+            ->where('is_active', true)
+            ->when($orgId, fn ($q) => $q->where('organization_id', $orgId))
+            ->get(['title', 'content', 'source', 'reference_id']);
+
+        if ($articles->isEmpty()) {
+            return '';
+        }
+
+        $body = $articles->map(function ($a) {
+            $header = "### {$a->title}";
+            if ($a->source === 'web_scrape' && $a->reference_id) {
+                $header .= " ({$a->reference_id})";
+            }
+            return $header . "\n" . $a->content;
+        })->implode("\n\n");
+
+        return "=== BASE DE CONOCIMIENTOS DEL SITIO (usa SOLO esta información para responder) ===\n\n{$body}\n\n";
+    }
+
+    // =========================================================================
+    // Historial de conversación
+    // =========================================================================
+
+    /**
+     * Construye el array de mensajes en formato universal [role, content].
+     * El system prompt incluye el contexto RAG si existe.
+     */
+    private function buildMessageHistory(Ticket $ticket, string $ragContext): array
+    {
+        $org     = $ticket->organization_id ? $ticket->organization : null;
+        $orgName = $org?->name ?? 'esta empresa';
+        $orgWeb  = $org?->website;
+
+        // Prompt base: identidad del bot restringida a la organización
+        $systemPrompt = implode("\n", [
+            "Eres un asistente virtual de atención al cliente de {$orgName}.",
+            'Responde siempre en el mismo idioma que el cliente. Sé amable, profesional y conciso (máximo 3 párrafos cortos).',
+            '',
+            '**REGLAS IMPORTANTES:**',
+            "- Solo puedes responder preguntas relacionadas con {$orgName}, sus productos, servicios, precios, políticas o información del sitio web.",
+            '- Si el usuario pregunta algo que NO está relacionado con la empresa (como la hora, geografía, ciencia, deportes, política u otros temas generales), responde amablemente:',
+            "  \"Solo estoy entrenado para ayudarte con información de {$orgName}. Para consultas fuera de este tema, te sugiero contactar a un agente.\"",
+            '- No inventes información. Si no sabes algo sobre la empresa, dilo honestamente y sugiere hablar con un agente.',
+        ]);
+
+        if ($orgWeb) {
+            $systemPrompt .= "\n- El sitio web oficial es: {$orgWeb}";
+        }
+
+        // Contexto de tienda WooCommerce (inyectado por el plugin, prioridad alta)
+        $storeCtx = $ticket->store_context;
+        if (! empty($storeCtx)) {
+            $systemPrompt .= "\n\n" . $this->buildStoreContextBlock($storeCtx);
+        }
+
+        // Conocimiento (KB manual + web scrape) — se agrega si existe
+        if ($ragContext !== '') {
+            $systemPrompt .= "\n\n{$ragContext}";
+        }
+
+        $history = Message::query()
+            ->where('ticket_id', $ticket->id)
+            ->orderBy('created_at')
+            ->get(['sender_type', 'content']);
+
+        $messages = [['role' => 'system', 'content' => $systemPrompt]];
+
+        foreach ($history as $msg) {
+            // 'agent' también se mapea como 'assistant' para que la IA mantenga coherencia
+            $messages[] = [
+                'role'    => $msg->sender_type === 'user' ? 'user' : 'assistant',
+                'content' => $msg->content,
+            ];
+        }
+
+        return $messages;
+    }
+
+    // =========================================================================
+    // Adaptadores de API — cada método lanza \Throwable en caso de error
+    // =========================================================================
+
+    /**
+     * Groq — API compatible con OpenAI.
+     * Docs: https://console.groq.com/docs/openai
+     */
+    private function callGroq(string $apiKey, array $messages): string
+    {
+        $response = Http::withToken($apiKey)
+            ->timeout(self::HTTP_TIMEOUT)
+            ->post(self::GROQ_ENDPOINT, [
+                'model'       => self::GROQ_MODEL,
+                'messages'    => $messages,
+                'max_tokens'  => self::MAX_TOKENS,
+                'temperature' => self::TEMPERATURE,
+            ]);
+
+        if ($response->failed()) {
+            throw new \RuntimeException(
+                "Groq HTTP {$response->status()}: " . substr($response->body(), 0, 200)
+            );
+        }
+
+        $text = $response->json('choices.0.message.content');
+
+        if (blank($text)) {
+            throw new \RuntimeException('Groq devolvió una respuesta vacía.');
+        }
+
+        return trim($text);
+    }
+
+    /**
+     * Google Gemini — API nativa (formato diferente a OpenAI).
+     * Docs: https://ai.google.dev/api/generate-content
+     *
+     * Diferencias clave vs OpenAI:
+     *  - El system prompt va en 'system_instruction', NO en contents[].
+     *  - Los roles son 'user' y 'model' (no 'assistant').
+     *  - La API key va como query param (?key=...).
+     */
+    private function callGemini(string $apiKey, array $messages): string
+    {
+        $systemText = '';
+        $contents   = [];
+
+        foreach ($messages as $msg) {
+            if ($msg['role'] === 'system') {
+                $systemText = $msg['content'];
+                continue;
+            }
+
+            $contents[] = [
+                'role'  => $msg['role'] === 'assistant' ? 'model' : 'user',
+                'parts' => [['text' => $msg['content']]],
+            ];
+        }
+
+        // Gemini no acepta contents vacío — si solo hay system prompt, añadimos placeholder
+        if (empty($contents)) {
+            $contents[] = ['role' => 'user', 'parts' => [['text' => 'Hola']]];
+        }
+
+        $payload = [
+            'contents'         => $contents,
+            'generationConfig' => [
+                'maxOutputTokens' => self::MAX_TOKENS,
+                'temperature'     => self::TEMPERATURE,
+            ],
+        ];
+
+        if ($systemText !== '') {
+            $payload['system_instruction'] = ['parts' => [['text' => $systemText]]];
+        }
+
+        $url = sprintf(self::GEMINI_ENDPOINT, self::GEMINI_MODEL, $apiKey);
+
+        $response = Http::timeout(self::HTTP_TIMEOUT)->post($url, $payload);
+
+        if ($response->failed()) {
+            throw new \RuntimeException(
+                "Gemini HTTP {$response->status()}: " . substr($response->body(), 0, 200)
+            );
+        }
+
+        $text = $response->json('candidates.0.content.parts.0.text');
+
+        if (blank($text)) {
+            // Puede indicar bloqueo por safety filters
+            $finishReason = $response->json('candidates.0.finishReason');
+            throw new \RuntimeException("Gemini respuesta vacía. finishReason: {$finishReason}");
+        }
+
+        return trim($text);
+    }
+}

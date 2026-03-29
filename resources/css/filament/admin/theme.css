@@ -1,0 +1,590 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+/* ═══════════════════════════════════════════════════════════════════
+   NEXOVA CHAT — Tema global Filament v5
+   Estilo Intercom-inspired: limpio, tipografía clara, acento único
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Paleta — modo claro ── */
+:root {
+    --c-bg:       #f5f6f8;
+    --c-surface:  #ffffff;
+    --c-surf2:    #f0f2f5;
+    --c-border:   #e3e6ea;
+    --c-text:     #111827;
+    --c-sub:      #6b7280;
+    --c-accent:   #16a34a;
+    --c-accent-h: #15803d;
+    --c-accent-s: rgba(34,197,94,.08);
+    --c-accent-b: rgba(34,197,94,.22);
+    --c-danger:   #dc2626;
+    --c-success:  #059669;
+    --c-warn:     #d97706;
+}
+
+/* modo oscuro deshabilitado — panel siempre en modo claro */
+
+/* ─────────────────────────────────────────
+   LAYOUT BASE
+───────────────────────────────────────── */
+body, .fi-body { background: var(--c-bg) !important; color: var(--c-text) !important; }
+.fi-layout, .fi-main-ctn, .fi-main { background: var(--c-bg) !important; }
+
+/* Content wrapper — breathing room */
+.fi-main { padding: 0 !important; }
+.fi-page-wrap { padding: 0 !important; }
+
+/* ─────────────────────────────────────────
+   SIDEBAR — light (Tremor blocks style)
+───────────────────────────────────────── */
+.fi-sidebar {
+    background: #f1f5f9 !important;
+    border-right: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+}
+
+.fi-sidebar-footer { background: #f1f5f9 !important; }
+
+/* Hide default Filament brand area */
+.fi-sidebar-header { display: none !important; }
+.fi-logo { display: none !important; }
+
+/* Scrollable nav area */
+.fi-sidebar-nav {
+    padding: 0 8px 16px !important;
+}
+
+/* Remove list bullets from nav items */
+.fi-sidebar-group-items,
+.fi-sidebar-item { list-style: none !important; }
+.fi-sidebar-group-items { padding-left: 0 !important; margin: 0 !important; }
+
+/* Group spacing */
+.fi-sidebar-group { margin-bottom: 0 !important; }
+.fi-sidebar-nav > * + * { margin-top: 0 !important; }
+
+/* Group labels */
+.fi-sidebar-group-label {
+    color: #b0b7c3 !important;
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: .09em !important;
+    text-transform: uppercase !important;
+    padding: 10px 8px 3px !important;
+}
+
+/* Nav item base */
+.fi-sidebar-item-btn {
+    border-radius: 6px !important;
+    margin: 0 !important;
+    padding: 6px 8px !important;
+    border: none !important;
+    border-left: 2px solid transparent !important;
+    transition: background .12s, color .12s !important;
+    gap: 9px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+.fi-sidebar-item-btn:hover {
+    background: #e2e8f0 !important;
+}
+.fi-sidebar-item-btn:hover .fi-sidebar-item-label {
+    color: #111827 !important;
+}
+.fi-sidebar-item-btn:hover .fi-sidebar-item-icon {
+    color: #6b7280 !important;
+}
+
+/* Labels & icons — inactive */
+.fi-sidebar-item-label {
+    color: #111827 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    transition: color .12s !important;
+}
+.fi-sidebar-item-icon,
+.fi-sidebar-item-icon svg {
+    color: #64748b !important;
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    flex-shrink: 0 !important;
+    display: block !important;
+}
+
+/* Active item — blue left-border */
+.fi-sidebar-item-btn[aria-current="page"],
+.fi-active > .fi-sidebar-item-btn {
+    background: rgba(59,130,246,.07) !important;
+    border-left-color: #3b82f6 !important;
+}
+.fi-sidebar-item-btn[aria-current="page"] .fi-sidebar-item-label,
+.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-label {
+    color: #1d4ed8 !important;
+    font-weight: 600 !important;
+}
+.fi-sidebar-item-btn[aria-current="page"] .fi-sidebar-item-icon,
+.fi-active > .fi-sidebar-item-btn .fi-sidebar-item-icon {
+    color: #3b82f6 !important;
+}
+
+/* Nav badge */
+.fi-sidebar-item-badge {
+    background: rgba(59,130,246,.1) !important;
+    color: #2563eb !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    padding: 1px 6px !important;
+    border-radius: 99px !important;
+    min-width: 18px !important;
+    text-align: center !important;
+}
+
+/* Collapse / close button */
+.fi-sidebar-close-btn {
+    color: #9ca3af !important;
+    border-radius: 7px !important;
+    transition: background .12s, color .12s !important;
+}
+.fi-sidebar-close-btn:hover {
+    color: #374151 !important;
+    background: #f3f4f6 !important;
+}
+
+/* ─────────────────────────────────────────
+   TOPBAR
+───────────────────────────────────────── */
+.fi-topbar, .fi-topbar-ctn {
+    background: var(--c-surface) !important;
+    border-bottom: 1px solid var(--c-border) !important;
+    box-shadow: none !important;
+    height: 52px !important;
+}
+
+/* ── Hide topbar user menu — moved to sidebar footer ── */
+.fi-theme-switcher,
+.fi-color-mode-switcher,
+.fi-user-menu,
+.fi-topbar-end .fi-user-avatar-btn,
+.fi-topbar-end { display: none !important; }
+
+/* ── Topbar — solo el botón de colapsar ── */
+.fi-topbar, .fi-topbar-ctn {
+    background: var(--c-surface) !important;
+    border-bottom: 1px solid var(--c-border) !important;
+    box-shadow: none !important;
+    height: 52px !important;
+}
+.fi-topbar .fi-icon-btn {
+    color: var(--c-sub) !important;
+    border-radius: 8px !important;
+    transition: background .12s, color .12s !important;
+}
+.fi-topbar .fi-icon-btn:hover {
+    background: var(--c-surf2) !important;
+    color: var(--c-text) !important;
+}
+
+/* ─────────────────────────────────────────
+   PÁGINA: header, breadcrumbs
+───────────────────────────────────────── */
+.fi-page-header {
+    background: transparent !important;
+    padding: 20px 24px 16px !important;
+}
+.fi-page-header-heading {
+    color: var(--c-text) !important;
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    letter-spacing: -.01em !important;
+}
+.fi-breadcrumbs-item-label { color: var(--c-sub) !important; font-size: 12px !important; }
+.fi-breadcrumbs-separator  { color: var(--c-sub) !important; opacity: .5 !important; }
+.fi-breadcrumbs-item-label:last-child { color: var(--c-text) !important; font-weight: 500 !important; }
+
+/* ─────────────────────────────────────────
+   CARDS / SECCIONES / TABLAS
+───────────────────────────────────────── */
+.fi-section,
+.fi-card,
+.fi-ta-ctn,
+.fi-simple-page {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-border) !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+}
+
+/* Cabecera de tabla */
+.fi-ta-header-ctn {
+    background: var(--c-surface) !important;
+    border-bottom: 1px solid var(--c-border) !important;
+    padding: 12px 16px !important;
+}
+
+/* Filas */
+.fi-ta-row {
+    border-bottom: 1px solid var(--c-border) !important;
+    transition: background .08s !important;
+}
+.fi-ta-row:last-child { border-bottom: none !important; }
+.fi-ta-row:hover { background: var(--c-surf2) !important; }
+
+/* Celdas */
+.fi-ta-cell {
+    color: var(--c-text) !important;
+    font-size: 13px !important;
+    padding: 11px 14px !important;
+}
+.fi-ta-col-label {
+    color: var(--c-sub) !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .05em !important;
+    padding: 10px 14px !important;
+}
+
+/* Paginación */
+.fi-ta-pagination { border-top: 1px solid var(--c-border) !important; background: var(--c-surface) !important; }
+
+/* ─────────────────────────────────────────
+   FORMULARIOS: inputs, selects, textareas
+───────────────────────────────────────── */
+.fi-input,
+.fi-select-input,
+.fi-textarea,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+select,
+textarea {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-border) !important;
+    border-radius: 7px !important;
+    color: var(--c-text) !important;
+    font-size: 13px !important;
+    transition: border-color .12s, box-shadow .12s !important;
+}
+/* dark mode inputs removed — panel is light only */
+
+.fi-input:focus,
+.fi-select-input:focus,
+.fi-textarea:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59,130,246,.1) !important;
+    outline: none !important;
+}
+
+.fi-fo-field-wrp-label,
+.fi-fo-label {
+    color: var(--c-text) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+.fi-fo-hint { color: var(--c-sub) !important; font-size: 11.5px !important; }
+
+/* ─────────────────────────────────────────
+   BOTONES — jerarquía clara
+───────────────────────────────────────── */
+/* Base de todos los botones Filament */
+.fi-btn {
+    border-radius: 7px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    padding: 7px 14px !important;
+    transition: background .1s, border-color .1s, box-shadow .1s !important;
+    border-width: 1px !important;
+    border-style: solid !important;
+    letter-spacing: 0 !important;
+    box-shadow: none !important;
+}
+.fi-btn:active { transform: scale(.98) !important; }
+
+/* Primario — dark slate (Tremor-style, no green glow) */
+.fi-btn-color-primary {
+    background: #1e293b !important;
+    border-color: #1e293b !important;
+    color: #f8fafc !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2) !important;
+}
+.fi-btn-color-primary:hover {
+    background: #0f172a !important;
+    border-color: #0f172a !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,.3) !important;
+}
+/* dark mode primary button removed — light only */
+
+/* Secundario / gris */
+.fi-btn-color-gray {
+    background: var(--c-surface) !important;
+    border-color: var(--c-border) !important;
+    color: var(--c-text) !important;
+}
+.fi-btn-color-gray:hover {
+    background: var(--c-surf2) !important;
+}
+
+/* Peligro */
+.fi-btn-color-danger {
+    background: transparent !important;
+    border-color: rgba(220,38,38,.25) !important;
+    color: var(--c-danger) !important;
+}
+.fi-btn-color-danger:hover {
+    background: rgba(220,38,38,.06) !important;
+    border-color: rgba(220,38,38,.4) !important;
+}
+
+/* Éxito */
+.fi-btn-color-success {
+    background: var(--c-success) !important;
+    border-color: var(--c-success) !important;
+    color: #fff !important;
+}
+
+/* Tamaño pequeño (icono) */
+.fi-btn-size-sm { padding: 5px 10px !important; font-size: 12px !important; }
+.fi-btn-size-xs { padding: 3px 8px !important;  font-size: 11px !important; }
+
+/* Botón de icono solo (sin label) */
+.fi-icon-btn {
+    border-radius: 7px !important;
+    padding: 6px !important;
+    color: var(--c-sub) !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    transition: background .1s !important;
+}
+.fi-icon-btn:hover {
+    background: var(--c-surf2) !important;
+    color: var(--c-text) !important;
+}
+
+/* ─────────────────────────────────────────
+   BADGES / PILLS
+───────────────────────────────────────── */
+.fi-badge {
+    border-radius: 5px !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    padding: 2px 7px !important;
+    letter-spacing: .01em !important;
+    border-width: 1px !important;
+    border-style: solid !important;
+}
+.fi-badge-color-success { background: rgba(5,150,105,.1) !important; color: var(--c-success) !important; border-color: rgba(5,150,105,.2) !important; }
+.fi-badge-color-danger  { background: rgba(220,38,38,.1)  !important; color: var(--c-danger) !important;  border-color: rgba(220,38,38,.2) !important; }
+.fi-badge-color-warning { background: rgba(217,119,6,.1)  !important; color: var(--c-warn) !important;   border-color: rgba(217,119,6,.2) !important; }
+.fi-badge-color-primary { background: var(--c-accent-s) !important;   color: var(--c-accent) !important; border-color: var(--c-accent-b) !important; }
+.fi-badge-color-gray    { background: var(--c-surf2) !important;       color: var(--c-sub) !important;   border-color: var(--c-border) !important; }
+
+/* ─────────────────────────────────────────
+   DROPDOWN / USER MENU
+───────────────────────────────────────── */
+.fi-dropdown-panel,
+.fi-user-menu-panel {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-border) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,.08) !important;
+    padding: 4px !important;
+}
+/* dark mode dropdown removed */
+
+.fi-dropdown-list-item-btn,
+.fi-user-menu-item-btn {
+    border-radius: 6px !important;
+    color: var(--c-text) !important;
+    font-size: 13px !important;
+    padding: 7px 10px !important;
+}
+.fi-dropdown-list-item-btn:hover,
+.fi-user-menu-item-btn:hover {
+    background: var(--c-surf2) !important;
+}
+.fi-dropdown-list-item-label { color: var(--c-text) !important; }
+
+/* ─────────────────────────────────────────
+   NOTIFICACIONES — estilo Nexova
+───────────────────────────────────────── */
+
+/* Contenedor de toasts */
+.fi-no {
+    bottom: 20px !important;
+    right: 20px !important;
+    top: auto !important;
+    left: auto !important;
+    z-index: 9990 !important;
+}
+
+/* Toast individual */
+.fi-no-notification {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-border) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 24px rgba(0,0,0,.09) !important;
+    color: var(--c-text) !important;
+    padding: 12px 14px !important;
+    gap: 10px !important;
+    max-width: 320px !important;
+    min-width: 260px !important;
+    font-size: 13px !important;
+    align-items: flex-start !important;
+}
+/* dark mode notification removed */
+
+/* Ícono de estado */
+.fi-no-notification-icon {
+    width: 18px !important;
+    height: 18px !important;
+    flex-shrink: 0 !important;
+    margin-top: 1px !important;
+}
+/* Quitar fondo de color del ícono */
+.fi-no-notification-icon-ctn,
+[class*="fi-color-custom"].fi-no-notification-icon-ctn {
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border: none !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+/* Título del toast */
+.fi-no-notification-title {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--c-text) !important;
+    line-height: 1.35 !important;
+    margin: 0 !important;
+}
+
+/* Cuerpo del toast */
+.fi-no-notification-body {
+    font-size: 12px !important;
+    color: var(--c-sub) !important;
+    line-height: 1.5 !important;
+    margin-top: 2px !important;
+}
+
+/* Fecha */
+.fi-no-notification-date { display: none !important; }
+
+/* Botón cerrar */
+.fi-no-notification-close-btn {
+    color: var(--c-sub) !important;
+    opacity: .6 !important;
+    padding: 2px !important;
+    width: 20px !important;
+    height: 20px !important;
+    margin-top: 1px !important;
+}
+.fi-no-notification-close-btn:hover { opacity: 1 !important; background: var(--c-surf2) !important; }
+
+/* Colores de estado por ícono */
+.fi-color-custom.fi-no-notification-icon svg,
+.fi-no-notification-icon svg { width: 16px !important; height: 16px !important; }
+
+/* Borde izquierdo por tipo */
+.fi-no-notification[class*="fi-color-success"] { border-left: 3px solid var(--c-success) !important; }
+.fi-no-notification[class*="fi-color-danger"]  { border-left: 3px solid var(--c-danger) !important; }
+.fi-no-notification[class*="fi-color-warning"] { border-left: 3px solid var(--c-warn) !important; }
+.fi-no-notification[class*="fi-color-primary"] { border-left: 3px solid var(--c-accent) !important; }
+
+/* ─────────────────────────────────────────
+   WIDGETS DASHBOARD
+───────────────────────────────────────── */
+.fi-wi-stats-overview,
+.fi-wi {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-border) !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+}
+
+/* ─────────────────────────────────────────
+   MODALES / DIALOGS
+───────────────────────────────────────── */
+.fi-modal-window {
+    background: var(--c-surface) !important;
+    border: 1px solid var(--c-border) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,.15) !important;
+}
+.fi-modal-header { border-bottom: 1px solid var(--c-border) !important; }
+.fi-modal-footer { border-top: 1px solid var(--c-border) !important; }
+.fi-modal-heading { color: var(--c-text) !important; font-size: 15px !important; font-weight: 600 !important; }
+
+/* ─────────────────────────────────────────
+   PAGE TRANSITION — Spinner overlay + fade
+───────────────────────────────────────── */
+
+/* Overlay de carga */
+#nx-page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, .18);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+}
+#nx-page-loader.nx-loader--visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Spinner circular */
+#nx-page-loader .nx-spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid rgba(0,0,0,.08);
+    border-top-color: #1e293b;
+    border-radius: 50%;
+    animation: nx-spin .7s linear infinite;
+}
+
+@keyframes nx-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Fade-in del contenido al terminar navegación */
+@keyframes nx-page-in {
+    from { opacity: 0; transform: translateY(5px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.nx-page-entering {
+    animation: nx-page-in .22s ease both;
+}
+
+[wire\:navigate] { cursor: pointer; }
+
+/* ─────────────────────────────────────────
+   SCROLLBARS
+───────────────────────────────────────── */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--c-border) transparent;
+}
+*::-webkit-scrollbar { width: 4px; height: 4px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+    background: var(--c-border);
+    border-radius: 99px;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--c-sub); }

@@ -1,0 +1,7 @@
+@import 'tailwindcss';
+
+/* Nexova Chat Widget — estilos base */
+#nexova-chat-root * {
+    box-sizing: border-box;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+}

@@ -1,0 +1,138 @@
+# English (US) translation for Nexova Desk Chat
+# Copyright (C) 2026 Nexova Digital Solutions
+msgid ""
+msgstr ""
+"Project-Id-Version: Nexova Desk Chat 1.0\n"
+"POT-Creation-Date: 2026-03-27\n"
+"PO-Revision-Date: 2026-03-27\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Conexión"
+msgstr "Connection"
+
+msgid "Widget"
+msgstr "Widget"
+
+msgid "Visibilidad"
+msgstr "Visibility"
+
+msgid "Soporte"
+msgstr "Support"
+
+msgid "Conectado · %s"
+msgstr "Connected · %s"
+
+msgid "Conectado"
+msgstr "Connected"
+
+msgid "No conectado"
+msgstr "Not connected"
+
+msgid "Cuenta conectada"
+msgstr "Account connected"
+
+msgid "Tu tienda está vinculada a Nexova Desk. Configura el widget en la pestaña Widget y controla su visibilidad en la pestaña Visibilidad."
+msgstr "Your store is linked to Nexova Desk. Configure the widget in the Widget tab and control its visibility in the Visibility tab."
+
+msgid "Desconectar cuenta"
+msgstr "Disconnect account"
+
+msgid "Conecta tu tienda con Nexova Desk"
+msgstr "Connect your store with Nexova Desk"
+
+msgid "Vincula tu cuenta de Nexova Desk para activar el chat inteligente en tu tienda WooCommerce. El proceso es seguro y solo toma un momento."
+msgstr "Link your Nexova Desk account to activate the AI chat on your WooCommerce store. The process is secure and only takes a moment."
+
+msgid "Chat con IA entrenada en tu catálogo WooCommerce"
+msgstr "AI chat trained on your WooCommerce catalog"
+
+msgid "Identificación automática de clientes con sesión activa"
+msgstr "Automatic identification of logged-in customers"
+
+msgid "Control total de visibilidad por página o producto"
+msgstr "Full visibility control per page or product"
+
+msgid "Iniciar sesión en Nexova Desk"
+msgstr "Sign in to Nexova Desk"
+
+msgid "Se abrirá una ventana segura para autorizar la conexión."
+msgstr "A secure window will open to authorize the connection."
+
+msgid "Gratuito"
+msgstr "Free"
+
+msgid "Prueba"
+msgstr "Trial"
+
+msgid "Plan: %s"
+msgstr "Plan: %s"
+
+msgid "¿Qué hace este plugin?"
+msgstr "What does this plugin do?"
+
+msgid "Inyecta el widget de chat de Nexova Desk en tu tienda"
+msgstr "Injects the Nexova Desk chat widget into your store"
+
+msgid "Identifica automáticamente a clientes con sesión iniciada"
+msgstr "Automatically identifies logged-in customers"
+
+msgid "Envía el contexto de tu tienda (productos, categorías) a la IA"
+msgstr "Sends your store context (products, categories) to the AI"
+
+msgid "Control total sobre en qué páginas aparece el widget"
+msgstr "Full control over which pages display the widget"
+
+msgid "Soporte técnico"
+msgstr "Technical support"
+
+msgid "¿Tienes preguntas o necesitas ayuda? Contáctanos directamente por WhatsApp o visita nuestro sitio."
+msgstr "Have questions or need help? Contact us directly via WhatsApp or visit our site."
+
+msgid "Contactar por WhatsApp"
+msgstr "Contact via WhatsApp"
+
+msgid "Licenciamiento y uso"
+msgstr "Licensing and usage"
+
+msgid "Datos de conexión incompletos."
+msgstr "Incomplete connection data."
+
+msgid "Conexión establecida correctamente."
+msgstr "Connection established successfully."
+
+msgid "Desconectado de Nexova Desk."
+msgstr "Disconnected from Nexova Desk."
+
+msgid "Configuración guardada."
+msgstr "Configuration saved."
+
+msgid "No se encontraron widgets o la conexión falló."
+msgstr "No widgets found or connection failed."
+
+msgid "Conectando…"
+msgstr "Connecting…"
+
+msgid "¡Conectado!"
+msgstr "Connected!"
+
+msgid "Desconectando…"
+msgstr "Disconnecting…"
+
+msgid "Guardando…"
+msgstr "Saving…"
+
+msgid "Guardado"
+msgstr "Saved"
+
+msgid "Error"
+msgstr "Error"
+
+msgid "El popup fue bloqueado. Permite popups para este sitio e intenta de nuevo."
+msgstr "The popup was blocked. Please allow popups for this site and try again."
+
+msgid "Todos los derechos reservados."
+msgstr "All rights reserved."

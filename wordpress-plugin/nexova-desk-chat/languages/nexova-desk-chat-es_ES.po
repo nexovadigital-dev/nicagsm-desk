@@ -1,0 +1,144 @@
+# Spanish (Spain) translation for Nexova Desk Chat
+# Copyright (C) 2026 Nexova Digital Solutions
+msgid ""
+msgstr ""
+"Project-Id-Version: Nexova Desk Chat 1.0\n"
+"POT-Creation-Date: 2026-03-27\n"
+"PO-Revision-Date: 2026-03-27\n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Nexova Desk Chat"
+msgstr "Nexova Desk Chat"
+
+msgid "Nexova Desk"
+msgstr "Nexova Desk"
+
+msgid "Conexión"
+msgstr "Conexión"
+
+msgid "Widget"
+msgstr "Widget"
+
+msgid "Visibilidad"
+msgstr "Visibilidad"
+
+msgid "Soporte"
+msgstr "Soporte"
+
+msgid "Conectado · %s"
+msgstr "Conectado · %s"
+
+msgid "Conectado"
+msgstr "Conectado"
+
+msgid "No conectado"
+msgstr "No conectado"
+
+msgid "Cuenta conectada"
+msgstr "Cuenta conectada"
+
+msgid "Tu tienda está vinculada a Nexova Desk. Configura el widget en la pestaña Widget y controla su visibilidad en la pestaña Visibilidad."
+msgstr "Tu tienda está vinculada a Nexova Desk. Configura el widget en la pestaña Widget y controla su visibilidad en la pestaña Visibilidad."
+
+msgid "Desconectar cuenta"
+msgstr "Desconectar cuenta"
+
+msgid "Conecta tu tienda con Nexova Desk"
+msgstr "Conecta tu tienda con Nexova Desk"
+
+msgid "Vincula tu cuenta de Nexova Desk para activar el chat inteligente en tu tienda WooCommerce. El proceso es seguro y solo toma un momento."
+msgstr "Vincula tu cuenta de Nexova Desk para activar el chat inteligente en tu tienda WooCommerce. El proceso es seguro y solo toma un momento."
+
+msgid "Chat con IA entrenada en tu catálogo WooCommerce"
+msgstr "Chat con IA entrenada en tu catálogo WooCommerce"
+
+msgid "Identificación automática de clientes con sesión activa"
+msgstr "Identificación automática de clientes con sesión activa"
+
+msgid "Control total de visibilidad por página o producto"
+msgstr "Control total de visibilidad por página o producto"
+
+msgid "Iniciar sesión en Nexova Desk"
+msgstr "Iniciar sesión en Nexova Desk"
+
+msgid "Se abrirá una ventana segura para autorizar la conexión."
+msgstr "Se abrirá una ventana segura para autorizar la conexión."
+
+msgid "Gratuito"
+msgstr "Gratuito"
+
+msgid "Prueba"
+msgstr "Prueba"
+
+msgid "Plan: %s"
+msgstr "Plan: %s"
+
+msgid "¿Qué hace este plugin?"
+msgstr "¿Qué hace este plugin?"
+
+msgid "Inyecta el widget de chat de Nexova Desk en tu tienda"
+msgstr "Inyecta el widget de chat de Nexova Desk en tu tienda"
+
+msgid "Identifica automáticamente a clientes con sesión iniciada"
+msgstr "Identifica automáticamente a clientes con sesión iniciada"
+
+msgid "Envía el contexto de tu tienda (productos, categorías) a la IA"
+msgstr "Envía el contexto de tu tienda (productos, categorías) a la IA"
+
+msgid "Control total sobre en qué páginas aparece el widget"
+msgstr "Control total sobre en qué páginas aparece el widget"
+
+msgid "Soporte técnico"
+msgstr "Soporte técnico"
+
+msgid "¿Tienes preguntas o necesitas ayuda? Contáctanos directamente por WhatsApp o visita nuestro sitio."
+msgstr "¿Tienes preguntas o necesitas ayuda? Contáctanos directamente por WhatsApp o visita nuestro sitio."
+
+msgid "Contactar por WhatsApp"
+msgstr "Contactar por WhatsApp"
+
+msgid "Licenciamiento y uso"
+msgstr "Licenciamiento y uso"
+
+msgid "Datos de conexión incompletos."
+msgstr "Datos de conexión incompletos."
+
+msgid "Conexión establecida correctamente."
+msgstr "Conexión establecida correctamente."
+
+msgid "Desconectado de Nexova Desk."
+msgstr "Desconectado de Nexova Desk."
+
+msgid "Configuración guardada."
+msgstr "Configuración guardada."
+
+msgid "No se encontraron widgets o la conexión falló."
+msgstr "No se encontraron widgets o la conexión falló."
+
+msgid "Conectando…"
+msgstr "Conectando…"
+
+msgid "¡Conectado!"
+msgstr "¡Conectado!"
+
+msgid "Desconectando…"
+msgstr "Desconectando…"
+
+msgid "Guardando…"
+msgstr "Guardando…"
+
+msgid "Guardado"
+msgstr "Guardado"
+
+msgid "Error"
+msgstr "Error"
+
+msgid "El popup fue bloqueado. Permite popups para este sitio e intenta de nuevo."
+msgstr "El popup fue bloqueado. Permite popups para este sitio e intenta de nuevo."
+
+msgid "Todos los derechos reservados."
+msgstr "Todos los derechos reservados."

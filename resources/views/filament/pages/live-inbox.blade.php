@@ -1,0 +1,1731 @@
+<x-filament-panels::page>
+
+{{-- ══ Alerta de llamada a agente ══ --}}
+@php $incomingCalls = $this->incomingAgentCalls(); @endphp
+
+<div x-data="{
+    ringing: $wire.entangle('hasIncomingCall'),
+    dismissed: false,
+    audioCtx: null,
+    ringInterval: null,
+
+    startRing() {
+        if (this.dismissed || !this.ringing) return;
+        try {
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            this.ringInterval = setInterval(() => {
+                if (!this.ringing || this.dismissed) { clearInterval(this.ringInterval); return; }
+                this.playBeep();
+            }, 1800);
+            this.playBeep();
+        } catch(e) {}
+    },
+    playBeep() {
+        if (!this.audioCtx) return;
+        const o1 = this.audioCtx.createOscillator();
+        const o2 = this.audioCtx.createOscillator();
+        const g  = this.audioCtx.createGain();
+        o1.connect(g); o2.connect(g); g.connect(this.audioCtx.destination);
+        o1.type = 'sine'; o1.frequency.value = 880;
+        o2.type = 'sine'; o2.frequency.value = 1100;
+        g.gain.setValueAtTime(0, this.audioCtx.currentTime);
+        g.gain.linearRampToValueAtTime(0.18, this.audioCtx.currentTime + 0.05);
+        g.gain.linearRampToValueAtTime(0, this.audioCtx.currentTime + 0.35);
+        o1.start(); o2.start();
+        o1.stop(this.audioCtx.currentTime + 0.4);
+        o2.stop(this.audioCtx.currentTime + 0.4);
+    },
+    dismiss() {
+        this.dismissed = true; this.ringing = false;
+        clearInterval(this.ringInterval);
+    }
+}"
+x-init="
+    if (ringing) startRing();
+    $watch('ringing', v => {
+        if (v && !dismissed) startRing();
+        if (!v) { dismissed = false; clearInterval(ringInterval); }
+    });
+">
+
+@if($hasIncomingCall)
+<div x-show="ringing && !dismissed"
+     style="display:flex;align-items:center;gap:14px;background:#fef3c7;border:1px solid #fcd34d;border-radius:12px;padding:14px 18px;margin-bottom:16px;animation:nx-ring-alert .5s ease infinite alternate">
+    <div style="width:42px;height:42px;border-radius:50%;background:#f59e0b22;display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:nx-ring-alert .5s ease infinite alternate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.8" width="22" height="22">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+        </svg>
+    </div>
+    <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:#92400e">
+            {{ $incomingCalls->count() }} usuario(s) esperando un agente
+        </div>
+        <div style="font-size:12px;color:#b45309;margin-top:2px">
+            @foreach($incomingCalls->take(3) as $call)
+                <span>{{ $call->client_name ?: 'Visitante' }} ({{ $call->agent_called_at?->diffForHumans() }})</span>{{ !$loop->last ? ' · ' : '' }}
+            @endforeach
+        </div>
+    </div>
+    <button @click="dismiss()"
+            style="background:none;border:1px solid #fcd34d;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;color:#92400e;cursor:pointer;white-space:nowrap">
+        Entendido
+    </button>
+</div>
+@endif
+
+<style>
+@keyframes nx-ring-alert {
+    from { box-shadow: 0 0 0 0 rgba(245,158,11,.3); }
+    to   { box-shadow: 0 0 0 8px rgba(245,158,11,0); }
+}
+</style>
+
+</div>
+
+<div wire:poll.3000ms class="nx-inbox">
+
+    {{-- ═══════════════════════════
+         SIDEBAR — Lista de tickets
+    ════════════════════════════════ --}}
+    <aside class="nx-sidebar">
+
+        @php $liveTickets = $this->tickets(); $activeCount = $liveTickets->count(); @endphp
+        <div class="nx-sidebar__header">
+            <span class="nx-sidebar__title">Conversaciones</span>
+            @if($activeCount > 0)
+                <span style="font-size:11px;font-weight:700;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;padding:2px 8px;border-radius:99px">{{ $activeCount }}</span>
+            @endif
+        </div>
+
+        <div class="nx-sidebar__tabs">
+            <button wire:click="switchView('active')"
+                class="nx-tab {{ $inboxView === 'active' ? 'nx-tab--active' : '' }}">
+                En Vivo
+                @if($activeCount > 0)
+                    <span class="nx-tab-count">{{ $activeCount }}</span>
+                @endif
+            </button>
+            <button wire:click="switchView('history')"
+                class="nx-tab {{ $inboxView === 'history' ? 'nx-tab--active' : '' }}">
+                Historial
+            </button>
+        </div>
+
+        {{-- Buscador --}}
+        <div style="padding: 8px 12px 4px;">
+            <div style="position:relative">
+                <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none;opacity:.4" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <input
+                    type="text"
+                    wire:model.live.debounce.300ms="search"
+                    placeholder="Buscar por nombre, email, mensaje…"
+                    style="width:100%;padding:7px 10px 7px 30px;border-radius:8px;border:1px solid var(--nx-border, rgba(128,128,128,.2));background:var(--nx-bg2, rgba(128,128,128,.07));font-size:12px;color:inherit;outline:none;font-family:inherit;box-sizing:border-box;transition:border-color .15s"
+                    onfocus="this.style.borderColor='#3b82f6'"
+                    onblur="this.style.borderColor=''"
+                >
+                @if($search)
+                <button wire:click="$set('search','')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;opacity:.5;padding:2px;display:flex;color:inherit" title="Limpiar">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+                @endif
+            </div>
+        </div>
+
+        <nav class="nx-ticket-list">
+            @forelse ($liveTickets as $ticket)
+                @php
+                    $active  = $selectedTicketId === $ticket->id;
+                    $lastMsg = $ticket->messages->first();
+                    $preview = $lastMsg ? \Illuminate\Support\Str::limit($lastMsg->content, 55) : 'Sin mensajes aún';
+                    $palette = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1'];
+                    $color   = $palette[abs(crc32($ticket->client_name)) % count($palette)];
+                @endphp
+
+                <button wire:click="selectTicket({{ $ticket->id }})"
+                        wire:key="ticket-{{ $ticket->id }}"
+                        class="nx-ticket {{ $active ? 'nx-ticket--active' : '' }}">
+
+                    <div class="nx-avatar" style="background:{{ $color }}">
+                        {{ strtoupper(substr($ticket->client_name, 0, 1)) }}
+                    </div>
+
+                    <div class="nx-ticket__body">
+                        <div class="nx-ticket__top">
+                            <span class="nx-ticket__name">
+                                {{ $ticket->conversation_name ?? $ticket->client_name }}
+                            </span>
+                            <span class="nx-ticket__time">{{ $ticket->updated_at->diffForHumans(null, true, true) }}</span>
+                        </div>
+                        <div class="nx-ticket__bottom">
+                            <span class="nx-ticket__preview">{{ $preview }}</span>
+                            <span class="nx-pill nx-pill--{{ $ticket->status }}">
+                                @if($ticket->status === 'bot') Bot
+                                @elseif($ticket->status === 'human') Agente
+                                @else Cerrado
+                                @endif
+                            </span>
+                        </div>
+                    </div>
+                </button>
+            @empty
+                <div class="nx-empty-state">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="28" height="28">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/>
+                    </svg>
+                    @if($search)
+                        <p>Sin resultados para "{{ Str::limit($search, 20) }}"</p>
+                    @else
+                        <p>Sin conversaciones activas</p>
+                    @endif
+                </div>
+            @endforelse
+        </nav>
+    </aside>
+
+    {{-- ═══════════════════════════
+         PANEL PRINCIPAL — Chat
+    ════════════════════════════════ --}}
+    <main class="nx-chat">
+
+        @php $ticket = $this->selectedTicket(); @endphp
+
+        @if ($ticket)
+
+            {{-- Cabecera --}}
+            <header class="nx-chat__header">
+                @php
+                    $palette = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1'];
+                    $color   = $palette[abs(crc32($ticket->client_name)) % count($palette)];
+                @endphp
+                <div class="nx-chat__header-top">
+                    <div class="nx-avatar nx-avatar--lg" style="background:{{ $color }}">
+                        {{ strtoupper(substr($ticket->client_name, 0, 1)) }}
+                    </div>
+                    <div class="nx-chat__info">
+                        <strong>{{ $ticket->conversation_name ?? $ticket->client_name }}</strong>
+                        <span>
+                            #{{ $ticket->id }}
+                            &middot; {{ $ticket->created_at->format('d M, H:i') }}
+                            @if($ticket->status === 'human')
+                                &middot; <span class="nx-status-label nx-status-label--human">Agente activo</span>
+                            @elseif($ticket->status === 'closed')
+                                &middot; <span class="nx-status-label nx-status-label--closed">Cerrado</span>
+                            @else
+                                &middot; <span class="nx-status-label nx-status-label--bot">Bot activo</span>
+                            @endif
+                            @if($ticket->widget)
+                                &middot; <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11" style="display:inline;vertical-align:middle;margin-right:2px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>{{ $ticket->widget->name }}
+                            @endif
+                        </span>
+                        {{-- Visitor URL --}}
+                        @if($ticket->visitor_page)
+                        <span style="font-size:10.5px;color:var(--c-sub,#6b7280);display:flex;align-items:center;gap:4px;margin-top:2px">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="10" height="10"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                            <a href="{{ $ticket->visitor_page }}" target="_blank"
+                               style="color:var(--c-sub,#6b7280);text-decoration:none;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+                               title="{{ $ticket->visitor_page }}">
+                                {{ parse_url($ticket->visitor_page, PHP_URL_HOST) }}{{ parse_url($ticket->visitor_page, PHP_URL_PATH) }}
+                            </a>
+                        </span>
+                        @endif
+                        {{-- Visitor info row --}}
+                        @if($ticket->visitor_country || $ticket->visitor_device || $ticket->visitor_browser)
+                        <span style="font-size:10.5px;color:var(--c-sub,#9ca3af);margin-top:1px">
+                            @if($ticket->visitor_country) {{ $ticket->visitor_country }}{{ $ticket->visitor_city ? ', '.$ticket->visitor_city : '' }} &middot; @endif
+                            @if($ticket->visitor_device) {{ $ticket->visitor_device }} @endif
+                            @if($ticket->visitor_browser) · {{ $ticket->visitor_browser }} @endif
+                        </span>
+                        @endif
+                    </div>
+                </div>
+                <div class="nx-chat__actions">
+                    @if ($ticket->status === 'bot')
+                        <button wire:click="assignToMe" class="nx-btn nx-btn--assign">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            Asignar a mí
+                        </button>
+                    @endif
+                    @if ($ticket->status === 'human')
+                        <span class="nx-agent-tag">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            {{ $ticket->assigned_agent ?? 'Agente' }}
+                        </span>
+                        <button wire:click="handBackToBot" class="nx-btn nx-btn--ghost">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            Pasar al bot
+                        </button>
+                    @endif
+                    @if ($ticket->status !== 'closed' && ! $ticket->is_support_ticket)
+                        <button wire:click="openTicketModal" class="nx-btn nx-btn--ticket">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                            </svg>
+                            Crear ticket
+                        </button>
+                    @elseif($ticket->is_support_ticket)
+                        <span class="nx-ticket-badge-tag">#{{ $ticket->ticket_number }}</span>
+                    @endif
+                    @if ($ticket->status !== 'closed')
+                        <button wire:click="closeTicket"
+                                wire:confirm="¿Cerrar este ticket? El cliente no podrá enviar más mensajes."
+                                class="nx-btn nx-btn--danger">
+                            Cerrar
+                        </button>
+                    @endif
+                </div>
+            </header>
+
+            {{-- Mensajes --}}
+            <section class="nx-messages"
+                     x-data="{
+                         loading: true,
+                         snap() { this.$el.scrollTop = this.$el.scrollHeight }
+                     }"
+                     x-init="$nextTick(() => { loading = false; $nextTick(() => snap()) })"
+                     x-on:livewire:updated.window="$nextTick(() => snap())">
+
+                {{-- Skeleton loading --}}
+                <template x-if="loading">
+                    <div class="nx-skeleton-wrap">
+                        <div class="nx-skeleton-msg nx-skeleton-msg--bot">
+                            <div class="nx-skeleton-avatar"></div>
+                            <div class="nx-skeleton-lines">
+                                <div class="nx-skeleton-line" style="width:72%"></div>
+                                <div class="nx-skeleton-line" style="width:55%"></div>
+                            </div>
+                        </div>
+                        <div class="nx-skeleton-msg nx-skeleton-msg--user">
+                            <div class="nx-skeleton-lines" style="align-items:flex-end">
+                                <div class="nx-skeleton-line" style="width:38%"></div>
+                            </div>
+                        </div>
+                        <div class="nx-skeleton-msg nx-skeleton-msg--bot">
+                            <div class="nx-skeleton-avatar"></div>
+                            <div class="nx-skeleton-lines">
+                                <div class="nx-skeleton-line" style="width:80%"></div>
+                                <div class="nx-skeleton-line" style="width:65%"></div>
+                                <div class="nx-skeleton-line" style="width:45%"></div>
+                            </div>
+                        </div>
+                        <div class="nx-skeleton-msg nx-skeleton-msg--user">
+                            <div class="nx-skeleton-lines" style="align-items:flex-end">
+                                <div class="nx-skeleton-line" style="width:50%"></div>
+                                <div class="nx-skeleton-line" style="width:40%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                @forelse ($this->chatMessages() as $msg)
+                    @php
+                        $isUser = $msg->sender_type === 'user';
+                        $vcPalette = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1'];
+                        $vcColor   = $vcPalette[abs(crc32($ticket->client_name ?? 'V')) % 6];
+                    @endphp
+
+                    @if ($msg->sender_type === 'system')
+                        @php
+                            $sysLabel = match($msg->content) {
+                                '__AGENT_CTA__' => '📞 Cliente solicitó atención con un agente',
+                                default         => $msg->content,
+                            };
+                        @endphp
+                        <div class="nx-msg--system" wire:key="msg-{{ $msg->id }}">
+                            <span>{{ $sysLabel }}</span>
+                        </div>
+                        @continue
+                    @endif
+
+                    <div class="nx-msg {{ $isUser ? 'nx-msg--user' : 'nx-msg--' . $msg->sender_type }}" wire:key="msg-{{ $msg->id }}">
+
+                        @if ($isUser)
+                            {{-- Visitor avatar — LEFT --}}
+                            <div class="nx-msg__avatar" style="background:{{ $vcColor }}">
+                                {{ strtoupper(substr($ticket->client_name ?? 'V', 0, 1)) }}
+                            </div>
+                        @elseif ($msg->sender_type === 'agent')
+                            {{-- Agent avatar — RIGHT (via flex-direction:row-reverse in CSS) --}}
+                            @if($currentAgentAvatar)
+                                <div class="nx-msg__avatar" style="padding:0;overflow:hidden">
+                                    <img src="{{ $currentAgentAvatar }}" alt="A" style="width:100%;height:100%;object-fit:cover;border-radius:50%">
+                                </div>
+                            @else
+                                <div class="nx-msg__avatar" style="background:#334155">A</div>
+                            @endif
+                        @else
+                            {{-- Bot avatar — LEFT --}}
+                            <div class="nx-msg__avatar" style="background:#64748b">N</div>
+                        @endif
+
+                        <div class="nx-msg__content">
+                            <div class="nx-bubble">@if($msg->attachment_path)
+@php $attUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($msg->attachment_path); @endphp
+@if(str_starts_with($msg->attachment_type ?? '', 'image/'))<a href="{{ $attUrl }}" target="_blank" style="display:block;margin-bottom:{{ $msg->content ? '6px' : '0' }}"><img src="{{ $attUrl }}" alt="{{ $msg->attachment_name }}" style="max-width:220px;max-height:180px;border-radius:8px;display:block;object-fit:cover"></a>@else<a href="{{ $attUrl }}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 10px;background:rgba(255,255,255,.1);border-radius:6px;text-decoration:none;color:inherit;margin-bottom:{{ $msg->content ? '5px' : '0' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline stroke-linecap="round" stroke-linejoin="round" stroke-width="2" points="14 2 14 8 20 8"/></svg>{{ $msg->attachment_name ?? 'Archivo' }}</a>@endif
+@endif
+{!! nl2br(e(trim($msg->content))) !!}</div>
+                            <time class="nx-msg__time">
+                                @if($msg->sender_type === 'agent') Agente &middot;
+                                @elseif($msg->sender_type === 'bot') Nexova IA &middot;
+                                @endif
+                                {{ $msg->created_at->format('H:i') }}
+                            </time>
+                        </div>
+                    </div>
+                @empty
+                    <div class="nx-messages__empty">
+                        <p>Aún no hay mensajes en esta conversación.</p>
+                    </div>
+                @endforelse
+            </section>
+
+
+            {{-- Compositor --}}
+            @if ($ticket->status !== 'closed')
+                <footer class="nx-composer"
+                    x-data="{
+                        open: false,
+                        enterSend: JSON.parse(localStorage.getItem('nx_enter_send') || 'false'),
+                        canned: @js(\App\Models\CannedResponse::orderBy('shortcut')->get(['shortcut','content'])->toArray()),
+                        filtered: [],
+                        query: '',
+                        selected: 0,
+                        toggleEnterSend() {
+                            this.enterSend = !this.enterSend;
+                            localStorage.setItem('nx_enter_send', JSON.stringify(this.enterSend));
+                        },
+                        onInput(val) {
+                            const m = val.match(/\/(\w*)$/);
+                            if (m) {
+                                this.query = m[1].toLowerCase();
+                                this.filtered = this.canned.filter(r => r.shortcut.startsWith(this.query));
+                                this.open = this.filtered.length > 0;
+                                this.selected = 0;
+                            } else {
+                                this.open = false;
+                                this.filtered = [];
+                            }
+                        },
+                        pick(item) {
+                            const ta = this.$refs.ta;
+                            const val = ta.value;
+                            const newVal = val.replace(/\/\w*$/, item.content);
+                            ta.value = newVal;
+                            ta.dispatchEvent(new Event('input'));
+                            @this.set('replyContent', newVal);
+                            this.open = false;
+                        },
+                        onKeydown(e) {
+                            if (this.open) {
+                                if (e.key === 'ArrowDown') { e.preventDefault(); this.selected = Math.min(this.selected+1, this.filtered.length-1); return; }
+                                if (e.key === 'ArrowUp')   { e.preventDefault(); this.selected = Math.max(this.selected-1, 0); return; }
+                                if (e.key === 'Enter')  { e.preventDefault(); this.pick(this.filtered[this.selected]); return; }
+                                if (e.key === 'Escape') { this.open = false; return; }
+                            }
+                            if (e.key === 'Enter' && !e.shiftKey && this.enterSend && !this.open) {
+                                e.preventDefault();
+                                @this.call('sendReply');
+                            }
+                        }
+                    }">
+                    @if ($ticket->status === 'bot')
+                        <div class="nx-composer__notice">
+                            El bot está respondiendo. Al enviar un mensaje tomarás el control de la conversación.
+                        </div>
+                    @endif
+
+                    {{-- Canned response picker --}}
+                    <div x-show="open" x-cloak class="nx-canned-picker">
+                        <div class="nx-canned-header">Respuestas rápidas — ↑↓ navegar · Enter seleccionar · Esc cerrar</div>
+                        <template x-for="(item, i) in filtered" :key="item.shortcut">
+                            <button type="button" class="nx-canned-item"
+                                :class="i === selected ? 'nx-canned-item--active' : ''"
+                                @click="pick(item)"
+                                @mouseenter="selected = i">
+                                <span class="nx-canned-shortcut" x-text="'/' + item.shortcut"></span>
+                                <span class="nx-canned-preview" x-text="item.content.substring(0,80) + (item.content.length>80?'…':'')"></span>
+                            </button>
+                        </template>
+                    </div>
+
+                    {{-- Preview adjunto --}}
+                    @if ($replyAttachment)
+                        <div class="nx-composer__attachment-preview">
+                            @php $mime = $replyAttachment->getMimeType(); @endphp
+                            @if (str_starts_with($mime, 'image/'))
+                                <img src="{{ $replyAttachment->temporaryUrl() }}" alt="preview" class="nx-attachment-thumb" />
+                            @else
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            @endif
+                            <span class="nx-attachment-name">{{ $replyAttachment->getClientOriginalName() }}</span>
+                            <button wire:click="removeReplyAttachment" class="nx-attachment-remove" title="Quitar adjunto">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+                    @endif
+
+                    <div class="nx-composer__row">
+                        {{-- Adjuntar archivo --}}
+                        <label class="nx-composer__attach-btn" title="Adjuntar imagen o PDF (máx. 8 MB)">
+                            <input type="file"
+                                wire:model="replyAttachment"
+                                accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+                                style="display:none" />
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16">
+                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                            </svg>
+                        </label>
+                        <textarea
+                            x-ref="ta"
+                            wire:model="replyContent"
+                            wire:keydown.ctrl.enter="sendReply"
+                            wire:loading.attr="disabled"
+                            wire:target="sendReply"
+                            rows="1"
+                            placeholder="Escribe una respuesta… (/ para respuestas rápidas)"
+                            class="nx-composer__input"
+                            @input="onInput($event.target.value); $event.target.style.height='auto'; $event.target.style.height=Math.min($event.target.scrollHeight,120)+'px'"
+                            @keydown="onKeydown($event)"
+                            @paste="
+                                const items = $event.clipboardData?.items;
+                                if (items) {
+                                    for (const item of items) {
+                                        if (item.type.startsWith('image/')) {
+                                            $event.preventDefault();
+                                            const file = item.getAsFile();
+                                            if (!file) break;
+                                            const dt = new DataTransfer();
+                                            dt.items.add(file);
+                                            $el.closest('.nx-composer').querySelector('input[type=file]').files = dt.files;
+                                            $el.closest('.nx-composer').querySelector('input[type=file]').dispatchEvent(new Event('change'));
+                                            break;
+                                        }
+                                    }
+                                }
+                            "
+                        ></textarea>
+                        <button wire:click="sendReply"
+                                wire:loading.attr="disabled"
+                                wire:target="sendReply"
+                                class="nx-btn nx-btn--primary" title="Enviar (Ctrl+Enter)">
+                            <span wire:loading.remove wire:target="sendReply">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="15" height="15">
+                                    <path d="M3.105 2.289a.75.75 0 00-.826.95l1.903 6.557H13.5a.75.75 0 010 1.5H4.182l-1.903 6.557a.75.75 0 00.826.95 28.896 28.896 0 0015.293-7.154.75.75 0 000-1.115A28.897 28.897 0 003.105 2.289z"/>
+                                </svg>
+                            </span>
+                            <span wire:loading wire:target="sendReply">
+                                <div class="nx-send-spinner"></div>
+                            </span>
+                        </button>
+                    </div>
+                    <div class="nx-composer__footer">
+                        <span class="nx-composer__hint" x-text="enterSend ? 'Enter para enviar · Shift+Enter nueva línea' : 'Ctrl+Enter para enviar'"></span>
+                        <label class="nx-enter-toggle">
+                            <span class="nx-enter-toggle__label">Enter envía</span>
+                            <span class="nx-enter-toggle__track" :class="enterSend ? 'on' : ''" @click="toggleEnterSend()">
+                                <span class="nx-enter-toggle__thumb"></span>
+                            </span>
+                        </label>
+                    </div>
+                </footer>
+            @else
+                <footer class="nx-composer nx-composer--closed">
+                    Ticket cerrado &mdash; el cliente no puede enviar más mensajes
+                </footer>
+            @endif
+
+        @else
+            <div class="nx-chat__empty">
+                <div class="nx-chat__empty-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.5" width="28" height="28">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/>
+                    </svg>
+                </div>
+                <h3>Selecciona una conversación</h3>
+                <p>Los mensajes nuevos aparecen automáticamente</p>
+            </div>
+        @endif
+
+    </main>
+
+    {{-- ═══════════════════════════
+         PANEL DERECHO — Visitante
+    ════════════════════════════════ --}}
+    {{-- ═══════════════════════════
+         MODAL — Editar visitante
+    ════════════════════════════════ --}}
+    @if($showVisitorModal)
+    <div class="nx-modal-overlay" wire:click.self="$set('showVisitorModal', false)">
+        <div class="nx-modal">
+            <div class="nx-modal__header">
+                <span class="nx-modal__title">Editar datos del visitante</span>
+                <button wire:click="$set('showVisitorModal', false)" class="nx-modal__close" aria-label="Cerrar">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <div class="nx-modal__field">
+                    <label class="nx-modal__label">Nombre</label>
+                    <input wire:model="visitorName" type="text" placeholder="Nombre del cliente" class="nx-modal__input">
+                </div>
+                <div class="nx-modal__field">
+                    <label class="nx-modal__label">Email</label>
+                    <input wire:model="visitorEmail" type="email" placeholder="correo@ejemplo.com" class="nx-modal__input">
+                </div>
+                <div class="nx-modal__field">
+                    <label class="nx-modal__label">Teléfono / Celular</label>
+                    <input wire:model="visitorPhone" type="tel" placeholder="+52 55 1234 5678" class="nx-modal__input">
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button wire:click="$set('showVisitorModal', false)" class="nx-btn nx-btn--ghost">Cancelar</button>
+                <button wire:click="saveVisitor" class="nx-btn nx-btn--primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- ═══════════════════════════
+         MODAL — Crear ticket de soporte
+    ════════════════════════════════ --}}
+    @if($showTicketModal)
+    <div class="nx-modal-overlay" wire:click.self="$set('showTicketModal', false)">
+        <div class="nx-modal">
+            <div class="nx-modal__header">
+                <span class="nx-modal__title">Crear ticket de soporte</span>
+                <button wire:click="$set('showTicketModal', false)" class="nx-modal__close" aria-label="Cerrar">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="nx-modal__body">
+                <p class="nx-modal__desc">Se generará un número de ticket y se enviará confirmación por correo al cliente.</p>
+
+                <div class="nx-modal__field">
+                    <label class="nx-modal__label">Asunto / Motivo <span style="color:#dc2626">*</span></label>
+                    <input wire:model="ticketSubject"
+                           type="text"
+                           placeholder="Ej: Problema con el pedido #1234"
+                           class="nx-modal__input"
+                           autofocus>
+                </div>
+
+                <div class="nx-modal__field">
+                    <label class="nx-modal__label">Email del cliente</label>
+                    <input wire:model="ticketEmailForTicket"
+                           type="email"
+                           placeholder="cliente@ejemplo.com"
+                           class="nx-modal__input">
+                    <span class="nx-modal__hint">Si está vacío no se enviará correo de confirmación.</span>
+                </div>
+            </div>
+            <div class="nx-modal__footer">
+                <button wire:click="$set('showTicketModal', false)" class="nx-btn nx-btn--ghost">Cancelar</button>
+                <button wire:click="createSupportTicket" class="nx-btn nx-btn--primary">Abrir ticket</button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- ═══════════════════════════
+         MODAL — Contacto duplicado
+    ════════════════════════════════ --}}
+    @if($showDuplicateModal)
+    <div class="nx-modal-overlay">
+        <div class="nx-modal" style="max-width:420px">
+            <div class="nx-modal__header">
+                <span class="nx-modal__title">Contacto existente encontrado</span>
+            </div>
+            <div class="nx-modal__body" style="gap:14px">
+                <p style="font-size:13px;color:var(--nx-fg);line-height:1.5;margin:0">
+                    Ya existe un contacto con el email
+                    <strong>{{ $duplicateContact['email'] ?? '' }}</strong>:
+                </p>
+                <div style="background:var(--nx-surface-2);border:1px solid var(--nx-border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+                    @php
+                        $dupInitial = strtoupper(substr($duplicateContact['name'] ?? '?', 0, 1));
+                        $dupPalette = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1'];
+                        $dupColor   = $dupPalette[abs(crc32($duplicateContact['name'] ?? '')) % count($dupPalette)];
+                    @endphp
+                    <div class="nx-avatar" style="background:{{ $dupColor }};flex-shrink:0">{{ $dupInitial }}</div>
+                    <div>
+                        <div style="font-weight:600;font-size:13px">{{ $duplicateContact['name'] ?? '—' }}</div>
+                        <div style="font-size:11.5px;color:var(--nx-muted)">{{ $duplicateContact['email'] ?? '' }}</div>
+                    </div>
+                </div>
+                <p style="font-size:12.5px;color:var(--nx-muted);margin:0;line-height:1.5">
+                    ¿Es la misma persona? Puedes vincular este ticket con el contacto existente o crear uno nuevo separado.
+                </p>
+            </div>
+            <div class="nx-modal__footer" style="justify-content:space-between">
+                <button wire:click="createNewContact" class="nx-btn nx-btn--ghost" style="font-size:12px">
+                    Crear contacto nuevo
+                </button>
+                <button wire:click="linkWithDuplicate" class="nx-btn nx-btn--primary" style="font-size:12px">
+                    Vincular con este contacto
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($ticket)
+    <aside class="nx-detail">
+
+        {{-- Header del panel derecho --}}
+        <div class="nx-detail__panel-header">
+            <span>Detalles</span>
+            <button wire:click="openVisitorModal" class="nx-detail__edit-btn" title="Editar datos del visitante">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Editar
+            </button>
+        </div>
+
+        {{-- Info del cliente --}}
+        <div class="nx-detail__section">
+            <div class="nx-detail__heading">Cliente</div>
+
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">Nombre</span>
+                <span class="nx-detail__val">{{ $ticket->client_name }}</span>
+            </div>
+            @if($ticket->client_email)
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">Email</span>
+                <span class="nx-detail__val nx-detail__val--mono">{{ $ticket->client_email }}</span>
+            </div>
+            @endif
+            @if($ticket->client_phone)
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">Teléfono</span>
+                <span class="nx-detail__val nx-detail__val--mono">{{ $ticket->client_phone }}</span>
+            </div>
+            @endif
+        </div>
+
+        {{-- Info del visitante --}}
+        <div class="nx-detail__section">
+            <div class="nx-detail__heading">Visitante</div>
+
+            @if($ticket->visitor_country)
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">Ubicación</span>
+                <span class="nx-detail__val">{{ $ticket->visitor_city }}, {{ $ticket->visitor_country }}</span>
+            </div>
+            @endif
+            @if($ticket->visitor_ip)
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">IP</span>
+                <span class="nx-detail__val nx-detail__val--mono">{{ $ticket->visitor_ip }}</span>
+            </div>
+            @endif
+            @if($ticket->visitor_device)
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">Dispositivo</span>
+                <span class="nx-detail__val">{{ $ticket->visitor_device }}</span>
+            </div>
+            @endif
+            @if($ticket->visitor_os)
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">Sistema</span>
+                <span class="nx-detail__val">{{ $ticket->visitor_os }}</span>
+            </div>
+            @endif
+            @if($ticket->visitor_browser)
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">Navegador</span>
+                <span class="nx-detail__val">{{ $ticket->visitor_browser }}</span>
+            </div>
+            @endif
+            @if($ticket->visitor_page)
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">Página</span>
+                <span class="nx-detail__val nx-detail__val--mono" title="{{ $ticket->visitor_page }}">
+                    {{ \Illuminate\Support\Str::limit($ticket->visitor_page, 30) }}
+                </span>
+            </div>
+            @endif
+            @if($ticket->visitor_referrer)
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">Referrer</span>
+                <span class="nx-detail__val nx-detail__val--mono" title="{{ $ticket->visitor_referrer }}">
+                    {{ \Illuminate\Support\Str::limit($ticket->visitor_referrer, 30) }}
+                </span>
+            </div>
+            @endif
+        </div>
+
+        {{-- Calificación --}}
+        @if($ticket->status === 'closed')
+        <div class="nx-detail__section">
+            <div class="nx-detail__heading">Calificación</div>
+            @if($ticket->rating)
+                <div class="nx-stars">
+                    @for($i = 1; $i <= 5; $i++)
+                        <span class="{{ $i <= $ticket->rating ? 'nx-star nx-star--on' : 'nx-star' }}">★</span>
+                    @endfor
+                    <span class="nx-detail__key" style="margin-left:4px">{{ $ticket->rating }}/5</span>
+                </div>
+                @if($ticket->rating_comment)
+                    <div class="nx-rating-comment">"{{ $ticket->rating_comment }}"</div>
+                @endif
+            @else
+                <div class="nx-detail__key" style="font-size:11px">Sin calificación</div>
+            @endif
+        </div>
+        @endif
+
+        {{-- Conversación / Ticket info --}}
+        <div class="nx-detail__section">
+            @if($ticket->is_support_ticket && $ticket->ticket_number)
+                <div class="nx-detail__heading" style="display:flex;align-items:center;gap:6px">
+                    Ticket
+                    <span style="font-size:11px;font-weight:700;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;padding:1px 7px;border-radius:5px">{{ $ticket->ticket_number }}</span>
+                </div>
+                @if($ticket->ticket_subject)
+                <div class="nx-detail__row">
+                    <span class="nx-detail__key">Asunto</span>
+                    <span class="nx-detail__val">{{ $ticket->ticket_subject }}</span>
+                </div>
+                @endif
+            @else
+                <div class="nx-detail__heading">Conversación</div>
+            @endif
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">Canal</span>
+                <span class="nx-detail__val">{{ ucfirst($ticket->platform) }}</span>
+            </div>
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">Inicio</span>
+                <span class="nx-detail__val">{{ $ticket->created_at->format('d M, H:i') }}</span>
+            </div>
+        </div>
+
+        {{-- Gestión del ticket (prioridad, categoría, notas) --}}
+        @if($ticket->status !== 'closed')
+        <div class="nx-detail__section">
+            <div class="nx-detail__heading">Gestión</div>
+
+            <div class="nx-detail__field">
+                <label class="nx-detail__key">Prioridad</label>
+                <select wire:model.live="ticketPriority" wire:change="saveTicketMeta" class="nx-detail__select">
+                    <option value="low">Baja</option>
+                    <option value="normal">Normal</option>
+                    <option value="high">Alta</option>
+                    <option value="urgent">Urgente</option>
+                </select>
+            </div>
+
+            <div class="nx-detail__field">
+                <label class="nx-detail__key">Categoría</label>
+                <select wire:model.live="ticketCategory" wire:change="saveTicketMeta" class="nx-detail__select">
+                    <option value="general">General</option>
+                    <option value="sales">Ventas</option>
+                    <option value="support">Soporte técnico</option>
+                    <option value="billing">Facturación</option>
+                    <option value="other">Otro</option>
+                </select>
+            </div>
+
+            <div class="nx-detail__field">
+                <label class="nx-detail__key">
+                    Notas internas
+                    <span style="font-weight:400;opacity:.6;text-transform:none;letter-spacing:0"> · privado</span>
+                </label>
+                <textarea wire:model="internalNotes"
+                          wire:blur="saveTicketMeta"
+                          rows="2"
+                          placeholder="Contexto privado del cliente…"
+                          class="nx-detail__textarea"></textarea>
+            </div>
+        </div>
+        @else
+        <div class="nx-detail__section">
+            <div class="nx-detail__heading">Gestión</div>
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">Prioridad</span>
+                <span class="nx-pill-sm nx-pill-sm--{{ $ticket->priority ?? 'normal' }}">
+                    {{ ucfirst($ticket->priority ?? 'Normal') }}
+                </span>
+            </div>
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">Categoría</span>
+                <span class="nx-detail__val">{{ ucfirst($ticket->category ?? 'General') }}</span>
+            </div>
+        </div>
+        @endif
+
+    </aside>
+    @endif
+</div>
+
+<style>
+/* ── Reset completo de Filament — inbox ocupa TODO el espacio ── */
+.fi-page-header, .fi-breadcrumbs { display: none !important; }
+
+/* Toda la cadena de wrappers Filament sin scroll ni padding */
+.fi-main, .fi-page, .fi-page-header-main-ctn,
+.fi-page-main, .fi-page-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+}
+
+/* ── Variables: hereda la paleta global --c-* del theme.css ── */
+.nx-inbox {
+    --nx-bg:       var(--c-bg,       #f5f6f8);
+    --nx-surface:  var(--c-surface,  #ffffff);
+    --nx-surface-2:var(--c-surf2,    #f0f2f5);
+    --nx-border:   var(--c-border,   #e3e6ea);
+    --nx-text:     var(--c-text,     #111827);
+    --nx-muted:    var(--c-sub,      #6b7280);
+    --nx-accent:   #3b82f6;
+    --nx-accent-h: #2563eb;
+    --nx-accent-bg:rgba(59,130,246,.08);
+    --nx-accent-bd:rgba(59,130,246,.2);
+    --nx-font:     'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ── Layout raíz — flush, sin border, sin border-radius ── */
+.nx-inbox {
+    display: flex;
+    flex: 1;
+    height: calc(100vh - 64px);
+    max-height: calc(100vh - 64px);
+    min-height: 0;
+    background: var(--nx-bg);
+    overflow: hidden;
+    font-family: var(--nx-font);
+}
+
+/* ─── SIDEBAR ─── */
+.nx-sidebar {
+    width: 272px;
+    min-width: 272px;
+    display: flex;
+    flex-direction: column;
+    background: var(--nx-surface);
+    border-right: 1px solid var(--nx-border);
+}
+
+.nx-sidebar__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    height: 56px;          /* mismo alto que el topbar de Filament */
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--nx-border);
+    background: var(--nx-surface);
+}
+
+.nx-sidebar__tabs {
+    display: flex;
+    border-bottom: 1px solid var(--nx-border);
+    background: var(--nx-surface);
+    flex-shrink: 0;
+}
+.nx-tab {
+    flex: 1;
+    padding: 9px 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--nx-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color .12s, border-color .12s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: var(--nx-font);
+}
+.nx-tab:hover { color: var(--nx-text); }
+.nx-tab--active {
+    color: var(--nx-accent);
+    border-bottom-color: var(--nx-accent);
+    font-weight: 600;
+}
+.nx-tab-count {
+    font-size: 10px;
+    font-weight: 700;
+    background: rgba(59,130,246,.1);
+    color: #2563eb;
+    border: 1px solid rgba(59,130,246,.25);
+    padding: 1px 5px;
+    border-radius: 99px;
+}
+
+.nx-sidebar__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--nx-text);
+    letter-spacing: -.01em;
+}
+
+.nx-status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 2px rgba(34,197,94,.2);
+    animation: nx-pulse 2.5s ease-in-out infinite;
+}
+@keyframes nx-pulse {
+    0%,100% { box-shadow: 0 0 0 2px rgba(34,197,94,.2); }
+    50%      { box-shadow: 0 0 0 5px rgba(34,197,94,.04); }
+}
+
+.nx-badge {
+    font-size: 10px;
+    font-weight: 700;
+    color: #1e293b;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 1px 7px;
+    border-radius: 99px;
+}
+
+/* Lista de tickets */
+.nx-ticket-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 6px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--nx-border) transparent;
+}
+
+.nx-ticket {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background .1s, border-color .1s;
+    margin-bottom: 1px;
+    color: inherit;
+}
+.nx-ticket:hover { background: var(--nx-surface-2); }
+.nx-ticket--active {
+    background: rgba(59,130,246,.07);
+    border-color: rgba(59,130,246,.25);
+}
+:is(html.dark, [data-theme="dark"]) .nx-ticket--active {
+    background: rgba(59,130,246,.12);
+    border-color: rgba(59,130,246,.3);
+}
+
+.nx-ticket__body { flex: 1; min-width: 0; }
+.nx-ticket__top  {
+    display: flex; justify-content: space-between;
+    align-items: baseline; gap: 4px; margin-bottom: 3px;
+}
+.nx-ticket__name {
+    font-size: 13px; font-weight: 500;
+    color: var(--nx-text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.nx-ticket__time {
+    font-size: 10px; color: var(--nx-muted); white-space: nowrap; flex-shrink: 0;
+}
+.nx-ticket__bottom {
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 6px;
+}
+.nx-ticket__preview {
+    font-size: 11.5px; color: var(--nx-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;
+}
+
+/* Pills */
+.nx-pill {
+    font-size: 9px; font-weight: 700; letter-spacing: .05em;
+    padding: 2px 6px; border-radius: 99px;
+    flex-shrink: 0; text-transform: uppercase;
+}
+.nx-pill--bot    { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+.nx-pill--human  { background: rgba(59,130,246,.08); color: #2563eb; border: 1px solid rgba(59,130,246,.2); }
+.nx-pill--closed { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; }
+
+:is(html.dark, [data-theme="dark"]) .nx-pill--bot   { color: #94a3b8; }
+:is(html.dark, [data-theme="dark"]) .nx-pill--human { color: #93c5fd; }
+
+/* Empty state (sidebar) */
+.nx-empty-state {
+    padding: 48px 20px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    color: var(--nx-muted);
+}
+.nx-empty-state p { font-size: 12px; margin: 0; }
+
+/* ─── AVATARS ─── */
+.nx-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.nx-avatar--lg { width: 36px; height: 36px; font-size: 14px; }
+
+/* ─── CHAT PANEL ─── */
+.nx-chat { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--nx-bg); }
+
+.nx-chat__header {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 10px 16px;
+    min-height: 56px;     /* alinear con el header del sidebar */
+    justify-content: center;
+    border-bottom: 1px solid var(--nx-border);
+    background: var(--nx-surface);
+    flex-shrink: 0;
+}
+.nx-chat__header-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+.nx-chat__info { flex: 1; min-width: 0; }
+.nx-chat__info strong {
+    display: block; font-size: 13.5px; font-weight: 600; color: var(--nx-text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 2px;
+}
+.nx-chat__info span {
+    font-size: 11px; color: var(--nx-muted); display: block;
+    overflow: hidden; text-overflow: ellipsis; margin-top: 1px;
+    line-height: 1.4;
+}
+.nx-chat__actions {
+    display: flex; gap: 6px; align-items: center;
+    padding-top: 8px; flex-wrap: wrap;
+}
+
+.nx-status-label { font-size: 11px; font-weight: 500; }
+.nx-status-label--human  { color: #2563eb; }
+.nx-status-label--bot    { color: #64748b; }
+.nx-status-label--closed { color: var(--nx-muted); }
+:is(html.dark, [data-theme="dark"]) .nx-status-label--human { color: #93c5fd; }
+:is(html.dark, [data-theme="dark"]) .nx-status-label--bot   { color: #94a3b8; }
+
+/* ─── MENSAJES ─── */
+.nx-messages {
+    flex: 1; overflow-y: auto;
+    padding: 16px 20px 12px;
+    display: flex; flex-direction: column; gap: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--nx-border) transparent;
+}
+/* Agrupar mensajes del mismo sender con menos gap */
+.nx-msg + .nx-msg { margin-top: 2px; }
+.nx-msg--user + .nx-msg--bot,
+.nx-msg--bot + .nx-msg--user,
+.nx-msg--agent + .nx-msg--user,
+.nx-msg--user + .nx-msg--agent { margin-top: 10px; }
+
+.nx-messages__empty {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+}
+.nx-messages__empty p { font-size: 13px; color: var(--nx-muted); }
+
+/* ─── SKELETON LOADING ─── */
+@keyframes nx-shimmer {
+    0%   { background-position: -400px 0 }
+    100% { background-position: 400px 0 }
+}
+.nx-skeleton-wrap { display: flex; flex-direction: column; gap: 14px; padding: 4px 0; }
+.nx-skeleton-msg { display: flex; align-items: flex-end; gap: 8px; }
+.nx-skeleton-msg--user { justify-content: flex-end; }
+.nx-skeleton-avatar {
+    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+    background: var(--nx-surface-2);
+    background: linear-gradient(90deg, var(--nx-surface-2) 25%, var(--nx-border) 50%, var(--nx-surface-2) 75%);
+    background-size: 800px 100%;
+    animation: nx-shimmer 1.4s infinite linear;
+}
+.nx-skeleton-lines { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.nx-skeleton-line {
+    height: 14px; border-radius: 99px;
+    background: var(--nx-surface-2);
+    background: linear-gradient(90deg, var(--nx-surface-2) 25%, var(--nx-border) 50%, var(--nx-surface-2) 75%);
+    background-size: 800px 100%;
+    animation: nx-shimmer 1.4s infinite linear;
+}
+.nx-skeleton-line:nth-child(2) { animation-delay: .1s; }
+.nx-skeleton-line:nth-child(3) { animation-delay: .2s; }
+
+.nx-msg { display: flex; align-items: flex-end; gap: 8px; }
+
+.nx-msg__avatar {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
+    margin-bottom: 2px;
+}
+
+.nx-msg__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    max-width: 68%;
+    min-width: 0;
+}
+/* Visitor (user) messages — LEFT */
+.nx-msg--user .nx-msg__content {
+    align-items: flex-start;
+}
+/* Agent messages — RIGHT (row-reverse flips avatar & content) */
+.nx-msg--agent {
+    flex-direction: row-reverse;
+}
+.nx-msg--agent .nx-msg__content {
+    align-items: flex-end;
+}
+
+.nx-bubble {
+    padding: 9px 14px;
+    border-radius: 18px;
+    font-size: 13.5px; line-height: 1.55;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+    max-width: 100%;
+}
+/* Burbujas — modo claro */
+/* Visitor: neutral gray, left tail */
+.nx-msg--user  .nx-bubble {
+    background: #f1f5f9;
+    color: #1e293b;
+    border: 1px solid #e2e8f0;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+/* Bot: subtle surface, left tail */
+.nx-msg--bot   .nx-bubble {
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    border: 1px solid var(--nx-border);
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+}
+/* Agent: dark slate, right tail */
+.nx-msg--agent .nx-bubble {
+    background: #1e293b;
+    color: #f8fafc;
+    border: none;
+    border-radius: 18px;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.18);
+}
+
+/* Burbujas — modo oscuro */
+:is(html.dark, [data-theme="dark"]) .nx-msg--user  .nx-bubble { background: #1e293b; color: #e2e8f0; border-color: #334155; }
+:is(html.dark, [data-theme="dark"]) .nx-msg--bot   .nx-bubble { background: var(--nx-surface-2); border-color: var(--nx-border); }
+:is(html.dark, [data-theme="dark"]) .nx-msg--agent .nx-bubble { background: #334155; color: #f1f5f9; }
+
+.nx-msg__time { display: block; font-size: 10px; color: var(--nx-muted); padding: 2px 4px 0; }
+.nx-msg--agent .nx-msg__time { text-align: right; }
+
+/* Mensaje de sistema */
+.nx-msg--system {
+    display: flex; align-items: center; gap: 10px;
+    text-align: center; font-size: 11px; color: var(--nx-muted);
+    padding: 2px 0;
+}
+.nx-msg--system::before,
+.nx-msg--system::after {
+    content: ''; flex: 1; height: 1px; background: var(--nx-border);
+}
+.nx-msg--system span { white-space: nowrap; flex-shrink: 0; }
+
+/* ─── PANEL DE METADATOS ─── */
+.nx-meta-panel {
+    padding: 8px 18px;
+    border-top: 1px solid var(--nx-border);
+    background: var(--nx-surface);
+    flex-shrink: 0;
+}
+.nx-meta-row {
+    display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;
+}
+.nx-meta-field { display: flex; flex-direction: column; gap: 3px; }
+.nx-meta-field--wide { flex: 1; min-width: 200px; }
+.nx-meta-label {
+    font-size: 10px; font-weight: 600; color: var(--nx-muted);
+    text-transform: uppercase; letter-spacing: .05em;
+    display: flex; align-items: center; gap: 6px;
+}
+.nx-meta-private { font-size: 10px; font-weight: 400; color: var(--nx-muted); text-transform: none; letter-spacing: 0; opacity: .7; }
+.nx-meta-select,
+.nx-meta-textarea {
+    background: var(--nx-bg);
+    color: var(--nx-text);
+    border: 1px solid var(--nx-border);
+    border-radius: 7px;
+    padding: 5px 9px;
+    font-size: 12px;
+    outline: none;
+    font-family: var(--nx-font);
+    transition: border-color .15s;
+}
+.nx-meta-select { cursor: pointer; }
+.nx-meta-select:focus,
+.nx-meta-textarea:focus { border-color: var(--nx-accent); }
+.nx-meta-textarea { resize: none; width: 100%; line-height: 1.5; }
+
+/* ─── COMPOSITOR ─── */
+.nx-composer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--nx-border);
+    background: var(--nx-surface);
+    flex-shrink: 0;
+}
+.nx-composer--closed {
+    text-align: center; font-size: 12px; color: var(--nx-muted);
+}
+
+.nx-composer__notice {
+    font-size: 11px; color: #2563eb;
+    background: rgba(59,130,246,.06);
+    border: 1px solid rgba(59,130,246,.15);
+    border-radius: 7px;
+    padding: 6px 12px;
+    margin-bottom: 9px;
+}
+:is(html.dark, [data-theme="dark"]) .nx-composer__notice { color: #93c5fd; }
+
+.nx-composer__row { display: flex; gap: 8px; align-items: flex-end; }
+.nx-composer__input {
+    flex: 1;
+    background: var(--nx-bg);
+    color: var(--nx-text);
+    border: 1px solid var(--nx-border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: var(--nx-font);
+    line-height: 1.5; resize: none; outline: none;
+    min-height: 38px; max-height: 120px;
+    transition: border-color .15s;
+}
+.nx-composer__input:focus { border-color: var(--nx-accent); }
+.nx-composer__input::placeholder { color: var(--nx-muted); }
+.nx-composer__footer { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; }
+.nx-composer__hint { font-size: 10px; color: var(--nx-muted); }
+.nx-enter-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+.nx-enter-toggle__label { font-size: 10px; color: var(--nx-muted); }
+.nx-enter-toggle__track { width: 28px; height: 16px; border-radius: 99px; background: var(--nx-border, #e3e6ea); position: relative; cursor: pointer; transition: background .15s; flex-shrink: 0; }
+.nx-enter-toggle__track.on { background: #3b82f6; }
+.nx-enter-toggle__thumb { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.nx-enter-toggle__track.on .nx-enter-toggle__thumb { transform: translateX(12px); }
+
+/* ── Send button loading ── */
+@keyframes nx-spin { to { transform: rotate(360deg); } }
+.nx-send-spinner {
+    width: 15px; height: 15px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    animation: nx-spin .65s linear infinite;
+    display: flex;
+}
+.nx-composer__input:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── Adjuntar archivo en compositor ── */
+.nx-composer__attach-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 7px; flex-shrink: 0;
+    color: var(--nx-muted); cursor: pointer; transition: color .15s, background .15s;
+    margin-bottom: 1px;
+}
+.nx-composer__attach-btn:hover { color: var(--nx-accent); background: color-mix(in srgb, var(--nx-accent) 10%, transparent); }
+
+.nx-composer__attachment-preview {
+    display: flex; align-items: center; gap: 8px;
+    background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;
+    padding: 6px 10px; margin-bottom: 8px; font-size: 12px; color: #15803d;
+}
+:is(html.dark, [data-theme="dark"]) .nx-composer__attachment-preview {
+    background: #052e16; border-color: #166534; color: #86efac;
+}
+.nx-attachment-thumb { width: 36px; height: 36px; object-fit: cover; border-radius: 5px; flex-shrink: 0; }
+.nx-attachment-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nx-attachment-remove {
+    background: none; border: none; cursor: pointer; color: #6b7280; padding: 2px;
+    display: flex; align-items: center; flex-shrink: 0; border-radius: 4px;
+}
+.nx-attachment-remove:hover { background: #fef2f2; color: #dc2626; }
+
+/* ── Canned responses picker ── */
+.nx-canned-picker {
+    background: var(--c-surface, #fff);
+    border: 1px solid var(--c-border, #e3e6ea);
+    border-radius: 10px 10px 0 0;
+    box-shadow: 0 -4px 16px rgba(0,0,0,.10);
+    overflow: hidden;
+    max-height: 220px;
+    overflow-y: auto;
+    border-bottom: none;
+}
+.nx-canned-header {
+    font-size: 10px;
+    color: var(--nx-muted, #9ca3af);
+    padding: 6px 12px;
+    background: var(--c-bg, #f5f6f8);
+    border-bottom: 1px solid var(--c-border, #e3e6ea);
+    letter-spacing: .03em;
+}
+.nx-canned-item {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 12px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    transition: background .1s;
+    font-family: inherit;
+}
+.nx-canned-item:hover,
+.nx-canned-item--active {
+    background: rgba(59,130,246,.07);
+}
+.nx-canned-shortcut {
+    font-size: 12px;
+    font-weight: 700;
+    color: #2563eb;
+    font-family: monospace;
+    flex-shrink: 0;
+    min-width: 80px;
+}
+.nx-canned-preview {
+    font-size: 12px;
+    color: var(--nx-muted, #6b7280);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ─── EMPTY CHAT STATE ─── */
+.nx-chat__empty {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 10px; text-align: center; color: var(--nx-muted);
+}
+.nx-chat__empty-icon {
+    width: 56px; height: 56px; border-radius: 14px;
+    background: var(--nx-surface-2);
+    border: 1px solid var(--nx-border);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 4px;
+}
+.nx-chat__empty h3 { font-size: 14px; font-weight: 600; color: var(--nx-text); margin: 0; }
+.nx-chat__empty p  { font-size: 12px; color: var(--nx-muted); margin: 0; }
+
+/* ─── BOTONES ─── */
+.nx-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 11px; border-radius: 7px;
+    font-size: 12px; font-weight: 500;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background .1s, color .1s;
+    font-family: var(--nx-font);
+    line-height: 1;
+}
+
+.nx-btn--primary {
+    background: #1e293b; color: #f8fafc; border-color: #1e293b;
+    padding: 8px 12px; border-radius: 9px;
+}
+.nx-btn--primary:hover { background: #0f172a; border-color: #0f172a; }
+:is(html.dark, [data-theme="dark"]) .nx-btn--primary { background: #f1f5f9; color: #0f172a; border-color: #f1f5f9; }
+:is(html.dark, [data-theme="dark"]) .nx-btn--primary:hover { background: #e2e8f0; border-color: #e2e8f0; }
+
+.nx-btn--ghost {
+    background: transparent;
+    color: var(--nx-muted);
+    border-color: var(--nx-border);
+}
+.nx-btn--ghost:hover { background: var(--nx-surface-2); color: var(--nx-text); }
+
+.nx-btn--danger {
+    background: transparent; color: #dc2626;
+    border-color: rgba(220,38,38,.2);
+}
+.nx-btn--danger:hover { background: rgba(220,38,38,.06); }
+:is(html.dark, [data-theme="dark"]) .nx-btn--danger { color: #f87171; }
+
+.nx-btn--assign {
+    background: rgba(59,130,246,.08);
+    color: #2563eb;
+    border-color: rgba(59,130,246,.2);
+}
+.nx-btn--assign:hover { background: rgba(59,130,246,.14); }
+:is(html.dark, [data-theme="dark"]) .nx-btn--assign { color: #93c5fd; }
+
+.nx-agent-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 500; color: #475569;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 4px 10px; border-radius: 99px;
+}
+:is(html.dark, [data-theme="dark"]) .nx-agent-tag { color: #94a3b8; }
+
+/* ─── PANEL DERECHO — Detalle del visitante ─── */
+.nx-detail {
+    width: 230px;
+    min-width: 230px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    background: var(--nx-surface);
+    border-left: 1px solid var(--nx-border);
+    scrollbar-width: thin;
+    scrollbar-color: var(--nx-border) transparent;
+}
+
+.nx-detail__panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--nx-text);
+    border-bottom: 1px solid var(--nx-border);
+    flex-shrink: 0;
+    background: var(--nx-surface);
+}
+.nx-detail__edit-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 500; color: var(--nx-muted);
+    background: none; border: 1px solid var(--nx-border); border-radius: 6px;
+    padding: 4px 9px; cursor: pointer; font-family: var(--nx-font);
+    transition: background .1s, color .1s;
+}
+.nx-detail__edit-btn:hover { background: var(--nx-surface-2); color: var(--nx-text); }
+
+.nx-detail__section {
+    padding: 14px 14px 10px;
+    border-bottom: 1px solid var(--nx-border);
+}
+.nx-detail__section:last-child { border-bottom: none; }
+
+.nx-detail__heading {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--nx-muted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    margin-bottom: 10px;
+}
+
+.nx-detail__row {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin-bottom: 8px;
+}
+.nx-detail__key {
+    font-size: 10px;
+    color: var(--nx-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.nx-detail__val {
+    font-size: 12px;
+    color: var(--nx-text);
+    font-weight: 400;
+    word-break: break-all;
+}
+.nx-detail__val--mono { font-family: ui-monospace, monospace; font-size: 11px; }
+
+.nx-detail__field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.nx-detail__field:last-child { margin-bottom: 0; }
+.nx-detail__select,
+.nx-detail__textarea {
+    background: var(--nx-bg);
+    color: var(--nx-text);
+    border: 1px solid var(--nx-border);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 12px;
+    outline: none;
+    font-family: var(--nx-font);
+    transition: border-color .15s;
+    width: 100%;
+    box-sizing: border-box;
+}
+.nx-detail__select { cursor: pointer; }
+.nx-detail__select:focus,
+.nx-detail__textarea:focus { border-color: var(--nx-accent); }
+.nx-detail__textarea { resize: none; line-height: 1.5; }
+
+/* Estrellas de calificación */
+.nx-stars { display: flex; align-items: center; gap: 2px; margin-bottom: 6px; }
+.nx-star { font-size: 16px; color: var(--nx-border); }
+.nx-star--on { color: #f59e0b; }
+.nx-rating-comment {
+    font-size: 11.5px;
+    color: var(--nx-muted);
+    font-style: italic;
+    line-height: 1.5;
+    margin-top: 4px;
+}
+
+/* ─── BOTÓN TICKET ─── */
+.nx-btn--ticket {
+    background: #f8fafc;
+    color: #475569;
+    border-color: #e2e8f0;
+}
+.nx-btn--ticket:hover { background: #f1f5f9; color: #1e293b; }
+
+.nx-ticket-badge-tag {
+    display: inline-flex; align-items: center;
+    font-size: 11px; font-weight: 700;
+    color: #475569;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 4px 10px; border-radius: 99px;
+    font-family: ui-monospace, monospace;
+}
+
+/* ─── MODAL CREAR TICKET ─── */
+.nx-modal-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,.35);
+    display: flex; align-items: center; justify-content: center;
+}
+.nx-modal {
+    background: var(--nx-surface);
+    border: 1px solid var(--nx-border);
+    border-radius: 14px;
+    width: 100%; max-width: 420px;
+    margin: 16px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+}
+.nx-modal__header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--nx-border);
+}
+.nx-modal__title {
+    font-size: 14px; font-weight: 600; color: var(--nx-text);
+}
+.nx-modal__close {
+    background: none; border: none; cursor: pointer;
+    color: var(--nx-muted); padding: 2px;
+    display: flex; align-items: center;
+    border-radius: 5px;
+    transition: background .1s, color .1s;
+}
+.nx-modal__close:hover { background: var(--nx-surface-2); color: var(--nx-text); }
+.nx-modal__body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+.nx-modal__desc { font-size: 12px; color: var(--nx-muted); margin: 0; line-height: 1.55; }
+.nx-modal__field { display: flex; flex-direction: column; gap: 5px; }
+.nx-modal__label {
+    font-size: 10px; font-weight: 700; color: var(--nx-muted);
+    text-transform: uppercase; letter-spacing: .05em;
+}
+.nx-modal__input {
+    background: var(--nx-bg);
+    color: var(--nx-text);
+    border: 1px solid var(--nx-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: var(--nx-font);
+    outline: none;
+    transition: border-color .15s;
+    width: 100%; box-sizing: border-box;
+}
+.nx-modal__input:focus { border-color: var(--nx-accent); }
+.nx-modal__input::placeholder { color: var(--nx-muted); }
+.nx-modal__hint { font-size: 10.5px; color: var(--nx-muted); }
+.nx-modal__footer {
+    display: flex; justify-content: flex-end; gap: 8px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--nx-border);
+    background: var(--nx-surface-2);
+}
+
+/* Pills pequeñas para prioridad */
+.nx-pill-sm {
+    font-size: 9px; font-weight: 700; letter-spacing:.04em;
+    padding: 2px 7px; border-radius: 99px; text-transform: uppercase;
+    display: inline-block;
+}
+.nx-pill-sm--low    { background: rgba(5,150,105,.08); color:#059669; border:1px solid rgba(5,150,105,.15); }
+.nx-pill-sm--normal { background: rgba(14,165,233,.08); color:#0284c7; border:1px solid rgba(14,165,233,.15); }
+.nx-pill-sm--high   { background: rgba(245,158,11,.08); color:#d97706; border:1px solid rgba(245,158,11,.15); }
+.nx-pill-sm--urgent { background: rgba(220,38,38,.08);  color:#dc2626; border:1px solid rgba(220,38,38,.15); }
+
+/* ─── RESPONSIVE ─── */
+/* <1100px: ocultar panel derecho de detalles */
+@media (max-width: 1100px) {
+    .nx-detail { display: none; }
+}
+/* <700px: sidebar reducida */
+@media (max-width: 700px) {
+    .nx-sidebar { width: 220px; min-width: 220px; }
+}
+/* <560px: sidebar ultra-compacta (solo avatares) */
+@media (max-width: 560px) {
+    .nx-sidebar { width: 60px; min-width: 60px; }
+    .nx-sidebar__title,
+    .nx-sidebar__tabs,
+    .nx-ticket__body,
+    .nx-ticket-list > div { display: none; }
+    .nx-ticket { justify-content: center; padding: 8px 0; }
+    .nx-ticket-list { padding: 4px 8px; }
+    .nx-sidebar__header { justify-content: center; padding: 0 8px; }
+    /* Buscador oculto en móvil */
+    .nx-sidebar > div:nth-child(3) { display: none; }
+}
+/* <420px: ocultar sidebar completamente si hay ticket activo */
+@media (max-width: 420px) {
+    .nx-sidebar { display: none; }
+    .nx-messages { padding: 12px 12px 8px; }
+    .nx-chat__header { padding: 8px 12px; }
+    .nx-composer { padding: 8px 12px; }
+}
+
+</style>
+
+</x-filament-panels::page>
