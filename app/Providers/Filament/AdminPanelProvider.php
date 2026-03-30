@@ -81,13 +81,27 @@ class AdminPanelProvider extends PanelProvider
 
                     // ── Impersonation banner ──────────────────────────────────
                     if (session()->has('superadmin_impersonating')) {
-                        $adminId = session('superadmin_impersonating');
                         return <<<HTML
-<div style="background:#1e293b;border-bottom:2px solid #22c55e;padding:10px 20px;font-size:13px;color:#f1f5f9;display:flex;align-items:center;gap:10px">
-    <svg fill="none" stroke="#22c55e" viewBox="0 0 24 24" width="15" height="15" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-    <span>Modo impersonación activo — estás viendo el panel como <strong>{$user?->name}</strong></span>
-    <a href="/nx-hq/stop-impersonate" style="margin-left:auto;background:#22c55e;color:#0d1117;padding:5px 14px;border-radius:6px;font-weight:700;font-size:12px;text-decoration:none">
-        ← Volver a Super Admin
+<div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;
+            display:flex;align-items:center;gap:10px;
+            background:#0f172a;border:1px solid rgba(34,197,94,.4);
+            border-radius:99px;padding:8px 8px 8px 16px;
+            box-shadow:0 8px 32px rgba(0,0,0,.25),0 0 0 1px rgba(34,197,94,.15);
+            font-family:Inter,system-ui,sans-serif;
+            white-space:nowrap;pointer-events:all">
+    <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0;box-shadow:0 0 6px #22c55e"></span>
+    <span style="font-size:12.5px;font-weight:500;color:#cbd5e1">
+        Impersonando como <strong style="color:#f1f5f9">{$user?->name}</strong>
+    </span>
+    <a href="/nx-hq/stop-impersonate"
+       style="display:inline-flex;align-items:center;gap:5px;
+              background:#22c55e;color:#0d1117;
+              padding:5px 14px;border-radius:99px;
+              font-size:12px;font-weight:700;text-decoration:none;
+              transition:background .15s;margin-left:4px"
+       onmouseover="this.style.background='#16a34a'" onmouseout="this.style.background='#22c55e'">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Salir
     </a>
 </div>
 HTML;
