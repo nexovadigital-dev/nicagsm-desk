@@ -44,6 +44,8 @@ class MailConfigPage extends Page
         $this->smtpEncryption  = $s->smtp_encryption  ?? 'tls';
         $this->smtpFromAddress = $s->smtp_from_address ?? '';
         $this->smtpFromName    = $s->smtp_from_name   ?? 'Nexova Desk';
+        // Pre-fill test email with the logged-in super-admin's email
+        $this->testEmailTo     = auth()->user()?->email ?? '';
     }
 
     public function save(): void

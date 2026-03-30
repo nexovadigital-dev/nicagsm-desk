@@ -15,11 +15,12 @@ class Organization extends Model
         'ai_groq_key', 'ai_gemini_key', 'ai_use_own_keys',
         'max_messages_per_session', 'max_bot_sessions_per_day',
         'bot_sessions_today', 'bot_messages_this_month', 'bot_messages_month_reset', 'usage_date',
-        'plan', 'trial_ends_at', 'is_active', 'accent_color', 'logo_path',
+        'plan', 'trial_ends_at', 'is_active', 'is_partner', 'accent_color', 'logo_path',
     ];
 
     protected $casts = [
         'is_active'               => 'boolean',
+        'is_partner'              => 'boolean',
         'ai_use_own_keys'         => 'boolean',
         'trial_ends_at'           => 'datetime',
         'usage_date'              => 'date',
@@ -71,13 +72,21 @@ class Organization extends Model
         return $this->plan === 'trial' && $this->trial_ends_at?->isFuture();
     }
 
+    public function isPartner(): bool
+    {
+        return (bool) $this->is_partner;
+    }
+
     public function isAiBlocked(): bool
     {
+        // Partner orgs always have AI enabled
+        if ($this->is_partner) return false;
         return $this->plan === 'free' || $this->plan === 'trial';
     }
 
     public function hasMonthlyBotQuota(): bool
     {
+        if ($this->is_partner) return true; // Partner = unlimited
         $plan = \App\Models\Plan::where('slug', $this->plan)->first();
         if (! $plan || $plan->max_bot_messages_monthly === 0) {
             return true; // unlimited
@@ -133,6 +142,7 @@ class Organization extends Model
      */
     public function canStartBotSession(): bool
     {
+        if ($this->is_partner) return true; // Partner = unlimited sessions
         $today = now()->toDateString();
 
         // Reset counter if it's a new day

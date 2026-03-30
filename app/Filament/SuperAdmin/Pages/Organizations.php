@@ -163,6 +163,61 @@ class Organizations extends Page
         return ChatWidget::where('organization_id', $this->widgetsOrgId)->get();
     }
 
+    public function assignPartner(int $orgId): void
+    {
+        $org  = Organization::find($orgId);
+        $plan = Plan::where('slug', 'partner')->first();
+        if (! $org || ! $plan) return;
+
+        // Expire current active subscription
+        Subscription::where('organization_id', $orgId)
+            ->where('status', 'active')
+            ->update(['status' => 'expired']);
+
+        $sub = Subscription::create([
+            'organization_id' => $orgId,
+            'plan_id'         => $plan->id,
+            'status'          => 'active',
+            'amount_usd'      => 0,
+            'starts_at'       => now(),
+            'ends_at'         => now()->addYears(10), // effectively no expiry
+            'activated_by'    => auth()->id(),
+            'notes'           => 'Plan Partner — acceso ilimitado asignado manualmente.',
+        ]);
+
+        $org->update([
+            'plan'                     => 'partner',
+            'is_partner'               => true,
+            'is_active'                => true,
+            'trial_ends_at'            => null,
+            'max_bot_sessions_per_day' => 9999,
+            'max_messages_per_session' => 9999,
+        ]);
+
+        $this->dispatch('nexova-toast', type: 'success', message: "Plan Partner asignado a {$org->name}");
+    }
+
+    public function revokePartner(int $orgId): void
+    {
+        $org = Organization::find($orgId);
+        if (! $org) return;
+
+        $freePlan = Plan::where('slug', 'free')->first();
+
+        Subscription::where('organization_id', $orgId)
+            ->where('status', 'active')
+            ->update(['status' => 'expired']);
+
+        $org->update([
+            'plan'                     => 'free',
+            'is_partner'               => false,
+            'max_bot_sessions_per_day' => $freePlan?->max_sessions_per_day ?? 20,
+            'max_messages_per_session' => $freePlan?->max_messages_per_session ?? 15,
+        ]);
+
+        $this->dispatch('nexova-toast', type: 'info', message: "Acceso Partner revocado para {$org->name}");
+    }
+
     public function impersonate(int $orgId): void
     {
         // Log in as the owner of that organization (for debugging)

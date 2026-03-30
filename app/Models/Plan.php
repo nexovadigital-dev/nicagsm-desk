@@ -12,12 +12,13 @@ class Plan extends Model
     protected $fillable = [
         'slug', 'name', 'description', 'price_usd',
         'max_agents', 'max_widgets', 'max_sessions_per_day', 'max_messages_per_session', 'max_bot_messages_monthly',
-        'features', 'is_active', 'ai_blocked', 'sort',
+        'features', 'is_active', 'is_public', 'ai_blocked', 'sort',
     ];
 
     protected $casts = [
         'features'                 => 'array',
         'is_active'                => 'boolean',
+        'is_public'                => 'boolean',
         'ai_blocked'               => 'boolean',
         'price_usd'                => 'decimal:2',
         'max_agents'               => 'integer',
@@ -35,7 +36,12 @@ class Plan extends Model
 
     public function isFree(): bool
     {
-        return $this->price_usd == 0;
+        return $this->price_usd == 0 && $this->slug !== 'partner';
+    }
+
+    public function isPartner(): bool
+    {
+        return $this->slug === 'partner';
     }
 
     public function isAiBlocked(): bool

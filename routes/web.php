@@ -24,7 +24,7 @@ Route::post('/logout', function () {
 
 // ── Landing / demo ────────────────────────────────────────────────────────────
 Route::get('/', function () {
-    $plans        = \App\Models\Plan::where('is_active', true)->orderBy('sort')->get();
+    $plans        = \App\Models\Plan::where('is_active', true)->where('is_public', true)->orderBy('sort')->get();
     $latestPosts  = \App\Models\Post::published()->orderByDesc('published_at')->limit(3)->get();
     return view('landing', compact('plans', 'latestPosts'));
 });
