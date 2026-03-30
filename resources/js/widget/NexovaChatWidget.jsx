@@ -1086,7 +1086,7 @@ function PreChatForm({ fields, onSubmit, accentColor, botName, welcomeMessage, b
 // ---------------------------------------------------------------------------
 // Orders OTP Screen — visitante no logueado consulta pedidos con email + OTP
 // ---------------------------------------------------------------------------
-function OrdersOtpScreen({ accentColor, onBack }) {
+function OrdersOtpScreen({ accentColor, onBack, onVerified }) {
     const [step, setStep]         = useState('email'); // 'email' | 'code' | 'orders'
     const [email, setEmail]       = useState('');
     const [code, setCode]         = useState('');
@@ -1132,8 +1132,12 @@ function OrdersOtpScreen({ accentColor, onBack }) {
             const res  = await fetch(wpAjax, { method: 'POST', body });
             const data = await res.json();
             if (!data.success) throw new Error(data.data?.message || 'Código incorrecto');
-            setOrders(data.data?.orders || []);
+            const verifiedOrders = data.data?.orders || [];
+            const verifiedEmail  = data.data?.email  || email;
+            setOrders(verifiedOrders);
             setStep('orders');
+            // Notify parent so orders appear inline in chat too
+            if (onVerified) onVerified(verifiedOrders, verifiedEmail);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -1633,7 +1637,8 @@ export default function NexovaChatWidget() {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     const hidden   = showOn === 'desktop' ? isMobile : showOn === 'mobile' ? !isMobile : false;
 
-    const [conversationName, setConversationName] = useState(null);
+    const [conversationName,  setConversationName]  = useState(null);
+    const [inlineChatOrders,  setInlineChatOrders]  = useState(null); // { orders, email } tras verificar OTP
     const hasAutoNamed = useRef(false); // evitar renombrar más de una vez por sesión
     const [contactName,      setContactName]      = useState(() => {
         if (WOO_CUSTOMER?.name) return WOO_CUSTOMER.name;
@@ -1654,6 +1659,41 @@ export default function NexovaChatWidget() {
             .then(r => r.json())
             .then(data => setCfg(data))
             .catch(() => setCfg({}));
+    }, []);
+
+    // ── Returning visitor lookup (WooCommerce logueado) ──────────────────────
+    // Para visitantes WC logueados, hace lookup en el servidor para detectar
+    // si ya tienen historial (sin esperar a iniciar sesión de chat).
+    useEffect(() => {
+        if (!WIDGET_TOKEN || !API_BASE) return;
+        if (!WOO_CUSTOMER?.id || !WOO_CUSTOMER?.token) return;
+        // Solo si no tenemos ya un nombre en localStorage
+        const cached = (() => { try { return JSON.parse(localStorage.getItem(CONTACT_KEY) || 'null'); } catch { return null; } })();
+        if (cached?.name) return; // ya tenemos datos locales
+
+        fetch(`${API_BASE}/api/chat/contact-lookup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({
+                token:        WIDGET_TOKEN,
+                woo_customer: { id: WOO_CUSTOMER.id, email: WOO_CUSTOMER.email },
+                woo_token:    WOO_CUSTOMER.token,
+            }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.found && data.name) {
+                setContactName(data.name);
+                if (data.total_conversations > 1) setIsReturning(true);
+                try {
+                    localStorage.setItem(CONTACT_KEY, JSON.stringify({
+                        name: data.name,
+                        returning: data.total_conversations > 1,
+                    }));
+                } catch {}
+            }
+        })
+        .catch(() => {});
     }, []);
 
     // ── Auto-scroll ──────────────────────────────────────────────────────────
@@ -2290,7 +2330,11 @@ export default function NexovaChatWidget() {
                     {screen === 'orders_otp' && (
                         <OrdersOtpScreen
                             accentColor={accentColor}
-                            onBack={() => setScreen(sessionId ? 'chat' : 'home')} />
+                            onBack={() => setScreen(sessionId ? 'chat' : 'home')}
+                            onVerified={(orders, email) => {
+                                setInlineChatOrders({ orders, email });
+                                if (sessionId) setScreen('chat');
+                            }} />
                     )}
 
                     {/* ── Pantalla: Offline ── */}
@@ -2486,6 +2530,75 @@ export default function NexovaChatWidget() {
                                 })}
 
                                 {isTyping && <TypingIndicator initial={initial} color={accentColor} botAvatar={botAvatar} />}
+
+                                {/* ── Pedidos verificados inline ── */}
+                                {inlineChatOrders && (
+                                    <div style={{ margin: '8px 0', animation: 'nx-fade-up .2s ease-out' }}>
+                                        <div style={{ background: '#fff', border: '1px solid #e2e8f0',
+                                            borderRadius: 12, overflow: 'hidden' }}>
+                                            <div style={{ background: accentColor, padding: '10px 14px',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"
+                                                        strokeLinecap="round" width="14" height="14">
+                                                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+                                                        <rect x="9" y="3" width="6" height="4" rx="1"/>
+                                                        <path d="M9 12h6M9 16h4"/>
+                                                    </svg>
+                                                    <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>
+                                                        Tus pedidos
+                                                    </span>
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                    <span style={{ fontSize: 10, color: 'rgba(255,255,255,.75)' }}>
+                                                        {inlineChatOrders.email}
+                                                    </span>
+                                                    <button onClick={() => setInlineChatOrders(null)}
+                                                        style={{ background: 'rgba(255,255,255,.2)', border: 'none',
+                                                            borderRadius: 4, color: '#fff', cursor: 'pointer',
+                                                            padding: '2px 6px', fontSize: 11, fontFamily: 'inherit' }}>
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                                {inlineChatOrders.orders.length === 0 ? (
+                                                    <p style={{ fontSize: 12, color: '#6b7280', margin: 0, textAlign: 'center', padding: '8px 0' }}>
+                                                        No hay pedidos asociados a este correo.
+                                                    </p>
+                                                ) : inlineChatOrders.orders.map((order, i) => {
+                                                    const stMap = { 'Procesando': '#854d0e', 'Completado': '#15803d', 'Cancelado': '#b91c1c', 'En espera': '#374151', 'Pendiente': '#1d4ed8' };
+                                                    const bgMap = { 'Procesando': '#fef9c3', 'Completado': '#dcfce7', 'Cancelado': '#fee2e2', 'En espera': '#f3f4f6', 'Pendiente': '#eff6ff' };
+                                                    const clr = stMap[order.status] || '#6b7280';
+                                                    const bg  = bgMap[order.status] || '#f3f4f6';
+                                                    return (
+                                                        <div key={i} style={{ background: '#f9fafb', border: '1px solid #e2e8f0',
+                                                            borderRadius: 8, padding: '9px 11px' }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between',
+                                                                alignItems: 'flex-start', gap: 6, marginBottom: 4 }}>
+                                                                <span style={{ fontSize: 12, fontWeight: 800, color: '#111827' }}>
+                                                                    #{order.number}
+                                                                    {order.date && <span style={{ fontSize: 10, color: '#9ca3af', fontWeight: 400, marginLeft: 6 }}>{order.date}</span>}
+                                                                </span>
+                                                                <span style={{ background: bg, color: clr, borderRadius: 99,
+                                                                    padding: '1px 8px', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
+                                                                    {order.status}
+                                                                </span>
+                                                            </div>
+                                                            {order.items?.length > 0 && (
+                                                                <p style={{ margin: '0 0 4px', fontSize: 11, color: '#4b5563', lineHeight: 1.4 }}>
+                                                                    {order.items.slice(0, 2).join(', ')}{order.items.length > 2 ? ` +${order.items.length - 2}` : ''}
+                                                                </p>
+                                                            )}
+                                                            <span style={{ fontSize: 12, fontWeight: 700, color: accentColor }}>{order.total}</span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div ref={messagesEndRef} />
                             </div>
 
