@@ -59,7 +59,7 @@
     background: white; border-radius: 50%; transition: transform .18s;
     box-shadow: 0 1px 3px rgba(0,0,0,.15);
 }
-.ns-toggle input:checked + .ns-slider { background: #3b82f6; }
+.ns-toggle input:checked + .ns-slider { background: #22c55e; }
 .ns-toggle input:checked + .ns-slider:before { transform: translateX(16px); }
 
 /* ─── Save button ─── */

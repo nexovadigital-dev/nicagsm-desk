@@ -31,7 +31,7 @@
 .ap-tab:hover { color: var(--c-text,#111827); }
 .ap-tab.active {
     color: var(--c-text,#111827); font-weight: 600;
-    border-bottom-color: #3b82f6;
+    border-bottom-color: #22c55e;
 }
 
 /* ─── Section row (Tremor pattern) ─── */
@@ -77,7 +77,7 @@
     width: 100%; font-family: inherit; transition: border-color .12s;
     box-sizing: border-box;
 }
-.ap-input:focus { border-color: #3b82f6; }
+.ap-input:focus { border-color: #16a34a; }
 .ap-input::placeholder { color: var(--c-sub); opacity: .5; }
 
 /* ─── Availability selector ─── */
@@ -159,7 +159,7 @@
 .ap-avatar-name { font-size: 14px; font-weight: 600; color: var(--c-text,#111827); margin-bottom: 4px; }
 .ap-avatar-actions { display: flex; gap: 10px; align-items: center; }
 .ap-upload-link {
-    font-size: 12px; color: #3b82f6;
+    font-size: 12px; color: #16a34a;
     background: none; border: none; cursor: pointer; font-family: inherit; padding: 0;
     transition: opacity .12s;
 }

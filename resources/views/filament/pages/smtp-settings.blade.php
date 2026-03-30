@@ -38,7 +38,7 @@
 .sm-field { display: flex; flex-direction: column; gap: 4px; }
 .sm-label { font-size: 10px; font-weight: 700; color: var(--c-sub,#6b7280); text-transform: uppercase; letter-spacing: .05em; }
 .sm-input, .sm-select { background: var(--c-bg,#f5f6f8); border: 1px solid var(--c-border,#e3e6ea); border-radius: 7px; color: var(--c-text,#111); font-size: 13px; padding: 8px 11px; outline: none; width: 100%; font-family: inherit; transition: border-color .12s; box-sizing: border-box; }
-.sm-input:focus, .sm-select:focus { border-color: #3b82f6; }
+.sm-input:focus, .sm-select:focus { border-color: #16a34a; }
 .sm-input::placeholder { color: var(--c-sub); }
 
 .sm-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -46,7 +46,7 @@
 .sm-toggle input { opacity: 0; width: 0; height: 0; }
 .sm-slider { position: absolute; cursor: pointer; inset: 0; background: var(--c-border,#e3e6ea); border-radius: 99px; transition: background .2s; }
 .sm-slider:before { content:''; position: absolute; height: 15px; width: 15px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: transform .2s; }
-.sm-toggle input:checked + .sm-slider { background: #3b82f6; }
+.sm-toggle input:checked + .sm-slider { background: #22c55e; }
 .sm-toggle input:checked + .sm-slider:before { transform: translateX(17px); }
 .sm-toggle-label { font-size: 13px; font-weight: 500; color: var(--c-text,#111); }
 .sm-toggle-sub { font-size: 11.5px; color: var(--c-sub,#6b7280); margin-top: 2px; }

@@ -45,7 +45,7 @@
     padding: 8px 11px; outline: none; width: 100%;
     transition: border-color .12s; box-sizing: border-box;
 }
-.ch-input:focus { border-color: #3b82f6; }
+.ch-input:focus { border-color: #16a34a; }
 
 .ch-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
 .ch-btn {

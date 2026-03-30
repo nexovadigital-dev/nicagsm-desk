@@ -10,7 +10,7 @@
 .sub-btn:hover { opacity:.85; }
 .sub-btn-sm  { padding:6px 14px; font-size:12px; }
 .sub-method  { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border:1px solid var(--c-border,#e3e6ea); border-radius:10px; margin-bottom:8px; cursor:pointer; transition:border-color .15s; }
-.sub-method:hover { border-color:#3b82f6; }
+.sub-method:hover { border-color:#22c55e; }
 .sub-tbl     { width:100%; border-collapse:collapse; font-size:12px; }
 .sub-tbl th  { padding:8px 12px; text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--c-sub,#6b7280); border-bottom:1px solid var(--c-border,#e3e6ea); }
 .sub-tbl td  { padding:10px 12px; border-bottom:1px solid var(--c-border,#e3e6ea); color:var(--c-text,#111827); }
@@ -26,7 +26,7 @@
 .sub-modal-body { padding:22px; }
 .sub-modal-foot { padding:14px 22px; border-top:1px solid var(--c-border,#e3e6ea); display:flex; gap:10px; justify-content:flex-end; }
 .sub-input   { width:100%; padding:9px 12px; border:1px solid var(--c-border,#e3e6ea); border-radius:8px; font-size:13px; font-family:monospace; background:var(--c-surface,#fff); color:var(--c-text,#111827); outline:none; box-sizing:border-box; }
-.sub-input:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.12); }
+.sub-input:focus { border-color:#16a34a; box-shadow:0 0 0 3px rgba(34,197,94,.1); }
 .sub-divider { height:1px; background:var(--c-border,#e3e6ea); margin:16px 0; }
 </style>
 
@@ -453,7 +453,7 @@ $txColors  = ['pending'=>['bg'=>'#fef9c3','color'=>'#854d0e','l'=>'Pendiente'],'
                         {{ $cryptoWallet }}
                     </div>
                     <button onclick="navigator.clipboard.writeText('{{ $cryptoWallet }}').then(()=>alert('Dirección copiada'))"
-                            style="background:none;border:none;cursor:pointer;font-size:12px;color:#3b82f6;font-weight:700">
+                            style="background:none;border:none;cursor:pointer;font-size:12px;color:#16a34a;font-weight:700">
                         Copiar dirección
                     </button>
                 </div>

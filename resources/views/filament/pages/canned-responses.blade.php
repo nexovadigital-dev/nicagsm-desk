@@ -45,14 +45,14 @@
     font-size: 13px; padding: 8px 11px; outline: none;
     width: 100%; font-family: inherit; transition: border-color .12s; box-sizing: border-box;
 }
-.cr-input:focus, .cr-textarea:focus { border-color: #3b82f6; }
+.cr-input:focus, .cr-textarea:focus { border-color: #16a34a; }
 .cr-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
 .cr-input::placeholder, .cr-textarea::placeholder { color: var(--c-sub); }
 
 .cr-shortcut-wrap { position: relative; }
 .cr-shortcut-prefix {
     position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
-    color: #3b82f6; font-weight: 700; font-size: 14px; pointer-events: none;
+    color: #16a34a; font-weight: 700; font-size: 14px; pointer-events: none;
 }
 .cr-shortcut-wrap .cr-input { padding-left: 22px; }
 
@@ -87,7 +87,7 @@
     border-radius: 7px; color: var(--c-text,#111); font-size: 13px;
     padding: 8px 11px 8px 32px; outline: none; width: 100%; font-family: inherit; box-sizing: border-box;
 }
-.cr-search:focus { border-color: #3b82f6; }
+.cr-search:focus { border-color: #16a34a; }
 
 .cr-list { display: flex; flex-direction: column; }
 .cr-row {

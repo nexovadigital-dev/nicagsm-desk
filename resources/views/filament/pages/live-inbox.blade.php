@@ -120,7 +120,7 @@ x-init="
                     wire:model.live.debounce.300ms="search"
                     placeholder="Buscar por nombre, email, mensaje…"
                     style="width:100%;padding:7px 10px 7px 30px;border-radius:8px;border:1px solid var(--nx-border, rgba(128,128,128,.2));background:var(--nx-bg2, rgba(128,128,128,.07));font-size:12px;color:inherit;outline:none;font-family:inherit;box-sizing:border-box;transition:border-color .15s"
-                    onfocus="this.style.borderColor='#3b82f6'"
+                    onfocus="this.style.borderColor='#22c55e'"
                     onblur="this.style.borderColor=''"
                 >
                 @if($search)
@@ -896,10 +896,10 @@ x-init="
     --nx-border:   var(--c-border,   #e3e6ea);
     --nx-text:     var(--c-text,     #111827);
     --nx-muted:    var(--c-sub,      #6b7280);
-    --nx-accent:   #3b82f6;
-    --nx-accent-h: #2563eb;
-    --nx-accent-bg:rgba(59,130,246,.08);
-    --nx-accent-bd:rgba(59,130,246,.2);
+    --nx-accent:   #22c55e;
+    --nx-accent-h: #16a34a;
+    --nx-accent-bg:rgba(34,197,94,.08);
+    --nx-accent-bd:rgba(34,197,94,.2);
     --nx-font:     'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -1344,7 +1344,7 @@ x-init="
 .nx-enter-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
 .nx-enter-toggle__label { font-size: 10px; color: var(--nx-muted); }
 .nx-enter-toggle__track { width: 28px; height: 16px; border-radius: 99px; background: var(--nx-border, #e3e6ea); position: relative; cursor: pointer; transition: background .15s; flex-shrink: 0; }
-.nx-enter-toggle__track.on { background: #3b82f6; }
+.nx-enter-toggle__track.on { background: #22c55e; }
 .nx-enter-toggle__thumb { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: transform .15s; }
 .nx-enter-toggle__track.on .nx-enter-toggle__thumb { transform: translateX(12px); }
 

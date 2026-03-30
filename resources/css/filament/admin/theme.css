@@ -115,26 +115,26 @@ body, .fi-body { background: var(--c-bg) !important; color: var(--c-text) !impor
     display: block !important;
 }
 
-/* Active item — blue left-border */
+/* Active item — green left-border */
 .fi-sidebar-item-btn[aria-current="page"],
 .fi-active > .fi-sidebar-item-btn {
-    background: rgba(59,130,246,.07) !important;
-    border-left-color: #3b82f6 !important;
+    background: rgba(34,197,94,.07) !important;
+    border-left-color: #22c55e !important;
 }
 .fi-sidebar-item-btn[aria-current="page"] .fi-sidebar-item-label,
 .fi-active > .fi-sidebar-item-btn .fi-sidebar-item-label {
-    color: #1d4ed8 !important;
+    color: #15803d !important;
     font-weight: 600 !important;
 }
 .fi-sidebar-item-btn[aria-current="page"] .fi-sidebar-item-icon,
 .fi-active > .fi-sidebar-item-btn .fi-sidebar-item-icon {
-    color: #3b82f6 !important;
+    color: #22c55e !important;
 }
 
 /* Nav badge */
 .fi-sidebar-item-badge {
-    background: rgba(59,130,246,.1) !important;
-    color: #2563eb !important;
+    background: rgba(34,197,94,.12) !important;
+    color: #16a34a !important;
     font-size: 10px !important;
     font-weight: 700 !important;
     padding: 1px 6px !important;
@@ -279,8 +279,8 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 3px rgba(59,130,246,.1) !important;
+    border-color: #16a34a !important;
+    box-shadow: 0 0 0 3px rgba(34,197,94,.1) !important;
     outline: none !important;
 }
 

@@ -39,7 +39,7 @@
     outline: none;
     transition: border-color .15s, box-shadow .15s;
 }
-.tfa-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+.tfa-input:focus { border-color: #16a34a; box-shadow: 0 0 0 3px rgba(34,197,94,.1); }
 .tfa-btn {
     width: 100%;
     padding: 11px;

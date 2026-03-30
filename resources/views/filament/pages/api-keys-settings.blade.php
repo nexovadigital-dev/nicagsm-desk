@@ -51,7 +51,7 @@
     padding: 8px 38px 8px 11px; outline: none; box-sizing: border-box;
     transition: border-color .12s;
 }
-.ak-input:focus { border-color: #3b82f6; }
+.ak-input:focus { border-color: #16a34a; }
 .ak-input.normal-font { font-family: inherit; padding-right: 11px; }
 .ak-eye {
     position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
@@ -68,7 +68,7 @@
     border-radius: 7px; color: var(--c-text,#111);
     font-size: 12px; padding: 7px 10px; outline: none; font-family: inherit;
 }
-.ak-select:focus { border-color: #3b82f6; }
+.ak-select:focus { border-color: #16a34a; }
 
 .ak-btn {
     display: inline-flex; align-items: center; gap: 5px;
@@ -197,7 +197,7 @@
         <div style="padding:20px 22px;display:flex;flex-direction:column;gap:14px">
 
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--c-text,#111827)">
-                <input type="checkbox" wire:model.live="orgUseOwnKeys" style="width:15px;height:15px;accent-color:#3b82f6">
+                <input type="checkbox" wire:model.live="orgUseOwnKeys" style="width:15px;height:15px;accent-color:#22c55e">
                 Usar mis propias llaves API (si están configuradas)
             </label>
 

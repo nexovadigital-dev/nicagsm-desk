@@ -58,7 +58,7 @@
     height: 16px; width: 16px; left: 3px; bottom: 3px;
     background: white; border-radius: 50%; transition: transform .2s;
 }
-.wc-toggle input:checked + .wc-slider { background: #3b82f6; }
+.wc-toggle input:checked + .wc-slider { background: #22c55e; }
 .wc-toggle input:checked + .wc-slider:before { transform: translateX(18px); }
 
 /* Buttons */
@@ -137,7 +137,7 @@
 .type-tel     { background: rgba(16,185,129,.1); color: #10b981; }
 .type-select  { background: rgba(245,158,11,.1); color: #f59e0b; }
 .pcb-add-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 11px; border-radius: 9px; border: 2px dashed var(--c-border, #e3e6ea); background: transparent; color: var(--c-sub, #6b7280); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: border-color .15s, color .15s, background .15s; }
-.pcb-add-btn:hover { border-color: #1e293b; color: #3b82f6; background: rgba(59,130,246,.04); }
+.pcb-add-btn:hover { border-color: #16a34a; color: #16a34a; background: rgba(34,197,94,.04); }
 .pcb-empty { text-align: center; padding: 28px 20px; color: var(--c-sub, #9ca3af); font-size: 13px; }
 
 /* FAQ & Social items */

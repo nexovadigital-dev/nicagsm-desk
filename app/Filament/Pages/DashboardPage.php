@@ -35,6 +35,15 @@ class DashboardPage extends Page
         return $this->scopeToOrg(Ticket::query());
     }
 
+    public function getRecentTicketsProperty()
+    {
+        return $this->orgTickets()
+            ->with(['messages' => fn ($q) => $q->latest()->limit(1)])
+            ->latest()
+            ->limit(6)
+            ->get();
+    }
+
     public function getStatsProperty(): array
     {
         $today    = now()->startOfDay();

@@ -30,23 +30,20 @@
 }
 .nx-kpi:hover { border-color: #cbd5e1; }
 
-/* Left accent stripe — the only color accent per card */
+/* Left accent stripe — single brand green */
 .nx-kpi::before {
     content: '';
     position: absolute;
     top: 0; left: 0; bottom: 0;
     width: 3px;
+    background: #22c55e;
 }
-.nx-kpi.kpi-active::before  { background: #3b82f6; }
-.nx-kpi.kpi-new::before     { background: #6366f1; }
-.nx-kpi.kpi-msg::before     { background: #0ea5e9; }
-.nx-kpi.kpi-csat::before    { background: #f59e0b; }
 
 .nx-kpi__icon {
     position: absolute; top: 16px; right: 16px;
     width: 32px; height: 32px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(59,130,246,.08);
+    background: rgba(34,197,94,.09);
 }
 .nx-kpi__label {
     font-size: 11px; font-weight: 600; color: #94a3b8;
@@ -108,7 +105,7 @@
 .nx-chart-bar-wrap { width: 100%; flex: 1; display: flex; align-items: flex-end; }
 .nx-chart-bar {
     width: 100%; border-radius: 5px 5px 0 0;
-    background: #3b82f6; opacity: .65;
+    background: #22c55e; opacity: .6;
     min-height: 4px; transition: opacity .15s;
 }
 .nx-chart-col:hover .nx-chart-bar { opacity: 1; }
@@ -153,6 +150,48 @@
 
 /* ══ Empty ══════════════════════════════════════════ */
 .nx-empty { font-size: 12.5px; color: #94a3b8; text-align: center; padding: 18px 0; }
+
+/* ══ Quick actions ═══════════════════════════════════ */
+.nx-qactions { display: flex; gap: 10px; flex-wrap: wrap; }
+.nx-qa {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 500; color: #374151;
+    background: #ffffff; border: 1px solid #e2e8f0;
+    text-decoration: none; cursor: pointer;
+    transition: border-color .15s, background .15s, color .15s;
+}
+.nx-qa:hover { background: #f8fafc; border-color: #22c55e; color: #15803d; }
+.nx-qa svg { color: #64748b; flex-shrink: 0; transition: color .15s; }
+.nx-qa:hover svg { color: #22c55e; }
+
+/* ══ Recent tickets ══════════════════════════════════ */
+.nx-recent { display: flex; flex-direction: column; gap: 14px; }
+.nx-recent-grid { display: grid; grid-template-columns: 1fr 360px; gap: 14px; }
+@media (max-width:1100px) { .nx-recent-grid { grid-template-columns: 1fr; } }
+.nx-rt-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid #f1f5f9;
+}
+.nx-rt-row:last-child { border-bottom: none; padding-bottom: 0; }
+.nx-rt-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.nx-rt-info { flex: 1; min-width: 0; }
+.nx-rt-name { font-size: 13px; font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nx-rt-subj { font-size: 11.5px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.nx-rt-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
+.nx-rt-time  { font-size: 11px; color: #94a3b8; }
+.nx-rt-badge {
+    display: inline-flex; align-items: center; padding: 2px 7px;
+    border-radius: 99px; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .03em;
+}
+.nx-rt-b-bot    { background: #eef2ff; color: #4338ca; }
+.nx-rt-b-human  { background: #eff6ff; color: #1d4ed8; }
+.nx-rt-b-closed { background: #f1f5f9; color: #475569; }
 </style>
 
 @php
@@ -190,7 +229,7 @@
 <div class="nx-kpis">
 
     {{-- Activas --}}
-    <div class="nx-kpi kpi-active">
+    <div class="nx-kpi">
         <div class="nx-kpi__icon">
             <svg fill="none" stroke="#64748b" viewBox="0 0 24 24" width="16" height="16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
         </div>
@@ -210,7 +249,7 @@
     </div>
 
     {{-- Nuevas hoy --}}
-    <div class="nx-kpi kpi-new">
+    <div class="nx-kpi">
         <div class="nx-kpi__icon">
             <svg fill="none" stroke="#64748b" viewBox="0 0 24 24" width="16" height="16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16m8-8H4"/></svg>
         </div>
@@ -220,7 +259,7 @@
     </div>
 
     {{-- Mensajes --}}
-    <div class="nx-kpi kpi-msg">
+    <div class="nx-kpi">
         <div class="nx-kpi__icon">
             <svg fill="none" stroke="#64748b" viewBox="0 0 24 24" width="16" height="16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
         </div>
@@ -230,7 +269,7 @@
     </div>
 
     {{-- CSAT Survey card --}}
-    <div class="nx-kpi kpi-csat">
+    <div class="nx-kpi">
         <div class="nx-kpi__icon">
             <svg fill="none" stroke="#64748b" viewBox="0 0 24 24" width="16" height="16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
         </div>
@@ -354,6 +393,30 @@
     </div>
 </div>
 
+{{-- ══ Quick actions ═══════════════════════════════════════════ --}}
+<div class="nx-qactions">
+    <a href="/app/live-inbox" class="nx-qa" wire:navigate>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        Live Inbox
+    </a>
+    <a href="/app/tickets" class="nx-qa" wire:navigate>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Tickets
+    </a>
+    <a href="/app/knowledge-base" class="nx-qa" wire:navigate>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Base de conocimiento
+    </a>
+    <a href="/app/widget-config" class="nx-qa" wire:navigate>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+        Widget
+    </a>
+    <a href="/app/subscription" class="nx-qa" wire:navigate>
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+        Facturación
+    </a>
+</div>
+
 {{-- ══ Satisfaction ════════════════════════════════════════════ --}}
 @if($s['totalRated'] > 0)
 <div class="nx-db-sat">
@@ -399,6 +462,77 @@
         </div>
     </div>
 
+</div>
+@endif
+
+{{-- ══ Recent tickets ═══════════════════════════════════════════ --}}
+@php
+    $recentTickets = $this->recentTickets;
+    $rtPalette = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1','#8b5cf6','#14b8a6'];
+@endphp
+@if($recentTickets->isNotEmpty())
+<div class="nx-recent-grid">
+    <div class="nx-card">
+        <div class="nx-card__hd">
+            <span class="nx-card__title">Conversaciones recientes</span>
+            <a href="/app/tickets" wire:navigate style="font-size:12px;color:#22c55e;font-weight:600;text-decoration:none">Ver todas →</a>
+        </div>
+        <div class="nx-card__body" style="padding-block:8px">
+            @foreach($recentTickets as $rt)
+            @php
+                $rtColor = $rtPalette[abs(crc32($rt->client_name ?? '')) % count($rtPalette)];
+                $rtBadgeClass = match($rt->status) { 'human' => 'nx-rt-b-human', 'closed' => 'nx-rt-b-closed', default => 'nx-rt-b-bot' };
+                $rtBadgeLabel = match($rt->status) { 'human' => 'Agente', 'closed' => 'Cerrado', default => 'Bot' };
+            @endphp
+            <div class="nx-rt-row">
+                <div class="nx-rt-avatar" style="background:{{ $rtColor }}">
+                    {{ strtoupper(substr($rt->client_name ?? 'V', 0, 1)) }}
+                </div>
+                <div class="nx-rt-info">
+                    <div class="nx-rt-name">{{ $rt->client_name ?? 'Visitante' }}</div>
+                    <div class="nx-rt-subj">{{ $rt->ticket_subject ?? $rt->ticket_number }}</div>
+                </div>
+                <div class="nx-rt-right">
+                    <span class="nx-rt-time">{{ ($rt->ticket_opened_at ?? $rt->created_at)->diffForHumans() }}</span>
+                    <span class="nx-rt-badge {{ $rtBadgeClass }}">{{ $rtBadgeLabel }}</span>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+
+    <div class="nx-card">
+        <div class="nx-card__hd">
+            <span class="nx-card__title">Resumen</span>
+        </div>
+        <div class="nx-card__body" style="padding-block:10px">
+            <div class="nx-catlist">
+                @php $botRate = $s['botRate'] ?? 0; @endphp
+                <div class="nx-cat">
+                    <span class="nx-cat__dot" style="background:#22c55e"></span>
+                    <span class="nx-cat__label">Tasa resolución bot</span>
+                    <span class="nx-cat__count" style="color:#16a34a;font-weight:700">{{ $botRate }}%</span>
+                </div>
+                <div class="nx-cat">
+                    <span class="nx-cat__dot" style="background:#0ea5e9"></span>
+                    <span class="nx-cat__label">Esta semana</span>
+                    <span class="nx-cat__count">{{ $s['weekTickets'] }}</span>
+                </div>
+                <div class="nx-cat">
+                    <span class="nx-cat__dot" style="background:#6366f1"></span>
+                    <span class="nx-cat__label">Total histórico</span>
+                    <span class="nx-cat__count">{{ $s['totalTickets'] }}</span>
+                </div>
+                @if($s['csatAvg'])
+                <div class="nx-cat">
+                    <span class="nx-cat__dot" style="background:#f59e0b"></span>
+                    <span class="nx-cat__label">CSAT promedio</span>
+                    <span class="nx-cat__count" style="color:#d97706">{{ number_format($s['csatAvg'],1) }}/5</span>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
 </div>
 @endif
 
