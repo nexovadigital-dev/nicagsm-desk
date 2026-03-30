@@ -41,7 +41,10 @@ class Organizations extends Page
 
     public function getOrganizationsProperty()
     {
-        return Organization::with(['users' => fn ($q) => $q->where('role', 'owner')])
+        return Organization::with([
+                'users'                   => fn ($q) => $q->where('role', 'owner'),
+                'activeSubscription.plan',
+            ])
             ->withCount(['users', 'chatWidgets'])
             ->when(trim($this->search), fn ($q) =>
                 $q->where('name', 'like', '%' . $this->search . '%')
@@ -72,6 +75,13 @@ class Organizations extends Page
     {
         $org = Organization::find($this->viewingOrgId);
         if (! $org) return;
+
+        // If plan changed, expire any active subscription
+        if ($org->plan !== $this->editOrgPlan) {
+            Subscription::where('organization_id', $org->id)
+                ->where('status', 'active')
+                ->update(['status' => 'expired']);
+        }
 
         $org->update([
             'name'      => trim($this->editOrgName) ?: $org->name,
@@ -109,7 +119,6 @@ class Organizations extends Page
             'plan'                     => $planSlug,
             'is_active'                => true,
             'trial_ends_at'            => null,
-            'max_agents'               => null, // inherit from plan
             'max_bot_sessions_per_day' => $plan->max_sessions_per_day,
             'max_messages_per_session' => $plan->max_messages_per_session,
         ]);
