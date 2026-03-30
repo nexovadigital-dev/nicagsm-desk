@@ -158,17 +158,17 @@ class PaymentController extends Controller
     // ── MercadoPago: páginas de retorno ──────────────────────────────────────
     public function mpSuccess(Request $request)
     {
-        return redirect('/admin/subscription?payment=success');
+        return redirect('/app/subscription?payment=success');
     }
 
     public function mpFailure(Request $request)
     {
-        return redirect('/admin/subscription?payment=failed');
+        return redirect('/app/subscription?payment=failed');
     }
 
     public function mpPending(Request $request)
     {
-        return redirect('/admin/subscription?payment=pending');
+        return redirect('/app/subscription?payment=pending');
     }
 
     // ── Crypto: iniciar transacción con QR ────────────────────────────────────
@@ -290,7 +290,6 @@ class PaymentController extends Controller
         Organization::where('id', $tx->organization_id)->update([
             'plan'                     => $plan->slug,
             'is_active'                => true,
-            'max_agents'               => null,
             'max_bot_sessions_per_day' => $plan->max_sessions_per_day,
             'max_messages_per_session' => $plan->max_messages_per_session,
         ]);

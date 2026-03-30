@@ -31,18 +31,19 @@
 </style>
 
 @php
-$org        = $this->org;
-$plan       = $this->plan;
-$proPlan    = $this->proPlan;
-$sub        = $this->activeSubscription;
-$pendingTx  = $this->activePendingTx;
-$isPro      = $org?->plan === 'pro';
-$isFree     = $org?->plan === 'free';
-$isCancelled = $sub?->status === 'cancelled';
-$daysLeft   = $sub?->ends_at ? (int) now()->diffInDays($sub->ends_at, false) : null;
-$nearExpiry = $daysLeft !== null && $daysLeft <= 7;
-$cryptoMethods = $this->activeCryptoMethods;
-$isMpActive = $this->isMpActive;
+$org             = $this->org;
+$plan            = $this->plan;
+$proPlan         = $this->proPlan;
+$availablePlans  = $this->availablePlans;
+$sub             = $this->activeSubscription;
+$pendingTx       = $this->activePendingTx;
+$isPaid          = $org?->plan !== 'free' && $org?->plan !== null;
+$isFree          = $org?->plan === 'free' || $org?->plan === null;
+$isCancelled     = $sub?->status === 'cancelled';
+$daysLeft        = $sub?->ends_at ? (int) now()->diffInDays($sub->ends_at, false) : null;
+$nearExpiry      = $daysLeft !== null && $daysLeft <= 7;
+$cryptoMethods   = $this->activeCryptoMethods;
+$isMpActive      = $this->isMpActive;
 $methodLabels = ['usdt_trc20'=>'USDT · TRC20','usdt_bep20'=>'USDT · BEP20','usdt_polygon'=>'USDT · Polygon','usdc_trc20'=>'USDC · TRC20','usdc_bep20'=>'USDC · BEP20','usdc_polygon'=>'USDC · Polygon'];
 $txColors  = ['pending'=>['bg'=>'#fef9c3','color'=>'#854d0e','l'=>'Pendiente'],'confirmed'=>['bg'=>'#dcfce7','color'=>'#15803d','l'=>'Confirmado'],'failed'=>['bg'=>'#fee2e2','color'=>'#b91c1c','l'=>'Fallido'],'expired'=>['bg'=>'#f3f4f6','color'=>'#6b7280','l'=>'Expirado'],'cancelled'=>['bg'=>'#fef2f2','color'=>'#b91c1c','l'=>'Cancelado']];
 @endphp
@@ -83,10 +84,9 @@ $txColors  = ['pending'=>['bg'=>'#fef9c3','color'=>'#854d0e','l'=>'Pendiente'],'
     <div class="sub-card">
         <div class="sub-head">
             <span class="sub-head-title">Plan actual</span>
-            @if($isPro && !$isCancelled)
+            @if($isPaid && !$isCancelled)
                 <div style="display:flex;gap:8px">
-                    <button wire:click="$dispatch('open-upgrade-section')"
-                            class="sub-btn sub-btn-sm"
+                    <button class="sub-btn sub-btn-sm"
                             style="background:#1e293b;color:#f8fafc"
                             onclick="document.getElementById('upgrade-section').scrollIntoView({behavior:'smooth'})">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -112,11 +112,11 @@ $txColors  = ['pending'=>['bg'=>'#fef9c3','color'=>'#854d0e','l'=>'Pendiente'],'
             <div style="display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:20px">
                 {{-- Plan badge --}}
                 <div>
-                    @if($isPro)
+                    @if($isPaid)
                         <div style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:12px 20px;text-align:center">
                             <div style="font-size:11px;font-weight:700;color:#22c55e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Plan</div>
-                            <div style="font-size:24px;font-weight:900;color:var(--c-text,#111827);letter-spacing:-.02em">Pro</div>
-                            <div style="font-size:13px;font-weight:700;color:#22c55e">${{ number_format($plan?->price_usd ?? 49, 2) }}/mes</div>
+                            <div style="font-size:24px;font-weight:900;color:var(--c-text,#111827);letter-spacing:-.02em">{{ ucfirst($plan?->name ?? $org?->plan) }}</div>
+                            <div style="font-size:13px;font-weight:700;color:#22c55e">${{ number_format($plan?->price_usd ?? 0, 2) }}/mes</div>
                         </div>
                     @else
                         <div style="background:#f3f4f6;border:1px solid var(--c-border,#e3e6ea);border-radius:10px;padding:12px 20px;text-align:center">
@@ -214,7 +214,7 @@ $txColors  = ['pending'=>['bg'=>'#fef9c3','color'=>'#854d0e','l'=>'Pendiente'],'
             @endif
 
             {{-- Near expiry warning --}}
-            @if($isPro && !$isCancelled && $nearExpiry)
+            @if($isPaid && !$isCancelled && $nearExpiry)
             <div style="margin-top:16px;background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;font-size:13px;color:#92400e">
                 <strong>Tu plan vence en {{ $daysLeft }} día(s).</strong> Renueva para no perder el acceso Pro.
             </div>
@@ -224,57 +224,113 @@ $txColors  = ['pending'=>['bg'=>'#fef9c3','color'=>'#854d0e','l'=>'Pendiente'],'
     </div>
 
     {{-- ─── SECCIÓN UPGRADE/RENOVAR ─── --}}
-    <div class="sub-card" id="upgrade-section">
+    <div class="sub-card" id="upgrade-section"
+         x-data="{ selectedPlan: '{{ $availablePlans->first()?->slug ?? 'pro' }}' }">
         <div class="sub-head">
             <span class="sub-head-title">
-                @if($isPro && !$isCancelled)
-                    Renovar Plan Pro
-                @elseif($isCancelled)
-                    Reactivar Plan Pro
-                @else
-                    Actualizar a Plan Pro
+                @if($isPaid && !$isCancelled) Renovar suscripción
+                @elseif($isCancelled) Reactivar suscripción
+                @else Actualizar plan
                 @endif
             </span>
-            @if($proPlan)
-            <span style="font-size:16px;font-weight:900;color:#22c55e">
-                ${{ number_format($proPlan->price_usd, 2) }}<span style="font-size:13px;font-weight:500;color:var(--c-sub,#6b7280)">/mes</span>
-            </span>
-            @endif
         </div>
         <div class="sub-body">
 
-            @if($isFree || $isCancelled)
-            {{-- Feature highlight for Free/Cancelled users --}}
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:20px">
-                @foreach(['IA con Groq + Gemini incluida','Widgets ilimitados','Agentes ilimitados','Sesiones sin límite','Integración Telegram','Soporte prioritario'] as $feat)
-                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--c-text,#111827)">
-                    <svg fill="none" stroke="#22c55e" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                    {{ $feat }}
+            {{-- Payment return notice --}}
+            @if(request('payment') === 'success')
+            <div style="margin-bottom:16px;background:#dcfce7;border:1px solid #86efac;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:700;color:#15803d">
+                ✓ Pago recibido. Tu plan se activará en breve.
+            </div>
+            @elseif(request('payment') === 'failed')
+            <div style="margin-bottom:16px;background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:700;color:#b91c1c">
+                El pago fue rechazado. Intenta de nuevo o usa otro método.
+            </div>
+            @endif
+
+            @if($availablePlans->isEmpty())
+            <div style="background:var(--c-bg,#f9fafb);border-radius:8px;padding:16px;font-size:13px;color:var(--c-sub,#6b7280);text-align:center">
+                No hay planes disponibles. Contacta al administrador.
+            </div>
+            @else
+
+            {{-- Plan selector --}}
+            @if($availablePlans->count() > 1)
+            <div style="margin-bottom:20px">
+                <div style="font-size:12px;font-weight:700;color:var(--c-sub,#6b7280);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Elige tu plan</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+                    @foreach($availablePlans as $p)
+                    <button @click="selectedPlan = '{{ $p->slug }}'"
+                            :style="selectedPlan === '{{ $p->slug }}' ? 'border-color:#22c55e;background:rgba(34,197,94,.06)' : ''"
+                            style="border:2px solid var(--c-border,#e3e6ea);border-radius:12px;padding:14px 16px;cursor:pointer;background:transparent;text-align:left;transition:all .15s">
+                        <div style="font-size:16px;font-weight:900;color:var(--c-text,#111827)">{{ $p->name }}</div>
+                        <div style="font-size:18px;font-weight:800;color:#22c55e;margin:4px 0">${{ number_format($p->price_usd, 2) }}<span style="font-size:12px;font-weight:500;color:var(--c-sub,#6b7280)">/mes</span></div>
+                        @if($p->features)
+                        @php $feats = is_array($p->features) ? array_slice($p->features, 0, 3) : []; @endphp
+                        @foreach($feats as $f)
+                        <div style="font-size:11px;color:var(--c-sub,#6b7280);margin-top:2px">✓ {{ $f }}</div>
+                        @endforeach
+                        @endif
+                    </button>
+                    @endforeach
                 </div>
-                @endforeach
+            </div>
+            <div class="sub-divider"></div>
+            @else
+            {{-- Single plan: show features if free/cancelled --}}
+            @if($isFree || $isCancelled)
+            @php $fp = $availablePlans->first(); @endphp
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+                <div>
+                    <div style="font-size:15px;font-weight:900;color:var(--c-text,#111827)">{{ $fp->name }}</div>
+                    @if($fp->features)
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+                        @foreach((is_array($fp->features) ? $fp->features : []) as $f)
+                        <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--c-text,#111827)">
+                            <svg fill="none" stroke="#22c55e" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>{{ $f }}
+                        </span>
+                        @endforeach
+                    </div>
+                    @endif
+                </div>
+                <div style="font-size:24px;font-weight:900;color:#22c55e">${{ number_format($fp->price_usd, 2) }}<span style="font-size:13px;font-weight:500;color:var(--c-sub,#6b7280)">/mes</span></div>
             </div>
             <div class="sub-divider"></div>
             @endif
+            @endif
+
+            {{-- Pending TX notice --}}
+            @if($pendingTx && !$pendingTx->tx_hash)
+            <div style="margin-bottom:16px;background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:12px 16px;font-size:13px;color:#92400e">
+                Tienes un pago cripto pendiente (<strong>{{ $methodLabels[$pendingTx->method] ?? $pendingTx->method }}</strong>,
+                {{ number_format($pendingTx->amount_crypto, 2) }} {{ $pendingTx->currency }}).
+                Expira {{ $pendingTx->expires_at->diffForHumans() }}.
+                <button wire:click="initCryptoPay('{{ $pendingTx->method }}', '{{ $pendingTx->plan?->slug ?? 'pro' }}')"
+                        style="background:none;border:none;cursor:pointer;color:#92400e;text-decoration:underline;font-size:13px">
+                    Ver detalles
+                </button>
+            </div>
+            @endif
 
             @if(count($cryptoMethods) > 0 || $isMpActive)
-            <p style="font-size:13px;color:var(--c-sub,#6b7280);margin:0 0 16px">Selecciona tu método de pago:</p>
+            <p style="font-size:13px;color:var(--c-sub,#6b7280);margin:0 0 14px">Selecciona tu método de pago:</p>
 
             {{-- Crypto methods --}}
             @if(count($cryptoMethods) > 0)
             <div style="margin-bottom:16px">
                 <div style="font-size:12px;font-weight:700;color:var(--c-sub,#6b7280);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Criptomonedas (USDT / USDC)</div>
                 @foreach($cryptoMethods as $method => $cfg)
-                <button wire:click="initCryptoPay('{{ $method }}')"
+                @foreach($availablePlans as $p)
+                <button x-show="selectedPlan === '{{ $p->slug }}'"
+                        wire:click="initCryptoPay('{{ $method }}', '{{ $p->slug }}')"
                         wire:loading.attr="disabled"
                         class="sub-method" style="width:100%;text-align:left;background:transparent">
                     <div>
                         <div style="font-weight:700;font-size:13px;color:var(--c-text,#111827)">{{ $methodLabels[$method] ?? $method }}</div>
-                        <div style="font-size:11px;color:var(--c-sub,#6b7280)">Pago manual — confirma el TX hash · Auto-verificación blockchain</div>
+                        <div style="font-size:11px;color:var(--c-sub,#6b7280)">Pago manual — confirma el TX hash · Verificación blockchain</div>
                     </div>
-                    <div style="font-size:13px;color:#22c55e;font-weight:700">
-                        ${{ number_format($proPlan?->price_usd ?? 49, 2) }} →
-                    </div>
+                    <div style="font-size:13px;color:#22c55e;font-weight:700">${{ number_format($p->price_usd, 2) }} →</div>
                 </button>
+                @endforeach
                 @endforeach
             </div>
             @endif
@@ -283,18 +339,21 @@ $txColors  = ['pending'=>['bg'=>'#fef9c3','color'=>'#854d0e','l'=>'Pendiente'],'
             @if($isMpActive)
             <div style="margin-bottom:16px">
                 <div style="font-size:12px;font-weight:700;color:var(--c-sub,#6b7280);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Tarjeta / PSE / Efectivo</div>
-                <button wire:click="initMpPay"
+                @foreach($availablePlans as $p)
+                <button x-show="selectedPlan === '{{ $p->slug }}'"
+                        wire:click="initMpPay('{{ $p->slug }}')"
                         wire:loading.attr="disabled"
                         class="sub-method" style="width:100%;text-align:left;background:transparent">
                     <div>
-                        <div style="font-weight:700;font-size:13px;color:var(--c-text,#111827)">MercadoPago</div>
+                        <div style="font-weight:700;font-size:13px;color:var(--c-text,#111827)">MercadoPago — Plan {{ $p->name }}</div>
                         <div style="font-size:11px;color:var(--c-sub,#6b7280)">Tarjeta, PSE, Efecty, Nequi y más · Acreditación automática</div>
                     </div>
                     <div style="display:flex;align-items:center;gap:8px">
                         <span style="background:#009ee3;color:#fff;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700">MP</span>
-                        <span style="font-size:12px;color:#22c55e;font-weight:700">→</span>
+                        <span style="font-size:12px;color:#22c55e;font-weight:700">${{ number_format($p->price_usd, 2) }} →</span>
                     </div>
                 </button>
+                @endforeach
             </div>
             @endif
 
@@ -304,29 +363,7 @@ $txColors  = ['pending'=>['bg'=>'#fef9c3','color'=>'#854d0e','l'=>'Pendiente'],'
             </div>
             @endif
 
-            {{-- Pending TX notice --}}
-            @if($pendingTx && !$pendingTx->tx_hash)
-            <div style="margin-top:12px;background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:12px 16px;font-size:13px;color:#92400e">
-                Tienes un pago cripto pendiente (<strong>{{ $methodLabels[$pendingTx->method] ?? $pendingTx->method }}</strong>,
-                {{ number_format($pendingTx->amount_crypto, 2) }} {{ $pendingTx->currency }}).
-                Expira {{ $pendingTx->expires_at->diffForHumans() }}.
-                <button wire:click="initCryptoPay('{{ $pendingTx->method }}')"
-                        style="background:none;border:none;cursor:pointer;color:#92400e;text-decoration:underline;font-size:13px">
-                    Ver detalles
-                </button>
-            </div>
-            @endif
-
-            {{-- Payment return notice --}}
-            @if(request('payment') === 'success')
-            <div style="margin-top:12px;background:#dcfce7;border:1px solid #86efac;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:700;color:#15803d">
-                ✓ Pago recibido. Tu plan se activará en breve.
-            </div>
-            @elseif(request('payment') === 'failed')
-            <div style="margin-top:12px;background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:700;color:#b91c1c">
-                El pago fue rechazado. Intenta de nuevo o usa otro método.
-            </div>
-            @endif
+            @endif {{-- end availablePlans not empty --}}
         </div>
     </div>
 

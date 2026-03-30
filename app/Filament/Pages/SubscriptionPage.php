@@ -68,6 +68,14 @@ class SubscriptionPage extends Page
         return Plan::where('slug', 'pro')->first();
     }
 
+    public function getAvailablePlansProperty()
+    {
+        return Plan::where('is_active', true)
+            ->where('price_usd', '>', 0)
+            ->orderBy('sort')
+            ->get();
+    }
+
     public function getActiveSubscriptionProperty(): ?Subscription
     {
         // Include cancelled subs so user can see expiry date
@@ -115,7 +123,7 @@ class SubscriptionPage extends Page
     }
 
     // ── Actions ───────────────────────────────────────────────────────────────
-    public function initCryptoPay(string $method): void
+    public function initCryptoPay(string $method, string $planSlug = 'pro'): void
     {
         $org = $this->org;
         if (! $org) return;
@@ -130,7 +138,7 @@ class SubscriptionPage extends Page
             return;
         }
 
-        $plan = $this->proPlan;
+        $plan = Plan::where('slug', $planSlug)->where('is_active', true)->first() ?? $this->proPlan;
         if (! $plan) return;
 
         // Cancel previous pending crypto txs
@@ -165,10 +173,10 @@ class SubscriptionPage extends Page
         $this->dispatch('open-crypto-modal');
     }
 
-    public function initMpPay(): void
+    public function initMpPay(string $planSlug = 'pro'): void
     {
         $org  = $this->org;
-        $plan = $this->proPlan;
+        $plan = Plan::where('slug', $planSlug)->where('is_active', true)->first() ?? $this->proPlan;
         if (! $org || ! $plan) return;
 
         $mp = PaymentConfig::where('method', 'mercadopago')->where('is_active', true)->first();
