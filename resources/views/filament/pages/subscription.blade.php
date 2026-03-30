@@ -196,7 +196,7 @@ $txColors  = ['pending'=>['bg'=>'#fef9c3','color'=>'#854d0e','l'=>'Pendiente'],'
                     <div class="sub-stat-lbl">IA habilitada</div>
                 </div>
                 <div class="sub-limit">
-                    <div class="sub-stat-val" style="color:#22c55e">{{ $isPro ? 'Sí' : 'No' }}</div>
+                    <div class="sub-stat-val" style="color:{{ $isPaid ? '#22c55e' : '#ef4444' }}">{{ $isPaid ? 'Sí' : 'No' }}</div>
                     <div class="sub-stat-lbl">Telegram</div>
                 </div>
             </div>
