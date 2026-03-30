@@ -200,9 +200,10 @@ class VerifyCryptoPayments extends Command
             if ($tx->wallet_to && strtolower($toAddr) !== strtolower($tx->wallet_to)) continue;
 
             // data = amount in hex
+            // Decimals: USDT/USDC BEP20 = 18, USDT/USDC Polygon = 6
+            $decimals  = $chain === 'bsc' ? 18 : 6;
             $amountHex = ltrim($log['data'] ?? '0x0', '0x') ?: '0';
-            $amountRaw = hexdec($amountHex);
-            $amount    = $amountRaw / 1e6; // USDT/USDC use 6 decimals
+            $amount    = $this->hexToDecFloat($amountHex, $decimals);
 
             if ($amount >= ((float)$tx->amount_crypto * 0.99)) {
                 // Store sender
@@ -229,5 +230,18 @@ class VerifyCryptoPayments extends Command
             str_contains($method, 'polygon') => 'polygon',
             default                           => 'unknown',
         };
+    }
+
+    /**
+     * Convert a hex string to a decimal float using bcmath for large 18-decimal values.
+     */
+    private function hexToDecFloat(string $hex, int $decimals): float
+    {
+        if ($hex === '' || $hex === '0') return 0.0;
+        $dec = '0';
+        for ($i = 0; $i < strlen($hex); $i++) {
+            $dec = bcadd(bcmul($dec, '16'), (string) hexdec($hex[$i]));
+        }
+        return (float) bcdiv($dec, bcpow('10', (string) $decimals), 8);
     }
 }

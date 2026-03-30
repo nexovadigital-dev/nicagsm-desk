@@ -2438,10 +2438,14 @@ export default function NexovaChatWidget() {
                                     const isUser   = msg.sender_type === 'user';
                                     const isSystem = msg.sender_type === 'system';
 
-                                    if (isSystem && msg.content === '__WOO_IDENTITY__') return (
-                                        <WooIdentityCard key={msg.id} accentColor={accentColor}
-                                            onVerifyOtp={() => setScreen('orders_otp')} />
-                                    );
+                                    if (isSystem && msg.content === '__WOO_IDENTITY__') {
+                                        // Don't show if WC user is already logged in
+                                        if (WOO_CUSTOMER?.id) return null;
+                                        return (
+                                            <WooIdentityCard key={msg.id} accentColor={accentColor}
+                                                onVerifyOtp={() => setScreen('orders_otp')} />
+                                        );
+                                    }
 
                                     if (isSystem && msg.content === '__AGENT_CTA__') return (
                                         <AgentCtaCard key={msg.id} accentColor={accentColor}

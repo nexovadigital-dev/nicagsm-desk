@@ -458,6 +458,7 @@ class NexovaAiService
             $systemPrompt .= "\n\n" . $this->buildStoreContextBlock($storeCtx);
 
             // Indicar si el visitante está identificado como cliente WC o es un guest
+            $ticket->loadMissing('contact');
             $wooVerified = $ticket->contact && $ticket->contact->woo_customer_id;
             if ($wooVerified) {
                 $systemPrompt .= "\n\n**IDENTIDAD DEL CLIENTE:** El cliente está identificado como cliente registrado de la tienda (WooCommerce). Puedes referirte a él por su nombre si lo tienes disponible.";
