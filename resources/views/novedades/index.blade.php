@@ -96,13 +96,13 @@
             'novedad'       => 'Novedades',
             'evento'        => 'Eventos',
             'producto'      => 'Producto',
-            'actualización' => 'Actualizaciones',
+            'actualizacion' => 'Actualizaciones',
         ];
         $catColors = [
             'novedad'       => ['bg'=>'rgba(30,64,175,.25)','color'=>'#93c5fd'],
             'evento'        => ['bg'=>'rgba(146,64,14,.25)', 'color'=>'#fcd34d'],
             'producto'      => ['bg'=>'rgba(21,128,61,.25)', 'color'=>'#86efac'],
-            'actualización' => ['bg'=>'rgba(55,65,81,.3)',   'color'=>'#d1d5db'],
+            'actualizacion' => ['bg'=>'rgba(55,65,81,.3)',   'color'=>'#d1d5db'],
         ];
     @endphp
     <div class="cat-filter">

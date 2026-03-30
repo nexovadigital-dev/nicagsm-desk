@@ -100,7 +100,7 @@ class PostsManager extends Page
             'formTitle'    => 'required|min:3|max:255',
             'formSlug'     => 'required|alpha_dash|max:255',
             'formBody'     => 'required|min:10',
-            'formCategory' => 'required|in:novedad,evento,producto,actualización',
+            'formCategory' => 'required|in:novedad,evento,producto,actualizacion',
             'formStatus'   => 'required|in:draft,published',
         ]);
 

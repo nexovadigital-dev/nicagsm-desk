@@ -30,11 +30,11 @@ $catColors = [
     'novedad'       => ['bg'=>'#dbeafe','color'=>'#1e40af'],
     'evento'        => ['bg'=>'#fef3c7','color'=>'#92400e'],
     'producto'      => ['bg'=>'#dcfce7','color'=>'#15803d'],
-    'actualización' => ['bg'=>'#f3f4f6','color'=>'#374151'],
+    'actualizacion' => ['bg'=>'#f3f4f6','color'=>'#374151'],
 ];
 $catLabels = [
     'novedad'=>'Novedad','evento'=>'Evento',
-    'producto'=>'Producto','actualización'=>'Actualización',
+    'producto'=>'Producto','actualizacion'=>'Actualizacion',
 ];
 @endphp
 
@@ -181,7 +181,7 @@ $catLabels = [
                             <option value="novedad">Novedad</option>
                             <option value="evento">Evento</option>
                             <option value="producto">Producto</option>
-                            <option value="actualización">Actualización</option>
+                            <option value="actualizacion">Actualizacion</option>
                         </select>
                     </div>
                     <div>

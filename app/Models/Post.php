@@ -42,7 +42,7 @@ class Post extends Model
             'novedad'        => 'Novedad',
             'evento'         => 'Evento',
             'producto'       => 'Producto',
-            'actualización'  => 'Actualización',
+            'actualizacion'  => 'Actualizacion',
             default          => ucfirst($this->category),
         };
     }
@@ -53,7 +53,7 @@ class Post extends Model
             'novedad'        => ['bg' => '#dbeafe', 'color' => '#1e40af'],
             'evento'         => ['bg' => '#fef3c7', 'color' => '#92400e'],
             'producto'       => ['bg' => '#dcfce7', 'color' => '#15803d'],
-            'actualización'  => ['bg' => '#f3f4f6', 'color' => '#374151'],
+            'actualizacion'  => ['bg' => '#f3f4f6', 'color' => '#374151'],
             default          => ['bg' => '#f3f4f6', 'color' => '#6b7280'],
         ];
     }

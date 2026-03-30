@@ -15,7 +15,7 @@ return new class extends Migration
             $table->text('excerpt')->nullable();
             $table->longText('body');
             $table->string('cover_image')->nullable();
-            $table->string('category')->default('novedad'); // novedad|evento|producto|actualización
+            $table->string('category')->default('novedad'); // novedad|evento|producto|actualizacion
             $table->string('status')->default('draft');     // draft|published
             $table->timestamp('published_at')->nullable();
             $table->timestamps();
