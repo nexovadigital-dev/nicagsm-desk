@@ -110,6 +110,7 @@ class Organization extends Model
                 'bot_messages_this_month'  => 0,
                 'bot_messages_month_reset' => $now,
             ]);
+            $this->bot_messages_this_month = 0; // sync in-memory after DB update
         }
     }
 
@@ -148,6 +149,7 @@ class Organization extends Model
         // Reset counter if it's a new day
         if ($this->usage_date?->toDateString() !== $today) {
             $this->update(['bot_sessions_today' => 0, 'usage_date' => $today]);
+            $this->bot_sessions_today = 0; // sync in-memory after DB update
         }
 
         return $this->bot_sessions_today < $this->max_bot_sessions_per_day;

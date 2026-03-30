@@ -25,6 +25,7 @@ class PaymentController extends Controller
         ]);
 
         $org  = Organization::findOrFail($request->organization_id);
+        abort_if(auth()->id() && auth()->user()->organization_id !== $org->id, 403);
         $plan = Plan::where('slug', $request->plan_slug)->firstOrFail();
         $mp   = PaymentConfig::where('method', 'mercadopago')->where('is_active', true)->first();
 
@@ -181,6 +182,7 @@ class PaymentController extends Controller
         ]);
 
         $org    = Organization::findOrFail($request->organization_id);
+        abort_if(auth()->id() && auth()->user()->organization_id !== $org->id, 403);
         $plan   = Plan::where('slug', $request->plan_slug)->firstOrFail();
         $method = $request->method;
 
