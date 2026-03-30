@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Mail\CryptoPaymentReceivedMail;
 use App\Models\Organization;
 use App\Models\PaymentConfig;
 use App\Models\PaymentTransaction;
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Models\User;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
@@ -284,6 +287,17 @@ class SubscriptionPage extends Page
         $this->txHash = '';
         $this->dispatch('close-crypto-modal');
         $this->dispatch('nexova-toast', type: 'success', message: 'Hash registrado. Verificaremos tu pago en la blockchain en breve.');
+
+        // Notify superadmins by email
+        try {
+            $tx->load(['organization', 'plan']);
+            $superAdmins = User::where('is_super_admin', true)->whereNotNull('email')->get();
+            foreach ($superAdmins as $admin) {
+                Mail::to($admin->email)->send(new CryptoPaymentReceivedMail($tx));
+            }
+        } catch (\Throwable $e) {
+            Log::error('[Payment] Failed to notify superadmin: ' . $e->getMessage());
+        }
     }
 
     private function generateQrBase64(string $content): string
