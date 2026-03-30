@@ -17,6 +17,9 @@ class NexovaAiService
     /** Sufijo interno que indica que el job debe ofrecer escalación. */
     public const ESCALATE_FLAG = '__ESCALATE__';
 
+    /** Sufijo interno que indica que el visitante debe verificar su identidad WooCommerce. */
+    public const WOO_VERIFY_FLAG = '__WOO_VERIFY__';
+
     // -------------------------------------------------------------------------
     // Constantes de configuración por proveedor
     // -------------------------------------------------------------------------
@@ -128,6 +131,13 @@ class NexovaAiService
                 $aiSuggestsEscalation = false;
                 foreach ($escalationKeywords as $kw) {
                     if (str_contains($lowerReply, $kw)) { $aiSuggestsEscalation = true; break; }
+                }
+
+                // WOO_VERIFY_FLAG already embedded by the AI — don't double-add ESCALATE
+                if (str_contains($reply, self::WOO_VERIFY_FLAG)) {
+                    $org?->incrementBotMessageCount();
+                    Log::info("[NexovaBot] Respuesta con WOO_VERIFY via {$type} — ticket #{$ticket->id}");
+                    return $reply;
                 }
 
                 $org?->incrementBotMessageCount();
@@ -280,6 +290,15 @@ class NexovaAiService
             $lines[] = "Moneda: {$ctx['currency']}";
         }
 
+        if (! empty($ctx['payment_methods']) && is_array($ctx['payment_methods'])) {
+            $methods = implode(', ', array_column($ctx['payment_methods'], 'title'));
+            $lines[] = "Métodos de pago: {$methods}";
+        }
+
+        if (! empty($ctx['shipping_methods']) && is_array($ctx['shipping_methods'])) {
+            $lines[] = "Métodos de envío: " . implode(', ', $ctx['shipping_methods']);
+        }
+
         if (! empty($ctx['categories']) && is_array($ctx['categories'])) {
             $cats  = implode(', ', array_column($ctx['categories'], 'name'));
             $lines[] = "Categorías de productos: {$cats}";
@@ -290,11 +309,18 @@ class NexovaAiService
             $lines[] = '';
             $lines[] = '--- PRODUCTO EN ESTA PÁGINA ---';
             $lines[] = "Nombre: {$p['name']}";
-            if (! empty($p['price']))       $lines[] = "Precio: {$p['price']} {$ctx['currency']}";
-            if (! empty($p['sku']))         $lines[] = "SKU: {$p['sku']}";
-            if (! empty($p['stock']))       $lines[] = "Stock: {$p['stock']}";
+            if (! empty($p['price']))        $lines[] = "Precio: {$p['price']}";
+            if (! empty($p['on_sale']))      $lines[] = "En oferta: Sí (precio regular: {$p['regular_price']})";
+            if (! empty($p['sku']))          $lines[] = "SKU: {$p['sku']}";
+            if (! empty($p['stock']))        $lines[] = "Stock: {$p['stock']}";
+            if (! empty($p['categories']))   $lines[] = "Categorías: " . implode(', ', (array)$p['categories']);
+            if (! empty($p['attributes']) && is_array($p['attributes'])) {
+                foreach ($p['attributes'] as $attrName => $attrVal) {
+                    $lines[] = "{$attrName}: {$attrVal}";
+                }
+            }
             if (! empty($p['description'])) $lines[] = "Descripción: {$p['description']}";
-            if (! empty($p['url']))         $lines[] = "URL: {$p['url']}";
+            if (! empty($p['url']))          $lines[] = "URL: {$p['url']}";
         }
 
         if (! empty($ctx['products']) && is_array($ctx['products'])) {
@@ -430,6 +456,14 @@ class NexovaAiService
         $storeCtx = $ticket->store_context;
         if (! empty($storeCtx)) {
             $systemPrompt .= "\n\n" . $this->buildStoreContextBlock($storeCtx);
+
+            // Indicar si el visitante está identificado como cliente WC o es un guest
+            $wooVerified = $ticket->contact && $ticket->contact->woo_customer_id;
+            if ($wooVerified) {
+                $systemPrompt .= "\n\n**IDENTIDAD DEL CLIENTE:** El cliente está identificado como cliente registrado de la tienda (WooCommerce). Puedes referirte a él por su nombre si lo tienes disponible.";
+            } else {
+                $systemPrompt .= "\n\n**IDENTIDAD DEL CLIENTE:** El visitante NO ha iniciado sesión en la tienda. Si pregunta por sus pedidos, historial de compras, estado de envío, cuenta o cualquier información personal de su perfil de cliente, responde explicando que necesitas verificar su identidad y añade el marcador exacto __WOO_VERIFY__ al FINAL de tu respuesta (sin espacios antes ni después). No inventes información de pedidos. Para preguntas generales sobre productos, precios o la tienda, responde con normalidad sin usar el marcador.";
+            }
         }
 
         // Conocimiento (KB manual + web scrape) — se agrega si existe

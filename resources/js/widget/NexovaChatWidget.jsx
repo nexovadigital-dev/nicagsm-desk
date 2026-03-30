@@ -659,6 +659,68 @@ const AgentCtaCard = ({ accentColor, onRequest }) => {
     );
 };
 
+// WooIdentityCard — inline identity verification card for WC guests
+// ---------------------------------------------------------------------------
+const WooIdentityCard = ({ accentColor, onVerifyOtp }) => {
+    const storeUrl = window.NexovaChatConfig?.storeContext?.store_url || null;
+    return (
+        <div style={{ display: 'flex', justifyContent: 'center', margin: '6px 0' }}>
+            <div style={{ background: '#fff', border: '1px solid #e2e8f0',
+                borderRadius: 12, padding: '14px 16px', maxWidth: 280, width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: `${accentColor}14`,
+                        border: `1px solid ${accentColor}33`, display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', flexShrink: 0 }}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2"
+                            strokeLinecap="round" width="16" height="16">
+                            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#111827' }}>
+                            Verificar identidad
+                        </p>
+                        <p style={{ margin: 0, fontSize: 11, color: '#6b7280', lineHeight: 1.4 }}>
+                            Para consultar tu cuenta o pedidos
+                        </p>
+                    </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    {storeUrl && (
+                        <a href={storeUrl + '/mi-cuenta'}
+                            target="_blank" rel="noopener noreferrer"
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                gap: 6, background: accentColor, color: '#fff', textDecoration: 'none',
+                                borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 700 }}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                                strokeLinecap="round" width="12" height="12">
+                                <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/>
+                            </svg>
+                            Iniciar sesión en la tienda
+                        </a>
+                    )}
+                    <button onClick={onVerifyOtp}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            gap: 6, background: 'transparent', border: '1px solid #e2e8f0',
+                            borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 600,
+                            cursor: 'pointer', color: '#374151', fontFamily: 'inherit' }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = accentColor; e.currentTarget.style.color = accentColor; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.color = '#374151'; }}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                            strokeLinecap="round" width="12" height="12">
+                            <rect x="2" y="7" width="20" height="14" rx="2"/>
+                            <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+                        </svg>
+                        Verificar con código por email
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const statusLabel = status =>
     ({ bot: 'Asistente IA · en línea', human: 'Agente conectado', closed: 'Conversación finalizada' }[status] ?? 'Conectando...');
 
@@ -1339,25 +1401,6 @@ function HomeScreen({ cfg, accentColor, botName, onStartChat, contactName, isRet
                     {hasSession ? 'Nueva conversación' : 'Iniciar conversación'}
                 </button>
 
-                {/* Ver mis pedidos — solo para visitantes no logueados en tiendas WC */}
-                {WP_CONFIG?.otpEnabled && onOrdersOtp && (
-                    <button onClick={onOrdersOtp}
-                        style={{ background: 'transparent', border: '1px solid #e2e8f0',
-                            borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 600,
-                            cursor: 'pointer', fontFamily: 'inherit', width: '100%',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                            color: '#374151' }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = accentColor; e.currentTarget.style.color = accentColor; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.color = '#374151'; }}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                            strokeLinecap="round" width="14" height="14">
-                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
-                            <rect x="9" y="3" width="6" height="4" rx="1"/>
-                            <path d="M9 12h6M9 16h4"/>
-                        </svg>
-                        Ver mis pedidos
-                    </button>
-                )}
 
                 {/* FAQs */}
                 {faqs.length > 0 && (
@@ -2247,7 +2290,7 @@ export default function NexovaChatWidget() {
                     {screen === 'orders_otp' && (
                         <OrdersOtpScreen
                             accentColor={accentColor}
-                            onBack={() => setScreen('home')} />
+                            onBack={() => setScreen(sessionId ? 'chat' : 'home')} />
                     )}
 
                     {/* ── Pantalla: Offline ── */}
@@ -2350,6 +2393,11 @@ export default function NexovaChatWidget() {
                                 {messages.map(msg => {
                                     const isUser   = msg.sender_type === 'user';
                                     const isSystem = msg.sender_type === 'system';
+
+                                    if (isSystem && msg.content === '__WOO_IDENTITY__') return (
+                                        <WooIdentityCard key={msg.id} accentColor={accentColor}
+                                            onVerifyOtp={() => setScreen('orders_otp')} />
+                                    );
 
                                     if (isSystem && msg.content === '__AGENT_CTA__') return (
                                         <AgentCtaCard key={msg.id} accentColor={accentColor}

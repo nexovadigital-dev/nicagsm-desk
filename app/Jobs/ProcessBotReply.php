@@ -39,6 +39,13 @@ class ProcessBotReply implements ShouldQueue
 
         $rawReply = $aiService->generateReply($ticket);
 
+        // Detect WOO_VERIFY flag (identity verification needed)
+        $needsWooVerify = str_contains($rawReply, \App\Services\NexovaAiService::WOO_VERIFY_FLAG);
+        if ($needsWooVerify) {
+            $rawReply = str_replace(\App\Services\NexovaAiService::WOO_VERIFY_FLAG, '', $rawReply);
+            $rawReply = rtrim($rawReply);
+        }
+
         // Detect escalation flag and strip it from the visible reply
         $needsEscalation = str_ends_with($rawReply, \App\Services\NexovaAiService::ESCALATE_FLAG);
         $reply = $needsEscalation
@@ -50,6 +57,15 @@ class ProcessBotReply implements ShouldQueue
             'sender_type' => 'bot',
             'content'     => $reply,
         ]);
+
+        // WooCommerce identity verification CTA
+        if ($needsWooVerify) {
+            Message::create([
+                'ticket_id'   => $ticket->id,
+                'sender_type' => 'system',
+                'content'     => '__WOO_IDENTITY__',
+            ]);
+        }
 
         // Insert escalation offer as a special system message the widget can detect
         if ($needsEscalation) {
