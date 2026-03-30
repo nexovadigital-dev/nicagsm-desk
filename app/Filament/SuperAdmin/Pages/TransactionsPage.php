@@ -27,6 +27,19 @@ class TransactionsPage extends Page
 
     public function getTitle(): string|Htmlable { return ''; }
 
+    public static function getNavigationBadge(): ?string
+    {
+        $count = PaymentTransaction::where('status', 'pending')
+            ->whereNotNull('tx_hash')
+            ->count();
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
     public string $filterStatus = 'all';
     public string $search       = '';
 
@@ -75,8 +88,10 @@ class TransactionsPage extends Page
         $tx->update(['subscription_id' => $sub->id]);
 
         Organization::where('id', $tx->organization_id)->update([
-            'plan'      => $tx->plan->slug,
-            'is_active' => true,
+            'plan'                     => $tx->plan->slug,
+            'is_active'                => true,
+            'max_bot_sessions_per_day' => $tx->plan->max_sessions_per_day,
+            'max_messages_per_session' => $tx->plan->max_messages_per_session,
         ]);
 
         $this->dispatch('nexova-toast', type: 'success', message: 'Transacción confirmada y suscripción activada');

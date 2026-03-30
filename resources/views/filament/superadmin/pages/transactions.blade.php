@@ -38,12 +38,22 @@ $methodIcons = [
             <h1 style="font-size:20px;font-weight:800;color:var(--c-text,#111827);margin:0">Transacciones</h1>
             <p style="font-size:13px;color:var(--c-sub,#6b7280);margin:4px 0 0">Historial de pagos y confirmaciones pendientes</p>
         </div>
-        @php $pending = $this->transactions->where('status','pending')->count(); @endphp
-        @if($this->transactions->total() > 0 && $pending > 0)
-        <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;color:#92400e">
-            ⚠ {{ $pending }} pago(s) pendiente(s) de confirmar
+        @php
+            $awaitingReview = $this->transactions->where('status','pending')->whereNotNull('tx_hash')->count();
+            $waitingHash    = $this->transactions->where('status','pending')->whereNull('tx_hash')->count();
+        @endphp
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+            @if($awaitingReview > 0)
+            <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;color:#92400e">
+                ⚠ {{ $awaitingReview }} por verificar en blockchain
+            </div>
+            @endif
+            @if($waitingHash > 0)
+            <div style="background:#f3f4f6;border:1px solid var(--c-border,#e3e6ea);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--c-sub,#6b7280)">
+                {{ $waitingHash }} esperando TX hash
+            </div>
+            @endif
         </div>
-        @endif
     </div>
 
     {{-- Filters --}}
@@ -143,6 +153,11 @@ $methodIcons = [
                     <td>
                         @if($tx->status === 'pending')
                         <div style="display:flex;flex-direction:column;gap:5px">
+                            @if($tx->tx_hash)
+                            <div style="font-size:10px;font-weight:700;color:#92400e;background:#fef3c7;border-radius:4px;padding:2px 6px;margin-bottom:2px;text-align:center">
+                                TX recibido · verificar
+                            </div>
+                            @endif
                             <button wire:click="confirmTransaction({{ $tx->id }})"
                                     wire:confirm="¿Confirmar esta transacción y activar el plan?"
                                     class="sa-btn" style="background:#22c55e;color:#fff">
