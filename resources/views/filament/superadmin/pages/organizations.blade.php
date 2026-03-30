@@ -58,7 +58,7 @@ $planLabelMap = array_merge(['free'=>'Free','trial'=>'Prueba'], $planLabelMap);
     {{-- Filters --}}
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <input wire:model.live.debounce.300ms="search"
-               class="sa-input" style="max-width:260px"
+               class="sa-input" style="max-width:220px"
                placeholder="Buscar por nombre o slug…">
         <select wire:model.live="filterPlan" class="sa-select">
             <option value="all">Todos los planes</option>
@@ -66,6 +66,15 @@ $planLabelMap = array_merge(['free'=>'Free','trial'=>'Prueba'], $planLabelMap);
             <option value="{{ $p->slug }}">{{ $p->name }}</option>
             @endforeach
         </select>
+        <select wire:model.live="filterStatus" class="sa-select">
+            <option value="all">Activo / Inactivo</option>
+            <option value="active">Solo activas</option>
+            <option value="inactive">Solo inactivas</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#374151;cursor:pointer;white-space:nowrap">
+            <input type="checkbox" wire:model.live="filterExpiry" style="accent-color:#22c55e;width:15px;height:15px">
+            Vence en ≤ 7 días
+        </label>
         <span style="font-size:12px;color:#64748b;margin-left:auto">
             {{ $this->organizations->total() }} organización(es)
         </span>

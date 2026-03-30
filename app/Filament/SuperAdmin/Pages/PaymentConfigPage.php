@@ -34,6 +34,10 @@ class PaymentConfigPage extends Page
     public string $mpCountry     = 'CO';
     public bool   $mpActive      = false;
 
+    // Blockchain API keys (BSCScan, PolygonScan)
+    public string $bscApiKey     = '';
+    public string $polygonApiKey = '';
+
     protected static array $CRYPTO_METHODS = [
         'usdt_trc20'  => ['label' => 'USDT · TRC20 (Tron)',         'currency' => 'USDT', 'network' => 'trc20'],
         'usdt_bep20'  => ['label' => 'USDT · BEP20 (BNB Chain)',    'currency' => 'USDT', 'network' => 'bep20'],
@@ -59,6 +63,12 @@ class PaymentConfigPage extends Page
             $this->mpCountry = $mp->mp_country ?? 'CO';
             $this->mpActive  = $mp->is_active;
             // Don't pre-fill keys — security
+        }
+
+        $apis = PaymentConfig::where('method', 'blockchain_apis')->first();
+        if ($apis && is_array($apis->metadata)) {
+            $this->bscApiKey     = $apis->metadata['bsc_api_key']     ?? '';
+            $this->polygonApiKey = $apis->metadata['polygon_api_key'] ?? '';
         }
     }
 
@@ -92,6 +102,30 @@ class PaymentConfigPage extends Page
         );
 
         $this->dispatch('nexova-toast', type: 'success', message: "Configuración {$meta['label']} guardada");
+    }
+
+    public function saveBlockchainApis(): void
+    {
+        $meta = [];
+        if (trim($this->bscApiKey)) {
+            $meta['bsc_api_key'] = trim($this->bscApiKey);
+        }
+        if (trim($this->polygonApiKey)) {
+            $meta['polygon_api_key'] = trim($this->polygonApiKey);
+        }
+
+        $existing = PaymentConfig::where('method', 'blockchain_apis')->first();
+        $existing_meta = $existing && is_array($existing->metadata) ? $existing->metadata : [];
+        $merged = array_merge($existing_meta, $meta);
+
+        PaymentConfig::updateOrCreate(
+            ['method' => 'blockchain_apis'],
+            ['label' => 'Blockchain APIs', 'metadata' => $merged, 'is_active' => true]
+        );
+
+        $this->bscApiKey = '';
+        $this->polygonApiKey = '';
+        $this->dispatch('nexova-toast', type: 'success', message: 'API keys guardadas');
     }
 
     public function saveMercadoPago(): void

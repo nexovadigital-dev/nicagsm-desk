@@ -30,8 +30,10 @@ class Organizations extends Page
 
     public function getTitle(): string|Htmlable { return ''; }
 
-    public string $search     = '';
-    public string $filterPlan = 'all';
+    public string $search        = '';
+    public string $filterPlan   = 'all';
+    public string $filterStatus = 'all';   // 'all' | 'active' | 'inactive'
+    public bool   $filterExpiry = false;   // true = vencimiento ≤ 7 días
 
     // Detail / edit modal
     public ?int   $viewingOrgId  = null;
@@ -51,6 +53,13 @@ class Organizations extends Page
                   ->orWhere('slug', 'like', '%' . $this->search . '%')
             )
             ->when($this->filterPlan !== 'all', fn ($q) => $q->where('plan', $this->filterPlan))
+            ->when($this->filterStatus === 'active',   fn ($q) => $q->where('is_active', true))
+            ->when($this->filterStatus === 'inactive', fn ($q) => $q->where('is_active', false))
+            ->when($this->filterExpiry, fn ($q) =>
+                $q->whereHas('activeSubscription', fn ($s) =>
+                    $s->whereBetween('ends_at', [now(), now()->addDays(7)])
+                )
+            )
             ->orderByDesc('created_at')
             ->paginate(20);
     }

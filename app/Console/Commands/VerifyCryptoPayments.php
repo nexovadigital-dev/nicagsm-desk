@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Http\Controllers\PaymentController;
+use App\Models\PaymentConfig;
 use App\Models\PaymentTransaction;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
@@ -146,7 +147,12 @@ class VerifyCryptoPayments extends Command
 
         if (! $baseUrl) return 'pending';
 
-        $apiKey = env($envKey, 'YourApiKeyToken'); // free tier works without key but is rate-limited
+        // Read API key from panel config first, fallback to .env
+        $metaKey = $chain === 'bsc' ? 'bsc_api_key' : 'polygon_api_key';
+        $panelCfg = PaymentConfig::where('method', 'blockchain_apis')->first();
+        $apiKey = ($panelCfg && !empty($panelCfg->metadata[$metaKey]))
+            ? $panelCfg->metadata[$metaKey]
+            : env($envKey, 'YourApiKeyToken');
 
         // Step 1: check receipt status (success/fail)
         $receipt = Http::timeout(15)->get($baseUrl, [

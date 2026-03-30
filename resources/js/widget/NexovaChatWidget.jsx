@@ -1859,7 +1859,7 @@ export default function NexovaChatWidget() {
         hasAutoNamed.current = false; // nueva conv → permitir auto-nombre
         sessionUploadCount.current = 0;
 
-        if (cfg?.pre_chat_enabled && cfg?.pre_chat_fields?.length > 0) {
+        if (cfg?.pre_chat_enabled && cfg?.pre_chat_fields?.length > 0 && !WOO_CUSTOMER?.id) {
             setScreen('prechat');
         } else {
             setScreen('chat');
@@ -1909,7 +1909,7 @@ export default function NexovaChatWidget() {
         }
 
         if (!sessionId) {
-            if (cfg?.pre_chat_enabled && cfg?.pre_chat_fields?.length > 0) {
+            if (cfg?.pre_chat_enabled && cfg?.pre_chat_fields?.length > 0 && !WOO_CUSTOMER?.id) {
                 setScreen('prechat');
             } else if (defaultScreen === 'home') {
                 setScreen('home');

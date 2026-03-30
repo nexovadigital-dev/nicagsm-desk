@@ -7,6 +7,7 @@ namespace App\Filament\SuperAdmin\Pages;
 use App\Models\Organization;
 use App\Models\PaymentTransaction;
 use App\Models\Subscription;
+use Illuminate\Support\Facades\DB;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\Support\Htmlable;
@@ -95,6 +96,33 @@ class TransactionsPage extends Page
         ]);
 
         $this->dispatch('nexova-toast', type: 'success', message: 'Transacción confirmada y suscripción activada');
+    }
+
+    public function getStatsProperty(): array
+    {
+        $confirmed = PaymentTransaction::where('status', 'confirmed');
+
+        // Revenue by method (all time)
+        $byMethod = (clone $confirmed)
+            ->select('method', DB::raw('SUM(amount_usd) as total'), DB::raw('COUNT(*) as count'))
+            ->groupBy('method')
+            ->orderByDesc('total')
+            ->get()
+            ->toArray();
+
+        // Revenue by month (last 6 months)
+        $byMonth = (clone $confirmed)
+            ->where('confirmed_at', '>=', now()->subMonths(6)->startOfMonth())
+            ->select(
+                DB::raw("DATE_FORMAT(confirmed_at, '%Y-%m') as month"),
+                DB::raw('SUM(amount_usd) as total')
+            )
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->toArray();
+
+        return compact('byMethod', 'byMonth');
     }
 
     public function rejectTransaction(int $id): void

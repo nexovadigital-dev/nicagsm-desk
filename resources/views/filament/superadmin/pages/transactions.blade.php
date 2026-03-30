@@ -56,6 +56,69 @@ $methodIcons = [
         </div>
     </div>
 
+    {{-- Stats --}}
+    @php
+        $stats      = $this->stats;
+        $methodLabels = [
+            'usdt_trc20'=>'USDT·TRC20','usdt_bep20'=>'USDT·BEP20','usdt_polygon'=>'USDT·POL',
+            'usdc_trc20'=>'USDC·TRC20','usdc_bep20'=>'USDC·BEP20','usdc_polygon'=>'USDC·POL',
+            'mercadopago'=>'MercadoPago',
+        ];
+        $maxMethod  = max(1, max(array_column($stats['byMethod'], 'total') ?: [0]));
+        $maxMonth   = max(1, max(array_column($stats['byMonth'],  'total') ?: [0]));
+        $monthNames = ['01'=>'Ene','02'=>'Feb','03'=>'Mar','04'=>'Abr','05'=>'May','06'=>'Jun',
+                       '07'=>'Jul','08'=>'Ago','09'=>'Sep','10'=>'Oct','11'=>'Nov','12'=>'Dic'];
+    @endphp
+    @if(!empty($stats['byMethod']))
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        {{-- Por método --}}
+        <div class="sa-card">
+            <div style="padding:12px 18px;border-bottom:1px solid var(--c-border,#e3e6ea);font-size:13px;font-weight:700;color:var(--c-text,#111827)">
+                Ingresos por método (total)
+            </div>
+            <div style="padding:16px 18px;display:flex;flex-direction:column;gap:9px">
+                @foreach($stats['byMethod'] as $row)
+                @php $pct = round(($row['total'] / $maxMethod) * 100); @endphp
+                <div style="display:flex;align-items:center;gap:10px;font-size:12px">
+                    <span style="width:90px;flex-shrink:0;font-weight:600;color:#374151">{{ $methodLabels[$row['method']] ?? $row['method'] }}</span>
+                    <div style="flex:1;height:6px;background:#f1f5f9;border-radius:99px;overflow:hidden">
+                        <div style="width:{{ $pct }}%;height:100%;background:#22c55e;border-radius:99px"></div>
+                    </div>
+                    <span style="width:56px;text-align:right;font-weight:800;color:#111827">${{ number_format($row['total'],0) }}</span>
+                    <span style="font-size:10px;color:#9ca3af">×{{ $row['count'] }}</span>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        {{-- Por mes --}}
+        <div class="sa-card">
+            <div style="padding:12px 18px;border-bottom:1px solid var(--c-border,#e3e6ea);font-size:13px;font-weight:700;color:var(--c-text,#111827)">
+                Ingresos por mes (últimos 6 meses)
+            </div>
+            <div style="padding:16px 18px">
+                @if(!empty($stats['byMonth']))
+                <div style="display:flex;align-items:flex-end;gap:8px;height:72px">
+                    @foreach($stats['byMonth'] as $row)
+                    @php
+                        $pct = round(($row['total'] / $maxMonth) * 100);
+                        [$yr, $mo] = explode('-', $row['month']);
+                        $label = ($monthNames[$mo] ?? $mo) . ' ' . substr($yr, 2);
+                    @endphp
+                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end">
+                        <span style="font-size:8px;color:#6b7280;font-weight:600">${{ number_format($row['total'],0) }}</span>
+                        <div style="width:100%;height:{{ max(4,$pct) }}%;background:#22c55e;border-radius:4px 4px 0 0;min-height:4px"></div>
+                        <span style="font-size:9px;color:#9ca3af;white-space:nowrap">{{ $label }}</span>
+                    </div>
+                    @endforeach
+                </div>
+                @else
+                <p style="font-size:12px;color:#9ca3af;text-align:center;margin:16px 0">Sin datos este período</p>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Filters --}}
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <input wire:model.live.debounce.300ms="search"

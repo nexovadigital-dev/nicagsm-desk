@@ -133,9 +133,49 @@
         </div>
     </div>
 
+    {{-- Avanzado: Blockchain API Keys --}}
+    <div class="sa-card">
+        <div class="sa-card-head" style="display:flex;align-items:center;justify-content:space-between">
+            <span>Avanzado · APIs Blockchain</span>
+            <span class="sa-badge" style="background:#f3f4f6;color:#6b7280;font-size:10px">Opcional — mejora la verificación automática</span>
+        </div>
+        <div class="sa-card-body" style="display:flex;flex-direction:column;gap:16px">
+            <p style="font-size:12px;color:var(--c-sub,#6b7280);margin:0">
+                Las claves de API permiten verificar TX hashes automáticamente en BSC y Polygon sin límites de rate. Obtén las keys gratuitas en
+                <a href="https://bscscan.com/myapikey" target="_blank" style="color:#22c55e">bscscan.com</a> y
+                <a href="https://polygonscan.com/myapikey" target="_blank" style="color:#22c55e">polygonscan.com</a>.
+                Tron (TRC20) no requiere key.
+            </p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                <div>
+                    <div class="sa-label">BSCScan API Key</div>
+                    <input wire:model="bscApiKey"
+                           type="password"
+                           class="sa-input"
+                           placeholder="{{ $bscApiKey ? '••••••••  (configurado)' : 'YourApiKeyToken' }}">
+                    <div style="font-size:11px;color:var(--c-sub,#6b7280);margin-top:4px">Para verificación USDT/USDC BEP20</div>
+                </div>
+                <div>
+                    <div class="sa-label">PolygonScan API Key</div>
+                    <input wire:model="polygonApiKey"
+                           type="password"
+                           class="sa-input"
+                           placeholder="{{ $polygonApiKey ? '••••••••  (configurado)' : 'YourApiKeyToken' }}">
+                    <div style="font-size:11px;color:var(--c-sub,#6b7280);margin-top:4px">Para verificación USDT/USDC Polygon</div>
+                </div>
+            </div>
+            <div>
+                <button wire:click="saveBlockchainApis"
+                        class="sa-btn" style="background:#111827;color:#fff">
+                    Guardar API Keys
+                </button>
+            </div>
+        </div>
+    </div>
+
     {{-- Info box --}}
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px 20px;font-size:13px;color:#166534">
-        <strong>Flujo de pago crypto:</strong> el cliente ve la wallet + monto, envía la transferencia y sube el TX hash. El super-admin verifica en el explorer de la red y confirma manualmente desde la sección de Transacciones.
+        <strong>Flujo de pago crypto:</strong> el cliente ve la wallet + monto, envía la transferencia y sube el TX hash. El sistema verifica automáticamente cada 5 min en la blockchain. También puedes confirmar manualmente desde la sección de Transacciones.
     </div>
 
 </div>
