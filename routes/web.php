@@ -24,8 +24,28 @@ Route::post('/logout', function () {
 
 // ── Landing / demo ────────────────────────────────────────────────────────────
 Route::get('/', function () {
-    $plans = \App\Models\Plan::where('is_active', true)->orderBy('sort')->get();
-    return view('landing', compact('plans'));
+    $plans        = \App\Models\Plan::where('is_active', true)->orderBy('sort')->get();
+    $latestPosts  = \App\Models\Post::published()->orderByDesc('published_at')->limit(3)->get();
+    return view('landing', compact('plans', 'latestPosts'));
+});
+
+// ── Blog / Novedades ──────────────────────────────────────────────────────────
+Route::get('/novedades', function () {
+    $posts = \App\Models\Post::published()
+        ->orderByDesc('published_at')
+        ->paginate(9);
+    return view('novedades.index', compact('posts'));
+});
+
+Route::get('/novedades/{slug}', function (string $slug) {
+    $post = \App\Models\Post::published()->where('slug', $slug)->firstOrFail();
+    $related = \App\Models\Post::published()
+        ->where('id', '!=', $post->id)
+        ->where('category', $post->category)
+        ->orderByDesc('published_at')
+        ->limit(3)
+        ->get();
+    return view('novedades.show', compact('post', 'related'));
 });
 
 // Página de demostración del widget (solo desarrollo)

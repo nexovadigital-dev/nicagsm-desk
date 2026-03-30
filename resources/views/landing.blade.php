@@ -221,6 +221,7 @@
         <a href="#features">Funciones</a>
         <a href="#pricing">Precios</a>
         <a href="#faq">FAQ</a>
+        <a href="/novedades">Blog</a>
     </div>
     <div class="nav-actions">
         @auth
@@ -552,6 +553,65 @@
         </div>
     </div>
 </section>
+
+{{-- NOVEDADES (solo si hay posts publicados) --}}
+@if(isset($latestPosts) && $latestPosts->isNotEmpty())
+<hr class="section-sep">
+<section class="section" id="novedades">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:40px">
+        <div>
+            <div class="label-row"><span class="label-line"></span><span class="label-text">Blog</span></div>
+            <h2 class="section-h2" style="margin-bottom:0">Novedades</h2>
+        </div>
+        <a href="/novedades" style="font-size:13px;color:var(--green);font-weight:600;display:inline-flex;align-items:center;gap:5px">
+            Ver todas
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </a>
+    </div>
+    @php
+        $landingCatColors = [
+            'novedad'       => ['bg'=>'rgba(30,64,175,.25)','color'=>'#93c5fd'],
+            'evento'        => ['bg'=>'rgba(146,64,14,.25)', 'color'=>'#fcd34d'],
+            'producto'      => ['bg'=>'rgba(21,128,61,.25)', 'color'=>'#86efac'],
+            'actualización' => ['bg'=>'rgba(55,65,81,.3)',   'color'=>'#d1d5db'],
+        ];
+    @endphp
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px">
+        @foreach($latestPosts as $post)
+        @php $cc = $landingCatColors[$post->category] ?? ['bg'=>'rgba(55,65,81,.3)','color'=>'#d1d5db']; @endphp
+        <a href="/novedades/{{ $post->slug }}"
+           style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .2s,transform .2s"
+           onmouseover="this.style.borderColor='rgba(34,197,94,.22)';this.style.transform='translateY(-2px)'"
+           onmouseout="this.style.borderColor='rgba(255,255,255,.075)';this.style.transform='translateY(0)'">
+            @if($post->cover_image)
+            <img src="{{ $post->cover_image }}" alt="{{ $post->title }}"
+                 style="width:100%;height:160px;object-fit:cover">
+            @else
+            <div style="width:100%;height:160px;background:var(--surf2);display:flex;align-items:center;justify-content:center">
+                <svg fill="none" stroke="rgba(255,255,255,.12)" viewBox="0 0 24 24" width="36" height="36"><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" stroke-width="1.5"/><path d="M21 15l-5-5L5 21" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            @endif
+            <div style="padding:18px;display:flex;flex-direction:column;gap:9px;flex:1">
+                <span style="display:inline-flex;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;width:fit-content;background:{{ $cc['bg'] }};color:{{ $cc['color'] }}">
+                    {{ $post->categoryLabel() }}
+                </span>
+                <div style="font-size:15px;font-weight:700;line-height:1.35;color:var(--text)">{{ $post->title }}</div>
+                @if($post->excerpt)
+                <p style="font-size:13px;color:var(--muted);line-height:1.6;margin:0">{{ Str::limit($post->excerpt, 100) }}</p>
+                @endif
+                <div style="margin-top:auto;display:flex;align-items:center;justify-content:space-between">
+                    <span style="font-size:11px;color:var(--sub)">{{ $post->published_at?->format('d/m/Y') }}</span>
+                    <span style="font-size:12px;font-weight:600;color:var(--green);display:inline-flex;align-items:center;gap:4px">
+                        Leer
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+            </div>
+        </a>
+        @endforeach
+    </div>
+</section>
+@endif
 
 <!-- CTA FINAL -->
 <section class="cta-section">

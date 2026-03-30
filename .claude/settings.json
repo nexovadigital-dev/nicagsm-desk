@@ -13,7 +13,14 @@
       "Bash(python3 -c \"import paramiko; print\\(''''ok''''\\)\")",
       "Bash(python3 -c \":*)",
       "Bash(python3 -m pip install paramiko)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Read(//c/xampp/htdocs/nexova-chat/app/Filament/**)",
+      "Bash(ssh -p 65002 -o StrictHostKeyChecking=no u164741808@82.25.113.102 \"cd /home/u164741808/domains/nexovadesk.com/public_html/nexova-app && git pull && php artisan view:clear && php artisan route:cache && php artisan config:cache\")",
+      "Bash(powershell -Command \"& ssh -p 65002 -o BatchMode=no -o StrictHostKeyChecking=no u164741808@82.25.113.102 ''echo test''\")",
+      "Bash(where WinSCP)",
+      "Bash(where winscp.com)",
+      "Bash(python -c \"import paramiko; print\\(''ok''\\)\")",
+      "Bash(python -:*)"
     ]
   }
 }
