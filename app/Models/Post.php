@@ -55,7 +55,7 @@ class Post extends Model
             'producto'       => ['bg' => '#dcfce7', 'color' => '#15803d'],
             'actualizacion'  => ['bg' => '#f3f4f6', 'color' => '#374151'],
             default          => ['bg' => '#f3f4f6', 'color' => '#6b7280'],
-        ];
+        };
     }
 
     /** Render body markdown to HTML (uses Laravel built-in Str::markdown). */
