@@ -15,6 +15,7 @@ Route::prefix('chat')->group(function () {
     Route::post('/rate',                 [ChatController::class, 'rateChat']);
     Route::post('/visitor',              [ChatController::class, 'updateVisitor']);
     Route::post('/request-agent',        [ChatController::class, 'requestAgent']);
+    Route::post('/revert-to-bot',        [ChatController::class, 'revertToBot']);
     // Contact recognition (returning visitor / WooCommerce lookup)
     Route::post('/contact-lookup',       [ChatController::class, 'contactLookup']);
     // Historial: resumen bulk de conversaciones por session_ids

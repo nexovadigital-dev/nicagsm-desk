@@ -488,7 +488,7 @@ function CallingScreen({ accentColor, timeoutMin, noResponse, onAgentJoined, onT
     useEffect(() => {
         pollRef.current = setInterval(async () => {
             try {
-                const r = await fetch(`${API_BASE}/messages?session_id=${sessionId}`);
+                const r = await fetch(`${API_BASE}/api/chat/messages?session_id=${sessionId}`);
                 const d = await r.json();
                 if (d.ticket_status === 'human' && d.messages?.some(m => m.sender_type === 'agent')) {
                     clearInterval(pollRef.current);
@@ -2401,15 +2401,19 @@ export default function NexovaChatWidget() {
                             sessionId={sessionId}
                             API_BASE={API_BASE}
                             onAgentJoined={() => setCallingAgent(false)}
-                            onTimeout={() => {
-                                setCallingAgent(false);
+                            onTimeout={async () => {
                                 if (callNoResponse === 'bot') {
-                                    // Volver al bot: reactivar status
-                                    fetch(`${API_BASE}/api/chat/messages?session_id=${sessionId}`)
-                                        .then(r => r.json()).then(d => {
-                                            if (d.ticket_status) setTicketStatus(d.ticket_status);
-                                        }).catch(() => {});
+                                    // Revertir el ticket a modo bot en el servidor
+                                    try {
+                                        await fetch(`${API_BASE}/api/chat/revert-to-bot`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                                            body: JSON.stringify({ session_id: sessionId }),
+                                        });
+                                    } catch { /* silent */ }
                                 }
+                                setCallingAgent(false);
+                                await fetchMessages();
                             }}
                         />
                     )}

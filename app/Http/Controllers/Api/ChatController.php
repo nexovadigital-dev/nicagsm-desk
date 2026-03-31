@@ -360,6 +360,32 @@ class ChatController extends Controller
         ]);
     }
 
+    // ── 4b. Revertir a bot cuando expira el timeout sin respuesta ────────────
+    public function revertToBot(Request $request): JsonResponse
+    {
+        $request->validate(['session_id' => 'required|string']);
+
+        $ticket = Ticket::where('session_id', $request->session_id)->first();
+        if (! $ticket) {
+            return response()->json(['error' => 'Sesión no encontrada'], 404);
+        }
+
+        // Solo revertir si el ticket sigue esperando agente (no fue tomado)
+        if ($ticket->status === 'human' && ! $ticket->messages()->where('sender_type', 'agent')->exists()) {
+            $ticket->update([
+                'status'          => 'bot',
+                'agent_called_at' => null,
+            ]);
+            Message::create([
+                'ticket_id'   => $ticket->id,
+                'sender_type' => 'system',
+                'content'     => 'No hay agentes disponibles. El asistente IA continuará ayudándote.',
+            ]);
+        }
+
+        return response()->json(['success' => true, 'status' => $ticket->fresh()->status]);
+    }
+
     // ── 5. Calificación del chat ─────────────────────────────────────────────
     public function rateChat(Request $request): JsonResponse
     {
