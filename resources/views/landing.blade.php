@@ -27,15 +27,15 @@
     {{-- JSON-LD structured data --}}
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
+        "@@context": "https://schema.org",
+        "@@type": "SoftwareApplication",
         "name": "Nexova Desk",
         "description": "Chat en vivo, bot automático y base de conocimiento para atender a tus clientes desde un panel unificado.",
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "Web",
         "url": "{{ url('/') }}",
         "offers": {
-            "@type": "Offer",
+            "@@type": "Offer",
             "price": "0",
             "priceCurrency": "USD",
             "description": "Plan gratuito disponible"

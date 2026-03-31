@@ -24,15 +24,15 @@
     <meta name="twitter:image"       content="{{ $post->cover_image ?: asset('images/nexovadeskicon.png') }}">
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
-        "@type": "BlogPosting",
+        "@@context": "https://schema.org",
+        "@@type": "BlogPosting",
         "headline": {{ json_encode($post->title) }},
         "description": {{ json_encode($metaDesc) }},
         "datePublished": "{{ $post->published_at?->toIso8601String() }}",
         "image": "{{ $post->cover_image ?: asset('images/nexovadeskicon.png') }}",
         "url": "{{ url('/novedades/' . $post->slug) }}",
         "publisher": {
-            "@type": "Organization",
+            "@@type": "Organization",
             "name": "Nexova Desk",
             "url": "{{ url('/') }}"
         }
