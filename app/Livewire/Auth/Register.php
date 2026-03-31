@@ -72,9 +72,12 @@ class Register extends Component
                 "Tu código de verificación para Nexova Desk es: {$otp}\n\nVence en 15 minutos.",
                 fn ($m) => $m->to($this->email)->subject('Código de verificación — Nexova Desk')
             );
-        } catch (\Throwable) {
-            // In dev, show OTP on screen (remove in production)
-            $this->success = "Dev mode — OTP: {$otp}";
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("OTP email failed for {$this->email}: {$e->getMessage()} — OTP: {$otp}");
+            // En producción sin SMTP configurado, mostrar mensaje genérico (no exponer OTP)
+            if (app()->isLocal()) {
+                $this->success = "Dev mode — OTP: {$otp}";
+            }
         }
 
         $this->step = 'verify';

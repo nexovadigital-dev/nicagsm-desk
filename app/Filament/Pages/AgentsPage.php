@@ -112,7 +112,7 @@ class AgentsPage extends Page
 
         if (! $agent || $agent->isOwner()) return;
 
-        $agent->update(['organization_id' => null, 'role' => 'agent']);
+        $agent->update(['organization_id' => null, 'role' => null]);
         $this->dispatch('nexova-toast', type: 'success', message: 'Agente removido de la organización.');
     }
 

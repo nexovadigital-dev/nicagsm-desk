@@ -679,11 +679,13 @@
     </div>
     <div class="footer-copy">© {{ date('Y') }} Nexova Digital Solutions. Todos los derechos reservados.</div>
     <div class="footer-links">
+        <a href="/p/terminos">Términos</a>
+        <a href="/p/privacidad">Privacidad</a>
+        <a href="/novedades">Blog</a>
         @auth
             <a href="{{ auth()->user()?->is_super_admin ? '/nx-hq' : '/app' }}">Mi cuenta</a>
         @else
             <a href="/login">Iniciar sesión</a>
-            <a href="/register">Registro</a>
         @endauth
     </div>
 </footer>

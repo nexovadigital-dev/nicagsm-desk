@@ -43,7 +43,7 @@ class Post extends Model
             'novedad'        => 'Novedad',
             'evento'         => 'Evento',
             'producto'       => 'Producto',
-            'actualizacion'  => 'Actualizacion',
+            'actualizacion'  => 'Actualización',
             default          => ucfirst($this->category),
         };
     }

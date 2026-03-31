@@ -181,8 +181,17 @@ class LiveInbox extends Page
     public function selectedTicket(): ?Ticket
     {
         return $this->selectedTicketId
-            ? Ticket::find($this->selectedTicketId)
+            ? $this->findOrgTicket($this->selectedTicketId)
             : null;
+    }
+
+    /** Lookup a ticket scoped to the current org — prevents cross-org data access. */
+    private function findOrgTicket(int $id): ?Ticket
+    {
+        $orgId = $this->orgId();
+        return $orgId
+            ? Ticket::where('organization_id', $orgId)->find($id)
+            : Ticket::find($id); // super-admin fallback (no org)
     }
 
     public function chatMessages(): Collection
@@ -205,7 +214,7 @@ class LiveInbox extends Page
         $this->replyContent     = '';
 
         // Cargar valores actuales del ticket en los controles
-        $t = Ticket::find($id);
+        $t = $this->findOrgTicket($id);
         if ($t) {
             $this->ticketPriority = $t->priority      ?? 'normal';
             $this->ticketCategory = $t->category      ?? 'general';
@@ -217,7 +226,9 @@ class LiveInbox extends Page
     public function saveTicketMeta(): void
     {
         if (! $this->selectedTicketId) return;
-        Ticket::where('id', $this->selectedTicketId)->update([
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
+        if (! $ticket) return;
+        $ticket->update([
             'priority'       => $this->ticketPriority,
             'category'       => $this->ticketCategory,
             'internal_notes' => $this->internalNotes,
@@ -230,7 +241,7 @@ class LiveInbox extends Page
         if (! $content && ! $this->replyAttachment) return;
         if (! $this->selectedTicketId) return;
 
-        $ticket = Ticket::find($this->selectedTicketId);
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
         if (! $ticket || $ticket->status === 'closed') return;
 
         if ($ticket->status === 'bot') {
@@ -295,17 +306,16 @@ class LiveInbox extends Page
     public function handBackToBot(): void
     {
         if (! $this->selectedTicketId) return;
-        Ticket::where('id', $this->selectedTicketId)->update([
-            'status'         => 'bot',
-            'assigned_agent' => null,
-        ]);
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
+        if (! $ticket) return;
+        $ticket->update(['status' => 'bot', 'assigned_agent' => null]);
     }
 
     public function closeTicket(): void
     {
         if (! $this->selectedTicketId) return;
 
-        $ticket = Ticket::find($this->selectedTicketId);
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
         if (! $ticket || $ticket->status === 'closed') return;
 
         $ticket->update(['status' => 'closed']);
@@ -325,7 +335,7 @@ class LiveInbox extends Page
     public function openVisitorModal(): void
     {
         if (! $this->selectedTicketId) return;
-        $t = Ticket::find($this->selectedTicketId);
+        $t = $this->findOrgTicket($this->selectedTicketId);
         if (! $t) return;
         $this->visitorName  = $t->client_name  ?? '';
         $this->visitorEmail = $t->client_email ?? '';
@@ -337,7 +347,7 @@ class LiveInbox extends Page
     {
         if (! $this->selectedTicketId) return;
 
-        $ticket = Ticket::find($this->selectedTicketId);
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
         if (! $ticket) return;
 
         $name  = trim($this->visitorName)  ?: null;
@@ -378,7 +388,7 @@ class LiveInbox extends Page
     public function linkWithDuplicate(): void
     {
         if (! $this->selectedTicketId) return;
-        $ticket = Ticket::find($this->selectedTicketId);
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
         if (! $ticket) return;
 
         $data    = $this->pendingSaveData;
@@ -411,7 +421,7 @@ class LiveInbox extends Page
     public function createNewContact(): void
     {
         if (! $this->selectedTicketId) return;
-        $ticket = Ticket::find($this->selectedTicketId);
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
         if (! $ticket) return;
 
         $data    = $this->pendingSaveData;
@@ -482,7 +492,7 @@ class LiveInbox extends Page
     public function openTicketModal(): void
     {
         if (! $this->selectedTicketId) return;
-        $t = Ticket::find($this->selectedTicketId);
+        $t = $this->findOrgTicket($this->selectedTicketId);
         if (! $t) return;
 
         $this->ticketEmailForTicket = $t->client_email ?? '';
@@ -495,7 +505,7 @@ class LiveInbox extends Page
         $subject = trim($this->ticketSubject);
         if (! $this->selectedTicketId || ! $subject) return;
 
-        $ticket = Ticket::find($this->selectedTicketId);
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
         if (! $ticket) return;
 
         $email = trim($this->ticketEmailForTicket) ?: $ticket->client_email;

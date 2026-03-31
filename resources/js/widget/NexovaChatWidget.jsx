@@ -566,7 +566,7 @@ function CallingScreen({ accentColor, timeoutMin, noResponse, onAgentJoined, onT
                 <button onClick={async () => {
                     if (!ticketForm.name || !ticketForm.email) return;
                     try {
-                        await fetch(`${API_BASE}/request-agent`, {
+                        await fetch(`${API_BASE}/api/chat/request-agent`, {
                             method:'POST', headers:{'Content-Type':'application/json'},
                             body: JSON.stringify({ session_id: sessionId, contact_name: ticketForm.name,
                                 contact_email: ticketForm.email, contact_note: ticketForm.message })

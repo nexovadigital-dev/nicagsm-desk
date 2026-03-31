@@ -46,6 +46,12 @@ class AcceptInvitation extends Component
             'password' => 'required|min:8|confirmed',
         ]);
 
+        // Check email not already taken (race condition or re-use of expired invite)
+        if (User::where('email', $this->invitation->email)->exists()) {
+            $this->error = true;
+            return;
+        }
+
         // Create the user
         $user = User::create([
             'name'             => $this->name,
