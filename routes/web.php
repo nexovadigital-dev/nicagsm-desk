@@ -31,10 +31,13 @@ Route::get('/', function () {
 
 // ── Blog / Novedades ──────────────────────────────────────────────────────────
 Route::get('/novedades', function () {
-    $posts = \App\Models\Post::published()
-        ->orderByDesc('published_at')
-        ->paginate(9);
-    return view('novedades.index', compact('posts'));
+    $cat   = request('cat');
+    $query = \App\Models\Post::published()->orderByDesc('published_at');
+    if ($cat) {
+        $query->where('category', $cat);
+    }
+    $posts = $query->paginate(9)->withQueryString();
+    return view('novedades.index', compact('posts', 'cat'));
 });
 
 Route::get('/novedades/{slug}', function (string $slug) {
@@ -46,6 +49,12 @@ Route::get('/novedades/{slug}', function (string $slug) {
         ->limit(3)
         ->get();
     return view('novedades.show', compact('post', 'related'));
+});
+
+// ── Páginas estáticas CMS ─────────────────────────────────────────────────────
+Route::get('/p/{slug}', function (string $slug) {
+    $page = \App\Models\Page::published()->where('slug', $slug)->firstOrFail();
+    return view('pages.show', compact('page'));
 });
 
 // Página de demostración del widget (solo desarrollo)

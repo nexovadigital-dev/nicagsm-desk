@@ -5,9 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexova Desk — Soporte en vivo para tu sitio web</title>
     <meta name="description" content="Chat en vivo, bot automático y base de conocimiento para atender a tus clientes desde un panel unificado.">
+
+    {{-- Canonical --}}
+    <link rel="canonical" href="{{ url('/') }}">
+
+    {{-- Open Graph --}}
+    <meta property="og:type"        content="website">
+    <meta property="og:url"         content="{{ url('/') }}">
+    <meta property="og:title"       content="Nexova Desk — Soporte en vivo para tu sitio web">
+    <meta property="og:description" content="Chat en vivo, bot automático y base de conocimiento para atender a tus clientes desde un panel unificado.">
+    <meta property="og:image"       content="{{ asset('images/nexovadeskicon.png') }}">
+    <meta property="og:locale"      content="es_ES">
+    <meta property="og:site_name"   content="Nexova Desk">
+
+    {{-- Twitter Card --}}
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="Nexova Desk — Soporte en vivo para tu sitio web">
+    <meta name="twitter:description" content="Chat en vivo, bot automático y base de conocimiento para atender a tus clientes desde un panel unificado.">
+    <meta name="twitter:image"       content="{{ asset('images/nexovadeskicon.png') }}">
+
+    {{-- JSON-LD structured data --}}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Nexova Desk",
+        "description": "Chat en vivo, bot automático y base de conocimiento para atender a tus clientes desde un panel unificado.",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "url": "{{ url('/') }}",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "description": "Plan gratuito disponible"
+        }
+    }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" href="{{ asset('images/nexovadesklogo.svg') }}">
+    <link rel="icon" href="{{ asset('images/nexovadeskicon.png') }}">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {

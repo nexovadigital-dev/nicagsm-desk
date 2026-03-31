@@ -3,12 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $post->title }} — Nexova Desk</title>
-    <meta name="description" content="{{ $post->excerpt ?? Str::limit(strip_tags($post->bodyHtml()), 160) }}">
-    @if($post->cover_image)<meta property="og:image" content="{{ $post->cover_image }}">@endif
+    @php
+        $metaTitle = $post->meta_title ? $post->meta_title . ' — Nexova Desk' : $post->title . ' — Nexova Desk';
+        $metaDesc  = $post->meta_description ?? $post->excerpt ?? Str::limit(strip_tags($post->bodyHtml()), 160);
+    @endphp
+    <title>{{ $metaTitle }}</title>
+    <meta name="description" content="{{ $metaDesc }}">
+    <link rel="canonical" href="{{ url('/novedades/' . $post->slug) }}">
+    <meta property="og:type"        content="article">
+    <meta property="og:url"         content="{{ url('/novedades/' . $post->slug) }}">
+    <meta property="og:title"       content="{{ $metaTitle }}">
+    <meta property="og:description" content="{{ $metaDesc }}">
+    <meta property="og:image"       content="{{ $post->cover_image ?: asset('images/nexovadeskicon.png') }}">
+    <meta property="og:locale"      content="es_ES">
+    <meta property="og:site_name"   content="Nexova Desk">
+    <meta property="article:published_time" content="{{ $post->published_at?->toIso8601String() }}">
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="{{ $metaTitle }}">
+    <meta name="twitter:description" content="{{ $metaDesc }}">
+    <meta name="twitter:image"       content="{{ $post->cover_image ?: asset('images/nexovadeskicon.png') }}">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": {{ json_encode($post->title) }},
+        "description": {{ json_encode($metaDesc) }},
+        "datePublished": "{{ $post->published_at?->toIso8601String() }}",
+        "image": "{{ $post->cover_image ?: asset('images/nexovadeskicon.png') }}",
+        "url": "{{ url('/novedades/' . $post->slug) }}",
+        "publisher": {
+            "@type": "Organization",
+            "name": "Nexova Desk",
+            "url": "{{ url('/') }}"
+        }
+    }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" href="{{ asset('images/nexovadesklogo.svg') }}">
+    <link rel="icon" href="{{ asset('images/nexovadeskicon.png') }}">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root { --bg:#0f1117; --surface:#161b27; --surf2:#1e2636; --border:rgba(255,255,255,.075); --green:#22c55e; --text:#f1f5f9; --sub:#64748b; --muted:rgba(255,255,255,.45); }

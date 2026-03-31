@@ -132,9 +132,10 @@ class ChannelsSettings extends Page
 
         $contents = file_get_contents($envPath);
 
-        if (preg_match("/^{$key}=/m", $contents)) {
+        $escapedKey = preg_quote($key, '/');
+        if (preg_match("/^{$escapedKey}=/m", $contents)) {
             $contents = preg_replace(
-                "/^{$key}=.*/m",
+                "/^{$escapedKey}=.*/m",
                 "{$key}={$value}",
                 $contents
             );

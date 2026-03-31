@@ -13,6 +13,7 @@ class Post extends Model
     protected $fillable = [
         'title', 'slug', 'excerpt', 'body',
         'cover_image', 'category', 'status', 'published_at',
+        'meta_title', 'meta_description',
     ];
 
     protected $casts = [

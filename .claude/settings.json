@@ -20,7 +20,12 @@
       "Bash(where WinSCP)",
       "Bash(where winscp.com)",
       "Bash(python -c \"import paramiko; print\\(''ok''\\)\")",
-      "Bash(python -:*)"
+      "Bash(python -:*)",
+      "Bash(ls -lh \"c:/xampp/htdocs/nexova-chat/resources/views/filament/pages/\"*.blade.php)",
+      "Bash(php -r \"require ''vendor/autoload.php''; echo ''PHP OK'';\")",
+      "Bash(ssh -p 65002 u164741808@82.25.113.102 \"tail -50 /home/u164741808/domains/nexovadesk.com/public_html/nexova-app/storage/logs/laravel.log 2>/dev/null | grep -A3 ''ERROR\\\\|CRITICAL\\\\|Exception'' | head -60\")",
+      "Bash(sshpass -p 'Pm16567733**' ssh -p 65002 -o StrictHostKeyChecking=no u164741808@82.25.113.102 \"tail -60 /home/u164741808/domains/nexovadesk.com/public_html/nexova-app/storage/logs/laravel.log 2>/dev/null | grep -E ''ERROR|CRITICAL|Exception|ParseError|fatal'' | tail -20\")",
+      "Bash(php -l app/Models/Post.php)"
     ]
   }
 }

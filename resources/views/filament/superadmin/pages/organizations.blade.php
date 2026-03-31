@@ -176,12 +176,12 @@ $planLabelMap = array_merge(['free'=>'Free','trial'=>'Prueba'], $planLabelMap);
                                 Widgets ({{ $org->chat_widgets_count ?? 0 }})
                             </button>
                             @if($hasSub)
-                            <button @click="activateOrgId={{ $org->id }}; activateOrgName='{{ addslashes($org->name) }}'; activatePlanSlug='{{ $org->plan }}'; activateModal=true"
+                            <button @click="activateOrgId={{ $org->id }}; activateOrgName={{ json_encode($org->name) }}; activatePlanSlug='{{ $org->plan }}'; activateModal=true"
                                     class="sa-btn" style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa">
                                 Cambiar plan
                             </button>
                             @else
-                            <button @click="activateOrgId={{ $org->id }}; activateOrgName='{{ addslashes($org->name) }}'; activatePlanSlug='{{ $org->plan === 'trial' ? 'pro' : $org->plan }}'; activateModal=true"
+                            <button @click="activateOrgId={{ $org->id }}; activateOrgName={{ json_encode($org->name) }}; activatePlanSlug='{{ $org->plan === 'trial' ? 'pro' : $org->plan }}'; activateModal=true"
                                     class="sa-btn" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0">
                                 Activar plan
                             </button>

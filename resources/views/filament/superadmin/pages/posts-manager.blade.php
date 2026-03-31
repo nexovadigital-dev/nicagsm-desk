@@ -222,6 +222,27 @@ $catLabels = [
                     @endif
                 </div>
 
+                {{-- SEO --}}
+                <div style="border-top:1px solid #e2e8f0;padding-top:14px;display:flex;flex-direction:column;gap:10px">
+                    <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:6px">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12" stroke-width="2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
+                        SEO (opcional — si se deja vacío usa el título y extracto)
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                        <div>
+                            <label class="sa-label">Meta título <span style="font-weight:400;text-transform:none">(máx. 70 chars)</span></label>
+                            <input wire:model="formMetaTitle" class="sa-input" placeholder="{{ $formTitle ?: 'Título del post' }} — Nexova Desk" maxlength="70">
+                            <div style="font-size:11px;color:#94a3b8;margin-top:3px">{{ strlen($formMetaTitle) }}/70</div>
+                        </div>
+                        <div>
+                            <label class="sa-label">Meta descripción <span style="font-weight:400;text-transform:none">(máx. 160 chars)</span></label>
+                            <textarea wire:model="formMetaDesc" class="sa-textarea" rows="2" maxlength="160"
+                                      placeholder="{{ $formExcerpt ?: 'Descripción del post para buscadores' }}"></textarea>
+                            <div style="font-size:11px;color:#94a3b8;margin-top:3px">{{ strlen($formMetaDesc) }}/160</div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
             <div class="sa-modal-foot">
                 <button @click="postModal = false" class="sa-btn" style="background:#f1f5f9;color:#374151">Cancelar</button>

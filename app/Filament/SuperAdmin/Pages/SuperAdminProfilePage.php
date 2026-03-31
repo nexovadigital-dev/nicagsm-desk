@@ -79,7 +79,7 @@ class SuperAdminProfilePage extends Page
                 $this->dispatch('nexova-toast', type: 'error', message: 'Las contraseñas no coinciden.');
                 return;
             }
-            $user->password = $this->newPassword;
+            $user->password = Hash::make($this->newPassword);
             $this->currentPassword = $this->newPassword = $this->confirmPassword = '';
         }
 

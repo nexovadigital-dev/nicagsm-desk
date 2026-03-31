@@ -2247,7 +2247,7 @@ export default function NexovaChatWidget() {
             {/* ── Ventana de chat ── */}
             {isOpen && (
                 <div className="nx-widget-window" style={{
-                    position: 'fixed', bottom: fabSize + 16, ...posStyle, width: 350,
+                    position: 'fixed', bottom: fabSize + 16, ...posStyle, width: 'min(350px, calc(100vw - 32px))',
                     background: '#fff', borderRadius: 16,
                     boxShadow: '0 8px 40px rgba(0,0,0,.16), 0 2px 8px rgba(0,0,0,.07)',
                     display: 'flex', flexDirection: 'column', zIndex: 9999,

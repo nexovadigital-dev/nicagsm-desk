@@ -51,18 +51,22 @@ class PostsManager extends Page
     public string  $formCategory = 'novedad';
     public string  $formStatus   = 'draft';
     public string  $formDate     = '';
+    public string  $formMetaTitle = '';
+    public string  $formMetaDesc  = '';
 
     public function openCreate(): void
     {
-        $this->editingId   = null;
-        $this->formTitle   = '';
-        $this->formSlug    = '';
-        $this->formExcerpt = '';
-        $this->formBody    = '';
-        $this->formCover   = '';
+        $this->editingId    = null;
+        $this->formTitle    = '';
+        $this->formSlug     = '';
+        $this->formExcerpt  = '';
+        $this->formBody     = '';
+        $this->formCover    = '';
         $this->formCategory = 'novedad';
-        $this->formStatus  = 'draft';
-        $this->formDate    = now()->format('Y-m-d\TH:i');
+        $this->formStatus   = 'draft';
+        $this->formDate     = now()->format('Y-m-d\TH:i');
+        $this->formMetaTitle = '';
+        $this->formMetaDesc  = '';
         $this->dispatch('open-post-modal');
     }
 
@@ -79,9 +83,11 @@ class PostsManager extends Page
         $this->formCover   = $post->cover_image ?? '';
         $this->formCategory = $post->category;
         $this->formStatus  = $post->status;
-        $this->formDate    = $post->published_at
+        $this->formDate     = $post->published_at
             ? $post->published_at->format('Y-m-d\TH:i')
             : now()->format('Y-m-d\TH:i');
+        $this->formMetaTitle = $post->meta_title ?? '';
+        $this->formMetaDesc  = $post->meta_description ?? '';
 
         $this->dispatch('open-post-modal');
     }
@@ -105,14 +111,16 @@ class PostsManager extends Page
         ]);
 
         $data = [
-            'title'        => trim($this->formTitle),
-            'slug'         => trim($this->formSlug),
-            'excerpt'      => trim($this->formExcerpt) ?: null,
-            'body'         => $this->formBody,
-            'cover_image'  => trim($this->formCover) ?: null,
-            'category'     => $this->formCategory,
-            'status'       => $this->formStatus,
-            'published_at' => $this->formDate ? \Carbon\Carbon::parse($this->formDate) : now(),
+            'title'            => trim($this->formTitle),
+            'slug'             => trim($this->formSlug),
+            'excerpt'          => trim($this->formExcerpt) ?: null,
+            'body'             => $this->formBody,
+            'cover_image'      => trim($this->formCover) ?: null,
+            'category'         => $this->formCategory,
+            'status'           => $this->formStatus,
+            'published_at'     => $this->formDate ? \Carbon\Carbon::parse($this->formDate) : now(),
+            'meta_title'       => trim($this->formMetaTitle) ?: null,
+            'meta_description' => trim($this->formMetaDesc) ?: null,
         ];
 
         if ($this->editingId) {
