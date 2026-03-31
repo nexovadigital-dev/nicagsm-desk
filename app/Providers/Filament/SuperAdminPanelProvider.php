@@ -15,7 +15,6 @@ use App\Filament\SuperAdmin\Pages\SuperAdminProfilePage;
 use App\Filament\SuperAdmin\Pages\MailConfigPage;
 use App\Filament\SuperAdmin\Pages\PostsManager;
 use App\Filament\SuperAdmin\Pages\PagesManager;
-use App\Filament\SuperAdmin\Pages\WidgetsOverview;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
