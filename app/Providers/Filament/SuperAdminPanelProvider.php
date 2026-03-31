@@ -13,6 +13,9 @@ use App\Filament\SuperAdmin\Pages\WidgetsOverview;
 use App\Filament\SuperAdmin\Pages\SystemSettingsPage;
 use App\Filament\SuperAdmin\Pages\SuperAdminProfilePage;
 use App\Filament\SuperAdmin\Pages\MailConfigPage;
+use App\Filament\SuperAdmin\Pages\PostsManager;
+use App\Filament\SuperAdmin\Pages\PagesManager;
+use App\Filament\SuperAdmin\Pages\WidgetsOverview;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -56,14 +59,18 @@ class SuperAdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Visión General')->collapsible(false),
                 NavigationGroup::make('Clientes')->collapsible(false),
                 NavigationGroup::make('Planes & Pagos')->collapsible(false),
+                NavigationGroup::make('Contenido')->collapsible(false),
                 NavigationGroup::make('Sistema')->collapsible(false),
             ])
             ->pages([
                 SuperDashboard::class,
                 Organizations::class,
+                WidgetsOverview::class,
                 PlansManager::class,
                 PaymentConfigPage::class,
                 TransactionsPage::class,
+                PostsManager::class,
+                PagesManager::class,
                 SystemSettingsPage::class,
                 SuperAdminProfilePage::class,
                 MailConfigPage::class,
