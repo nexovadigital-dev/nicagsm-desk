@@ -78,9 +78,9 @@ class ProcessBotReply implements ShouldQueue
 
         // Si el ticket es de Telegram, enviar la respuesta al usuario
         if ($ticket->platform === 'telegram' && $ticket->telegram_id) {
-            TelegramWebhookController::sendTelegramMessage($ticket->telegram_id, $reply);
+            TelegramWebhookController::sendTelegramMessage($ticket->telegram_id, $reply, $ticket->organization_id);
             if ($needsEscalation) {
-                TelegramWebhookController::sendTelegramMessage($ticket->telegram_id, '¿Te gustaría hablar con un agente humano? Responde "agente" o "si" para conectarte.');
+                TelegramWebhookController::sendTelegramMessage($ticket->telegram_id, '¿Te gustaría hablar con un agente humano? Responde "agente" o "si" para conectarte.', $ticket->organization_id);
             }
         }
     }

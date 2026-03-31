@@ -129,7 +129,7 @@
         {{-- HQ admin panel — no product marketing --}}
         <div>
             <div class="auth-brand">
-                <img src="{{ asset('images/nexovadesklogo.svg') }}" alt="Nexova Desk" class="auth-brand-logo">
+                <img src="{{ asset('images/nexovadesklogo.png') }}" alt="Nexova Desk" class="auth-brand-logo">
                 <div>
                     <div class="auth-brand-name">Nexova Desk</div>
                     <div class="auth-brand-sub">Panel de Administración HQ</div>
@@ -174,7 +174,7 @@
         {{-- Regular user login panel --}}
         <div>
             <div class="auth-brand">
-                <img src="{{ asset('images/nexovadesklogo.svg') }}" alt="Nexova Desk" class="auth-brand-logo">
+                <img src="{{ asset('images/nexovadesklogo.png') }}" alt="Nexova Desk" class="auth-brand-logo">
                 <div>
                     <div class="auth-brand-name">Nexova Desk</div>
                     <div class="auth-brand-sub">by Nexova Digital Solutions</div>
@@ -224,7 +224,7 @@
     <div class="auth-right">
         <div class="auth-box">
             <div class="auth-logo-mobile">
-                <img src="{{ asset('images/nexovadesklogo.svg') }}" alt="Nexova Desk" style="height:48px;width:48px;border-radius:8px;object-fit:contain">
+                <img src="{{ asset('images/nexovadesklogo.png') }}" alt="Nexova Desk" style="height:48px;width:48px;border-radius:8px;object-fit:contain">
                 <div class="auth-logo-mobile-name">Nexova Desk</div>
             </div>
 

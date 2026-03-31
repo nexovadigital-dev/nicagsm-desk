@@ -1597,6 +1597,7 @@ export default function NexovaChatWidget() {
     const messagesEndRef  = useRef(null);
     const pollRef         = useRef(null);
     const typingSinceRef      = useRef(null);
+    const typingTimeoutRef    = useRef(null); // safety timeout to clear typing indicator
     const botMsgCountAtSend   = useRef(0); // # non-user msgs when user hit send
     const textareaRef     = useRef(null);
     const fileInputRef    = useRef(null);
@@ -1745,6 +1746,7 @@ export default function NexovaChatWidget() {
                 if (botCount > botMsgCountAtSend.current) {
                     setIsTyping(false);
                     typingSinceRef.current = null;
+                    clearTimeout(typingTimeoutRef.current);
                 }
             }
             // Count unread agent messages when closed
@@ -1853,6 +1855,7 @@ export default function NexovaChatWidget() {
         setInputValue('');
         setIsTyping(false);
         typingSinceRef.current = null;
+        clearTimeout(typingTimeoutRef.current);
         botMsgCountAtSend.current = 0;
         setError(null);
         setConversationName(null);
@@ -2016,7 +2019,7 @@ export default function NexovaChatWidget() {
     // ── Enviar mensaje ───────────────────────────────────────────────────────
     const sendMessage = async () => {
         const content = inputValue.trim();
-        if ((!content && !attachmentFile) || !sessionId || isSending || isClosed) return;
+        if ((!content && !attachmentFile) || !sessionId || isSending || isClosed || isTyping) return;
 
         setIsSending(true);
         setInputValue('');
@@ -2076,6 +2079,14 @@ export default function NexovaChatWidget() {
                 ).length;
                 typingSinceRef.current = true; // flag activo
                 setIsTyping(true);
+                // Safety: clear typing after 30s if no bot response arrives
+                clearTimeout(typingTimeoutRef.current);
+                typingTimeoutRef.current = setTimeout(() => {
+                    if (typingSinceRef.current !== null) {
+                        setIsTyping(false);
+                        typingSinceRef.current = null;
+                    }
+                }, 30000);
             }
             await fetchMessages();
         } catch {
@@ -2687,7 +2698,7 @@ export default function NexovaChatWidget() {
                                                 style={{ display: 'none' }} onChange={handleFileSelect} />
                                             {/* Attach — absolute izquierda abajo */}
                                             <button onClick={() => fileInputRef.current?.click()}
-                                                disabled={isSending || isClosed}
+                                                disabled={isSending || isClosed || isTyping}
                                                 aria-label="Adjuntar archivo"
                                                 title="Adjuntar imagen o PDF"
                                                 style={{ position: 'absolute', left: 10, bottom: 10,
@@ -2704,17 +2715,20 @@ export default function NexovaChatWidget() {
                                             <textarea ref={textareaRef} rows={1} value={inputValue}
                                                 onChange={handleInput} onKeyDown={handleKeyDown}
                                                 onPaste={handlePaste}
-                                                placeholder="Escribe tu mensaje..."
+                                                disabled={isTyping || isSending || isClosed}
+                                                placeholder={isTyping ? 'El asistente está escribiendo...' : 'Escribe tu mensaje...'}
                                                 style={{ ...s.input, height: 24, maxHeight: 96, overflowY: 'auto',
-                                                    display: 'block', width: '100%' }} />
+                                                    display: 'block', width: '100%',
+                                                    opacity: (isTyping || isSending) ? 0.5 : 1,
+                                                    cursor: (isTyping || isSending) ? 'not-allowed' : 'text' }} />
                                             {/* Send — absolute derecha abajo */}
                                             <button onClick={sendMessage}
-                                                disabled={(!inputValue.trim() && !attachmentFile) || isSending}
+                                                disabled={(!inputValue.trim() && !attachmentFile) || isSending || isTyping}
                                                 aria-label="Enviar"
                                                 style={{ position: 'absolute', right: 10, bottom: 10,
                                                     width: 36, height: 36, borderRadius: 10, border: 'none',
-                                                    background: ((!inputValue.trim() && !attachmentFile) || isSending) ? '#d1d5db' : accentColor,
-                                                    color: '#fff', cursor: ((!inputValue.trim() && !attachmentFile) || isSending) ? 'default' : 'pointer',
+                                                    background: ((!inputValue.trim() && !attachmentFile) || isSending || isTyping) ? '#d1d5db' : accentColor,
+                                                    color: '#fff', cursor: ((!inputValue.trim() && !attachmentFile) || isSending || isTyping) ? 'default' : 'pointer',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                     transition: 'background .15s', padding: 0 }}>
                                                 <IconSend spinning={isSending} />

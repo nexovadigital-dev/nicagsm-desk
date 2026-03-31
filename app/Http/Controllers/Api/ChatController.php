@@ -270,6 +270,14 @@ class ChatController extends Controller
         $attachmentName = null;
 
         if ($request->hasFile('attachment')) {
+            // Server-side limit: max 5 attachments per ticket
+            $existingAttachments = Message::where('ticket_id', $ticket->id)
+                ->whereNotNull('attachment_path')
+                ->count();
+            if ($existingAttachments >= 5) {
+                return response()->json(['error' => 'Límite de 5 archivos adjuntos por conversación alcanzado'], 422);
+            }
+
             $file           = $request->file('attachment');
             $attachmentName = $file->getClientOriginalName();
             $attachmentType = $file->getMimeType();

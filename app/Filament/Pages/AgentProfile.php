@@ -97,12 +97,21 @@ class AgentProfile extends Page
 
         $user = Filament::auth()->user();
 
-        if ($user->avatar_path) {
-            Storage::disk('public')->delete($user->avatar_path);
+        $oldPath = $user->avatar_path;
+        $path    = $this->avatarFile->store('avatars', 'public');
+
+        if (! $path) {
+            $this->dispatch('nexova-toast', type: 'error', message: 'Error al subir la imagen');
+            return;
         }
 
-        $path = $this->avatarFile->store('avatars', 'public');
         $user->update(['avatar_path' => $path]);
+
+        // Delete old avatar only after new one is confirmed saved
+        if ($oldPath) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
         $this->currentAvatarUrl = Storage::url($path);
         $this->avatarFile = null;
 

@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\ScopedToOrganization;
+use App\Models\Organization;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\Support\Htmlable;
@@ -10,48 +12,60 @@ use Illuminate\Support\Facades\Http;
 
 class ChannelsSettings extends Page
 {
-    protected string $view = 'filament.pages.channels-settings';
+    use ScopedToOrganization;
 
+    protected string $view = 'filament.pages.channels-settings';
     protected Width|string|null $maxContentWidth = 'full';
 
     protected static ?string $navigationLabel = 'Canales';
     protected static string|\UnitEnum|null $navigationGroup = 'Integraciones';
     protected static ?int $navigationSort = 10;
 
-    // ── Telegram ──────────────────────────────────────────────────────────
-    public string $telegramToken   = '';
-    public string $telegramStatus  = '';   // 'ok' | 'error' | ''
-    public string $telegramBotInfo = '';
-
-    // ── Inline feedback message ───────────────────────────────────────────
-    public string $msg     = '';
-    public string $msgType = 'success';  // 'success' | 'error'
-
-    // ──────────────────────────────────────────────────────────────────────
-
     public static function getNavigationIcon(): string|\BackedEnum|Htmlable|null
     {
         return 'heroicon-o-signal';
     }
 
-    public function getTitle(): string|Htmlable
-    {
-        return 'Canales';
-    }
+    public function getTitle(): string|Htmlable { return 'Canales'; }
+
+    // ── Telegram ──────────────────────────────────────────────────────────
+    public string $telegramToken   = '';
+    public string $telegramStatus  = '';   // 'ok' | 'error' | ''
+    public string $telegramBotInfo = '';
+
+    // ── Inline feedback ───────────────────────────────────────────────────
+    public string $msg     = '';
+    public string $msgType = 'success';
 
     public function mount(): void
     {
-        $this->telegramToken = env('TELEGRAM_BOT_TOKEN', '');
-
-        if ($this->telegramToken) {
-            $this->telegramStatus = 'ok';
+        $orgId = $this->orgId();
+        if ($orgId) {
+            $org = Organization::find($orgId);
+            if ($org && $org->telegram_bot_token) {
+                // Don't prefill token for security — just show connected status
+                $this->telegramStatus = 'ok';
+                $this->telegramBotInfo = 'Bot configurado';
+            }
         }
     }
 
     public function saveTelegramToken(): void
     {
-        $this->writeEnvValue('TELEGRAM_BOT_TOKEN', $this->telegramToken);
+        $orgId = $this->orgId();
+        if (! $orgId || ! trim($this->telegramToken)) {
+            $this->msg     = 'Ingresa el token antes de guardar.';
+            $this->msgType = 'error';
+            return;
+        }
 
+        Organization::where('id', $orgId)->update([
+            'telegram_bot_token' => encrypt(trim($this->telegramToken)),
+        ]);
+
+        $this->telegramStatus = 'ok';
+        $this->telegramBotInfo = 'Bot configurado';
+        $this->telegramToken = '';
         $this->dispatch('nexova-toast', type: 'success', message: 'Token de Telegram guardado');
         $this->msg     = 'Token guardado correctamente.';
         $this->msgType = 'success';
@@ -60,7 +74,6 @@ class ChannelsSettings extends Page
     public function testTelegram(): void
     {
         if (empty($this->telegramToken)) {
-            $this->telegramStatus = 'error';
             $this->msg     = 'Ingresa el token antes de probar.';
             $this->msgType = 'error';
             return;
@@ -91,17 +104,35 @@ class ChannelsSettings extends Page
 
     public function registerWebhook(): void
     {
-        if (empty($this->telegramToken)) {
+        $token = trim($this->telegramToken);
+
+        // If no token in field, try to use saved org token
+        if (! $token) {
+            $orgId = $this->orgId();
+            if ($orgId) {
+                $org = Organization::find($orgId);
+                if ($org && $org->telegram_bot_token) {
+                    try {
+                        $token = decrypt($org->telegram_bot_token);
+                    } catch (\Throwable) {
+                        $token = '';
+                    }
+                }
+            }
+        }
+
+        if (! $token) {
             $this->msg     = 'Primero guarda o ingresa el token.';
             $this->msgType = 'error';
             return;
         }
 
-        $webhookUrl = url('/api/webhook/telegram');
+        $orgId      = $this->orgId();
+        $webhookUrl = url("/api/webhook/telegram/{$orgId}");
 
         try {
             $response = Http::timeout(10)
-                ->post("https://api.telegram.org/bot{$this->telegramToken}/setWebhook", [
+                ->post("https://api.telegram.org/bot{$token}/setWebhook", [
                     'url' => $webhookUrl,
                 ]);
 
@@ -120,29 +151,22 @@ class ChannelsSettings extends Page
         }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────
-
-    private function writeEnvValue(string $key, string $value): void
+    public function disconnectTelegram(): void
     {
-        $envPath = base_path('.env');
+        $orgId = $this->orgId();
+        if (! $orgId) return;
 
-        if (! file_exists($envPath)) {
-            return;
-        }
+        Organization::where('id', $orgId)->update(['telegram_bot_token' => null]);
+        $this->telegramStatus  = '';
+        $this->telegramBotInfo = '';
+        $this->telegramToken   = '';
+        $this->dispatch('nexova-toast', type: 'success', message: 'Bot de Telegram desconectado');
+        $this->msg     = 'Bot desconectado.';
+        $this->msgType = 'success';
+    }
 
-        $contents = file_get_contents($envPath);
-
-        $escapedKey = preg_quote($key, '/');
-        if (preg_match("/^{$escapedKey}=/m", $contents)) {
-            $contents = preg_replace(
-                "/^{$escapedKey}=.*/m",
-                "{$key}={$value}",
-                $contents
-            );
-        } else {
-            $contents .= PHP_EOL . "{$key}={$value}";
-        }
-
-        file_put_contents($envPath, $contents);
+    public function getWebhookUrl(): string
+    {
+        return url('/api/webhook/telegram/' . ($this->orgId() ?? '?'));
     }
 }

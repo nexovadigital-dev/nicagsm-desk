@@ -128,18 +128,27 @@
         <div class="ch-panel">
             <div class="ch-field">
                 <label class="ch-label">Bot Token</label>
-                <input type="text" class="ch-input" wire:model="telegramToken" placeholder="123456:ABCdefGhIJKlmno…" autocomplete="off">
+                <input type="password" class="ch-input" wire:model="telegramToken"
+                    placeholder="{{ $telegramStatus === 'ok' ? '••••••••••• (configurado — pega nuevo para reemplazar)' : '123456:ABCdefGhIJKlmno…' }}"
+                    autocomplete="off">
             </div>
             <div class="ch-actions">
                 <button class="ch-btn ch-btn-outline" wire:click="testTelegram" wire:loading.attr="disabled">
                     Probar conexión
                 </button>
-                <button class="ch-btn ch-btn-primary" wire:click="registerWebhook" wire:loading.attr="disabled">
-                    Registrar webhook
-                </button>
-                <button class="ch-btn ch-btn-outline" wire:click="saveTelegramToken" wire:loading.attr="disabled">
+                <button class="ch-btn ch-btn-primary" wire:click="saveTelegramToken" wire:loading.attr="disabled">
                     Guardar token
                 </button>
+                <button class="ch-btn ch-btn-outline" wire:click="registerWebhook" wire:loading.attr="disabled">
+                    Registrar webhook
+                </button>
+                @if($telegramStatus === 'ok')
+                <button class="ch-btn" style="background:transparent;color:#dc2626;border-color:rgba(220,38,38,.25)"
+                    wire:click="disconnectTelegram"
+                    wire:confirm="¿Desconectar el bot de Telegram? Los mensajes de Telegram dejarán de recibirse.">
+                    Desconectar
+                </button>
+                @endif
             </div>
             <div class="ch-steps">
                 <div class="ch-step">
@@ -148,11 +157,11 @@
                 </div>
                 <div class="ch-step">
                     <div class="ch-step-num">2</div>
-                    <div>Pega el token y haz clic en <strong>Probar conexión</strong>.</div>
+                    <div>Pega el token, haz clic en <strong>Probar conexión</strong> y luego <strong>Guardar token</strong>.</div>
                 </div>
                 <div class="ch-step">
                     <div class="ch-step-num">3</div>
-                    <div>Haz clic en <strong>Registrar webhook</strong> — apuntará el bot a <code>{{ url('/api/webhook/telegram') }}</code>.</div>
+                    <div>Haz clic en <strong>Registrar webhook</strong> — apuntará el bot a <code>{{ $this->getWebhookUrl() }}</code>.</div>
                 </div>
             </div>
             @if($msg)

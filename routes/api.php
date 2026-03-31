@@ -30,8 +30,9 @@ Route::get('/admin/unread-count', [ChatController::class, 'adminUnreadCount']);
 
 // ── Telegram webhook ──
 Route::prefix('webhook')->group(function () {
-    Route::post('/telegram',          [TelegramWebhookController::class, 'handle']);
-    Route::get('/telegram/register',  [TelegramWebhookController::class, 'register']);
+    // Per-org Telegram webhook: POST /api/webhook/telegram/{orgId}
+    Route::post('/telegram/{orgId}', [TelegramWebhookController::class, 'handle'])
+        ->where('orgId', '[0-9]+');
 });
 
 // ── WP Plugin API (Bearer token auth) ──

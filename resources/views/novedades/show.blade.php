@@ -107,7 +107,7 @@
 
 <nav class="nav">
     <a class="nav-brand" href="/">
-        <img src="{{ asset('images/nexovadesklogo.svg') }}" alt="Nexova Desk"
+        <img src="{{ asset('images/nexovadesklogo.png') }}" alt="Nexova Desk"
              style="filter:brightness(0) saturate(100%) invert(58%) sepia(72%) saturate(500%) hue-rotate(95deg) brightness(95%)">
         <span class="nav-brand-name">Nexova Desk</span>
     </a>
@@ -171,7 +171,7 @@
 
 <footer class="footer">
     <div style="display:flex;align-items:center;gap:9px">
-        <img src="{{ asset('images/nexovadesklogo.svg') }}" alt="" style="height:24px;width:24px;filter:brightness(0) saturate(100%) invert(58%) sepia(72%) saturate(500%) hue-rotate(95deg) brightness(95%)">
+        <img src="{{ asset('images/nexovadesklogo.png') }}" alt="" style="height:24px;width:24px;filter:brightness(0) saturate(100%) invert(58%) sepia(72%) saturate(500%) hue-rotate(95deg) brightness(95%)">
         <span style="font-size:13.5px;font-weight:700">Nexova Desk</span>
     </div>
     <span class="footer-copy">© {{ date('Y') }} Nexova Digital Solutions</span>
