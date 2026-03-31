@@ -95,94 +95,10 @@
 </style>
 
 <div class="ak-wrap">
-    <h1 style="font-size:22px;font-weight:700;color:var(--c-text,#111827);margin-bottom:28px;letter-spacing:-.02em">Claves API</h1>
-
-    <div class="ak-grid">
-        @foreach($providers as $key => $info)
-        @php
-            $hasKey = !empty($keys[$key]);
-            $isOn   = $activeFlags[$key] ?? true;
-        @endphp
-        <div class="ak-card">
-
-            <div class="ak-head">
-                <div class="ak-icon" style="background:{{ $info['color'] }}">{{ $info['letter'] }}</div>
-                <div style="flex:1;min-width:0">
-                    <div class="ak-title">{{ $info['label'] }}</div>
-                    <div class="ak-desc">{{ $info['desc'] }}</div>
-                </div>
-                @if($hasKey)
-                    <span class="ak-badge {{ $isOn ? 'ak-badge-on' : 'ak-badge-off' }}">
-                        <svg fill="currentColor" viewBox="0 0 8 8" width="6" height="6"><circle cx="4" cy="4" r="4"/></svg>
-                        {{ $isOn ? 'Activa' : 'Inactiva' }}
-                    </span>
-                @else
-                    <span class="ak-badge ak-badge-off">Sin configurar</span>
-                @endif
-            </div>
-
-            <div class="ak-field">
-                <label class="ak-label">API Key</label>
-                <div class="ak-input-wrap" x-data="{ show: false }">
-                    <input
-                        :type="show ? 'text' : 'password'"
-                        class="ak-input"
-                        wire:model.blur="keys.{{ $key }}"
-                        placeholder="{{ $hasKey ? '••••••••••••••••••••••' : 'Pega tu clave aquí…' }}"
-                        autocomplete="off">
-                    <button type="button" class="ak-eye" @click="show = !show" tabindex="-1">
-                        <svg x-show="!show" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                        </svg>
-                        <svg x-show="show" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
-            @if($key === 'meta_whatsapp')
-            <div class="ak-field">
-                <label class="ak-label">Token de verificación Webhook</label>
-                <input type="text" class="ak-input normal-font"
-                    wire:model.blur="webhooks.{{ $key }}"
-                    placeholder="Token de verificación Meta…" autocomplete="off">
-            </div>
-            @endif
-
-            <div class="ak-divider"></div>
-
-            <div class="ak-footer">
-                <button class="ak-btn ak-btn-primary" wire:click="save('{{ $key }}')">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-                    </svg>
-                    Guardar
-                </button>
-                @if($hasKey)
-                    <button class="ak-btn ak-btn-outline" wire:click="toggleActive('{{ $key }}')">
-                        {{ $isOn ? 'Desactivar' : 'Activar' }}
-                    </button>
-                    <button class="ak-btn ak-btn-danger" wire:click="delete('{{ $key }}')"
-                        wire:confirm="¿Eliminar la clave de {{ $info['label'] }}?">
-                        Eliminar
-                    </button>
-                @endif
-            </div>
-
-        </div>
-        @endforeach
-    </div>
-
-    <div class="ak-info" style="margin-top:16px">
-        <strong>Telegram:</strong> El token del bot se configura desde
-        <a href="{{ route('filament.admin.pages.channels-settings') }}" style="color:#2563eb;text-decoration:none">
-            Canales → Telegram Bot
-        </a>
-        y se guarda directamente en el <code>.env</code>.
-    </div>
-
+    <h1 style="font-size:22px;font-weight:700;color:var(--c-text,#111827);margin-bottom:6px;letter-spacing:-.02em">Claves API</h1>
+    <p style="font-size:13px;color:var(--c-sub,#6b7280);margin:0 0 28px;max-width:600px;line-height:1.6">
+        Configura claves API propias para que tu organización use sus propios proveedores de IA en lugar de las claves globales de la plataforma.
+    </p>
 </div>
 
 {{-- ── API propias de la organización (solo owner/admin) ── --}}

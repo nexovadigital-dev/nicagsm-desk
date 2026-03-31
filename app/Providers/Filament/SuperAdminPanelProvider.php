@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Providers\Filament;
 
 use App\Filament\SuperAdmin\Pages\SuperDashboard;
+use App\Filament\SuperAdmin\Pages\HqLoginPage;
+use App\Filament\SuperAdmin\Pages\AiConfigPage;
 use App\Filament\SuperAdmin\Pages\Organizations;
 use App\Filament\SuperAdmin\Pages\PlansManager;
 use App\Filament\SuperAdmin\Pages\PaymentConfigPage;
@@ -40,7 +42,7 @@ class SuperAdminPanelProvider extends PanelProvider
         return $panel
             ->id('superadmin')
             ->path('nx-hq')
-            ->login()
+            ->login(HqLoginPage::class)
             ->brandName('')
             ->brandLogo(null)
             ->brandLogoHeight('0')
@@ -73,6 +75,7 @@ class SuperAdminPanelProvider extends PanelProvider
                 SystemSettingsPage::class,
                 SuperAdminProfilePage::class,
                 MailConfigPage::class,
+                AiConfigPage::class,
             ])
             ->middleware([
                 EncryptCookies::class,

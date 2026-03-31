@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Filament\Concerns\ScopedToOrganization;
-use App\Models\ApiSetting;
 use App\Models\Organization;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
@@ -28,14 +27,7 @@ class ApiKeysSettings extends Page
 
     public function getTitle(): string|Htmlable { return ''; }
 
-    public array $providers = [
-        'groq'   => ['label' => 'Groq Cloud', 'desc' => 'Llama 3.3 70B · Modelo principal de IA', 'color' => '#f97316', 'letter' => 'G'],
-        'gemini' => ['label' => 'Google Gemini', 'desc' => 'Gemini 1.5 Flash · Modelo de respaldo', 'color' => '#4285f4', 'letter' => 'G'],
-    ];
-
-    public array $keys        = [];
-    public array $priorities  = [];
-    public array $activeFlags = [];
+    public array $webhooks    = [];
 
     // Org-own API keys
     public string $orgGroqKey    = '';
@@ -48,13 +40,6 @@ class ApiKeysSettings extends Page
 
     public function mount(): void
     {
-        foreach (array_keys($this->providers) as $provider) {
-            $row = ApiSetting::where('provider', $provider)->first();
-            $this->keys[$provider]        = $row ? $row->api_key : '';
-            $this->priorities[$provider]  = $row ? $row->priority : 1;
-            $this->activeFlags[$provider] = $row ? (bool) $row->is_active : true;
-        }
-
         // Load org settings (owner/admin only)
         if ($this->isOrgAdmin() && $orgId = $this->orgId()) {
             $org = Organization::find($orgId);
@@ -98,32 +83,4 @@ class ApiKeysSettings extends Page
         $this->dispatch('nexova-toast', type: 'success', message: 'Límites actualizados');
     }
 
-    public function save(string $provider): void
-    {
-        $key = trim($this->keys[$provider] ?? '');
-        if (! $key) {
-            $this->dispatch('nexova-toast', type: 'error', message: 'Introduce una clave API para guardar');
-            return;
-        }
-        ApiSetting::updateOrCreate(
-            ['provider' => $provider],
-            ['api_key' => $key, 'priority' => (int)($this->priorities[$provider] ?? 1), 'is_active' => $this->activeFlags[$provider] ?? true]
-        );
-        $this->dispatch('nexova-toast', type: 'success', message: "Configuración de {$this->providers[$provider]['label']} guardada");
-    }
-
-    public function toggleActive(string $provider): void
-    {
-        $this->activeFlags[$provider] = !($this->activeFlags[$provider] ?? true);
-        ApiSetting::where('provider', $provider)->update(['is_active' => $this->activeFlags[$provider]]);
-        $estado = $this->activeFlags[$provider] ? 'activada' : 'desactivada';
-        $this->dispatch('nexova-toast', type: 'success', message: "{$this->providers[$provider]['label']} {$estado}");
-    }
-
-    public function delete(string $provider): void
-    {
-        ApiSetting::where('provider', $provider)->delete();
-        $this->keys[$provider] = ''; $this->priorities[$provider] = 1; $this->activeFlags[$provider] = true;
-        $this->dispatch('nexova-toast', type: 'success', message: "Clave de {$this->providers[$provider]['label']} eliminada");
-    }
 }

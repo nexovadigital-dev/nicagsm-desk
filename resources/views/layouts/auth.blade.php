@@ -125,6 +125,53 @@
 
     {{-- Left decorative panel --}}
     <div class="auth-left">
+        @if($hqMode ?? false)
+        {{-- HQ admin panel — no product marketing --}}
+        <div>
+            <div class="auth-brand">
+                <img src="{{ asset('images/nexovadesklogo.svg') }}" alt="Nexova Desk" class="auth-brand-logo">
+                <div>
+                    <div class="auth-brand-name">Nexova Desk</div>
+                    <div class="auth-brand-sub">Panel de Administración HQ</div>
+                </div>
+            </div>
+
+            <div style="margin-top:48px">
+                <div class="auth-tagline">Sistema de<br>gestión <span>central</span></div>
+                <div style="margin-top:16px;font-size:13.5px;color:rgba(255,255,255,.45);line-height:1.7">
+                    Acceso exclusivo para administradores del sistema Nexova Desk.
+                </div>
+            </div>
+
+            <div class="auth-features" style="margin-top:36px">
+                <div class="auth-feat">
+                    <div class="auth-feat-dot">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="10" height="10" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <div class="auth-feat-text"><strong>Gestión de organizaciones</strong> — control total de cuentas y planes</div>
+                </div>
+                <div class="auth-feat">
+                    <div class="auth-feat-dot">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="10" height="10" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <div class="auth-feat-text"><strong>Configuración global</strong> — API keys, métodos de pago, canales</div>
+                </div>
+                <div class="auth-feat">
+                    <div class="auth-feat-dot">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="10" height="10" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <div class="auth-feat-text"><strong>Transacciones</strong> — revisión y confirmación de pagos</div>
+                </div>
+                <div class="auth-feat">
+                    <div class="auth-feat-dot">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="10" height="10" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <div class="auth-feat-text"><strong>Blog y páginas</strong> — contenido público del sitio</div>
+                </div>
+            </div>
+        </div>
+        @else
+        {{-- Regular user login panel --}}
         <div>
             <div class="auth-brand">
                 <img src="{{ asset('images/nexovadesklogo.svg') }}" alt="Nexova Desk" class="auth-brand-logo">
@@ -168,6 +215,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         <div class="auth-footer-note">© {{ date('Y') }} Nexova Digital Solutions. Todos los derechos reservados.</div>
     </div>

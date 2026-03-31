@@ -257,6 +257,7 @@ $planLabelMap = array_merge(['free'=>'Free','trial'=>'Prueba'], $planLabelMap);
             <div class="sa-modal-foot">
                 <button @click="orgModal=false" class="sa-btn" style="background:#f1f5f9;color:#374151">Cancelar</button>
                 <button wire:click="saveOrg"
+                        wire:confirm="¿Guardar cambios? Si cambias el plan, la suscripción activa quedará inactiva."
                         class="sa-btn" style="background:#22c55e;color:#fff">Guardar</button>
             </div>
         </div>
