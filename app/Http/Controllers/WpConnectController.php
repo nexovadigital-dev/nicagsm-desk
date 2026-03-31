@@ -36,7 +36,9 @@ class WpConnectController extends Controller
     public function authorize(Request $request)
     {
         if (! Auth::check()) {
-            return redirect()->route('auth.login');
+            $origin     = $request->input('origin', '');
+            $connectPath = '/connect' . ($origin ? '?origin=' . urlencode($origin) : '');
+            return redirect()->route('auth.login', ['redirect' => $connectPath]);
         }
 
         $user   = Auth::user();

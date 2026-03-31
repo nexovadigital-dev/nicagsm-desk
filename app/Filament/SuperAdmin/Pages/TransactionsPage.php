@@ -81,7 +81,11 @@ class TransactionsPage extends Page
             'status'          => 'active',
             'amount_usd'      => $tx->amount_usd,
             'starts_at'       => now(),
-            'ends_at'         => now()->addMonth(),
+            'ends_at'         => now()->addMonths(
+                ($tx->plan->price_usd > 0)
+                    ? max(1, (int) round((float) $tx->amount_usd / (float) $tx->plan->price_usd))
+                    : 1
+            ),
             'activated_by'    => auth()->id(),
             'notes'           => "Confirmado manualmente. TX: {$tx->tx_hash}",
         ]);

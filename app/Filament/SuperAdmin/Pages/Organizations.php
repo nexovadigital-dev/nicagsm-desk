@@ -13,6 +13,7 @@ use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class Organizations extends Page
 {
@@ -228,7 +229,18 @@ class Organizations extends Page
         }
 
         // Store super-admin ID in session to allow returning
-        session(['superadmin_impersonating' => auth()->id()]);
+        $adminId = auth()->id();
+        session(['superadmin_impersonating' => $adminId]);
+
+        Log::channel('stack')->info('SuperAdmin impersonation started', [
+            'admin_id'    => $adminId,
+            'admin_email' => auth()->user()->email,
+            'org_id'      => $orgId,
+            'owner_id'    => $owner->id,
+            'owner_email' => $owner->email,
+            'ip'          => request()->ip(),
+        ]);
+
         auth()->login($owner);
 
         $this->redirect('/app');

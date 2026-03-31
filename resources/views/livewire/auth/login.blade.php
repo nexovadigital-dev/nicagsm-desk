@@ -25,7 +25,7 @@
             <input type="checkbox" wire:model="remember" style="accent-color:#22c55e">
             Recordarme
         </label>
-        {{-- <a href="#" class="auth-link" style="font-size:13px">¿Olvidaste tu contraseña?</a> --}}
+        <a href="{{ route('auth.forgot') }}" class="auth-link" style="font-size:13px">¿Olvidaste tu contraseña?</a>
     </div>
 
     <button class="auth-btn" wire:click="submit" wire:loading.attr="disabled">

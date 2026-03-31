@@ -127,7 +127,7 @@
                     <input
                         :type="show ? 'text' : 'password'"
                         class="ak-input"
-                        wire:model.defer="keys.{{ $key }}"
+                        wire:model.blur="keys.{{ $key }}"
                         placeholder="{{ $hasKey ? '••••••••••••••••••••••' : 'Pega tu clave aquí…' }}"
                         autocomplete="off">
                     <button type="button" class="ak-eye" @click="show = !show" tabindex="-1">
@@ -146,7 +146,7 @@
             <div class="ak-field">
                 <label class="ak-label">Token de verificación Webhook</label>
                 <input type="text" class="ak-input normal-font"
-                    wire:model.defer="webhooks.{{ $key }}"
+                    wire:model.blur="webhooks.{{ $key }}"
                     placeholder="Token de verificación Meta…" autocomplete="off">
             </div>
             @endif

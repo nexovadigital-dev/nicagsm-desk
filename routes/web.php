@@ -4,14 +4,16 @@ use Illuminate\Support\Facades\Route;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\AcceptInvitation;
+use App\Livewire\Auth\ForgotPassword;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\WpConnectController;
 
 // ── Auth público ──────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
-    Route::get('/register',         Register::class)->name('auth.register');
-    Route::get('/login',            Login::class)->name('auth.login');
+    Route::get('/register',           Register::class)->name('auth.register');
+    Route::get('/login',              Login::class)->name('auth.login');
+    Route::get('/forgot-password',    ForgotPassword::class)->name('auth.forgot');
     Route::get('/invitation/{token}', AcceptInvitation::class)->name('auth.invitation');
 });
 
