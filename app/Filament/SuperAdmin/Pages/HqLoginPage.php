@@ -4,38 +4,36 @@ declare(strict_types=1);
 
 namespace App\Filament\SuperAdmin\Pages;
 
-use Filament\Pages\Auth\Login as FilamentLogin;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse;
+use Filament\Auth\Pages\Login as FilamentLogin;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class HqLoginPage extends FilamentLogin
 {
-    // Override with simple properties instead of Filament form
-    public string $email    = '';
-    public string $password = '';
-    public string $error    = '';
-
-    public function authenticate(): void
+    public function authenticate(): ?LoginResponse
     {
-        $this->error = '';
+        // Run Filament's full authentication (rate limiting, credentials check, etc.)
+        $response = parent::authenticate();
 
-        if (! Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
-            $this->error = 'Credenciales incorrectas.';
-            return;
-        }
-
-        if (! Auth::user()->isSuperAdmin()) {
+        // After a successful login, ensure the user is a super-admin
+        if (Auth::check() && ! Auth::user()->isSuperAdmin()) {
             Log::warning('Non-superadmin attempted HQ login', [
-                'email' => $this->email,
+                'email' => Auth::user()->email,
                 'ip'    => request()->ip(),
             ]);
+
             Auth::logout();
-            $this->error = 'Acceso restringido. Este panel es solo para administradores del sistema.';
-            return;
+            request()->session()->invalidate();
+
+            throw ValidationException::withMessages([
+                'data.email' => 'Acceso restringido. Este panel es solo para administradores del sistema.',
+            ]);
         }
 
-        $this->redirect('/nx-hq', navigate: true);
+        return $response;
     }
 
     public function render(): View
