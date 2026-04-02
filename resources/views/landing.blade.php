@@ -88,6 +88,7 @@
         .hero {
             padding:80px 5% 64px; max-width:1160px; margin:0 auto;
             display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center;
+            position:relative;
         }
         @media(max-width:820px) { .hero { grid-template-columns:1fr; gap:40px; text-align:center; padding:52px 5% 48px; } }
         .hero-eyebrow {
@@ -127,7 +128,7 @@
         .cd-status { font-size:11px; color:rgba(255,255,255,.8); display:flex; align-items:center; gap:5px; margin-top:1px; }
         .cd-status-dot { width:7px; height:7px; border-radius:50%; background:#4ade80; animation:pulse 2s infinite; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
-        .cd-msgs { padding:16px; display:flex; flex-direction:column; gap:10px; min-height:220px; background:var(--bg); }
+        .cd-msgs { padding:16px; display:flex; flex-direction:column; gap:10px; height:190px; overflow:hidden; background:var(--bg); }
         .cd-msg-bot, .cd-msg-user { display:flex; gap:8px; align-items:flex-end; }
         .cd-msg-user { flex-direction:row-reverse; }
         .cd-bubble {
@@ -352,21 +353,27 @@
         }
         @media(max-width:820px) { .chat-demo-wrap { animation:none; } }
 
-        /* Gradient orbs behind hero */
-        .hero-orbs { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:0; }
-        .orb {
-            position:absolute; border-radius:50%;
-            filter:blur(72px); opacity:.55;
+        /* Gradient orbs behind hero — CSS pseudo-elements to avoid grid slot collision */
+        .hero::before, .hero::after {
+            content:''; position:absolute; border-radius:50%;
+            pointer-events:none; filter:blur(72px); opacity:.55;
             animation: orbPulse 9s ease-in-out infinite;
         }
-        .orb-1 { width:520px; height:520px; background:radial-gradient(circle,rgba(34,197,94,.22),transparent 65%); top:-120px; right:-80px; animation-delay:0s; }
-        .orb-2 { width:400px; height:400px; background:radial-gradient(circle,rgba(34,197,94,.12),transparent 70%); bottom:-100px; left:5%; animation-delay:4s; }
+        .hero::before {
+            width:520px; height:520px;
+            background:radial-gradient(circle,rgba(34,197,94,.22),transparent 65%);
+            top:-120px; right:-80px; animation-delay:0s;
+        }
+        .hero::after {
+            width:400px; height:400px;
+            background:radial-gradient(circle,rgba(34,197,94,.12),transparent 70%);
+            bottom:-100px; left:5%; animation-delay:4s;
+        }
         @keyframes orbPulse {
             0%,100% { transform:scale(1); opacity:.55; }
             50%      { transform:scale(1.18); opacity:.75; }
         }
-        .hero { position:relative; }
-        .hero > * { position:relative; z-index:1; }
+        .hero-left, .hero-right { position:relative; z-index:1; }
 
         /* Scroll reveal */
         [data-reveal] {
@@ -471,7 +478,6 @@
 
 <!-- HERO -->
 <div class="hero">
-    <div class="hero-orbs"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
     <div class="hero-left">
         <div class="hero-eyebrow"><span></span>Chat en vivo · IA · Agentes · Telegram</div>
         <h1 class="hero-h1">Soporte 24/7 para<br>tu web, con <em>IA que<br>sí responde</em></h1>
@@ -553,8 +559,8 @@
         <div class="stat-label">Tiempo de respuesta del bot</div>
     </div>
     <div class="stat-item" data-reveal data-d="2">
-        <div class="stat-num">2</div>
-        <div class="stat-label">Modelos IA — Groq + Gemini</div>
+        <div class="stat-num">IA</div>
+        <div class="stat-label">24/7 siempre activa</div>
     </div>
     <div class="stat-item" data-reveal data-d="3">
         <div class="stat-num">5<span style="font-size:1.1rem">min</span></div>
@@ -578,7 +584,7 @@
         <div class="feat-card" data-reveal>
             <div class="feat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></div>
             <div class="feat-title">Bot con IA real</div>
-            <div class="feat-desc">Usa Groq (Llama 3.3) y Gemini como fallback. Responde con tu base de conocimiento o IA general cuando es necesario.</div>
+            <div class="feat-desc">Múltiples modelos de IA con fallback automático. Responde con tu base de conocimiento o IA general cuando es necesario.</div>
         </div>
         <div class="feat-card" data-reveal>
             <div class="feat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg></div>
@@ -796,7 +802,7 @@
                 @php $botMsgs = $plan->max_bot_messages_monthly ?? 0; @endphp
                 <li>{!! $checkSvg !!}{{ $botMsgs === 0 ? 'Mensajes bot ilimitados' : number_format($botMsgs).' mensajes bot/mes' }}</li>
                 @if(! $plan->ai_blocked)
-                    <li>{!! $checkSvg !!}IA con Groq + Gemini</li>
+                    <li>{!! $checkSvg !!}IA integrada con fallback</li>
                     <li>{!! $checkSvg !!}Telegram incluido</li>
                     <li>{!! $checkSvg !!}Plugin WooCommerce</li>
                 @else
@@ -833,7 +839,7 @@
             <div class="plan-desc">Para negocios en crecimiento.</div>
             <ul class="plan-feats">
                 <li>{!! $checkSvg !!}Widgets y agentes ilimitados</li>
-                <li>{!! $checkSvg !!}IA con Groq + Gemini</li>
+                <li>{!! $checkSvg !!}IA integrada con fallback</li>
                 <li>{!! $checkSvg !!}Sesiones ilimitadas</li>
                 <li>{!! $checkSvg !!}Telegram + WooCommerce</li>
             </ul>
@@ -860,7 +866,7 @@
             <div class="faq-q" onclick="toggleFaq(this)">¿Cómo aprende el bot a responder mis preguntas?
                 <svg class="faq-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </div>
-            <div class="faq-a">Creas artículos en la "Base de conocimiento" o importas páginas de tu sitio. El bot busca en esa información antes de usar la IA general de Groq o Gemini.</div>
+            <div class="faq-a">Creas artículos en la "Base de conocimiento" o importas páginas de tu sitio. El bot busca en esa información antes de usar la IA integrada como respaldo.</div>
         </div>
         <div class="faq-item">
             <div class="faq-q" onclick="toggleFaq(this)">¿Qué pasa cuando el bot no sabe responder?
@@ -1085,13 +1091,11 @@ function toggleFaq(el) {
     if (!msgs) return;
 
     const script = [
-        { type:'bot',  text:'¡Hola! 👋 Soy Nexova IA. ¿En qué puedo ayudarte hoy?' },
-        { type:'user', text:'¿Cuáles son sus métodos de pago?' },
-        { type:'bot',  text:'Aceptamos MercadoPago (tarjeta, PSE, Nequi, Daviplata, Efecty) y criptomonedas USDT/USDC en Tron, BNB Chain y Polygon. ¿Te ayudo con algo más?' },
+        { type:'bot',  text:'¡Hola! 👋 Soy Nexova IA. ¿En qué puedo ayudarte?' },
         { type:'user', text:'¿Hacen envíos a Medellín?' },
-        { type:'bot',  text:'¡Claro! Hacemos envíos a todo Colombia incluyendo Medellín. El tiempo estimado es de 2 a 4 días hábiles con Servientrega y Coordinadora. 📦' },
-        { type:'user', text:'Perfecto, gracias!' },
-        { type:'bot',  text:'Con gusto 😊 Si tienes más preguntas, aquí estaré. También puedo conectarte con un agente en cualquier momento.' },
+        { type:'bot',  text:'¡Claro! Enviamos a todo Colombia. Tiempo estimado: 2-4 días hábiles. 📦' },
+        { type:'user', text:'¿Tienen soporte por WhatsApp?' },
+        { type:'bot',  text:'Sí, también por Telegram y chat en vivo. ¿Te conecto con un agente?' },
     ];
 
     let step = 0, typingEl = null;
@@ -1106,7 +1110,6 @@ function toggleFaq(el) {
             row.innerHTML = `<div class="cd-bubble cd-bubble-user">${text}</div>`;
         }
         msgs.appendChild(row);
-        msgs.scrollTop = msgs.scrollHeight;
     }
 
     function showTyping() {
@@ -1116,7 +1119,6 @@ function toggleFaq(el) {
         row.innerHTML = `<div class="cd-dot">N</div><div class="cd-typing"><span></span><span></span><span></span></div>`;
         typingEl = row;
         msgs.appendChild(row);
-        msgs.scrollTop = msgs.scrollHeight;
     }
 
     function hideTyping() {
