@@ -763,7 +763,7 @@
             <div class="faq-q" onclick="toggleFaq(this)">¿Dónde están almacenados mis datos?
                 <svg class="faq-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </div>
-            <div class="faq-a">Nexova Desk es operado por Nexova Digital Solutions, empresa colombiana. Tratamos tus datos conforme a la Ley 1581 de 2012 de protección de datos personales. Consulta nuestra <a href="/p/privacidad" style="color:var(--green)">Política de Privacidad</a>.</div>
+            <div class="faq-a">Nexova Desk es una marca de Nexova Digital Solutions, con actividad en Colombia. Tratamos tus datos conforme a la Ley 1581 de 2012 de protección de datos personales. Consulta nuestra <a href="/p/privacidad" style="color:var(--green)">Política de Privacidad</a>.</div>
         </div>
     </div>
 </section>
@@ -887,9 +887,7 @@
 
     <div class="footer-bottom">
         <div class="footer-copy">
-            © {{ date('Y') }} Nexova Digital Solutions S.A.S. — Colombia
-            <span style="margin:0 6px;color:var(--border)">·</span>
-            NIT pendiente de registro
+            © {{ date('Y') }} Nexova Digital Solutions — Colombia
         </div>
         <div class="footer-legal-links">
             <a href="/p/terminos">Términos</a>

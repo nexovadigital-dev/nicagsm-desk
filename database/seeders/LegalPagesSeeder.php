@@ -21,9 +21,9 @@ class LegalPagesSeeder extends Seeder
                 'content'          => <<<'MD'
 # Términos y Condiciones de Uso
 
-**Última actualización:** 31 de marzo de 2026
+**Última actualización:** 1 de abril de 2026
 
-Bienvenido a **Nexova Desk**, un servicio operado por **Nexova Digital Solutions S.A.S.**, empresa constituida en Colombia bajo las leyes de la República de Colombia, con domicilio en la ciudad de Bogotá D.C.
+Bienvenido a **Nexova Desk**, un servicio operado bajo el nombre comercial **Nexova Digital Solutions**, con actividad en la República de Colombia.
 
 Al acceder y utilizar este servicio, usted acepta estos Términos y Condiciones en su totalidad. Si no está de acuerdo, le solicitamos no continuar utilizando el servicio.
 
@@ -32,9 +32,10 @@ Al acceder y utilizar este servicio, usted acepta estos Términos y Condiciones 
 ## 1. Definiciones
 
 - **Servicio:** La plataforma de soporte al cliente mediante chat en vivo y atención con inteligencia artificial disponible en nexovadesk.com.
+- **Nexova / el Operador:** El nombre comercial Nexova Digital Solutions, titular de la marca Nexova Desk.
 - **Usuario / Cliente:** Persona natural o jurídica que contrata el Servicio.
 - **Agente:** Colaborador designado por el Cliente para atender conversaciones a través del panel de administración.
-- **Visitor / Visitante:** Persona que interactúa con el widget de chat instalado en el sitio web del Cliente.
+- **Visitante:** Persona que interactúa con el widget de chat instalado en el sitio web del Cliente.
 - **Contenido:** Mensajes, archivos, imágenes y cualquier otro dato transmitido a través del Servicio.
 
 ---
@@ -47,7 +48,7 @@ Al acceder y utilizar este servicio, usted acepta estos Términos y Condiciones 
 
 2.3. Queda prohibido el uso del Servicio para actividades ilícitas, envío de spam, distribución de malware, o cualquier actividad que infrinja derechos de terceros o la normativa colombiana vigente.
 
-2.4. Nexova Digital Solutions S.A.S. se reserva el derecho de suspender o cancelar cuentas que infrinjan estos términos, sin perjuicio de las acciones legales correspondientes.
+2.4. El Operador se reserva el derecho de suspender o cancelar cuentas que infrinjan estos términos, sin perjuicio de las acciones legales correspondientes.
 
 ---
 
@@ -65,17 +66,17 @@ Al acceder y utilizar este servicio, usted acepta estos Términos y Condiciones 
 
 ## 4. Propiedad Intelectual
 
-4.1. Nexova Desk y todos sus componentes (código fuente, diseño, marcas, logotipos) son propiedad exclusiva de Nexova Digital Solutions S.A.S. o sus licenciantes.
+4.1. **Nexova Desk** es una marca y nombre comercial. El Servicio y todos sus componentes (código fuente, diseño, marcas, logotipos) son propiedad de Nexova Digital Solutions o sus licenciantes.
 
 4.2. El Cliente conserva la propiedad de los datos y contenidos que carga o transmite a través del Servicio.
 
-4.3. El Cliente otorga a Nexova Digital Solutions S.A.S. una licencia limitada, no exclusiva y no transferible para procesar dichos contenidos únicamente con el fin de prestar el Servicio.
+4.3. El Cliente otorga al Operador una licencia limitada, no exclusiva y no transferible para procesar dichos contenidos únicamente con el fin de prestar el Servicio.
 
 ---
 
 ## 5. Disponibilidad del Servicio
 
-5.1. Nexova Digital Solutions S.A.S. hará sus mejores esfuerzos para mantener el Servicio disponible de forma continua, sin garantizar un nivel de disponibilidad específico en el plan gratuito.
+5.1. El Operador hará sus mejores esfuerzos para mantener el Servicio disponible de forma continua, sin garantizar un nivel de disponibilidad específico en el plan gratuito.
 
 5.2. Podemos realizar mantenimientos programados notificando con al menos 24 horas de anticipación.
 
@@ -85,13 +86,13 @@ Al acceder y utilizar este servicio, usted acepta estos Términos y Condiciones 
 
 ## 6. Limitación de Responsabilidad
 
-En la máxima medida permitida por la ley colombiana, Nexova Digital Solutions S.A.S. no será responsable por daños indirectos, incidentales, especiales o consecuentes derivados del uso o imposibilidad de uso del Servicio.
+En la máxima medida permitida por la ley colombiana, el Operador no será responsable por daños indirectos, incidentales, especiales o consecuentes derivados del uso o imposibilidad de uso del Servicio.
 
 ---
 
 ## 7. Legislación Aplicable y Resolución de Disputas
 
-Estos Términos se rigen por las leyes de la República de Colombia. Cualquier controversia se someterá en primera instancia a mediación ante la Cámara de Comercio de Bogotá. De no lograrse acuerdo, será resuelta por los jueces competentes de Bogotá D.C.
+Estos Términos se rigen por las leyes de la República de Colombia. Cualquier controversia se resolverá en primera instancia de forma directa entre las partes y, de no lograrse acuerdo, ante los jueces competentes de Colombia.
 
 El Servicio cumple con:
 - **Ley 1480 de 2011** — Estatuto del Consumidor
@@ -112,7 +113,7 @@ Para cualquier consulta relacionada con estos Términos:
 
 - **Correo:** legal@nexovadesk.com
 - **Sitio web:** [nexovadesk.com/p/contacto](/p/contacto)
-- **Domicilio:** Bogotá D.C., Colombia
+- **País:** Colombia
 MD,
             ],
 
@@ -125,9 +126,9 @@ MD,
                 'content'          => <<<'MD'
 # Política de Tratamiento de Datos Personales
 
-**Última actualización:** 31 de marzo de 2026
+**Última actualización:** 1 de abril de 2026
 
-En cumplimiento de la **Ley 1581 de 2012**, el **Decreto 1377 de 2013** y demás normas concordantes sobre protección de datos personales en Colombia, **Nexova Digital Solutions S.A.S.** (en adelante "Nexova" o "el Responsable") informa su política de tratamiento de datos personales.
+En cumplimiento de la **Ley 1581 de 2012**, el **Decreto 1377 de 2013** y demás normas concordantes sobre protección de datos personales en Colombia, **Nexova Digital Solutions** (nombre comercial, titular de la marca Nexova Desk, en adelante "Nexova" o "el Responsable") informa su política de tratamiento de datos personales.
 
 ---
 
@@ -135,8 +136,9 @@ En cumplimiento de la **Ley 1581 de 2012**, el **Decreto 1377 de 2013** y demás
 
 | Campo | Detalle |
 |---|---|
-| **Razón Social** | Nexova Digital Solutions S.A.S. |
-| **Domicilio** | Bogotá D.C., Colombia |
+| **Nombre comercial** | Nexova Digital Solutions |
+| **Marca** | Nexova Desk |
+| **País** | Colombia |
 | **Correo de datos** | datos@nexovadesk.com |
 | **Sitio web** | nexovadesk.com |
 
@@ -169,7 +171,7 @@ Los datos se tratan para:
 2. Gestionar la relación contractual y facturación.
 3. Enviar comunicaciones del servicio (alertas, facturas, actualizaciones críticas).
 4. Mejorar y optimizar la plataforma mediante análisis agregados y anonimizados.
-5. Cumplir con obligaciones legales y fiscales colombianas.
+5. Cumplir con obligaciones legales aplicables en Colombia.
 6. Prevenir fraudes y garantizar la seguridad de la plataforma.
 
 No realizamos tratamiento de datos para perfilamiento comercial de terceros ni vendemos datos personales.
@@ -188,7 +190,7 @@ El tratamiento se fundamenta en:
 
 ## 5. Conservación de los Datos
 
-Los datos se conservan mientras la cuenta esté activa y durante el período adicional exigido por obligaciones legales (mínimo 5 años para datos contables según normativa colombiana). Al eliminar la cuenta, los datos de chat se eliminan de los servidores activos en un plazo máximo de 30 días.
+Los datos se conservan mientras la cuenta esté activa y durante el período adicional exigido por obligaciones legales. Al eliminar la cuenta, los datos de chat se eliminan de los servidores activos en un plazo máximo de 30 días.
 
 ---
 
@@ -196,10 +198,8 @@ Los datos se conservan mientras la cuenta esté activa y durante el período adi
 
 Nexova puede compartir datos con:
 
-- **Proveedores de infraestructura cloud** bajo acuerdos de procesamiento de datos (AWS, Cloudflare). Estos proveedores actúan como encargados del tratamiento y no tienen acceso independiente a sus datos.
+- **Proveedores de infraestructura cloud** bajo acuerdos de procesamiento de datos (Cloudflare, servicios de hosting). Estos proveedores actúan como encargados del tratamiento y no tienen acceso independiente a sus datos.
 - **Autoridades competentes** cuando sea requerido por ley colombiana.
-
-No realizamos transferencias internacionales de datos a países sin nivel adecuado de protección sin las salvaguardas correspondientes.
 
 ---
 
@@ -236,9 +236,9 @@ Notificaremos cambios sustanciales con al menos 15 días de anticipación por co
 
 ---
 
-## 10. Contacto y Quejas
+## 11. Contacto y Quejas
 
-**Delegado de Protección de Datos:**
+**Responsable de Datos:**
 - Correo: datos@nexovadesk.com
 - Superintendencia de Industria y Comercio: www.sic.gov.co / Línea nacional: 01 8000 910165
 MD,
@@ -253,9 +253,9 @@ MD,
                 'content'          => <<<'MD'
 # Derecho de Habeas Data
 
-**Última actualización:** 31 de marzo de 2026
+**Última actualización:** 1 de abril de 2026
 
-**Nexova Digital Solutions S.A.S.** reconoce y garantiza el derecho fundamental de **Habeas Data** consagrado en el artículo 15 de la Constitución Política de Colombia, desarrollado por la **Ley 1266 de 2008** y la **Ley 1581 de 2012**.
+**Nexova Digital Solutions** (nombre comercial, titular de la marca **Nexova Desk**) reconoce y garantiza el derecho fundamental de **Habeas Data** consagrado en el artículo 15 de la Constitución Política de Colombia, desarrollado por la **Ley 1266 de 2008** y la **Ley 1581 de 2012**.
 
 ---
 
@@ -267,7 +267,7 @@ Es el derecho que tiene toda persona a conocer, actualizar y rectificar la infor
 
 ## Sus Derechos
 
-Como titular de datos personales, usted tiene los siguientes derechos frente a Nexova Digital Solutions S.A.S.:
+Como titular de datos personales, usted tiene los siguientes derechos frente a Nexova Digital Solutions:
 
 | Derecho | Descripción |
 |---|---|
@@ -373,10 +373,10 @@ Para solicitudes relacionadas con el tratamiento de sus datos personales:
 
 ---
 
-## Información Legal
+## Información
 
-**Nexova Digital Solutions S.A.S.**
-- **Domicilio:** Bogotá D.C., Colombia
+**Nexova Desk** es una marca de **Nexova Digital Solutions**
+- **País:** Colombia
 - **Correo legal:** legal@nexovadesk.com
 
 ---
