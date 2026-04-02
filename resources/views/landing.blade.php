@@ -331,6 +331,102 @@
             .section { padding:52px 5%; }
             .cta-section { padding:60px 5%; }
         }
+
+        /* ═══════════════════════════════════════════
+           ANIMATIONS & SCROLL REVEAL
+        ═══════════════════════════════════════════ */
+
+        /* Hero entrance */
+        .hero-left  { animation: heroIn 0.9s cubic-bezier(.22,.97,.42,1) both; }
+        .hero-right { animation: heroIn 0.9s cubic-bezier(.22,.97,.42,1) 0.18s both; }
+        @keyframes heroIn {
+            from { opacity:0; transform:translateY(36px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+
+        /* Floating chat card */
+        .chat-demo-wrap { animation: floatCard 6s ease-in-out infinite; }
+        @keyframes floatCard {
+            0%,100% { transform:translateY(0); }
+            50%      { transform:translateY(-12px); }
+        }
+        @media(max-width:820px) { .chat-demo-wrap { animation:none; } }
+
+        /* Gradient orbs behind hero */
+        .hero-orbs { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:0; }
+        .orb {
+            position:absolute; border-radius:50%;
+            filter:blur(72px); opacity:.55;
+            animation: orbPulse 9s ease-in-out infinite;
+        }
+        .orb-1 { width:520px; height:520px; background:radial-gradient(circle,rgba(34,197,94,.22),transparent 65%); top:-120px; right:-80px; animation-delay:0s; }
+        .orb-2 { width:400px; height:400px; background:radial-gradient(circle,rgba(34,197,94,.12),transparent 70%); bottom:-100px; left:5%; animation-delay:4s; }
+        @keyframes orbPulse {
+            0%,100% { transform:scale(1); opacity:.55; }
+            50%      { transform:scale(1.18); opacity:.75; }
+        }
+        .hero { position:relative; }
+        .hero > * { position:relative; z-index:1; }
+
+        /* Scroll reveal */
+        [data-reveal] {
+            opacity:0; transform:translateY(28px);
+            transition:opacity .65s ease, transform .65s ease;
+        }
+        [data-reveal].revealed { opacity:1; transform:translateY(0); }
+        [data-reveal][data-d="1"] { transition-delay:.1s; }
+        [data-reveal][data-d="2"] { transition-delay:.2s; }
+        [data-reveal][data-d="3"] { transition-delay:.3s; }
+        [data-reveal][data-d="4"] { transition-delay:.4s; }
+        [data-reveal][data-d="5"] { transition-delay:.5s; }
+        [data-reveal][data-d="6"] { transition-delay:.6s; }
+        [data-reveal][data-d="7"] { transition-delay:.7s; }
+        [data-reveal][data-d="8"] { transition-delay:.8s; }
+
+        /* Nav glow on scroll */
+        .nav.is-scrolled { box-shadow:0 1px 0 rgba(34,197,94,.14), 0 8px 32px rgba(0,0,0,.35); }
+
+        /* ── STATS BAR ── */
+        .stats-bar {
+            max-width:1160px; margin:0 auto; padding:28px 5%;
+            display:grid; grid-template-columns:repeat(4,1fr); gap:8px;
+        }
+        @media(max-width:700px) { .stats-bar { grid-template-columns:repeat(2,1fr); } }
+        @media(max-width:380px) { .stats-bar { grid-template-columns:1fr; } }
+        .stat-item {
+            background:var(--surface); border:1px solid var(--border); border-radius:12px;
+            padding:18px 20px; text-align:center;
+            transition:border-color .2s, transform .2s;
+        }
+        .stat-item:hover { border-color:rgba(34,197,94,.22); transform:translateY(-2px); }
+        .stat-num { font-size:1.8rem; font-weight:800; letter-spacing:-.03em; color:var(--green); line-height:1; }
+        .stat-label { font-size:11.5px; color:var(--sub); margin-top:5px; }
+
+        /* Feature icon hover */
+        .feat-card:hover .feat-icon { background:rgba(34,197,94,.18); transform:scale(1.08); transition:background .2s, transform .2s; }
+
+        /* CTA animated glow */
+        .cta-section {
+            border-top:1px solid var(--border); padding:88px 5%; text-align:center;
+            background:radial-gradient(ellipse 80% 60% at 50% 100%, rgba(34,197,94,.07) 0%, transparent 70%);
+            position:relative; overflow:hidden;
+        }
+        .cta-section::before {
+            content:''; position:absolute; inset:0; pointer-events:none;
+            background:radial-gradient(ellipse 60% 50% at 50% 50%, rgba(34,197,94,.05) 0%, transparent 70%);
+            animation:ctaPulse 6s ease-in-out infinite;
+        }
+        @keyframes ctaPulse { 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.08)} }
+
+        /* Admin panel demo — animated messages */
+        .adm-msg-bubble, .adm-msg-dot { opacity:1; }
+        .adm-msg[data-anim] .adm-msg-bubble,
+        .adm-msg[data-anim] .adm-msg-dot { opacity:0; transform:translateY(8px); transition:opacity .4s ease, transform .4s ease; }
+        .adm-msg[data-anim].adm-revealed .adm-msg-bubble,
+        .adm-msg[data-anim].adm-revealed .adm-msg-dot { opacity:1; transform:translateY(0); }
+
+        /* Pulse dot on status */
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.85)} }
     </style>
 </head>
 <body>
@@ -375,7 +471,8 @@
 
 <!-- HERO -->
 <div class="hero">
-    <div>
+    <div class="hero-orbs"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+    <div class="hero-left">
         <div class="hero-eyebrow"><span></span>Chat en vivo · IA · Agentes · Telegram</div>
         <h1 class="hero-h1">Soporte 24/7 para<br>tu web, con <em>IA que<br>sí responde</em></h1>
         <p class="hero-desc">
@@ -404,6 +501,7 @@
     </div>
 
     <!-- Chat animado -->
+    <div class="hero-right">
     <div class="chat-demo-wrap">
         <div class="chat-demo">
             <div class="cd-header">
@@ -443,53 +541,76 @@
             </div>
         </div>
     </div>
+    </div>
+</div>
+
+<hr class="section-sep">
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+    <div class="stat-item" data-reveal data-d="1">
+        <div class="stat-num"><span data-count="5" data-suffix="s">&lt; 1s</span></div>
+        <div class="stat-label">Tiempo de respuesta del bot</div>
+    </div>
+    <div class="stat-item" data-reveal data-d="2">
+        <div class="stat-num">2</div>
+        <div class="stat-label">Modelos IA — Groq + Gemini</div>
+    </div>
+    <div class="stat-item" data-reveal data-d="3">
+        <div class="stat-num">5<span style="font-size:1.1rem">min</span></div>
+        <div class="stat-label">Configuración inicial</div>
+    </div>
+    <div class="stat-item" data-reveal data-d="4">
+        <div class="stat-num">$0</div>
+        <div class="stat-label">Plan gratis para siempre</div>
+    </div>
 </div>
 
 <hr class="section-sep">
 
 <!-- FEATURES -->
 <section class="section" id="features">
-    <div class="label-row"><span class="label-line"></span><span class="label-text">Funciones</span></div>
-    <h2 class="section-h2">Todo lo que necesita tu equipo de soporte</h2>
-    <p class="section-sub">Desde el bot hasta el historial completo, en un solo lugar sin complicaciones.</p>
+    <div class="label-row" data-reveal><span class="label-line"></span><span class="label-text">Funciones</span></div>
+    <h2 class="section-h2" data-reveal data-d="1">Todo lo que necesita tu equipo de soporte</h2>
+    <p class="section-sub" data-reveal data-d="2">Desde el bot hasta el historial completo, en un solo lugar sin complicaciones.</p>
 
     <div class="feat-grid">
-        <div class="feat-card">
+        <div class="feat-card" data-reveal>
             <div class="feat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></div>
             <div class="feat-title">Bot con IA real</div>
             <div class="feat-desc">Usa Groq (Llama 3.3) y Gemini como fallback. Responde con tu base de conocimiento o IA general cuando es necesario.</div>
         </div>
-        <div class="feat-card">
+        <div class="feat-card" data-reveal>
             <div class="feat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg></div>
             <div class="feat-title">Widget personalizable</div>
             <div class="feat-desc">Colores, posición, horario de atención, formulario previo y mensajes de bienvenida. Todo configurable en segundos.</div>
         </div>
-        <div class="feat-card">
+        <div class="feat-card" data-reveal>
             <div class="feat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
             <div class="feat-title">Equipo de agentes</div>
             <div class="feat-desc">Invita a tu equipo con roles y permisos. Cada agente ve las conversaciones en tiempo real y puede tomar el control.</div>
         </div>
-        <div class="feat-card">
+        <div class="feat-card" data-reveal>
             <div class="feat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div>
             <div class="feat-title">Base de conocimiento</div>
             <div class="feat-desc">Crea artículos o importa contenido desde URLs de tu sitio. El bot los usa para responder con precisión antes de recurrir a la IA.</div>
         </div>
-        <div class="feat-card">
+        <div class="feat-card" data-reveal>
             <div class="feat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg></div>
             <div class="feat-title">Telegram conectado</div>
             <div class="feat-desc">Conecta tu bot de Telegram y atiende sus conversaciones desde el mismo inbox que el chat web. Sin cambiar de pantalla.</div>
         </div>
-        <div class="feat-card">
+        <div class="feat-card" data-reveal>
             <div class="feat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div>
             <div class="feat-title">Dashboard y métricas</div>
             <div class="feat-desc">Tickets abiertos, calificaciones, tiempos de respuesta y actividad del bot. Todo en tiempo real en el panel principal.</div>
         </div>
-        <div class="feat-card">
+        <div class="feat-card" data-reveal>
             <div class="feat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg></div>
             <div class="feat-title">Integración WooCommerce</div>
             <div class="feat-desc">Plugin oficial para WordPress. El bot conoce tu catálogo, precios y stock automáticamente. Los clientes consultan sus pedidos.</div>
         </div>
-        <div class="feat-card">
+        <div class="feat-card" data-reveal>
             <div class="feat-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></div>
             <div class="feat-title">Adjuntos e imágenes</div>
             <div class="feat-desc">Clientes y agentes comparten imágenes y PDFs en el chat. Con soporte de pegar directo con Ctrl+V desde el portapapeles.</div>
@@ -502,11 +623,11 @@
 <!-- ADMIN PANEL DEMO -->
 <section class="admin-demo-section" id="demo-panel">
     <div class="admin-demo-inner">
-        <div class="label-row"><span class="label-line"></span><span class="label-text">Panel de agentes</span></div>
-        <h2 class="section-h2">Tu equipo atiende desde un solo lugar</h2>
-        <p class="section-sub">Inbox unificado con todas las conversaciones — web, Telegram, bot y agentes — en tiempo real.</p>
+        <div class="label-row" data-reveal><span class="label-line"></span><span class="label-text">Panel de agentes</span></div>
+        <h2 class="section-h2" data-reveal data-d="1">Tu equipo atiende desde un solo lugar</h2>
+        <p class="section-sub" data-reveal data-d="2">Inbox unificado con todas las conversaciones — web, Telegram, bot y agentes — en tiempo real.</p>
 
-        <div class="admin-demo-layout">
+        <div class="admin-demo-layout" data-reveal data-d="3" id="adminDemoLayout">
             <!-- Sidebar -->
             <div class="adm-sidebar">
                 <div class="adm-logo">
@@ -584,25 +705,25 @@
                         <div style="padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.2)">Activo</div>
                     </div>
                 </div>
-                <div class="adm-chat-body">
-                    <div class="adm-msg">
+                <div class="adm-chat-body" id="admChatBody">
+                    <div class="adm-msg" data-anim>
                         <div class="adm-msg-dot" style="background:var(--green);color:#0d1117">N</div>
                         <div class="adm-msg-bubble bot">Hola Carlos, soy Nexova IA 👋 ¿En qué puedo ayudarte hoy?</div>
                     </div>
-                    <div class="adm-msg right">
+                    <div class="adm-msg right" data-anim>
                         <div class="adm-msg-bubble user">¿Hacen envíos a Medellín?</div>
                     </div>
-                    <div class="adm-msg">
+                    <div class="adm-msg" data-anim>
                         <div class="adm-msg-dot" style="background:var(--green);color:#0d1117">N</div>
                         <div class="adm-msg-bubble bot">¡Claro! Hacemos envíos a todo Colombia incluyendo Medellín. El tiempo estimado es de 2 a 4 días hábiles con Servientrega y Coordinadora.</div>
                     </div>
-                    <div class="adm-msg right">
+                    <div class="adm-msg right" data-anim>
                         <div class="adm-msg-bubble user">¿Y cuánto vale el envío?</div>
                     </div>
-                    <div class="adm-msg" style="align-items:center;gap:6px">
+                    <div class="adm-msg" style="align-items:center;gap:6px" data-anim>
                         <div style="font-size:10px;color:var(--sub);padding:4px 10px;background:rgba(255,255,255,.04);border-radius:99px;border:1px solid var(--border)">👤 Ana López se unió a la conversación</div>
                     </div>
-                    <div class="adm-msg">
+                    <div class="adm-msg" data-anim>
                         <div class="adm-msg-dot" style="background:#7c3aed;color:#fff">A</div>
                         <div class="adm-msg-bubble agent">¡Hola Carlos! El envío a Medellín tiene un costo de $8.500 COP para pedidos menores a $80.000. Gratis por compras mayores. ¿Te ayudo a iniciar el pedido?</div>
                     </div>
@@ -622,21 +743,21 @@
 
 <!-- HOW IT WORKS -->
 <section class="section">
-    <div class="label-row"><span class="label-line"></span><span class="label-text">Inicio rápido</span></div>
-    <h2 class="section-h2">De cero a tu primer chat en minutos</h2>
-    <p class="section-sub">Sin instalar nada complejo. Dos líneas de código y listo.</p>
+    <div class="label-row" data-reveal><span class="label-line"></span><span class="label-text">Inicio rápido</span></div>
+    <h2 class="section-h2" data-reveal data-d="1">De cero a tu primer chat en minutos</h2>
+    <p class="section-sub" data-reveal data-d="2">Sin instalar nada complejo. Dos líneas de código y listo.</p>
     <div class="steps-grid">
-        <div class="step-card">
+        <div class="step-card" data-reveal data-d="2">
             <div class="step-num">Paso 01</div>
             <div class="step-title">Crea tu cuenta y configura el widget</div>
             <div class="step-desc">Personaliza nombre del bot, colores, horario y el mensaje de bienvenida. Copia el script en tu HTML.</div>
         </div>
-        <div class="step-card">
+        <div class="step-card" data-reveal data-d="3">
             <div class="step-num">Paso 02</div>
             <div class="step-title">Agrega tu base de conocimiento</div>
             <div class="step-desc">Escribe artículos o importa páginas de tu sitio. El bot los usa para responder con precisión antes de llamar a la IA.</div>
         </div>
-        <div class="step-card">
+        <div class="step-card" data-reveal data-d="4">
             <div class="step-num">Paso 03</div>
             <div class="step-title">Responde en vivo cuando lo necesites</div>
             <div class="step-desc">Recibirás una alerta cuando un cliente pida hablar con un agente. Toma el control desde el panel en segundos.</div>
@@ -914,6 +1035,48 @@ function toggleFaq(el) {
     document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
     if (!open) item.classList.add('open');
 }
+
+// ── Nav scroll glow ──
+(function() {
+    const nav = document.querySelector('.nav');
+    window.addEventListener('scroll', () => {
+        nav.classList.toggle('is-scrolled', window.scrollY > 30);
+    }, { passive: true });
+})();
+
+// ── Scroll reveal (IntersectionObserver) ──
+(function() {
+    const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.classList.add('revealed');
+                io.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el));
+})();
+
+// ── Admin panel demo — staggered message reveal ──
+(function() {
+    const layout = document.getElementById('adminDemoLayout');
+    if (!layout) return;
+
+    let triggered = false;
+    const io = new IntersectionObserver((entries) => {
+        if (triggered || !entries[0].isIntersecting) return;
+        triggered = true;
+        io.disconnect();
+
+        const msgs = layout.querySelectorAll('[data-anim]');
+        msgs.forEach((msg, i) => {
+            setTimeout(() => {
+                msg.classList.add('adm-revealed');
+            }, 400 + i * 350);
+        });
+    }, { threshold: 0.3 });
+    io.observe(layout);
+})();
 
 // ── Animated chat demo ──
 (function() {
