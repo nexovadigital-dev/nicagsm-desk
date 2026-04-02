@@ -12,6 +12,7 @@ class Organization extends Model
 {
     protected $fillable = [
         'name', 'slug', 'website', 'support_email', 'support_name',
+        'domain', 'domain_verified', 'domain_verify_token',
         'ai_groq_key', 'ai_gemini_key', 'ai_use_own_keys', 'telegram_bot_token',
         'max_messages_per_session', 'max_bot_sessions_per_day',
         'bot_sessions_today', 'bot_messages_this_month', 'bot_messages_month_reset', 'usage_date',
@@ -21,6 +22,7 @@ class Organization extends Model
     protected $casts = [
         'is_active'               => 'boolean',
         'is_partner'              => 'boolean',
+        'domain_verified'         => 'boolean',
         'ai_use_own_keys'         => 'boolean',
         'trial_ends_at'           => 'datetime',
         'usage_date'              => 'date',
@@ -65,6 +67,11 @@ class Organization extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(PaymentTransaction::class);
+    }
+
+    public function smtpSetting(): HasOne
+    {
+        return $this->hasOne(SmtpSetting::class);
     }
 
     public function isOnTrial(): bool

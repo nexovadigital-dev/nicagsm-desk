@@ -4,7 +4,6 @@
 
 .sm-wrap { padding: 32px 36px 64px; max-width: 1040px; }
 
-/* Each section: label-left config-right */
 .sm-section {
     display: grid;
     grid-template-columns: 240px 1fr;
@@ -13,24 +12,13 @@
     border-top: 1px solid var(--c-border,#e3e6ea);
 }
 .sm-section:first-of-type { border-top: none; padding-top: 0; }
-/* section last — no extra rule needed */
 @media (max-width: 720px) {
     .sm-section { grid-template-columns: 1fr; gap: 12px; }
 }
 
-.sm-section-label {
-    padding-top: 2px;
-}
-.sm-section-label h3 {
-    font-size: 14px; font-weight: 600; color: var(--c-text,#111);
-    margin: 0 0 6px;
-}
-.sm-section-label h3 svg { display: none; }
-.sm-section-label p {
-    font-size: 12.5px; color: var(--c-sub,#6b7280); margin: 0; line-height: 1.6;
-}
-
-.sm-panel { /* open — no card border */ }
+.sm-section-label { padding-top: 2px; }
+.sm-section-label h3 { font-size: 14px; font-weight: 600; color: var(--c-text,#111); margin: 0 0 6px; }
+.sm-section-label p  { font-size: 12.5px; color: var(--c-sub,#6b7280); margin: 0; line-height: 1.6; }
 
 .sm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 500px) { .sm-grid { grid-template-columns: 1fr; } }
@@ -56,31 +44,55 @@
 .sm-btn-primary:hover { background: #0f172a; }
 .sm-btn-ghost { background: transparent; color: var(--c-sub,#6b7280); border-color: var(--c-border,#e3e6ea); }
 .sm-btn-ghost:hover { background: var(--c-surf2,#f0f2f5); }
-.sm-alert { padding: 9px 13px; border-radius: 7px; font-size: 12px; font-weight: 500; }
-.sm-alert-success { background: rgba(5,150,105,.07); border:1px solid rgba(5,150,105,.2); color: #059669; }
-.sm-alert-error   { background: rgba(220,38,38,.07); border:1px solid rgba(220,38,38,.2); color: #dc2626; }
 .sm-actions { margin-top: 14px; display: flex; align-items: center; gap: 10px; }
+
+.sm-notice { padding: 11px 14px; border-radius: 8px; font-size: 12px; line-height: 1.6; }
+.sm-notice-info    { background: rgba(59,130,246,.07); border: 1px solid rgba(59,130,246,.2); color: #1d4ed8; }
+.sm-notice-success { background: rgba(5,150,105,.07); border: 1px solid rgba(5,150,105,.2); color: #059669; }
+.sm-notice code { background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 4px; font-size: 11.5px; }
 </style>
 
 <div class="sm-wrap">
-    <h1 style="font-size:22px;font-weight:700;color:var(--c-text,#111827);margin-bottom:28px;letter-spacing:-.02em">Email & SMTP</h1>
+    <h1 style="font-size:22px;font-weight:700;color:var(--c-text,#111827);margin-bottom:4px;letter-spacing:-.02em">Email & SMTP</h1>
+    <p style="font-size:13px;color:var(--c-sub,#6b7280);margin-bottom:28px">
+        Configura cómo se envían los emails de tickets a tus clientes.
+    </p>
+
+    {{-- ── Email actual (genérico o personalizado) ── --}}
+    <div class="sm-section">
+        <div class="sm-section-label">
+            <h3>Email de envío</h3>
+            <p>Dirección desde la que tus clientes recibirán los emails de tickets.</p>
+        </div>
+        <div>
+            @if($enabled && $fromAddress)
+                <div class="sm-notice sm-notice-success">
+                    <strong>SMTP personalizado activo</strong><br>
+                    Los emails se enviarán desde <code>{{ $fromAddress }}</code> usando tu servidor SMTP.
+                </div>
+            @else
+                <div class="sm-notice sm-notice-info">
+                    <strong>Email genérico de plataforma</strong><br>
+                    Sin SMTP propio configurado, los emails se envían desde
+                    <code>{{ $genericEmail }}</code> usando el servidor de Nexova Desk.<br><br>
+                    Para usar tu propio dominio, configura tu servidor SMTP abajo y actívalo.
+                    Necesitarás <a href="{{ url('/app/domain-settings') }}" style="text-decoration:underline">verificar tu dominio</a> para máxima entregabilidad.
+                </div>
+            @endif
+        </div>
+    </div>
 
     {{-- ── Notificaciones ── --}}
     <div class="sm-section">
         <div class="sm-section-label">
-            <h3>
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
-                Notificaciones
-            </h3>
-            <p>Activa el envío automático de emails al cliente cuando hay una respuesta en su ticket.</p>
+            <h3>Notificaciones al cliente</h3>
+            <p>Email automático al cliente cuando bot o agente responde a su ticket.</p>
         </div>
-        <div class="sm-panel">
+        <div>
             <div class="sm-toggle-row">
                 <div>
                     <div class="sm-toggle-label">Notificar al cliente</div>
-                    <div class="sm-toggle-sub">Email automático cuando bot o agente responde</div>
+                    <div class="sm-toggle-sub">Se envía un email con cada respuesta del agente o bot</div>
                 </div>
                 <label class="sm-toggle">
                     <input type="checkbox" wire:model.live="notificationsEnabled">
@@ -93,18 +105,25 @@
     {{-- ── Servidor SMTP ── --}}
     <div class="sm-section">
         <div class="sm-section-label">
-            <h3>
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-                Servidor SMTP
-            </h3>
-            <p>Gmail, Outlook, Mailtrap, Amazon SES u otro proveedor compatible con SMTP.</p>
+            <h3>Servidor SMTP propio</h3>
+            <p>Gmail, Outlook, Amazon SES, Brevo u otro proveedor SMTP. Deja vacío para usar el servidor de la plataforma.</p>
         </div>
-        <div class="sm-panel">
+        <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+                <div>
+                    <div class="sm-toggle-label">Usar mi SMTP</div>
+                    <div class="sm-toggle-sub">Activa para enviar desde tu propio servidor</div>
+                </div>
+                <label class="sm-toggle">
+                    <input type="checkbox" wire:model.live="enabled">
+                    <span class="sm-slider"></span>
+                </label>
+            </div>
+
+            @if($enabled)
             <div class="sm-grid">
                 <div class="sm-field" style="grid-column:1/-1">
-                    <label class="sm-label">Host</label>
+                    <label class="sm-label">Host SMTP</label>
                     <input type="text" class="sm-input" wire:model="host" placeholder="smtp.gmail.com">
                 </div>
                 <div class="sm-field">
@@ -120,22 +139,23 @@
                     </select>
                 </div>
                 <div class="sm-field">
-                    <label class="sm-label">Usuario</label>
-                    <input type="text" class="sm-input" wire:model="username" placeholder="tu@email.com" autocomplete="off">
+                    <label class="sm-label">Usuario SMTP</label>
+                    <input type="text" class="sm-input" wire:model="username" placeholder="tu@dominio.com" autocomplete="off">
                 </div>
                 <div class="sm-field">
-                    <label class="sm-label">Contraseña</label>
+                    <label class="sm-label">Contraseña SMTP</label>
                     <input type="password" class="sm-input" wire:model="password" placeholder="••••••••" autocomplete="new-password">
                 </div>
                 <div class="sm-field">
-                    <label class="sm-label">Email remitente</label>
-                    <input type="email" class="sm-input" wire:model="fromAddress" placeholder="noreply@nexova.com">
+                    <label class="sm-label">Email remitente (FROM)</label>
+                    <input type="email" class="sm-input" wire:model="fromAddress" placeholder="soporte@tudominio.com">
                 </div>
                 <div class="sm-field">
                     <label class="sm-label">Nombre remitente</label>
-                    <input type="text" class="sm-input" wire:model="fromName" placeholder="Nexova Chat">
+                    <input type="text" class="sm-input" wire:model="fromName" placeholder="Soporte Acme">
                 </div>
             </div>
+            @endif
 
             <div class="sm-actions">
                 <button class="sm-btn sm-btn-primary" wire:click="save" wire:loading.attr="disabled">
@@ -148,18 +168,13 @@
         </div>
     </div>
 
-    {{-- ── Probar ── --}}
+    {{-- ── Probar configuración ── --}}
     <div class="sm-section">
         <div class="sm-section-label">
-            <h3>
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                </svg>
-                Probar configuración
-            </h3>
-            <p>Envía un email de prueba para verificar que los datos SMTP son correctos.</p>
+            <h3>Probar envío</h3>
+            <p>Verifica que el email llega correctamente antes de activarlo para tus clientes.</p>
         </div>
-        <div class="sm-panel">
+        <div>
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
                 <input type="email" class="sm-input" wire:model="testEmail" placeholder="email@destino.com" style="max-width:260px">
                 <button class="sm-btn sm-btn-ghost" wire:click="sendTest" wire:loading.attr="disabled">
@@ -169,6 +184,9 @@
                     Enviar prueba
                 </button>
             </div>
+            <p style="font-size:11.5px;color:var(--c-sub,#6b7280);margin-top:8px">
+                Se usará el SMTP activo (propio si está habilitado, o el de la plataforma).
+            </p>
         </div>
     </div>
 

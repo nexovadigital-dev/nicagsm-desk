@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Ticket;
+use App\Services\OrgMailer;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -15,9 +16,7 @@ class TicketClosedMail extends Mailable
 
     public function build(): self
     {
-        $org      = $this->ticket->organization;
-        $fromName = $org?->support_name  ?: ($org?->name ?: config('mail.from.name', 'Nexova Desk'));
-        $fromAddr = $org?->support_email ?: config('mail.from.address', 'noreply@nexovadesk.com');
+        [$fromAddr, $fromName] = OrgMailer::fromFor($this->ticket->organization);
 
         return $this
             ->from($fromAddr, $fromName)

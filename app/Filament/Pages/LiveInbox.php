@@ -10,6 +10,7 @@ use App\Mail\TicketClosedMail;
 use App\Models\Contact;
 use App\Models\Message;
 use App\Models\Ticket;
+use App\Services\OrgMailer;
 use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
@@ -322,7 +323,13 @@ class LiveInbox extends Page
 
         // Send closed notification + survey link
         if ($ticket->is_support_ticket && $ticket->client_email && $ticket->ticket_reply_token) {
-            Mail::to($ticket->client_email)->queue(new TicketClosedMail($ticket->fresh()));
+            $fresh      = $ticket->fresh();
+            $org        = $fresh->organization;
+            $mailerName = OrgMailer::mailerNameFor($org);
+            $mailable   = new TicketClosedMail($fresh);
+            $mailerName
+                ? Mail::mailer($mailerName)->to($ticket->client_email)->queue($mailable)
+                : Mail::to($ticket->client_email)->queue($mailable);
         }
 
         $this->selectedTicketId = null;
@@ -558,7 +565,13 @@ class LiveInbox extends Page
         ]);
 
         if ($email) {
-            Mail::to($email)->queue(new SupportTicketMail($ticket->fresh()));
+            $fresh      = $ticket->fresh();
+            $org        = $fresh->organization;
+            $mailerName = OrgMailer::mailerNameFor($org);
+            $mailable   = new SupportTicketMail($fresh);
+            $mailerName
+                ? Mail::mailer($mailerName)->to($email)->queue($mailable)
+                : Mail::to($email)->queue($mailable);
         }
 
         Message::create([

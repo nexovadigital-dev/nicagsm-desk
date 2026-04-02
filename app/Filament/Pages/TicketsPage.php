@@ -10,6 +10,7 @@ use App\Mail\SupportTicketMail;
 use App\Models\Contact;
 use App\Models\Message;
 use App\Models\Ticket;
+use App\Services\OrgMailer;
 use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
@@ -167,7 +168,12 @@ class TicketsPage extends Page
 
         // Send opening email to client
         if ($email) {
-            Mail::to($email)->queue(new SupportTicketMail($ticket));
+            $org        = $ticket->organization;
+            $mailerName = OrgMailer::mailerNameFor($org);
+            $mailable   = new SupportTicketMail($ticket);
+            $mailerName
+                ? Mail::mailer($mailerName)->to($email)->queue($mailable)
+                : Mail::to($email)->queue($mailable);
         }
 
         $this->showNewModal = false;
@@ -183,7 +189,13 @@ class TicketsPage extends Page
 
         // Send closed notification + survey link if ticket has email
         if ($ticket->is_support_ticket && $ticket->client_email && $ticket->ticket_reply_token) {
-            Mail::to($ticket->client_email)->queue(new TicketClosedMail($ticket->fresh()));
+            $fresh      = $ticket->fresh();
+            $org        = $fresh->organization;
+            $mailerName = OrgMailer::mailerNameFor($org);
+            $mailable   = new TicketClosedMail($fresh);
+            $mailerName
+                ? Mail::mailer($mailerName)->to($ticket->client_email)->queue($mailable)
+                : Mail::to($ticket->client_email)->queue($mailable);
         }
     }
 
