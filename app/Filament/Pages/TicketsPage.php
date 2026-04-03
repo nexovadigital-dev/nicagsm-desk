@@ -8,6 +8,7 @@ use App\Filament\Concerns\ScopedToOrganization;
 use App\Mail\TicketClosedMail;
 use App\Mail\SupportTicketMail;
 use App\Models\Contact;
+use App\Models\Department;
 use App\Models\Message;
 use App\Models\Ticket;
 use App\Services\OrgMailer;
@@ -37,11 +38,12 @@ class TicketsPage extends Page
     public function getTitle(): string|Htmlable { return ''; }
 
     // ── Filters ──────────────────────────────────────────────────────────────
-    public string  $search         = '';
-    public string  $filterStatus   = 'all';
-    public string  $filterPriority = 'all';
-    public string  $filterPlatform = 'all';
-    public int     $perPage        = 20;
+    public string  $search            = '';
+    public string  $filterStatus      = 'all';
+    public string  $filterPriority    = 'all';
+    public string  $filterPlatform    = 'all';
+    public string  $filterDepartment  = 'all';
+    public int     $perPage           = 20;
 
     // ── New ticket modal ──────────────────────────────────────────────────────
     public bool   $showNewModal      = false;
@@ -58,7 +60,7 @@ class TicketsPage extends Page
     public function getTicketsProperty()
     {
         return $this->scopeToOrg(
-                Ticket::with(['messages' => fn ($q) => $q->orderBy('created_at', 'desc')->limit(1)])
+                Ticket::with(['messages' => fn ($q) => $q->orderBy('created_at', 'desc')->limit(1), 'department'])
             )
             ->where('is_support_ticket', true)
             ->when(trim($this->search), fn ($q) =>
@@ -71,7 +73,12 @@ class TicketsPage extends Page
             )
             ->when($this->filterStatus   !== 'all', fn ($q) => $q->where('status',   $this->filterStatus))
             ->when($this->filterPriority !== 'all', fn ($q) => $q->where('priority', $this->filterPriority))
-            ->when($this->filterPlatform !== 'all', fn ($q) => $q->where('platform', $this->filterPlatform))
+            ->when($this->filterPlatform   !== 'all', fn ($q) => $q->where('platform', $this->filterPlatform))
+            ->when($this->filterDepartment !== 'all', fn ($q) =>
+                $this->filterDepartment === 'none'
+                    ? $q->whereNull('department_id')
+                    : $q->where('department_id', (int) $this->filterDepartment)
+            )
             ->orderBy('ticket_opened_at', 'desc')
             ->paginate($this->perPage);
     }
@@ -92,6 +99,15 @@ class TicketsPage extends Page
                 ->orWhere('phone', 'like', "%{$s}%")
             )
             ->limit(8)
+            ->get();
+    }
+
+    public function getAvailableDepartmentsProperty()
+    {
+        return $this->scopeToOrg(Department::query())
+            ->where('is_active', true)
+            ->orderBy('sort')
+            ->orderBy('name')
             ->get();
     }
 
@@ -207,5 +223,13 @@ class TicketsPage extends Page
     public function setPriority(int $id, string $priority): void
     {
         Ticket::where('id', $id)->update(['priority' => $priority]);
+    }
+
+    public function setDepartment(int $id, string $deptId): void
+    {
+        $val = $deptId === '' ? null : (int) $deptId;
+        Ticket::where('id', $id)
+            ->where('organization_id', $this->orgId())
+            ->update(['department_id' => $val]);
     }
 }

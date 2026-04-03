@@ -6,6 +6,7 @@ namespace App\Filament\Resources\ChatWidgets\Pages;
 
 use App\Filament\Resources\ChatWidgetResource;
 use App\Models\ChatWidget;
+use App\Models\Department;
 use Filament\Resources\Pages\Page;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\Support\Htmlable;
@@ -51,6 +52,8 @@ class EditChatWidget extends Page
     public string $ratingMessage   = '¿Cómo fue tu experiencia?';
     public bool   $preChatEnabled  = false;
     public array  $preChatFields   = [];
+
+    public ?int   $defaultDepartmentId = null;
 
     public int    $agentCallTimeout = 10;       // 5 | 10 | 15 minutos
     public string $agentNoResponse  = 'bot';   // 'bot' | 'ticket'
@@ -101,9 +104,10 @@ class EditChatWidget extends Page
         $this->ratingMessage       = $w->rating_message;
         $this->preChatEnabled      = (bool) $w->pre_chat_enabled;
         $this->preChatFields       = $w->pre_chat_fields ?? [];
-        $this->agentCallTimeout    = $w->agent_call_timeout ?? 10;
-        $this->agentNoResponse     = $w->agent_no_response  ?? 'bot';
-        $this->buttonStyle         = $w->button_style      ?? 'icon';
+        $this->agentCallTimeout      = $w->agent_call_timeout  ?? 10;
+        $this->agentNoResponse       = $w->agent_no_response   ?? 'bot';
+        $this->defaultDepartmentId   = $w->department_id;
+        $this->buttonStyle           = $w->button_style        ?? 'icon';
         $this->buttonIcon          = $w->button_icon       ?? 'chat';
         $this->buttonText          = $w->button_text       ?? '';
         $this->buttonTextColor     = $w->button_text_color ?? '#ffffff';
@@ -197,9 +201,21 @@ class EditChatWidget extends Page
             'button_image'            => $this->buttonImage ?: null,
             'agent_call_timeout'      => $this->agentCallTimeout,
             'agent_no_response'       => $this->agentNoResponse,
+            'department_id'           => $this->defaultDepartmentId,
         ]);
 
         $this->dispatch('nexova-toast', type: 'success', message: 'Widget guardado correctamente');
+    }
+
+    public function getAvailableDepartmentsProperty()
+    {
+        $orgId = ChatWidget::find($this->widgetId)?->organization_id;
+        if (! $orgId) return collect();
+        return Department::where('organization_id', $orgId)
+            ->where('is_active', true)
+            ->orderBy('sort')
+            ->orderBy('name')
+            ->get();
     }
 
     // ── FAQ helpers ──────────────────────────────────────────────────────────

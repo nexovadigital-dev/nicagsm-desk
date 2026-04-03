@@ -111,6 +111,21 @@ x-init="
             </button>
         </div>
 
+        {{-- Filtro departamento --}}
+        @php $sidebarDepts = $this->availableDepartments; @endphp
+        @if($sidebarDepts->isNotEmpty())
+        <div style="padding: 4px 12px 0;">
+            <select wire:model.live="filterDept"
+                    style="width:100%;padding:6px 8px;border-radius:7px;border:1px solid var(--nx-border,rgba(128,128,128,.2));background:var(--nx-bg2,rgba(128,128,128,.07));font-size:11.5px;color:inherit;outline:none;font-family:inherit;box-sizing:border-box">
+                <option value="all">Todos los departamentos</option>
+                <option value="none">Sin departamento</option>
+                @foreach($sidebarDepts as $d)
+                    <option value="{{ $d->id }}">{{ $d->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        @endif
+
         {{-- Buscador --}}
         <div style="padding: 8px 12px 4px;">
             <div style="position:relative">
@@ -134,11 +149,12 @@ x-init="
         <nav class="nx-ticket-list">
             @forelse ($liveTickets as $ticket)
                 @php
-                    $active  = $selectedTicketId === $ticket->id;
-                    $lastMsg = $ticket->messages->first();
-                    $preview = $lastMsg ? \Illuminate\Support\Str::limit($lastMsg->content, 55) : 'Sin mensajes aún';
-                    $palette = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1'];
-                    $color   = $palette[abs(crc32($ticket->client_name)) % count($palette)];
+                    $active     = $selectedTicketId === $ticket->id;
+                    $lastMsg    = $ticket->messages->first();
+                    $preview    = $lastMsg ? \Illuminate\Support\Str::limit($lastMsg->content, 55) : 'Sin mensajes aún';
+                    $palette    = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1'];
+                    $color      = $palette[abs(crc32($ticket->client_name)) % count($palette)];
+                    $ticketDept = $ticket->department;
                 @endphp
 
                 <button wire:click="selectTicket({{ $ticket->id }})"
@@ -165,6 +181,12 @@ x-init="
                                 @endif
                             </span>
                         </div>
+                        @if($ticketDept)
+                        <div style="margin-top:3px;display:flex;align-items:center;gap:4px">
+                            <span style="width:6px;height:6px;border-radius:50%;background:{{ $ticketDept->color }};flex-shrink:0"></span>
+                            <span style="font-size:10.5px;color:var(--nx-muted,#6b7280);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $ticketDept->name }}</span>
+                        </div>
+                        @endif
                     </div>
                 </button>
             @empty
@@ -383,6 +405,29 @@ x-init="
                         <p>Aún no hay mensajes en esta conversación.</p>
                     </div>
                 @endforelse
+
+                {{-- Sneak-peek: texto que el visitante está escribiendo --}}
+                @php $sneakText = $this->typingPreview; @endphp
+                @if($sneakText)
+                <div style="display:flex;align-items:flex-end;gap:8px;padding:4px 0 2px;opacity:.75">
+                    <div style="width:28px;height:28px;border-radius:50%;background:#e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center">
+                        <svg fill="none" stroke="#64748b" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    </div>
+                    <div style="max-width:68%;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:14px 14px 14px 2px;padding:8px 12px;position:relative">
+                        <div style="font-size:11px;color:#94a3b8;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:5px">
+                            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#94a3b8;animation:nx-sneak-pulse 1.2s ease-in-out infinite"></span>
+                            escribiendo…
+                        </div>
+                        <div style="font-size:13px;color:#475569;word-break:break-word;font-style:italic">{{ $sneakText }}</div>
+                    </div>
+                </div>
+                <style>
+                @keyframes nx-sneak-pulse {
+                    0%, 100% { opacity:.4; transform:scale(1); }
+                    50%       { opacity:1; transform:scale(1.3); }
+                }
+                </style>
+                @endif
             </section>
 
 
@@ -814,10 +859,21 @@ x-init="
             </div>
         </div>
 
-        {{-- Gestión del ticket (prioridad, categoría, notas) --}}
+        {{-- Gestión del ticket (prioridad, categoría, departamento, notas) --}}
+        @php $availableDepts = $this->availableDepartments; @endphp
         @if($ticket->status !== 'closed')
         <div class="nx-detail__section">
             <div class="nx-detail__heading">Gestión</div>
+
+            <div class="nx-detail__field">
+                <label class="nx-detail__key">Departamento</label>
+                <select wire:model.live="ticketDepartmentId" wire:change="saveTicketMeta" class="nx-detail__select">
+                    <option value="">Sin departamento</option>
+                    @foreach($availableDepts as $dept)
+                        <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                    @endforeach
+                </select>
+            </div>
 
             <div class="nx-detail__field">
                 <label class="nx-detail__key">Prioridad</label>
@@ -840,6 +896,62 @@ x-init="
                 </select>
             </div>
 
+            {{-- Tags --}}
+            @php $availableTags = $this->availableTags; $ticketTags = $ticket->tags ?? collect(); @endphp
+            @if($availableTags->isNotEmpty())
+            <div class="nx-detail__field"
+                 x-data="{
+                     open: false,
+                     selected: {{ json_encode($ticketTags->pluck('id')->toArray()) }},
+                     toggle(id) {
+                         const idx = this.selected.indexOf(id);
+                         if (idx === -1) this.selected.push(id);
+                         else this.selected.splice(idx, 1);
+                         $wire.syncTags(this.selected);
+                     }
+                 }">
+                <label class="nx-detail__key">Tags</label>
+                {{-- Active tags as pills --}}
+                <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:{{ $ticketTags->isNotEmpty() ? '6px' : '0' }}">
+                    @foreach($ticketTags as $tag)
+                    <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;background:{{ $tag->color }}22;color:{{ $tag->color }};border:1px solid {{ $tag->color }}44">
+                        <span style="width:5px;height:5px;border-radius:50%;background:{{ $tag->color }};flex-shrink:0"></span>
+                        {{ $tag->name }}
+                        <button wire:click="removeTag({{ $tag->id }})"
+                                style="background:none;border:none;cursor:pointer;padding:0;margin-left:1px;opacity:.6;display:flex;color:inherit;line-height:1"
+                                title="Quitar tag">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="10" height="10" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </span>
+                    @endforeach
+                </div>
+                {{-- Dropdown to add --}}
+                <div style="position:relative" @click.outside="open=false">
+                    <button type="button"
+                            @click="open=!open"
+                            style="width:100%;text-align:left;padding:5px 9px;border:1px dashed var(--nx-border,#e3e6ea);border-radius:7px;background:transparent;font-size:12px;color:var(--nx-muted,#6b7280);cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                        Agregar tag
+                    </button>
+                    <div x-show="open" x-transition
+                         style="position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:50;background:var(--nx-surface,#fff);border:1px solid var(--nx-border,#e3e6ea);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);overflow:hidden;max-height:180px;overflow-y:auto">
+                        @foreach($availableTags as $tag)
+                        <button type="button"
+                                @click="toggle({{ $tag->id }})"
+                                style="width:100%;text-align:left;padding:7px 11px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:7px;font-family:inherit;font-size:12.5px;color:var(--nx-text,#111827);transition:background .1s"
+                                :style="selected.includes({{ $tag->id }}) ? 'background:var(--nx-bg,#f5f6f8)' : ''"
+                                onmouseenter="this.style.background='var(--nx-bg,#f5f6f8)'"
+                                onmouseleave="this.style.background=selected.includes({{ $tag->id }}) ? 'var(--nx-bg,#f5f6f8)' : ''">
+                            <span style="width:8px;height:8px;border-radius:50%;background:{{ $tag->color }};flex-shrink:0"></span>
+                            {{ $tag->name }}
+                            <svg x-show="selected.includes({{ $tag->id }})" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12" style="margin-left:auto;color:#22c55e" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        </button>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <div class="nx-detail__field">
                 <label class="nx-detail__key">
                     Notas internas
@@ -855,6 +967,20 @@ x-init="
         @else
         <div class="nx-detail__section">
             <div class="nx-detail__heading">Gestión</div>
+            @if($ticket->department_id)
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">Departamento</span>
+                @php $dept = $availableDepts->firstWhere('id', $ticket->department_id); @endphp
+                @if($dept)
+                    <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:{{ $dept->color }}">
+                        <span style="width:7px;height:7px;border-radius:50%;background:{{ $dept->color }};flex-shrink:0"></span>
+                        {{ $dept->name }}
+                    </span>
+                @else
+                    <span class="nx-detail__val">—</span>
+                @endif
+            </div>
+            @endif
             <div class="nx-detail__row">
                 <span class="nx-detail__key">Prioridad</span>
                 <span class="nx-pill-sm nx-pill-sm--{{ $ticket->priority ?? 'normal' }}">
@@ -865,6 +991,20 @@ x-init="
                 <span class="nx-detail__key">Categoría</span>
                 <span class="nx-detail__val">{{ ucfirst($ticket->category ?? 'General') }}</span>
             </div>
+            @php $closedTags = $ticket->tags ?? collect(); @endphp
+            @if($closedTags->isNotEmpty())
+            <div class="nx-detail__row" style="align-items:flex-start">
+                <span class="nx-detail__key" style="margin-top:3px">Tags</span>
+                <div style="display:flex;flex-wrap:wrap;gap:4px">
+                    @foreach($closedTags as $tag)
+                    <span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:99px;font-size:10.5px;font-weight:600;background:{{ $tag->color }}22;color:{{ $tag->color }};border:1px solid {{ $tag->color }}44">
+                        <span style="width:5px;height:5px;border-radius:50%;background:{{ $tag->color }};flex-shrink:0"></span>
+                        {{ $tag->name }}
+                    </span>
+                    @endforeach
+                </div>
+            </div>
+            @endif
         </div>
         @endif
 

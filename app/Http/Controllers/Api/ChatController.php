@@ -631,6 +631,31 @@ class ChatController extends Controller
         return response()->json(['conversations' => $result]);
     }
 
+    // ── Sneak-peek: visitante transmite texto mientras escribe ────────────────
+    public function typingPreview(Request $request): JsonResponse
+    {
+        $sessionId = $request->input('session_id');
+        $text      = $request->input('text', '');
+
+        if (! $sessionId) {
+            return response()->json(['ok' => false], 400);
+        }
+
+        $ticket = \App\Models\Ticket::where('session_id', $sessionId)->first();
+        if (! $ticket) {
+            return response()->json(['ok' => false], 404);
+        }
+
+        // Store for 30 seconds — agent panel reads this via Livewire
+        \Illuminate\Support\Facades\Cache::put(
+            "typing_preview_{$ticket->id}",
+            ['text' => (string) $text, 'at' => now()->toIso8601String()],
+            30
+        );
+
+        return response()->json(['ok' => true]);
+    }
+
     // ── Admin: count de tickets activos (para badge del sidebar) ─────────────
     public function adminUnreadCount(): JsonResponse
     {

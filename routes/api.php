@@ -22,6 +22,8 @@ Route::prefix('chat')->group(function () {
     Route::post('/conversations/bulk',   [ChatController::class, 'conversationsBulk']);
     // Renombrar conversación
     Route::post('/rename',               [ChatController::class, 'renameConversation']);
+    // Sneak-peek: visitante transmite texto mientras escribe
+    Route::post('/typing-preview',       [ChatController::class, 'typingPreview']);
 });
 
 // ── Admin notifications (sin auth, solo verifica Referer interno) ──

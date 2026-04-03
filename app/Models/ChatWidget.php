@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 class ChatWidget extends Model
 {
     protected $fillable = [
-        'organization_id', 'name', 'token', 'is_active',
+        'organization_id', 'department_id', 'name', 'token', 'is_active',
         'bot_name', 'welcome_message', 'accent_color',
         'widget_position', 'widget_size', 'attention_effect', 'default_screen', 'show_on',
         'preview_message_enabled', 'preview_message',
@@ -45,6 +45,11 @@ class ChatWidget extends Model
                 $widget->token = Str::random(32);
             }
         });
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 
     public function organization(): BelongsTo

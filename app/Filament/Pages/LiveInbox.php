@@ -8,7 +8,9 @@ use App\Filament\Concerns\ScopedToOrganization;
 use App\Mail\SupportTicketMail;
 use App\Mail\TicketClosedMail;
 use App\Models\Contact;
+use App\Models\Department;
 use App\Models\Message;
+use App\Models\Tag;
 use App\Models\Ticket;
 use App\Services\OrgMailer;
 use Filament\Facades\Filament;
@@ -107,15 +109,17 @@ class LiveInbox extends Page
             ->get();
     }
 
-    public ?int    $selectedTicketId = null;
-    public string  $inboxView        = 'active'; // 'active' | 'history'
-    public string  $search           = '';
+    public ?int    $selectedTicketId  = null;
+    public string  $inboxView         = 'active'; // 'active' | 'history'
+    public string  $search            = '';
+    public string  $filterDept        = 'all';
     public string  $replyContent     = '';
     #[\Livewire\Attributes\Rule(['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp,pdf', 'max:8192'])]
     public         $replyAttachment  = null; // Livewire TemporaryUploadedFile
-    public string  $ticketPriority   = 'normal';
+    public string  $ticketPriority    = 'normal';
     public string  $ticketCategory   = 'general';
     public string  $internalNotes    = '';
+    public ?int    $ticketDepartmentId = null;
 
     // Support ticket modal
     public bool   $showTicketModal       = false;
@@ -137,11 +141,59 @@ class LiveInbox extends Page
     // Datos
     // -------------------------------------------------------------------------
 
+    public function getAvailableDepartmentsProperty()
+    {
+        return $this->scopeToOrg(Department::query())
+            ->where('is_active', true)
+            ->orderBy('sort')
+            ->orderBy('name')
+            ->get();
+    }
+
+    public function getTypingPreviewProperty(): ?string
+    {
+        if (! $this->selectedTicketId) return null;
+        $data = \Illuminate\Support\Facades\Cache::get("typing_preview_{$this->selectedTicketId}");
+        if (! $data || ! isset($data['text']) || $data['text'] === '') return null;
+        return $data['text'];
+    }
+
+    public function getAvailableTagsProperty()
+    {
+        return $this->scopeToOrg(Tag::query())
+            ->orderBy('name')
+            ->get();
+    }
+
+    public function syncTags(array $tagIds): void
+    {
+        if (! $this->selectedTicketId) return;
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
+        if (! $ticket) return;
+
+        // Validate tag IDs belong to this org
+        $orgId = $this->orgId();
+        $valid = Tag::where('organization_id', $orgId)
+            ->whereIn('id', array_map('intval', $tagIds))
+            ->pluck('id')
+            ->toArray();
+
+        $ticket->tags()->sync($valid);
+    }
+
+    public function removeTag(int $tagId): void
+    {
+        if (! $this->selectedTicketId) return;
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
+        if (! $ticket) return;
+        $ticket->tags()->detach($tagId);
+    }
+
     public function tickets(): Collection
     {
         $user  = auth()->user();
         $query = Ticket::query()
-            ->with(['messages' => fn ($q) => $q->latest()->limit(1), 'widget'])
+            ->with(['messages' => fn ($q) => $q->latest()->limit(1), 'widget', 'department', 'tags'])
             ->orderByDesc('updated_at');
 
         // Scope to org
@@ -168,6 +220,12 @@ class LiveInbox extends Page
                   ->orWhere('client_phone', 'like', "%{$s}%")
                   ->orWhereHas('messages', fn ($m) => $m->where('content', 'like', "%{$s}%"));
             });
+        }
+
+        if ($this->filterDept !== 'all') {
+            $this->filterDept === 'none'
+                ? $query->whereNull('department_id')
+                : $query->where('department_id', (int) $this->filterDept);
         }
 
         return $query->get();
@@ -217,9 +275,10 @@ class LiveInbox extends Page
         // Cargar valores actuales del ticket en los controles
         $t = $this->findOrgTicket($id);
         if ($t) {
-            $this->ticketPriority = $t->priority      ?? 'normal';
-            $this->ticketCategory = $t->category      ?? 'general';
-            $this->internalNotes  = $t->internal_notes ?? '';
+            $this->ticketPriority     = $t->priority       ?? 'normal';
+            $this->ticketCategory     = $t->category       ?? 'general';
+            $this->internalNotes      = $t->internal_notes ?? '';
+            $this->ticketDepartmentId = $t->department_id;
         }
     }
 
@@ -233,6 +292,7 @@ class LiveInbox extends Page
             'priority'       => $this->ticketPriority,
             'category'       => $this->ticketCategory,
             'internal_notes' => $this->internalNotes,
+            'department_id'  => $this->ticketDepartmentId,
         ]);
     }
 

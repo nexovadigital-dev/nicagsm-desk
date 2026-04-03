@@ -224,9 +224,10 @@
 </style>
 
 @php
-$tickets  = $this->tickets;
-$palette  = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1'];
+$tickets     = $this->tickets;
+$palette     = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1'];
 $suggestions = $this->contactSuggestions;
+$availableDepts = $this->availableDepartments;
 @endphp
 
 <div class="tk-page">
@@ -262,6 +263,16 @@ $suggestions = $this->contactSuggestions;
             <option value="telegram">Telegram</option>
         </select>
 
+        @if($availableDepts->isNotEmpty())
+        <select class="tk-select" wire:model.live="filterDepartment">
+            <option value="all">Todos los depart.</option>
+            <option value="none">Sin departamento</option>
+            @foreach($availableDepts as $dept)
+                <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+            @endforeach
+        </select>
+        @endif
+
         <button class="tk-btn-new" wire:click="openNewModal">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
             Nuevo Ticket
@@ -276,6 +287,7 @@ $suggestions = $this->contactSuggestions;
                     <th>Ticket</th>
                     <th>Cliente</th>
                     <th>Asunto</th>
+                    <th>Departamento</th>
                     <th>Estado</th>
                     <th>Prioridad</th>
                     <th>Agente</th>
@@ -314,6 +326,17 @@ $suggestions = $this->contactSuggestions;
                         <div style="font-size:13px;color:#0f172a;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
                             {{ $ticket->ticket_subject ?? '—' }}
                         </div>
+                    </td>
+                    <td>
+                        @php $dept = $ticket->department_id ? $availableDepts->firstWhere('id', $ticket->department_id) : null; @endphp
+                        <select x-data
+                                @change="$wire.setDepartment({{ $ticket->id }}, $event.target.value)"
+                                style="background:transparent;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;padding:4px 7px;color:#374151;outline:none;font-family:inherit;cursor:pointer;max-width:130px">
+                            <option value="">— ninguno —</option>
+                            @foreach($availableDepts as $d)
+                                <option value="{{ $d->id }}" {{ $ticket->department_id === $d->id ? 'selected' : '' }}>{{ $d->name }}</option>
+                            @endforeach
+                        </select>
                     </td>
                     <td>
                         @php $statusLabel = ['bot'=>'Bot','human'=>'Agente','closed'=>'Cerrado'][$ticket->status] ?? $ticket->status; @endphp
@@ -363,7 +386,7 @@ $suggestions = $this->contactSuggestions;
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="9" class="tk-empty">
+                <tr><td colspan="10" class="tk-empty">
                     @if($search || $filterStatus !== 'all')
                         Sin resultados para los filtros aplicados.
                     @else

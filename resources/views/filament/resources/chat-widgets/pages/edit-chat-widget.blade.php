@@ -730,6 +730,21 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                 </label>
             </div>
         </div>
+        @php $widgetDepts = $this->availableDepartments; @endphp
+        @if($widgetDepts->isNotEmpty())
+        <div class="wc-field" style="margin-top:16px">
+            <label class="wc-label">Departamento por defecto</label>
+            <select class="wc-input" wire:model.live="defaultDepartmentId">
+                <option value="">Sin departamento (asignar manualmente)</option>
+                @foreach($widgetDepts as $dept)
+                    <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                @endforeach
+            </select>
+            <span style="font-size:11px;color:var(--c-sub);margin-top:4px;display:block">
+                Las conversaciones de este widget se asignan automáticamente a este departamento.
+            </span>
+        </div>
+        @endif
     </div>
 </div>
 

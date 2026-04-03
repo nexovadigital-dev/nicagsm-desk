@@ -2023,6 +2023,14 @@ export default function NexovaChatWidget() {
 
         setIsSending(true);
         setInputValue('');
+        clearTimeout(sneakPeekTimer.current);
+        if (sessionId) {
+            fetch(`${API_BASE}/api/chat/typing-preview`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId, text: '' }),
+            }).catch(() => {});
+        }
         if (textareaRef.current) textareaRef.current.style.setProperty('height', '24px', 'important');
         const file = attachmentFile;
         const prev = attachmentPrev;
@@ -2101,12 +2109,27 @@ export default function NexovaChatWidget() {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     };
 
+    const sneakPeekTimer = useRef(null);
+    const sendSneakPeek = useCallback((text) => {
+        if (!sessionId) return;
+        clearTimeout(sneakPeekTimer.current);
+        sneakPeekTimer.current = setTimeout(() => {
+            fetch(`${API_BASE}/api/chat/typing-preview`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ session_id: sessionId, text }),
+            }).catch(() => {});
+        }, 600);
+    }, [sessionId]);
+
     const handleInput = e => {
-        setInputValue(e.target.value);
+        const val = e.target.value;
+        setInputValue(val);
         const ta = e.target;
         ta.style.setProperty('height', '24px', 'important');
         const h = Math.min(ta.scrollHeight, 96);
         ta.style.setProperty('height', `${Math.max(h, 24)}px`, 'important');
+        sendSneakPeek(val);
     };
 
     // ── Render ───────────────────────────────────────────────────────────────
