@@ -16,104 +16,120 @@ class LegalPagesSeeder extends Seeder
                 'slug'             => 'terminos',
                 'title'            => 'Términos y Condiciones',
                 'meta_title'       => 'Términos y Condiciones — Nexova Desk',
-                'meta_description' => 'Términos y condiciones de uso del servicio Nexova Desk. Ley 1480 de 2011 y Ley 527 de 1999.',
+                'meta_description' => 'Términos y condiciones de uso de Nexova Desk. Leemos la Ley 1480 de 2011 y la Ley 527 de 1999 para protegerte.',
                 'status'           => 'published',
                 'content'          => <<<'MD'
 # Términos y Condiciones de Uso
 
 **Última actualización:** 1 de abril de 2026
 
-Bienvenido a **Nexova Desk**, un servicio operado bajo el nombre comercial **Nexova Digital Solutions**, con actividad en la República de Colombia.
+Bienvenido a **Nexova Desk**. Antes de empezar a usar el servicio, le pedimos que lea con atención estos términos. Son el acuerdo entre usted y nosotros, y definen cómo funciona la relación.
 
-Al acceder y utilizar este servicio, usted acepta estos Términos y Condiciones en su totalidad. Si no está de acuerdo, le solicitamos no continuar utilizando el servicio.
-
----
-
-## 1. Definiciones
-
-- **Servicio:** La plataforma de soporte al cliente mediante chat en vivo y atención con inteligencia artificial disponible en nexovadesk.com.
-- **Nexova / el Operador:** El nombre comercial Nexova Digital Solutions, titular de la marca Nexova Desk.
-- **Usuario / Cliente:** Persona natural o jurídica que contrata el Servicio.
-- **Agente:** Colaborador designado por el Cliente para atender conversaciones a través del panel de administración.
-- **Visitante:** Persona que interactúa con el widget de chat instalado en el sitio web del Cliente.
-- **Contenido:** Mensajes, archivos, imágenes y cualquier otro dato transmitido a través del Servicio.
+Si tiene preguntas, escríbanos a **legal@nexovadesk.com** — respondemos en máximo un día hábil.
 
 ---
 
-## 2. Acceso y Uso del Servicio
+## 1. ¿Quiénes somos?
 
-2.1. El acceso al Servicio requiere el registro de una cuenta con información veraz y actualizada.
-
-2.2. El Cliente es responsable de mantener la confidencialidad de sus credenciales de acceso y de todas las actividades realizadas bajo su cuenta.
-
-2.3. Queda prohibido el uso del Servicio para actividades ilícitas, envío de spam, distribución de malware, o cualquier actividad que infrinja derechos de terceros o la normativa colombiana vigente.
-
-2.4. El Operador se reserva el derecho de suspender o cancelar cuentas que infrinjan estos términos, sin perjuicio de las acciones legales correspondientes.
+Nexova Desk es un servicio de chat en vivo e inteligencia artificial para soporte al cliente, operado bajo el nombre comercial **Nexova Digital Solutions**, con actividad en la República de Colombia.
 
 ---
 
-## 3. Planes y Pagos
+## 2. ¿A quién aplican estos términos?
 
-3.1. El Servicio ofrece planes gratuitos y de pago. Las características de cada plan se describen en la página de precios disponible en el sitio web.
+A toda persona que cree una cuenta, instale el widget, o utilice cualquier función de la plataforma — ya sea como organización contratante, agente de soporte, o visitante del chat.
 
-3.2. Los pagos se procesan de forma recurrente (mensual o anual) según el plan contratado. Los precios están expresados en dólares estadounidenses (USD) o pesos colombianos (COP) según se indique.
-
-3.3. De conformidad con la **Ley 1480 de 2011 (Estatuto del Consumidor)**, el Cliente tiene derecho a retractarse de la compra dentro de los **5 días hábiles** siguientes a la contratación del plan, siempre que no haya hecho uso extensivo del servicio.
-
-3.4. No se realizan reembolsos parciales por períodos no utilizados, salvo en los casos contemplados por la Ley 1480 de 2011.
+Cuando decimos **"usted"** o **"el cliente"**, nos referimos a la persona o empresa que tiene la cuenta. Cuando decimos **"visitante"**, nos referimos a quien usa el chat en su sitio web.
 
 ---
 
-## 4. Propiedad Intelectual
+## 3. Cómo funciona el servicio
 
-4.1. **Nexova Desk** es una marca y nombre comercial. El Servicio y todos sus componentes (código fuente, diseño, marcas, logotipos) son propiedad de Nexova Digital Solutions o sus licenciantes.
+Nexova Desk le permite:
+- Instalar un widget de chat en su sitio web o tienda en línea.
+- Configurar un bot con inteligencia artificial para responder preguntas frecuentes.
+- Recibir y atender conversaciones desde un panel unificado junto a su equipo.
+- Conectar canales adicionales como Telegram.
 
-4.2. El Cliente conserva la propiedad de los datos y contenidos que carga o transmite a través del Servicio.
-
-4.3. El Cliente otorga al Operador una licencia limitada, no exclusiva y no transferible para procesar dichos contenidos únicamente con el fin de prestar el Servicio.
-
----
-
-## 5. Disponibilidad del Servicio
-
-5.1. El Operador hará sus mejores esfuerzos para mantener el Servicio disponible de forma continua, sin garantizar un nivel de disponibilidad específico en el plan gratuito.
-
-5.2. Podemos realizar mantenimientos programados notificando con al menos 24 horas de anticipación.
-
-5.3. No seremos responsables por interrupciones causadas por terceros (proveedores de internet, servicios en la nube, casos de fuerza mayor).
+El servicio funciona sobre infraestructura en la nube. Hacemos nuestro mejor esfuerzo para mantenerlo disponible 24/7, aunque pueden ocurrir ventanas de mantenimiento programado — siempre avisamos con al menos 24 horas de anticipación.
 
 ---
 
-## 6. Limitación de Responsabilidad
+## 4. Su cuenta y sus credenciales
 
-En la máxima medida permitida por la ley colombiana, el Operador no será responsable por daños indirectos, incidentales, especiales o consecuentes derivados del uso o imposibilidad de uso del Servicio.
+Al registrarse, usted acepta proporcionar información veraz y mantenerla actualizada. Es responsable de la confidencialidad de su contraseña y de todo lo que ocurra bajo su cuenta.
+
+Si detecta un acceso no autorizado, avísenos de inmediato a **soporte@nexovadesk.com**.
 
 ---
 
-## 7. Legislación Aplicable y Resolución de Disputas
+## 5. Uso aceptable
 
-Estos Términos se rigen por las leyes de la República de Colombia. Cualquier controversia se resolverá en primera instancia de forma directa entre las partes y, de no lograrse acuerdo, ante los jueces competentes de Colombia.
+Puede usar Nexova Desk para cualquier negocio legítimo. No está permitido:
 
-El Servicio cumple con:
+- Enviar spam, mensajes masivos no solicitados, o contenido engañoso.
+- Usar el bot para recopilar datos personales sin consentimiento.
+- Intentar acceder a cuentas o datos de otras organizaciones.
+- Usar el servicio para actividades que infrinjan la ley colombiana o los derechos de terceros.
+
+Si incumple estas condiciones, podemos suspender o cancelar su cuenta sin previo aviso, sin perjuicio de las acciones legales que correspondan.
+
+---
+
+## 6. Planes, precios y pagos
+
+Ofrecemos un plan gratuito con funciones básicas y planes de pago con más capacidades. Los precios están en dólares estadounidenses (USD) o pesos colombianos (COP) según se indique en la página de precios.
+
+Los planes de pago se cobran de forma recurrente (mensual o anual). Al contratar un plan, usted autoriza los cobros periódicos hasta que cancele.
+
+**Derecho de retracto:** Conforme a la **Ley 1480 de 2011 (Estatuto del Consumidor)**, tiene derecho a retractarse dentro de los 5 días hábiles siguientes a la contratación, siempre que no haya hecho uso extensivo del servicio. Para ejercerlo, escríbanos a legal@nexovadesk.com.
+
+No hacemos reembolsos parciales por períodos no utilizados fuera del derecho de retracto.
+
+---
+
+## 7. Sus datos y los de sus visitantes
+
+Usted conserva la propiedad de todos los datos que cargue o transmita a través del servicio. Nosotros los procesamos únicamente para prestarle el servicio, conforme a nuestra [Política de Privacidad](/p/privacidad).
+
+Como responsable del tratamiento de los datos de sus visitantes, es su obligación informarles sobre el uso del chat e implementar los avisos de privacidad que exija la ley.
+
+---
+
+## 8. Propiedad intelectual
+
+El código, diseño, marca y logotipos de Nexova Desk son de nuestra propiedad o de nuestros licenciantes. No puede copiarlos, modificarlos ni usarlos fuera del contexto del servicio.
+
+---
+
+## 9. Limitación de responsabilidad
+
+En la medida que la ley lo permita, Nexova Digital Solutions no responde por daños indirectos, pérdida de ingresos o datos, derivados del uso o la imposibilidad de uso del servicio. Nuestra responsabilidad máxima no superará el valor pagado por el servicio en los últimos 3 meses.
+
+---
+
+## 10. Modificaciones
+
+Podemos actualizar estos términos. Le avisaremos por correo electrónico o mediante un aviso en la plataforma con al menos **15 días de anticipación** antes de que entren en vigencia. Si continúa usando el servicio después de ese plazo, entendemos que acepta los cambios.
+
+---
+
+## 11. Ley aplicable
+
+Estos términos se rigen por las leyes de la República de Colombia, incluyendo:
 - **Ley 1480 de 2011** — Estatuto del Consumidor
 - **Ley 527 de 1999** — Comercio Electrónico
 - **Ley 1581 de 2012** — Protección de Datos Personales
 
----
-
-## 8. Modificaciones
-
-Nos reservamos el derecho de modificar estos Términos en cualquier momento. Los cambios serán notificados por correo electrónico o mediante aviso en la plataforma con al menos 15 días de anticipación.
+Cualquier controversia se resolverá entre las partes de forma directa y, si no hay acuerdo, ante los jueces competentes de Colombia.
 
 ---
 
-## 9. Contacto
-
-Para cualquier consulta relacionada con estos Términos:
+## 12. Contacto
 
 - **Correo:** legal@nexovadesk.com
-- **Sitio web:** [nexovadesk.com/p/contacto](/p/contacto)
-- **País:** Colombia
+- **Soporte:** soporte@nexovadesk.com
+- **Sitio:** [nexovadesk.com/p/contacto](/p/contacto)
 MD,
             ],
 
@@ -121,126 +137,137 @@ MD,
                 'slug'             => 'privacidad',
                 'title'            => 'Política de Privacidad',
                 'meta_title'       => 'Política de Privacidad — Nexova Desk',
-                'meta_description' => 'Política de tratamiento de datos personales de Nexova Desk conforme a la Ley 1581 de 2012.',
+                'meta_description' => 'Cómo tratamos sus datos personales en Nexova Desk. Cumplimos con la Ley 1581 de 2012 de protección de datos personales.',
                 'status'           => 'published',
                 'content'          => <<<'MD'
 # Política de Tratamiento de Datos Personales
 
 **Última actualización:** 1 de abril de 2026
 
-En cumplimiento de la **Ley 1581 de 2012**, el **Decreto 1377 de 2013** y demás normas concordantes sobre protección de datos personales en Colombia, **Nexova Digital Solutions** (nombre comercial, titular de la marca Nexova Desk, en adelante "Nexova" o "el Responsable") informa su política de tratamiento de datos personales.
+En **Nexova Digital Solutions** (nombre comercial, titular de la marca Nexova Desk) nos tomamos muy en serio la privacidad de quienes usan nuestra plataforma. Esta política explica qué datos recopilamos, para qué los usamos y cómo los protegemos, en cumplimiento de la **Ley 1581 de 2012** y el **Decreto 1377 de 2013**.
+
+Si tiene preguntas sobre cómo manejamos sus datos, escríbanos a **datos@nexovadesk.com**.
 
 ---
 
-## 1. Responsable del Tratamiento
+## 1. Responsable del tratamiento
 
-| Campo | Detalle |
+| | |
 |---|---|
 | **Nombre comercial** | Nexova Digital Solutions |
-| **Marca** | Nexova Desk |
-| **País** | Colombia |
-| **Correo de datos** | datos@nexovadesk.com |
+| **Marca registrada** | Nexova Desk |
+| **País de operación** | Colombia |
+| **Correo de datos personales** | datos@nexovadesk.com |
 | **Sitio web** | nexovadesk.com |
 
 ---
 
-## 2. Datos Personales que Recopilamos
+## 2. Qué datos recopilamos
 
-Recopilamos los siguientes datos según el rol del titular:
+Dependiendo de cómo use el servicio, tratamos diferentes tipos de datos:
 
-**Clientes (administradores de la plataforma):**
-- Nombre completo, correo electrónico, contraseña (almacenada en hash irreversible)
-- Información de pago (procesada por pasarelas certificadas PCI-DSS; Nexova no almacena datos de tarjetas)
-- Registros de uso y actividad dentro del panel
+**Si usted es cliente (administrador de una cuenta):**
+- Nombre, correo electrónico y contraseña (almacenada en hash bcrypt — nunca en texto plano).
+- Información de facturación procesada por pasarelas certificadas. Nexova Desk **no almacena datos de tarjetas de crédito**.
+- Registros de uso: cuándo inicia sesión, qué funciones utiliza, con qué frecuencia.
 
-**Agentes:**
-- Nombre, correo electrónico, foto de perfil (opcional)
-- Registros de conversaciones atendidas
+**Si usted es agente de soporte:**
+- Nombre, correo electrónico y foto de perfil (opcional).
+- Conversaciones atendidas y tiempos de respuesta (para métricas internas).
 
-**Visitantes del widget (usuarios finales de los Clientes):**
-- Mensajes de chat, nombre e email si el visitante los proporciona voluntariamente
-- Dirección IP (seudonimizada), agente de usuario del navegador
-
----
-
-## 3. Finalidad del Tratamiento
-
-Los datos se tratan para:
-
-1. Prestar el Servicio de soporte y atención al cliente.
-2. Gestionar la relación contractual y facturación.
-3. Enviar comunicaciones del servicio (alertas, facturas, actualizaciones críticas).
-4. Mejorar y optimizar la plataforma mediante análisis agregados y anonimizados.
-5. Cumplir con obligaciones legales aplicables en Colombia.
-6. Prevenir fraudes y garantizar la seguridad de la plataforma.
-
-No realizamos tratamiento de datos para perfilamiento comercial de terceros ni vendemos datos personales.
+**Si usted es visitante de un chat instalado por uno de nuestros clientes:**
+- Los mensajes que envía en el chat.
+- Nombre y correo electrónico, si los proporciona voluntariamente.
+- Dirección IP (seudonimizada) y agente de usuario del navegador.
 
 ---
 
-## 4. Base Legitimadora
+## 3. Para qué usamos sus datos
 
-El tratamiento se fundamenta en:
-- **Ejecución del contrato** de servicio suscrito con el Cliente.
-- **Consentimiento** del titular para comunicaciones de marketing (siempre revocable).
-- **Obligación legal** derivada de normativa colombiana aplicable.
-- **Interés legítimo** para la seguridad y mejora del Servicio.
+Usamos sus datos exclusivamente para:
 
----
+1. Prestarle el servicio de soporte al cliente que contrató.
+2. Gestionar su cuenta, facturación y renovaciones.
+3. Enviarle comunicaciones del servicio: actualizaciones importantes, facturas y alertas de seguridad.
+4. Mejorar la plataforma con análisis agregados y anonimizados (nunca a nivel individual).
+5. Cumplir con obligaciones legales colombianas.
+6. Prevenir fraudes y proteger la seguridad de todos los usuarios.
 
-## 5. Conservación de los Datos
-
-Los datos se conservan mientras la cuenta esté activa y durante el período adicional exigido por obligaciones legales. Al eliminar la cuenta, los datos de chat se eliminan de los servidores activos en un plazo máximo de 30 días.
-
----
-
-## 6. Transferencias de Datos
-
-Nexova puede compartir datos con:
-
-- **Proveedores de infraestructura cloud** bajo acuerdos de procesamiento de datos (Cloudflare, servicios de hosting). Estos proveedores actúan como encargados del tratamiento y no tienen acceso independiente a sus datos.
-- **Autoridades competentes** cuando sea requerido por ley colombiana.
+**No vendemos sus datos.** Nunca. A nadie.
 
 ---
 
-## 7. Derechos del Titular
+## 4. Base legal del tratamiento
 
-De conformidad con la Ley 1581 de 2012, usted tiene derecho a:
+Tratamos sus datos basándonos en:
 
-- **Conocer** los datos que tenemos sobre usted.
-- **Actualizar y rectificar** datos inexactos o incompletos.
-- **Solicitar prueba** del consentimiento otorgado.
-- **Revocar** el consentimiento en cualquier momento.
-- **Suprimir** sus datos cuando no sean necesarios para la finalidad del tratamiento.
-- **Presentar quejas** ante la **Superintendencia de Industria y Comercio (SIC)**: www.sic.gov.co
+- **Ejecución del contrato:** Para prestarle el servicio que contrató.
+- **Consentimiento:** Para comunicaciones de marketing, que puede retirar en cualquier momento.
+- **Obligación legal:** Cuando la ley colombiana nos lo exige.
+- **Interés legítimo:** Para seguridad de la plataforma y mejora del servicio.
 
-Para ejercer sus derechos, escriba a: **datos@nexovadesk.com** con asunto "Derechos ARCO" adjuntando copia de su documento de identidad. Atenderemos su solicitud en un plazo máximo de **10 días hábiles**.
+---
+
+## 5. Por cuánto tiempo conservamos sus datos
+
+Mientras su cuenta esté activa. Si cancela o elimina su cuenta, eliminamos sus datos de los servidores activos en un plazo máximo de **30 días**, salvo lo que debamos conservar por obligaciones legales (por ejemplo, registros de facturación que exige la DIAN).
+
+---
+
+## 6. Con quién compartimos sus datos
+
+Solo compartimos datos en estos casos:
+
+- **Proveedores de infraestructura** (servicios de hosting, Cloudflare) que actúan como encargados del tratamiento bajo nuestras instrucciones y sin acceso independiente a sus datos.
+- **Autoridades colombianas** cuando una norma o una orden judicial nos lo exija.
+
+No compartimos datos con terceros para fines comerciales propios.
+
+---
+
+## 7. Sus derechos como titular de datos
+
+Conforme a la **Ley 1581 de 2012**, usted puede en cualquier momento:
+
+- **Conocer** qué datos tenemos sobre usted.
+- **Actualizar o rectificar** información inexacta.
+- **Solicitar prueba** del consentimiento que otorgó.
+- **Revocar** su consentimiento para comunicaciones de marketing.
+- **Solicitar la supresión** de sus datos cuando no sean necesarios para la finalidad original.
+- **Presentar una queja** ante la **Superintendencia de Industria y Comercio (SIC)**: [www.sic.gov.co](https://www.sic.gov.co) / Línea gratuita: 01 8000 910165.
+
+Para ejercer cualquiera de estos derechos, escríbanos a **datos@nexovadesk.com** con el asunto **"Derechos ARCO"** e incluya una copia de su documento de identidad. Atendemos su solicitud en máximo **10 días hábiles**.
 
 ---
 
 ## 8. Seguridad
 
-Implementamos medidas técnicas y organizativas para proteger sus datos: cifrado TLS en tránsito, hashing de contraseñas (bcrypt), acceso basado en roles, registros de auditoría y copias de seguridad cifradas.
+Implementamos medidas técnicas y organizativas acordes con el riesgo del tratamiento:
+
+- Cifrado TLS en todas las comunicaciones.
+- Contraseñas almacenadas con bcrypt.
+- Acceso a datos basado en roles (nadie ve más de lo que necesita).
+- Auditorías de acceso y copias de seguridad cifradas.
+- Revisiones periódicas de seguridad.
 
 ---
 
-## 9. Cookies y Tecnologías Similares
+## 9. Cookies
 
-Utilizamos cookies estrictamente necesarias para el funcionamiento del servicio y cookies analíticas (anonimizadas). Puede gestionar sus preferencias de cookies desde la configuración de su navegador.
-
----
-
-## 10. Cambios en esta Política
-
-Notificaremos cambios sustanciales con al menos 15 días de anticipación por correo electrónico.
+Usamos cookies estrictamente necesarias para el funcionamiento del servicio (sesión, seguridad) y cookies analíticas anonimizadas para entender cómo se usa la plataforma. Puede gestionar las cookies desde la configuración de su navegador.
 
 ---
 
-## 11. Contacto y Quejas
+## 10. Cambios en esta política
 
-**Responsable de Datos:**
-- Correo: datos@nexovadesk.com
-- Superintendencia de Industria y Comercio: www.sic.gov.co / Línea nacional: 01 8000 910165
+Si hacemos cambios importantes, le avisaremos por correo electrónico con al menos **15 días de anticipación**.
+
+---
+
+## 11. Contacto
+
+- **Correo de datos personales:** datos@nexovadesk.com
+- **Superintendencia de Industria y Comercio:** [www.sic.gov.co](https://www.sic.gov.co)
 MD,
             ],
 
@@ -248,86 +275,78 @@ MD,
                 'slug'             => 'habeas-data',
                 'title'            => 'Habeas Data',
                 'meta_title'       => 'Habeas Data — Nexova Desk',
-                'meta_description' => 'Ejercicio del derecho de Habeas Data conforme a la Ley 1266 de 2008 y Ley 1581 de 2012.',
+                'meta_description' => 'Cómo ejercer su derecho de Habeas Data ante Nexova Desk, conforme a la Ley 1266 de 2008 y la Ley 1581 de 2012.',
                 'status'           => 'published',
                 'content'          => <<<'MD'
-# Derecho de Habeas Data
+# Habeas Data
 
-**Última actualización:** 1 de abril de 2026
-
-**Nexova Digital Solutions** (nombre comercial, titular de la marca **Nexova Desk**) reconoce y garantiza el derecho fundamental de **Habeas Data** consagrado en el artículo 15 de la Constitución Política de Colombia, desarrollado por la **Ley 1266 de 2008** y la **Ley 1581 de 2012**.
+**Nexova Digital Solutions**, nombre comercial titular de la marca **Nexova Desk**, garantiza el derecho fundamental de Habeas Data consagrado en el **artículo 15 de la Constitución Política de Colombia**, reglamentado por la **Ley 1266 de 2008** y la **Ley 1581 de 2012**.
 
 ---
 
 ## ¿Qué es el Habeas Data?
 
-Es el derecho que tiene toda persona a conocer, actualizar y rectificar la información que sobre ella exista en bases de datos o archivos de entidades públicas y privadas.
+Es su derecho a saber qué información tienen sobre usted, corregirla si está mal, y pedir que la eliminen cuando ya no sea necesaria. En Colombia es un derecho fundamental, no un trámite opcional.
 
 ---
 
-## Sus Derechos
+## Sus derechos frente a Nexova Digital Solutions
 
-Como titular de datos personales, usted tiene los siguientes derechos frente a Nexova Digital Solutions:
-
-| Derecho | Descripción |
+| Derecho | En qué consiste |
 |---|---|
-| **Conocer** | Acceder gratuitamente a sus datos personales que reposan en nuestras bases de datos. |
-| **Actualizar** | Solicitar la corrección de datos inexactos, incompletos o que induzcan a error. |
-| **Rectificar** | Exigir la corrección de datos que no corresponden a la realidad. |
-| **Suprimir** | Solicitar la eliminación de sus datos cuando no exista obligación legal de conservarlos. |
-| **Revocar** | Retirar el consentimiento otorgado para el tratamiento de sus datos. |
-| **Quejarse** | Presentar quejas ante la Superintendencia de Industria y Comercio. |
+| **Conocer** | Acceder gratuitamente a sus datos personales en nuestras bases de datos. |
+| **Actualizar** | Corregir datos desactualizados o incompletos. |
+| **Rectificar** | Exigir la corrección de datos incorrectos o que no corresponden a la realidad. |
+| **Suprimir** | Pedir la eliminación de sus datos cuando no exista obligación legal de conservarlos. |
+| **Revocar** | Retirar el consentimiento que otorgó para el tratamiento de sus datos. |
+| **Quejarse** | Presentar una queja ante la Superintendencia de Industria y Comercio si considera que no atendimos su solicitud correctamente. |
 
 ---
 
-## Cómo Ejercer sus Derechos
+## Cómo hacer una solicitud
 
-**Paso 1 — Envíe su solicitud escrita a:**
-
-- **Correo electrónico:** datos@nexovadesk.com
-- **Asunto:** "Solicitud Habeas Data — [su nombre completo]"
-
-**Paso 2 — Incluya en su solicitud:**
-- Nombre completo y número de documento de identidad.
+**1. Envíe un correo a datos@nexovadesk.com** con:
+- Asunto: `Solicitud Habeas Data — [su nombre completo]`
+- Su nombre completo y número de documento de identidad.
 - Descripción clara de los datos sobre los que ejerce el derecho.
-- Tipo de solicitud (conocer, actualizar, rectificar, suprimir o revocar).
-- Copia de su documento de identidad.
+- Tipo de solicitud: conocer, actualizar, rectificar, suprimir o revocar.
+- Copia de su documento de identidad (puede enviarla como adjunto).
 
-**Paso 3 — Tiempos de respuesta:**
+**2. Tiempos de respuesta:**
 
-| Tipo de solicitud | Plazo máximo |
+| Tipo de solicitud | Plazo de respuesta |
 |---|---|
-| Consulta (conocer datos) | 10 días hábiles |
-| Reclamo (rectificar / suprimir / revocar) | 15 días hábiles (prorrogables 8 días más con notificación) |
+| Consulta (conocer sus datos) | Máximo **10 días hábiles** |
+| Reclamo (rectificar / suprimir / revocar) | Máximo **15 días hábiles** (prorrogables 8 días adicionales con notificación previa) |
+
+Respondemos siempre al correo desde el que hizo la solicitud.
 
 ---
 
-## Datos que Tratamos
+## Qué datos tratamos
 
-Nexova procesa únicamente los datos necesarios para la prestación del servicio de soporte al cliente. Consulte nuestra [Política de Privacidad](/p/privacidad) para el detalle completo.
+Solo tratamos los datos necesarios para prestar el servicio de soporte al cliente. Consulte nuestra [Política de Privacidad](/p/privacidad) para el detalle completo de qué datos recopilamos, para qué los usamos y con quién los compartimos.
 
 ---
 
-## Autoridad de Control
+## Autoridad de control
 
-Si considera que sus derechos no han sido atendidos adecuadamente, puede presentar queja ante la:
+Si considera que no atendimos su solicitud de forma adecuada, puede presentar una queja directamente ante:
 
 **Superintendencia de Industria y Comercio (SIC)**
 - Sitio web: [www.sic.gov.co](https://www.sic.gov.co)
 - Línea gratuita nacional: **01 8000 910165**
 - Correo: contactenos@sic.gov.co
-- Dirección: Carrera 13 No. 27-00 Pisos 1-5, Bogotá D.C.
+- Dirección: Carrera 13 No. 27-00, pisos 1–5, Bogotá D.C.
 
 ---
 
-## Marco Legal
+## Marco legal
 
-Esta política se rige por:
-
-- **Constitución Política de Colombia** — Artículo 15 (Derecho a la intimidad y al buen nombre)
-- **Ley 1266 de 2008** — Disposiciones generales del Habeas Data
+- **Constitución Política de Colombia** — Artículo 15 (derecho a la intimidad y al buen nombre)
+- **Ley 1266 de 2008** — Disposiciones generales del Habeas Data financiero
 - **Ley 1581 de 2012** — Protección de Datos Personales
-- **Decreto 1377 de 2013** — Reglamentación parcial de la Ley 1581 de 2012
+- **Decreto 1377 de 2013** — Reglamentación parcial de la Ley 1581
 - **Decreto 1074 de 2015** — Decreto Único Reglamentario del Sector Comercio
 MD,
             ],
@@ -336,61 +355,60 @@ MD,
                 'slug'             => 'contacto',
                 'title'            => 'Contacto',
                 'meta_title'       => 'Contacto — Nexova Desk',
-                'meta_description' => 'Ponte en contacto con el equipo de Nexova Desk. Soporte, ventas y consultas generales.',
+                'meta_description' => 'Contáctenos. Soporte técnico, ventas y solicitudes de datos personales. Le respondemos en máximo 1 día hábil.',
                 'status'           => 'published',
                 'content'          => <<<'MD'
-# Contáctanos
+# Contáctenos
 
-Estamos aquí para ayudarte. Elige el canal que mejor se adapte a tu necesidad.
+Estamos disponibles de lunes a viernes de **8:00 a.m. a 6:00 p.m.** (hora Colombia, UTC−5). Para lo urgente, use el chat en vivo en la esquina inferior derecha de esta página.
 
 ---
 
-## Soporte Técnico
+## Soporte técnico
 
-¿Tienes un problema con la plataforma o necesitas asistencia?
+¿Algo no funciona o tiene preguntas sobre la plataforma?
 
-- **Chat en vivo:** Usa el widget en la esquina inferior derecha de esta página.
+- **Chat en vivo:** Widget en esta página — respuesta inmediata en horario hábil.
 - **Correo:** soporte@nexovadesk.com
-- **Horario de atención:** Lunes a viernes, 8:00 a.m. – 6:00 p.m. (hora Colombia, UTC-5)
+- **Tiempo de respuesta:** Máximo 1 día hábil.
 
 ---
 
-## Ventas y Planes
+## Ventas y planes
 
-¿Quieres conocer más sobre nuestros planes o necesitas una cotización personalizada?
+¿Quiere conocer las opciones para su empresa o necesita una cotización?
 
 - **Correo:** ventas@nexovadesk.com
+- **Tiempo de respuesta:** Máximo 2 días hábiles.
 
 ---
 
-## Datos Personales y Habeas Data
+## Datos personales y Habeas Data
 
-Para solicitudes relacionadas con el tratamiento de sus datos personales:
+Para solicitudes de acceso, rectificación, supresión o revocación de datos:
 
 - **Correo:** datos@nexovadesk.com
-- **Asunto sugerido:** "Solicitud Habeas Data — [su nombre]"
-- Consulte nuestra [Política de Privacidad](/p/privacidad) y la página de [Habeas Data](/p/habeas-data).
+- **Asunto sugerido:** `Solicitud Habeas Data — [su nombre]`
+- Consulte el proceso detallado en nuestra página de [Habeas Data](/p/habeas-data).
 
 ---
 
-## Información
+## Asuntos legales
 
-**Nexova Desk** es una marca de **Nexova Digital Solutions**
-- **País:** Colombia
-- **Correo legal:** legal@nexovadesk.com
+Para contratos, términos y consultas legales:
 
----
-
-## Redes Sociales
-
-Síguenos y escríbenos por nuestras redes:
-
-- LinkedIn: linkedin.com/company/nexovadigital
-- Instagram: @nexovadigital
+- **Correo:** legal@nexovadesk.com
 
 ---
 
-*Tiempo de respuesta estimado: máximo 1 día hábil para soporte y 2 días hábiles para consultas de ventas.*
+## Nexova Digital Solutions
+
+Nombre comercial · Actividad en Colombia
+- **Correo general:** hola@nexovadesk.com
+
+---
+
+*Le respondemos siempre desde el canal que usted usa para escribirnos.*
 MD,
             ],
         ];
