@@ -31,10 +31,15 @@
 </style>
 
 <div class="ac-wrap">
-    <h1 style="font-size:22px;font-weight:700;color:var(--c-text,#111827);margin-bottom:6px;letter-spacing:-.02em">Configuración de IA</h1>
-    <p style="font-size:13px;color:var(--c-sub,#6b7280);margin:0 0 28px;max-width:600px">
-        Claves API de los proveedores de inteligencia artificial utilizados por la plataforma. Estas claves se comparten entre todas las organizaciones que no tienen sus propias claves configuradas.
+    <h1 style="font-size:18px;font-weight:800;color:#0f172a;margin-bottom:4px;letter-spacing:-.025em">IA Global — Fallback del sistema</h1>
+    <p style="font-size:13px;color:#64748b;margin:0 0 6px;max-width:620px;line-height:1.6">
+        Claves API de respaldo usadas cuando una organización no tiene sus propias claves configuradas.
     </p>
+    <div style="display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px;color:#1d4ed8;margin-bottom:24px">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Para configurar claves por organización, usa el botón <strong style="margin-left:2px">"Editar"</strong> en cada org en la página de
+        <a href="{{ filament()->getPanel('superadmin')->getUrl() }}/organizations" style="color:#1d4ed8;font-weight:700;text-decoration:underline;text-underline-offset:2px">Organizaciones</a>.
+    </div>
 
     <div class="ac-grid">
         @foreach($this->getProviders() as $key => $info)

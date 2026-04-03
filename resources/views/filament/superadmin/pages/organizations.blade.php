@@ -87,6 +87,7 @@ $planLabelMap = array_merge(['free'=>'Free','trial'=>'Prueba'], $planLabelMap);
                 <tr>
                     <th>Organización</th>
                     <th>Plan</th>
+                    <th>IA</th>
                     <th>Suscripción</th>
                     <th>Estado</th>
                     <th>Usuarios</th>
@@ -125,6 +126,17 @@ $planLabelMap = array_merge(['free'=>'Free','trial'=>'Prueba'], $planLabelMap);
                         <span class="sa-badge" style="background:rgba(6,78,59,.3);color:#6ee7b7;border:1px solid rgba(110,231,183,.2)">Partner</span>
                         @else
                         <span class="sa-badge" style="background:{{ $pc['bg'] }};color:{{ $pc['color'] }}">{{ $pl }}</span>
+                        @endif
+                    </td>
+                    <td>
+                        @php $hasOwnAi = $org->ai_use_own_keys && ($org->getRawOriginal('ai_groq_key') || $org->getRawOriginal('ai_gemini_key')); @endphp
+                        @if($hasOwnAi)
+                            <span class="sa-badge" style="background:rgba(99,102,241,.1);color:#6366f1;font-size:9px">
+                                <svg fill="currentColor" viewBox="0 0 8 8" width="5" height="5"><circle cx="4" cy="4" r="4"/></svg>
+                                Propia
+                            </span>
+                        @else
+                            <span style="font-size:11px;color:#94a3b8">Global</span>
                         @endif
                     </td>
                     <td>
@@ -216,7 +228,7 @@ $planLabelMap = array_merge(['free'=>'Free','trial'=>'Prueba'], $planLabelMap);
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" style="text-align:center;color:#94a3b8;padding:40px 16px;font-size:13px">
+                    <td colspan="8" style="text-align:center;color:#94a3b8;padding:40px 16px;font-size:13px">
                         No se encontraron organizaciones
                     </td>
                 </tr>
@@ -230,9 +242,17 @@ $planLabelMap = array_merge(['free'=>'Free','trial'=>'Prueba'], $planLabelMap);
 
     {{-- ── Edit org modal ── --}}
     <div class="sa-overlay" x-show="orgModal" x-cloak @click.self="orgModal=false" style="display:none">
-        <div class="sa-modal">
-            <div class="sa-modal-head">Editar organización</div>
-            <div class="sa-modal-body">
+        <div class="sa-modal" style="width:560px;max-width:96vw">
+            <div class="sa-modal-head" style="display:flex;align-items:center;justify-content:space-between">
+                <span>Editar organización</span>
+                <button @click="orgModal=false" style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:4px;display:flex" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#94a3b8'">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="sa-modal-body" style="max-height:75vh;overflow-y:auto">
+
+                {{-- General --}}
+                <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #f1f5f9">General</div>
                 <div>
                     <label class="sa-label">Nombre</label>
                     <input wire:model="editOrgName" class="sa-input" placeholder="Nombre de la organización">
@@ -246,19 +266,71 @@ $planLabelMap = array_merge(['free'=>'Free','trial'=>'Prueba'], $planLabelMap);
                     </select>
                     <p style="font-size:11.5px;color:#f59e0b;margin:6px 0 0;display:flex;align-items:center;gap:5px">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                        Cambiar el plan aquí expira la suscripción activa. Para nueva suscripción usa "Activar plan".
+                        Cambiar plan expira la suscripción activa. Para nueva suscripción usa "Activar plan".
                     </p>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px">
                     <input type="checkbox" wire:model="editOrgActive" id="editOrgActive" style="width:16px;height:16px;accent-color:#22c55e">
                     <label for="editOrgActive" style="font-size:13px;font-weight:600;color:#0f172a;cursor:pointer">Organización activa</label>
                 </div>
+
+                {{-- AI Keys --}}
+                <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;margin:20px 0 12px;padding-bottom:6px;border-bottom:1px solid #f1f5f9">Credenciales IA</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                    <input type="checkbox" wire:model="editAiUseOwnKeys" id="editAiUseOwnKeys" style="width:16px;height:16px;accent-color:#22c55e">
+                    <label for="editAiUseOwnKeys" style="font-size:13px;font-weight:600;color:#0f172a;cursor:pointer">Usar claves propias de IA</label>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <div>
+                        <label class="sa-label" style="display:flex;align-items:center;gap:6px">
+                            Groq API Key
+                            @if($editAiHasGroq)
+                                <span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;color:#059669;background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.18);border-radius:99px;padding:1px 6px">
+                                    <svg fill="currentColor" viewBox="0 0 8 8" width="5" height="5"><circle cx="4" cy="4" r="4"/></svg>Configurada
+                                </span>
+                            @endif
+                        </label>
+                        <input type="password" wire:model="editAiGroqKey" class="sa-input" style="font-family:monospace;font-size:12px"
+                               placeholder="{{ $editAiHasGroq ? '••••••••• (dejar vacío para mantener)' : 'gsk_...' }}"
+                               autocomplete="off">
+                        @if($editAiHasGroq)
+                        <button type="button" wire:click="clearOrgAiKey('groq')"
+                                style="margin-top:5px;font-size:11px;color:#dc2626;background:none;border:none;cursor:pointer;padding:0;font-family:inherit"
+                                onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                            Eliminar clave Groq
+                        </button>
+                        @endif
+                    </div>
+                    <div>
+                        <label class="sa-label" style="display:flex;align-items:center;gap:6px">
+                            Gemini API Key
+                            @if($editAiHasGemini)
+                                <span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;color:#059669;background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.18);border-radius:99px;padding:1px 6px">
+                                    <svg fill="currentColor" viewBox="0 0 8 8" width="5" height="5"><circle cx="4" cy="4" r="4"/></svg>Configurada
+                                </span>
+                            @endif
+                        </label>
+                        <input type="password" wire:model="editAiGeminiKey" class="sa-input" style="font-family:monospace;font-size:12px"
+                               placeholder="{{ $editAiHasGemini ? '••••••••• (dejar vacío para mantener)' : 'AIza...' }}"
+                               autocomplete="off">
+                        @if($editAiHasGemini)
+                        <button type="button" wire:click="clearOrgAiKey('gemini')"
+                                style="margin-top:5px;font-size:11px;color:#dc2626;background:none;border:none;cursor:pointer;padding:0;font-family:inherit"
+                                onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                            Eliminar clave Gemini
+                        </button>
+                        @endif
+                    </div>
+                </div>
+                <p style="font-size:11.5px;color:#64748b;margin-top:8px;line-height:1.5">
+                    Las claves se almacenan cifradas. Deja el campo vacío para no cambiar la clave existente. Activa "Usar claves propias" para que esta org use sus propias claves en lugar de las globales.
+                </p>
             </div>
             <div class="sa-modal-foot">
                 <button @click="orgModal=false" class="sa-btn" style="background:#f1f5f9;color:#374151">Cancelar</button>
                 <button wire:click="saveOrg"
                         wire:confirm="¿Guardar cambios? Si cambias el plan, la suscripción activa quedará inactiva."
-                        class="sa-btn" style="background:#22c55e;color:#fff">Guardar</button>
+                        class="sa-btn" style="background:#22c55e;color:#fff">Guardar cambios</button>
             </div>
         </div>
     </div>

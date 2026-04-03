@@ -37,10 +37,17 @@ class Organizations extends Page
     public bool   $filterExpiry = false;   // true = vencimiento ≤ 7 días
 
     // Detail / edit modal
-    public ?int   $viewingOrgId  = null;
-    public string $editOrgName   = '';
-    public string $editOrgPlan   = 'trial';
-    public bool   $editOrgActive = true;
+    public ?int   $viewingOrgId    = null;
+    public string $editOrgName     = '';
+    public string $editOrgPlan     = 'trial';
+    public bool   $editOrgActive   = true;
+
+    // AI keys (set by super admin per org)
+    public bool   $editAiUseOwnKeys = false;
+    public string $editAiGroqKey    = '';
+    public string $editAiGeminiKey  = '';
+    public bool   $editAiHasGroq    = false;
+    public bool   $editAiHasGemini  = false;
 
     public function getOrganizationsProperty()
     {
@@ -74,10 +81,16 @@ class Organizations extends Page
     {
         $org = Organization::find($id);
         if (! $org) return;
-        $this->viewingOrgId  = $id;
-        $this->editOrgName   = $org->name;
-        $this->editOrgPlan   = $org->plan;
-        $this->editOrgActive = $org->is_active;
+        $this->viewingOrgId     = $id;
+        $this->editOrgName      = $org->name;
+        $this->editOrgPlan      = $org->plan;
+        $this->editOrgActive    = $org->is_active;
+        $this->editAiUseOwnKeys = (bool) $org->ai_use_own_keys;
+        $this->editAiGroqKey    = '';
+        $this->editAiGeminiKey  = '';
+        // Check if keys are already configured (without exposing them)
+        $this->editAiHasGroq    = (bool) $org->getRawOriginal('ai_groq_key');
+        $this->editAiHasGemini  = (bool) $org->getRawOriginal('ai_gemini_key');
         $this->dispatch('open-org-modal');
     }
 
@@ -93,14 +106,42 @@ class Organizations extends Page
                 ->update(['status' => 'expired']);
         }
 
-        $org->update([
-            'name'      => trim($this->editOrgName) ?: $org->name,
-            'plan'      => $this->editOrgPlan,
-            'is_active' => $this->editOrgActive,
-        ]);
+        $data = [
+            'name'           => trim($this->editOrgName) ?: $org->name,
+            'plan'           => $this->editOrgPlan,
+            'is_active'      => $this->editOrgActive,
+            'ai_use_own_keys' => $this->editAiUseOwnKeys,
+        ];
+
+        if (trim($this->editAiGroqKey)) {
+            $data['ai_groq_key'] = encrypt(trim($this->editAiGroqKey));
+            $this->editAiHasGroq = true;
+        }
+        if (trim($this->editAiGeminiKey)) {
+            $data['ai_gemini_key'] = encrypt(trim($this->editAiGeminiKey));
+            $this->editAiHasGemini = true;
+        }
+
+        $org->update($data);
+        $this->editAiGroqKey   = '';
+        $this->editAiGeminiKey = '';
 
         $this->dispatch('close-org-modal');
         $this->dispatch('nexova-toast', type: 'success', message: 'Organización actualizada');
+    }
+
+    public function clearOrgAiKey(string $provider): void
+    {
+        $org = Organization::find($this->viewingOrgId);
+        if (! $org) return;
+        $field = $provider === 'groq' ? 'ai_groq_key' : 'ai_gemini_key';
+        $org->update([$field => null, 'ai_use_own_keys' => false]);
+        if ($provider === 'groq') {
+            $this->editAiHasGroq = false;
+        } else {
+            $this->editAiHasGemini = false;
+        }
+        $this->dispatch('nexova-toast', type: 'success', message: 'Clave eliminada');
     }
 
     public function activatePlan(int $orgId, string $planSlug, int $months = 1): void
