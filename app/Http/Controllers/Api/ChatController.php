@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcessBotReply;
+use App\Models\ActiveVisitor;
+use App\Models\BannedIp;
 use App\Models\Contact;
 use App\Models\Message;
 use App\Models\Ticket;
@@ -678,6 +680,114 @@ class ChatController extends Controller
         ];
 
         return $adjectives[array_rand($adjectives)] . ' ' . $animals[array_rand($animals)];
+    }
+
+    // ── Visitor Management ───────────────────────────────────────────────────
+
+    public function visitorPing(Request $request): JsonResponse
+    {
+        $token      = $request->input('widget_token');
+        $visitorKey = $request->input('visitor_key');
+
+        if (! $token || ! $visitorKey) {
+            return response()->json(['ok' => false], 400);
+        }
+
+        $widget = ChatWidget::where('token', $token)->first();
+        if (! $widget) {
+            return response()->json(['ok' => false], 404);
+        }
+
+        $orgId = $widget->organization_id;
+        $ip    = $request->ip();
+
+        // Check if IP is banned
+        if (BannedIp::where('organization_id', $orgId)->where('ip', $ip)->exists()) {
+            return response()->json(['banned' => true, 'message' => 'Tu acceso a este chat ha sido restringido.']);
+        }
+
+        // Purge stale visitors (no ping in 90 seconds)
+        ActiveVisitor::where('organization_id', $orgId)
+            ->where('last_ping_at', '<', now()->subSeconds(90))
+            ->delete();
+
+        $existing   = ActiveVisitor::where('organization_id', $orgId)
+                        ->where('visitor_key', $visitorKey)
+                        ->first();
+
+        // Build pages_visited — append if URL changed
+        $currentUrl = $request->input('current_url');
+        $pageTitle  = $request->input('page_title');
+        $pages      = $existing ? ($existing->pages_visited ?? []) : [];
+        $lastPage   = end($pages) ?: null;
+
+        if (! $lastPage || $lastPage['url'] !== $currentUrl) {
+            $pages[] = ['url' => $currentUrl, 'title' => $pageTitle, 'at' => now()->toIso8601String()];
+            if (count($pages) > 20) {
+                $pages = array_slice($pages, -20);
+            }
+        }
+
+        $data = [
+            'widget_token'   => $token,
+            'current_url'    => $currentUrl,
+            'page_title'     => $pageTitle,
+            'referrer'       => $request->input('referrer') ?: ($existing?->referrer),
+            'pages_visited'  => $pages,
+            'ip'             => $ip,
+            'is_idle'        => (bool) $request->input('is_idle', false),
+            'tab_visible'    => (bool) $request->input('tab_visible', true),
+            'session_id'     => $request->input('session_id'),
+            'last_ping_at'   => now(),
+        ];
+
+        if (! $existing) {
+            $ua             = $request->userAgent() ?? '';
+            $uaInfo         = $this->parseUserAgent($ua);
+            $geo            = $this->geolocate($ip);
+            $data['first_seen_at'] = now();
+            $data['country']       = $geo['country'] ?? null;
+            $data['city']          = $geo['city']    ?? null;
+            $data['device']        = $uaInfo['device'];
+            $data['os']            = $uaInfo['os'];
+            $data['browser']       = $uaInfo['browser'];
+        }
+
+        $visitor = ActiveVisitor::updateOrCreate(
+            ['organization_id' => $orgId, 'visitor_key' => $visitorKey],
+            $data
+        );
+
+        // Check proactive chat trigger from agent
+        $openChat         = $visitor->proactive_open;
+        $proactiveMessage = $visitor->proactive_message;
+
+        if ($openChat) {
+            $visitor->update(['proactive_open' => false, 'proactive_message' => null]);
+        }
+
+        return response()->json([
+            'ok'                => true,
+            'open_chat'         => $openChat,
+            'proactive_message' => $proactiveMessage,
+        ]);
+    }
+
+    public function visitorOffline(Request $request): JsonResponse
+    {
+        $token      = $request->input('widget_token');
+        $visitorKey = $request->input('visitor_key');
+
+        if ($token && $visitorKey) {
+            $widget = ChatWidget::where('token', $token)->first();
+            if ($widget) {
+                ActiveVisitor::where('organization_id', $widget->organization_id)
+                    ->where('visitor_key', $visitorKey)
+                    ->delete();
+            }
+        }
+
+        return response()->json(['ok' => true]);
     }
 
     private function parseUserAgent(string $ua): array

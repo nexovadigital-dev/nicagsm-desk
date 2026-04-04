@@ -11,11 +11,23 @@ const WIDGET_TOKEN = (window.NexovaChatConfig?.token     ?? null);
 const WOO_CUSTOMER   = (window.NexovaChatConfig?.customer     ?? null);
 const STORE_CONTEXT  = (window.NexovaChatConfig?.storeContext ?? null);
 const WP_CONFIG      = (window.NexovaChatConfig?._wp          ?? null);
-const POLL_MS           = 3000;
-const STORAGE_KEY       = 'nexova_sid';
-const SESSIONS_KEY      = 'nexova_sessions' + (WIDGET_TOKEN ? '_' + WIDGET_TOKEN : '');
-const CONTACT_KEY       = 'nexova_contact'  + (WIDGET_TOKEN ? '_' + WIDGET_TOKEN : '');
+const POLL_MS             = 3000;
+const STORAGE_KEY         = 'nexova_sid';
+const SESSIONS_KEY        = 'nexova_sessions' + (WIDGET_TOKEN ? '_' + WIDGET_TOKEN : '');
+const CONTACT_KEY         = 'nexova_contact'  + (WIDGET_TOKEN ? '_' + WIDGET_TOKEN : '');
+const VISITOR_KEY_STORAGE = 'nexova_vk' + (WIDGET_TOKEN ? '_' + WIDGET_TOKEN : '');
 const MAX_STORED_SESSIONS = 15;
+
+// ── Visitor key: persistent anonymous browser identity ──────────────────────
+function getVisitorKey() {
+    let key = localStorage.getItem(VISITOR_KEY_STORAGE);
+    if (!key) {
+        key = 'vk_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        localStorage.setItem(VISITOR_KEY_STORAGE, key);
+    }
+    return key;
+}
+const VISITOR_KEY = getVisitorKey();
 
 // ---------------------------------------------------------------------------
 // Sonidos via Web Audio API (sin archivos externos)
@@ -1661,6 +1673,122 @@ export default function NexovaChatWidget() {
             .then(data => setCfg(data))
             .catch(() => setCfg({}));
     }, []);
+
+    // ── Visitor heartbeat — tracking en tiempo real ──────────────────────────
+    const isIdleRef       = useRef(false);
+    const tabVisibleRef   = useRef(!document.hidden);
+    const heartbeatRef    = useRef(null);
+    const idleTimerRef    = useRef(null);
+    const sessionIdRef    = useRef(sessionId); // keep ref in sync for heartbeat closure
+    useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
+
+    const sendHeartbeat = useCallback((overrides = {}) => {
+        if (!WIDGET_TOKEN) return;
+        fetch(`${API_BASE}/api/chat/visitor-ping`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({
+                widget_token: WIDGET_TOKEN,
+                visitor_key:  VISITOR_KEY,
+                current_url:  window.location.href,
+                page_title:   document.title,
+                referrer:     document.referrer || null,
+                is_idle:      isIdleRef.current,
+                tab_visible:  tabVisibleRef.current,
+                session_id:   sessionIdRef.current || null,
+                ...overrides,
+            }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.banned) {
+                // Remove widget entirely if IP is banned
+                setIsOpen(false);
+                setCfg(null);
+                return;
+            }
+            if (data.open_chat) {
+                setIsOpen(true);
+                if (data.proactive_message) {
+                    // Show proactive greeting as a temporary welcome message
+                    setMessages(prev => {
+                        const hasProactive = prev.some(m => m._proactive);
+                        if (hasProactive) return prev;
+                        return [...prev, {
+                            id: 'proactive_' + Date.now(),
+                            sender_type: 'bot',
+                            content: data.proactive_message,
+                            created_at: new Date().toISOString(),
+                            _proactive: true,
+                        }];
+                    });
+                }
+            }
+        })
+        .catch(() => {});
+    }, []);
+
+    useEffect(() => {
+        if (!WIDGET_TOKEN) return;
+
+        // Initial ping
+        sendHeartbeat();
+
+        // Heartbeat every 15 seconds
+        heartbeatRef.current = setInterval(() => sendHeartbeat(), 15000);
+
+        // Idle detection — reset on any activity
+        const resetIdle = () => {
+            isIdleRef.current = false;
+            clearTimeout(idleTimerRef.current);
+            idleTimerRef.current = setTimeout(() => {
+                isIdleRef.current = true;
+            }, 90000); // 90s without activity = idle
+        };
+        resetIdle();
+        ['mousemove', 'keydown', 'scroll', 'click', 'touchstart'].forEach(e =>
+            document.addEventListener(e, resetIdle, { passive: true })
+        );
+
+        // Tab visibility
+        const handleVisibility = () => {
+            tabVisibleRef.current = !document.hidden;
+            sendHeartbeat();
+        };
+        document.addEventListener('visibilitychange', handleVisibility);
+
+        // SPA: track URL changes
+        const originalPushState = history.pushState;
+        history.pushState = function (...args) {
+            originalPushState.apply(this, args);
+            sendHeartbeat();
+        };
+        window.addEventListener('popstate', () => sendHeartbeat());
+
+        // Offline on unload
+        const handleUnload = () => {
+            if (navigator.sendBeacon) {
+                const blob = new Blob(
+                    [JSON.stringify({ widget_token: WIDGET_TOKEN, visitor_key: VISITOR_KEY })],
+                    { type: 'application/json' }
+                );
+                navigator.sendBeacon(`${API_BASE}/api/chat/visitor-offline`, blob);
+            }
+        };
+        window.addEventListener('beforeunload', handleUnload);
+
+        return () => {
+            clearInterval(heartbeatRef.current);
+            clearTimeout(idleTimerRef.current);
+            ['mousemove', 'keydown', 'scroll', 'click', 'touchstart'].forEach(e =>
+                document.removeEventListener(e, resetIdle)
+            );
+            document.removeEventListener('visibilitychange', handleVisibility);
+            window.removeEventListener('popstate', () => sendHeartbeat());
+            window.removeEventListener('beforeunload', handleUnload);
+            history.pushState = originalPushState;
+        };
+    }, [sendHeartbeat]);
 
     // ── Returning visitor lookup (WooCommerce logueado) ──────────────────────
     // Para visitantes WC logueados, hace lookup en el servidor para detectar

@@ -24,6 +24,9 @@ Route::prefix('chat')->group(function () {
     Route::post('/rename',               [ChatController::class, 'renameConversation']);
     // Sneak-peek: visitante transmite texto mientras escribe
     Route::post('/typing-preview',       [ChatController::class, 'typingPreview']);
+    // Visitor management
+    Route::post('/visitor-ping',         [ChatController::class, 'visitorPing']);
+    Route::post('/visitor-offline',      [ChatController::class, 'visitorOffline']);
 });
 
 // ── Admin notifications (sin auth, solo verifica Referer interno) ──
