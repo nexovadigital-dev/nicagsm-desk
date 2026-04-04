@@ -1,6 +1,9 @@
 <IfModule mod_headers.c>
-    # Allow unsafe-eval for Filament admin (Alpine.js requires it)
-    Header always set Content-Security-Policy "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https: blob:; font-src 'self' data: https:; connect-src *; frame-ancestors 'self'; default-src 'self' 'unsafe-inline' https:;"
+    # Remove any server-level CSP (Hostinger sets one that blocks eval)
+    # then set our own that allows Alpine.js + Filament to work
+    Header always unset Content-Security-Policy
+    Header always unset Content-Security-Policy-Report-Only
+    Header always set Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; connect-src *; frame-ancestors 'self';"
 </IfModule>
 
 <IfModule mod_rewrite.c>
