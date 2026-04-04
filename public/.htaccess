@@ -1,3 +1,8 @@
+<IfModule mod_headers.c>
+    # Allow unsafe-eval for Filament admin (Alpine.js requires it)
+    Header always set Content-Security-Policy "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https: blob:; font-src 'self' data: https:; connect-src *; frame-ancestors 'self'; default-src 'self' 'unsafe-inline' https:;"
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

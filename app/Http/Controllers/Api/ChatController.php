@@ -737,6 +737,7 @@ class ChatController extends Controller
             'ip'             => $ip,
             'is_idle'        => (bool) $request->input('is_idle', false),
             'tab_visible'    => (bool) $request->input('tab_visible', true),
+            'chat_open'      => (bool) $request->input('chat_open', false),
             'session_id'     => $request->input('session_id'),
             'last_ping_at'   => now(),
         ];

@@ -13,7 +13,7 @@ class ActiveVisitor extends Model
         'organization_id', 'visitor_key', 'widget_token',
         'current_url', 'page_title', 'referrer', 'pages_visited',
         'ip', 'country', 'city', 'device', 'os', 'browser',
-        'is_idle', 'tab_visible', 'session_id',
+        'is_idle', 'tab_visible', 'session_id', 'chat_open',
         'proactive_open', 'proactive_message',
         'first_seen_at', 'last_ping_at',
     ];
@@ -22,6 +22,7 @@ class ActiveVisitor extends Model
         'pages_visited'  => 'array',
         'is_idle'        => 'boolean',
         'tab_visible'    => 'boolean',
+        'chat_open'      => 'boolean',
         'proactive_open' => 'boolean',
         'first_seen_at'  => 'datetime',
         'last_ping_at'   => 'datetime',

@@ -1677,10 +1677,13 @@ export default function NexovaChatWidget() {
     // ── Visitor heartbeat — tracking en tiempo real ──────────────────────────
     const isIdleRef       = useRef(false);
     const tabVisibleRef   = useRef(!document.hidden);
+    const isOpenRef       = useRef(false);
     const heartbeatRef    = useRef(null);
     const idleTimerRef    = useRef(null);
     const sessionIdRef    = useRef(sessionId); // keep ref in sync for heartbeat closure
     useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
+    // Sync isOpen to ref and immediately ping so admin sees open/close in real time
+    useEffect(() => { isOpenRef.current = isOpen; sendHeartbeat(); }, [isOpen]);
 
     const sendHeartbeat = useCallback((overrides = {}) => {
         if (!WIDGET_TOKEN) return;
@@ -1695,6 +1698,7 @@ export default function NexovaChatWidget() {
                 referrer:     document.referrer || null,
                 is_idle:      isIdleRef.current,
                 tab_visible:  tabVisibleRef.current,
+                chat_open:    isOpenRef.current,
                 session_id:   sessionIdRef.current || null,
                 ...overrides,
             }),

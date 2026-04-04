@@ -7,9 +7,20 @@ $banned   = $this->bannedIps;
 
 <div x-data="{
     audioCtx: null,
+    soundEnabled: false,
+    initAudio() {
+        // Only create AudioContext after explicit user interaction
+        if (!this.audioCtx) {
+            try { this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+        }
+        if (this.audioCtx && this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume().catch(() => {});
+        }
+        this.soundEnabled = true;
+    },
     playDing() {
+        if (!this.soundEnabled || !this.audioCtx) return;
         try {
-            if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const o = this.audioCtx.createOscillator();
             const g = this.audioCtx.createGain();
             o.connect(g); g.connect(this.audioCtx.destination);
@@ -93,26 +104,26 @@ x-init="
 .vp-status-pill--idle   { background: #fef3c7; color: #92400e; }
 .vp-status-pill--hidden { background: #f1f5f9; color: #475569; }
 
-/* Page info */
-.vp-card__page {
-    font-size: 11.5px; color: #334155;
-    background: #f8fafc; border: 1px solid #e2e8f0;
-    border-radius: 6px; padding: 5px 9px;
-    display: flex; align-items: flex-start; gap: 6px;
-}
+/* Page info (legacy, keep for compat) */
 .vp-card__page-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
 .vp-card__page-url   { color: #94a3b8; font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
 
 /* Pages history */
-.vp-history { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
+.vp-history {
+    display: flex; flex-direction: column; gap: 0;
+    border: 1px solid #e2e8f0; border-radius: 7px; overflow: hidden;
+    background: #f8fafc;
+}
 .vp-history-item {
     font-size: 10.5px; color: #64748b;
-    display: flex; align-items: center; gap: 5px;
-    padding: 2px 0;
-    border-bottom: 1px dotted #f1f5f9;
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 8px;
+    border-bottom: 1px solid #f1f5f9;
 }
 .vp-history-item:last-child { border-bottom: none; }
-.vp-history-dot { width: 4px; height: 4px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
+.vp-history-item--current { background: #f0fdf4; }
+.vp-history-dot { width: 5px; height: 5px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
+.vp-history-dot--live { background: #22c55e; animation: vp-pulse 1.5s ease-in-out infinite; }
 
 /* Stats row */
 .vp-card__stats { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -141,6 +152,21 @@ x-init="
     font-size: 10px; font-weight: 700;
     background: #eff6ff; color: #1d4ed8;
     border: 1px solid #bfdbfe;
+}
+/* Widget open/minimized badge */
+.vp-widget-open {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 99px;
+    font-size: 10px; font-weight: 700;
+    background: #f0fdf4; color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+.vp-widget-min {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 99px;
+    font-size: 10px; font-weight: 600;
+    background: #f8fafc; color: #64748b;
+    border: 1px solid #e2e8f0;
 }
 
 /* ── Empty state ── */
@@ -226,9 +252,20 @@ x-init="
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
         Visitantes en Vivo
     </div>
-    <div class="vp-count-badge">
-        <span class="vp-dot"></span>
-        {{ $visitors->count() }} {{ $visitors->count() === 1 ? 'visitante' : 'visitantes' }} ahora
+    <div style="display:flex;align-items:center;gap:10px">
+        {{-- Sound toggle — requires user click to init AudioContext --}}
+        <button @click="initAudio()"
+                :title="soundEnabled ? 'Sonido activado' : 'Activar alerta de sonido'"
+                style="background:none;border:1px solid #e2e8f0;border-radius:7px;padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11.5px;color:#64748b;font-family:inherit;transition:background .12s"
+                :style="soundEnabled ? 'background:#f0fdf4;border-color:#bbf7d0;color:#15803d' : ''">
+            <svg x-show="!soundEnabled" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
+            <svg x-show="soundEnabled" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6v12m0 0l-3-3m3 3l3-3M9 12H3"/></svg>
+            <span x-text="soundEnabled ? 'Sonido ON' : 'Activar sonido'"></span>
+        </button>
+        <div class="vp-count-badge">
+            <span class="vp-dot"></span>
+            {{ $visitors->count() }} {{ $visitors->count() === 1 ? 'visitante' : 'visitantes' }} ahora
+        </div>
     </div>
 </div>
 
@@ -270,6 +307,17 @@ x-init="
                         Chat activo
                     </span>
                     @endif
+                    @if($visitor->chat_open)
+                    <span class="vp-widget-open" title="El visitante tiene el widget abierto">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="9" height="9"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3h14a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
+                        Widget abierto
+                    </span>
+                    @elseif($visitor->session_id)
+                    <span class="vp-widget-min" title="El visitante tiene el widget minimizado">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="9" height="9"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 15l-6-6-6 6"/></svg>
+                        Minimizado
+                    </span>
+                    @endif
                 </div>
                 <div class="vp-card__sub">
                     {{-- Status pill --}}
@@ -288,24 +336,29 @@ x-init="
             </div>
         </div>
 
-        {{-- Current page --}}
-        @if($visitor->current_url)
-        <div class="vp-card__page">
-            <svg fill="none" stroke="#94a3b8" viewBox="0 0 24 24" width="13" height="13" style="flex-shrink:0;margin-top:1px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <div style="flex:1;min-width:0">
-                <div class="vp-card__page-title">{{ $visitor->page_title ?: parse_url($visitor->current_url, PHP_URL_PATH) }}</div>
-                <div class="vp-card__page-url">{{ parse_url($visitor->current_url, PHP_URL_HOST) }}{{ parse_url($visitor->current_url, PHP_URL_PATH) }}</div>
-            </div>
-        </div>
-        @endif
-
-        {{-- Pages history (last 4 previous) --}}
-        @if(count($prevPages) > 0)
+        {{-- Page navigation history (current + previous, newest first) --}}
+        @if($visitor->current_url || count($prevPages) > 0)
         <div class="vp-history">
+            {{-- Current page (highlighted) --}}
+            @if($visitor->current_url)
+            <div class="vp-history-item vp-history-item--current">
+                <span class="vp-history-dot vp-history-dot--live"></span>
+                <div style="flex:1;min-width:0">
+                    <div style="font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px">
+                        {{ $visitor->page_title ?: parse_url($visitor->current_url, PHP_URL_PATH) }}
+                    </div>
+                    <div style="font-size:10px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                        {{ parse_url($visitor->current_url, PHP_URL_PATH) ?: '/' }}
+                    </div>
+                </div>
+                <span style="font-size:9.5px;color:#22c55e;font-weight:700;flex-shrink:0">AHORA</span>
+            </div>
+            @endif
+            {{-- Previous pages (last 4, most recent first) --}}
             @foreach(array_slice(array_reverse($prevPages), 0, 4) as $pg)
             <div class="vp-history-item">
                 <span class="vp-history-dot"></span>
-                <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $pg['title'] ?: $pg['url'] }}</span>
+                <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px">{{ $pg['title'] ?: $pg['url'] }}</span>
                 <span style="color:#cbd5e1;font-size:10px;flex-shrink:0">{{ \Carbon\Carbon::parse($pg['at'])->diffForHumans(null, true, true) }}</span>
             </div>
             @endforeach
