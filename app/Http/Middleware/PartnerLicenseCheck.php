@@ -12,13 +12,13 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Verifies the partner license against nexovadesk.com daily.
- * Caches the result for 24 hours so it doesn't call on every request.
+ * Verification is by domain — no token required on the partner side.
  */
 class PartnerLicenseCheck
 {
     public function handle(Request $request, Closure $next)
     {
-        // Skip check for non-web routes (API, widget, etc.)
+        // Skip for API and widget routes
         if ($request->is('api/*') || $request->is('widget*')) {
             return $next($request);
         }
@@ -28,7 +28,6 @@ class PartnerLicenseCheck
 
         if ($isValid === null) {
             $isValid = $this->checkLicense();
-            // Cache 24h if valid, 1h if invalid (retry sooner on failure)
             Cache::put($cacheKey, $isValid, $isValid ? now()->addHours(24) : now()->addHour());
         }
 
@@ -41,34 +40,35 @@ class PartnerLicenseCheck
 
     private function checkLicense(): bool
     {
-        $token   = config('partner.token');
+        $domain  = parse_url(config('app.url'), PHP_URL_HOST);
         $baseUrl = config('partner.license_url', 'https://nexovadesk.com');
 
-        if (! $token) {
-            Log::error('[Partner] PARTNER_TOKEN not set in .env');
+        if (! $domain) {
+            Log::error('[Partner] APP_URL not set — cannot determine domain for license check');
             return false;
         }
 
         try {
             $response = Http::timeout(10)
                 ->acceptJson()
-                ->get("{$baseUrl}/api/partner/verify/{$token}", [
-                    'domain' => parse_url(config('app.url'), PHP_URL_HOST),
-                ]);
+                ->get("{$baseUrl}/api/partner/verify", ['domain' => $domain]);
 
             if ($response->successful() && $response->json('valid') === true) {
                 return true;
             }
 
             Log::warning('[Partner] License check failed', [
+                'domain'   => $domain,
                 'status'   => $response->status(),
                 'response' => $response->json(),
             ]);
             return false;
+
         } catch (\Throwable $e) {
-            // Network error — grant grace period (don't block if nexovadesk.com is down)
-            Log::warning('[Partner] License check network error — granting grace', [
-                'error' => $e->getMessage(),
+            // Network error — grant grace (don't block if nexovadesk.com is temporarily down)
+            Log::warning('[Partner] License check network error — granting grace period', [
+                'domain' => $domain,
+                'error'  => $e->getMessage(),
             ]);
             return true;
         }

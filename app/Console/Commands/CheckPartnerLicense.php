@@ -16,20 +16,20 @@ class CheckPartnerLicense extends Command
 
     public function handle(): int
     {
-        $token   = config('partner.token');
+        $domain  = parse_url(config('app.url'), PHP_URL_HOST);
         $baseUrl = config('partner.license_url', 'https://nexovadesk.com');
 
-        if (! $token) {
-            $this->error('PARTNER_TOKEN is not set in .env');
+        if (! $domain) {
+            $this->error('APP_URL is not set in .env');
             return self::FAILURE;
         }
 
-        $this->info("Checking license for token: " . substr($token, 0, 8) . "…");
+        $this->info("Checking license for domain: {$domain}");
 
         try {
             $response = Http::timeout(15)
                 ->acceptJson()
-                ->get("{$baseUrl}/api/partner/verify/{$token}");
+                ->get("{$baseUrl}/api/partner/verify", ['domain' => $domain]);
 
             if ($response->successful() && $response->json('valid') === true) {
                 Cache::put('partner_license_valid', true, now()->addHours(24));

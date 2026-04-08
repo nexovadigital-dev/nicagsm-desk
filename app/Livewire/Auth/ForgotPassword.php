@@ -29,9 +29,21 @@ class ForgotPassword extends Component
             return;
         }
 
+        // Check SMTP is configured before attempting to send
+        $smtpHost = config('mail.mailers.smtp.host', '');
+        $smtpUser = config('mail.mailers.smtp.username', '');
+        if (empty($smtpHost) || in_array($smtpHost, ['', 'mailpit', 'localhost', 'smtp.example.com'])) {
+            $this->error = 'El servidor de correo no está configurado. Contacta al administrador para habilitar el envío de emails antes de restablecer la contraseña.';
+            return;
+        }
+        if (empty($smtpUser)) {
+            $this->error = 'Las credenciales del servidor de correo no están configuradas. Contacta al administrador.';
+            return;
+        }
+
         $user = User::where('email', $this->email)->first();
 
-        // Always show success message to prevent email enumeration
+        // Always show success to prevent email enumeration
         if ($user) {
             $code = strtoupper(Str::random(6));
             Cache::put('pwd_reset_' . md5($this->email), $code, now()->addMinutes(15));
@@ -43,8 +55,9 @@ class ForgotPassword extends Component
                         ->to($user->email)
                         ->subject('Recuperar contraseña — Nexova Desk')
                 );
-            } catch (\Throwable) {
-                // Silent fail — don't reveal mail errors
+            } catch (\Throwable $e) {
+                $this->error = 'No se pudo enviar el email. Verifica que el servidor SMTP esté correctamente configurado.';
+                return;
             }
         }
 

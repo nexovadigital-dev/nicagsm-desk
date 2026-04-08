@@ -3,17 +3,8 @@
 return [
     /*
     |--------------------------------------------------------------------------
-    | Partner Token
-    |--------------------------------------------------------------------------
-    | The unique token assigned by Nexova HQ to this partner installation.
-    | Set PARTNER_TOKEN in .env. This token is verified daily against
-    | nexovadesk.com to confirm the partner license is still active.
-    */
-    'token' => env('PARTNER_TOKEN'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | License Verification URL
+    | License Verification URL (nexovadesk.com)
+    | Verifies this installation by domain — no token required.
     |--------------------------------------------------------------------------
     | Base URL of the Nexova SaaS that issues and verifies partner licenses.
     | Do not change unless you know what you are doing.
