@@ -19,6 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
         ]);
+        // Partner license check — runs on all web requests, skips API/widget
+        $middleware->web(append: [
+            \App\Http\Middleware\PartnerLicenseCheck::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

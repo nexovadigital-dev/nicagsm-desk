@@ -64,17 +64,7 @@ Route::get('/chat-demo', function () {
     return view('chat-demo');
 });
 
-// ── Super-admin impersonation return ─────────────────────────────────────────
-Route::get('/nx-hq/stop-impersonate', function () {
-    $adminId = session('superadmin_impersonating');
-    if (! $adminId) {
-        return redirect('/app');
-    }
-    auth()->logout();
-    session()->forget('superadmin_impersonating');
-    auth()->loginUsingId($adminId);
-    return redirect('/nx-hq');
-})->middleware('web');
+// HQ super-admin not available in Partner Edition
 
 // ── Survey público (sin auth) ─────────────────────────────────────────────────
 Route::get('/survey/{token}',  [SurveyController::class, 'show'])->name('survey.show');

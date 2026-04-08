@@ -17,6 +17,9 @@ Schedule::command('nexova:sync-external')->hourly();
 // Verificar suscripciones vencidas y hacer downgrade a Free
 Schedule::command('nexova:check-subscriptions')->dailyAt('02:00');
 
+// Verificar licencia partner contra nexovadesk.com cada día a las 03:00
+Schedule::command('partner:check-license')->dailyAt('03:00');
+
 // Verificar TX hash de pagos crypto en blockchain cada 5 minutos
 Schedule::command('nexova:verify-crypto')->everyFiveMinutes();
 
