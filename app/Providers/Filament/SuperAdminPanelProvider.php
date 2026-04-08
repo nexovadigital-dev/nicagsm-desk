@@ -53,7 +53,6 @@ class SuperAdminPanelProvider extends PanelProvider
             ])
             ->font('Inter')
             ->defaultThemeMode(ThemeMode::Light)
-            ->sidebarCollapsibleOnDesktop()
             ->topNavigation(false)
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->navigationGroups([
