@@ -50,19 +50,14 @@ class PartnerSetupSeeder extends Seeder
         // ── Default chat widget ───────────────────────────────────────────────
         if (! ChatWidget::where('organization_id', $org->id)->exists()) {
             ChatWidget::create([
-                'organization_id'    => $org->id,
-                'name'               => 'Widget NicaGSM',
-                'token'              => Str::random(32),
-                'is_active'          => true,
-                'welcome_message'    => '¡Hola! ¿En qué podemos ayudarte hoy?',
-                'bot_name'           => 'NicaGSM Bot',
-                'accent_color'       => '#22c55e',
-                'position'           => 'right',
-                'pre_chat_form'      => false,
-                'require_name'       => false,
-                'require_email'      => false,
-                'show_agent_avatar'  => true,
-                'enable_attachments' => true,
+                'organization_id' => $org->id,
+                'name'            => 'Widget NicaGSM',
+                'token'           => Str::random(32),
+                'is_active'       => true,
+                'welcome_message' => '¡Hola! ¿En qué podemos ayudarte hoy?',
+                'bot_name'        => 'NicaGSM Bot',
+                'accent_color'    => '#22c55e',
+                'widget_position' => 'right',
             ]);
         }
 
