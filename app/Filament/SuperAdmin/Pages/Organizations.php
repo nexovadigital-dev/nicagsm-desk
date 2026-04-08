@@ -13,6 +13,7 @@ use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 
 class Organizations extends Page
@@ -234,6 +235,7 @@ class Organizations extends Page
             'trial_ends_at'            => null,
             'max_bot_sessions_per_day' => 9999,
             'max_messages_per_session' => 9999,
+            'partner_token'            => $org->partner_token ?? Str::random(48),
         ]);
 
         $this->dispatch('nexova-toast', type: 'success', message: "Plan Partner asignado a {$org->name}");

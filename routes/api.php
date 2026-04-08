@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\TelegramWebhookController;
 use App\Http\Controllers\Api\WpApiController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Api\PartnerController;
 
 // ── Chat widget (web) ──
 Route::prefix('chat')->group(function () {
@@ -46,6 +47,9 @@ Route::prefix('wp')->group(function () {
     Route::get('/widgets',         [WpApiController::class, 'widgets']);
     Route::get('/widgets/{id}',    [WpApiController::class, 'widget']);
 });
+
+// ── Partner license verification ──
+Route::get('/partner/verify/{token}', [PartnerController::class, 'verify']);
 
 // ── Payment webhooks (no CSRF) ──
 Route::post('/webhooks/mercadopago', [PaymentController::class, 'mpWebhook']);

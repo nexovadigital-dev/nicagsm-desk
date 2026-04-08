@@ -16,7 +16,7 @@ class Organization extends Model
         'ai_groq_key', 'ai_gemini_key', 'ai_use_own_keys', 'telegram_bot_token',
         'max_messages_per_session', 'max_bot_sessions_per_day',
         'bot_sessions_today', 'bot_messages_this_month', 'bot_messages_month_reset', 'usage_date',
-        'plan', 'trial_ends_at', 'is_active', 'is_partner', 'accent_color', 'logo_path',
+        'plan', 'trial_ends_at', 'is_active', 'is_partner', 'partner_token', 'accent_color', 'logo_path',
     ];
 
     protected $casts = [
