@@ -52,7 +52,9 @@ class PartnerLicenseCheck
         try {
             $response = Http::timeout(10)
                 ->acceptJson()
-                ->get("{$baseUrl}/api/partner/verify/{$token}");
+                ->get("{$baseUrl}/api/partner/verify/{$token}", [
+                    'domain' => parse_url(config('app.url'), PHP_URL_HOST),
+                ]);
 
             if ($response->successful() && $response->json('valid') === true) {
                 return true;
