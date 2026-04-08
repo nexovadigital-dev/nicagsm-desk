@@ -15,11 +15,11 @@
         p  { font-size: 13.5px; color: #64748b; line-height: 1.65; }
         .domain-block {
             margin-top: 24px; background: #f8fafc; border: 1px solid #e2e8f0;
-            border-radius: 8px; padding: 12px 16px;
-            display: flex; align-items: center; gap: 8px;
+            border-radius: 8px; padding: 14px 16px;
+            text-align: center;
         }
-        .domain-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
-        .domain-value { font-size: 13px; font-weight: 600; color: #334155; word-break: break-all; text-align: left; }
+        .domain-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+        .domain-value { font-size: 13.5px; font-weight: 700; color: #334155; word-break: break-all; }
         .error-id {
             margin-top: 10px; font-size: 11px; color: #94a3b8;
             font-family: ui-monospace, monospace; letter-spacing: .03em;
@@ -45,15 +45,14 @@
 
         <h1>Licencia no activa</h1>
         <p>
-            No se puede constatar que tengas los permisos para ejecutar Nexova Desk en este dominio.
-            Contacta al administrador de Nexova para activar tu licencia.
+            El acceso a Nexova Desk en este dominio requiere una licencia Partner activa.
+            Si ya eres partner, solicita la activación al administrador de Nexova
+            indicando tu dominio y el ID de error.
         </p>
 
         <div class="domain-block">
-            <div>
-                <div class="domain-label">Dominio</div>
-                <div class="domain-value">{{ $domain }}</div>
-            </div>
+            <div class="domain-label">Dominio</div>
+            <div class="domain-value">{{ $domain }}</div>
         </div>
 
         <div class="error-id">ID de error: {{ $errorId }}</div>
