@@ -240,6 +240,31 @@
         .lf-btn:active:not(:disabled) { transform: translateY(0); }
         .lf-btn:disabled { opacity: .55; cursor: not-allowed; }
         .lf-spin { animation: lf-spin .8s linear infinite; }
+
+        /* ── Login success state ── */
+        .lf-success-ring {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: rgba(34,197,94,.1);
+            border: 1.5px solid rgba(34,197,94,.3);
+            display: flex; align-items: center; justify-content: center;
+            animation: lf-ring-pop .5s cubic-bezier(.16,1,.3,1) both;
+        }
+        .lf-check-path {
+            stroke-dasharray: 30;
+            stroke-dashoffset: 30;
+            animation: lf-draw-check .45s ease forwards .25s;
+        }
+        @keyframes lf-ring-pop {
+            from { opacity: 0; transform: scale(.6); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        @keyframes lf-draw-check {
+            to { stroke-dashoffset: 0; }
+        }
+        @keyframes lf-dot {
+            0%, 80%, 100% { opacity: .2; transform: scale(.8); }
+            40%            { opacity: 1;  transform: scale(1.1); }
+        }
     </style>
 </head>
 <body>

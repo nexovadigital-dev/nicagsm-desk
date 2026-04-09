@@ -8,10 +8,11 @@ use Livewire\Component;
 
 class Login extends Component
 {
-    public string $email    = '';
-    public string $password = '';
-    public bool   $remember = false;
-    public string $error    = '';
+    public string $email       = '';
+    public string $password   = '';
+    public bool   $remember   = false;
+    public string $error      = '';
+    public bool   $showSuccess = false;
 
     public function submit(): void
     {
@@ -29,13 +30,14 @@ class Login extends Component
             return;
         }
 
-        $redirect = request()->query('redirect');
+        $redirectUrl = '/app';
+        $redirect    = request()->query('redirect');
         if ($redirect && str_starts_with($redirect, '/')) {
-            $this->redirect($redirect);
-            return;
+            $redirectUrl = $redirect;
         }
 
-        $this->redirect('/app');
+        $this->showSuccess = true;
+        $this->dispatch('loginSuccess', url: $redirectUrl);
     }
 
     public function render()

@@ -1,5 +1,30 @@
-<div x-data="{ showPass: false }" class="lf-wrap">
+<div x-data="{ showPass: false }" class="lf-wrap"
+     @loginSuccess.window="
+         setTimeout(() => {
+             document.body.style.transition = 'opacity .4s ease';
+             document.body.style.opacity = '0';
+             setTimeout(() => window.location.href = $event.detail.url, 420);
+         }, 900)
+     ">
 
+    @if($showSuccess)
+    {{-- ── Estado éxito ── --}}
+    <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:32px 0 24px">
+        <div class="lf-success-ring">
+            <svg fill="none" stroke="#22c55e" viewBox="0 0 24 24" width="32" height="32">
+                <path class="lf-check-path" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+            </svg>
+        </div>
+        <div style="margin-top:20px;font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">¡Acceso concedido!</div>
+        <div style="margin-top:6px;font-size:13px;color:rgba(255,255,255,.4)">Redirigiendo al panel...</div>
+        <div style="margin-top:20px;display:flex;gap:5px;align-items:center">
+            <span style="width:5px;height:5px;border-radius:50%;background:#22c55e;animation:lf-dot 1.2s ease-in-out infinite"></span>
+            <span style="width:5px;height:5px;border-radius:50%;background:#22c55e;animation:lf-dot 1.2s ease-in-out .2s infinite"></span>
+            <span style="width:5px;height:5px;border-radius:50%;background:#22c55e;animation:lf-dot 1.2s ease-in-out .4s infinite"></span>
+        </div>
+    </div>
+    @else
+    {{-- ── Formulario ── --}}
     <div class="lf-head">
         <div class="lf-title">Bienvenido de vuelta</div>
         <div class="lf-sub">Inicia sesión en tu panel de administración.</div>
@@ -78,5 +103,6 @@
         <span wire:loading.remove wire:target="submit">Iniciar sesión</span>
         <span wire:loading wire:target="submit" style="display:none">Verificando...</span>
     </button>
+    @endif
 
 </div>

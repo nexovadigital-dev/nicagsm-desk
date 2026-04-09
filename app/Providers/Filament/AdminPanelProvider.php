@@ -43,6 +43,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->font('Inter')
             ->defaultThemeMode(ThemeMode::Light)
+            ->spa()
             ->sidebarCollapsibleOnDesktop()
             ->topNavigation(false)
             ->viteTheme('resources/css/filament/admin/theme.css')
@@ -232,7 +233,23 @@ HTML;
     }
 
     document.addEventListener('livewire:navigating', () => { syncLeft(); show(); });
-    document.addEventListener('livewire:navigated',  hide);
+    document.addEventListener('livewire:navigated', () => {
+        hide();
+        // Fade-in del contenido principal tras navegación SPA
+        const main = document.querySelector('.fi-main') || document.querySelector('.fi-page-wrap');
+        if (main) {
+            main.style.opacity = '0';
+            main.style.transform = 'translateY(5px)';
+            main.style.transition = '';
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    main.style.transition = 'opacity .22s ease, transform .22s ease';
+                    main.style.opacity = '1';
+                    main.style.transform = 'translateY(0)';
+                });
+            });
+        }
+    });
     document.addEventListener('livewire:request-succeeded', hide);
     // Keep left in sync when sidebar toggles
     const obs = new MutationObserver(syncLeft);
