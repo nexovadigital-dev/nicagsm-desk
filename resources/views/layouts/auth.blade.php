@@ -174,9 +174,9 @@
         {{-- Partner Edition — solo branding, sin marketing --}}
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center">
             <img src="{{ asset('images/nexovadesklogo.png') }}" alt="Nexova Desk"
-                 style="width:80px;height:80px;border-radius:16px;object-fit:contain;margin-bottom:20px">
-            <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-.03em">Nexova Desk</div>
-            <div style="font-size:12px;color:#22c55e;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-top:4px">
+                 style="width:130px;height:130px;border-radius:24px;object-fit:contain;margin-bottom:24px">
+            <div style="font-size:26px;font-weight:800;color:#fff;letter-spacing:-.03em">Nexova Desk</div>
+            <div style="font-size:12px;color:#22c55e;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-top:6px">
                 by Nexova Digital Solutions
             </div>
         </div>
