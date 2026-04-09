@@ -137,15 +137,6 @@ HTML;
             ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn (): string => <<<'HTML'
-<!-- ── Force light mode always ── -->
-<script>
-(function(){
-    localStorage.removeItem('theme');
-    document.documentElement.classList.remove('dark');
-    document.documentElement.classList.add('light');
-    document.documentElement.style.colorScheme = 'light';
-})();
-</script>
 <!-- ── Nexova Custom Toast ── -->
 <style>
 @keyframes nxToastIn  { from { opacity:0; transform:translateY(10px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
@@ -442,6 +433,15 @@ HTML
                     $org     = auth()->user()?->organization;
                     $orgName = addslashes($org?->name ?? '');
                     return <<<HTML
+<!-- ── Force light mode BEFORE content renders ── -->
+<script>
+(function(){
+    localStorage.removeItem('theme');
+    document.documentElement.classList.remove('dark');
+    document.documentElement.classList.add('light');
+    document.documentElement.style.colorScheme = 'light';
+})();
+</script>
 <script>
 (function(){
     var ORG = '{$orgName}';

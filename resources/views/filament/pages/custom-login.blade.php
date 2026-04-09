@@ -6,9 +6,8 @@
              wrap.style.opacity = '0';
              wrap.style.transform = 'scale(0.97)';
              wrap.style.filter = 'blur(6px)';
-             wrap.addEventListener('transitionend', () => {
-                 $wire.performRedirect();
-             }, { once: true });
+             // Usar timeout fijo en vez de transitionend (más robusto en máquinas lentas)
+             setTimeout(() => { window.location.href = '/app'; }, 400);
          }, 900)
      ">
 
