@@ -82,7 +82,7 @@ x-init="
 
 </div>
 
-<div wire:poll.3000ms class="nx-inbox">
+<div wire:poll.8000ms class="nx-inbox">
 
     {{-- ═══════════════════════════
          SIDEBAR — Lista de tickets

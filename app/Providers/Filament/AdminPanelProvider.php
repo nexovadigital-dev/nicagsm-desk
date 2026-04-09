@@ -418,10 +418,9 @@ HTML;
         }, { once: true });
     });
 
-    // Si la página ya cargó (Livewire SPA)
+    // SPA: si DOMContentLoaded ya pasó, sólo pedir permiso — el polling ya corre
     if (document.readyState !== 'loading') {
         requestNotifPermission();
-        setInterval(pollNewMessages, 5000);
     }
 })();
 </script>
