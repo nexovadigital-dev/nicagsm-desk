@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
     <title>{{ $title ?? 'Nexova Desk' }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -148,6 +149,7 @@
             font-size: 13px; line-height: 1.5; margin-bottom: 16px;
         }
         .lf-alert-err { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2); color: #f87171; }
+        .lf-alert-suc { background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.2); color: #4ade80; }
 
         .lf-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
         .lf-label {

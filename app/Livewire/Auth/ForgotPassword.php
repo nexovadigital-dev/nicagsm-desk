@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 
 class ForgotPassword extends Component
@@ -29,52 +30,82 @@ class ForgotPassword extends Component
             return;
         }
 
-        // Check SMTP is configured before attempting to send
+        // ── Rate limit: max 3 intentos por IP cada 15 minutos ──
+        $rateLimitKey = 'pwd_reset_ip_' . request()->ip();
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 3)) {
+            $seconds = RateLimiter::availableIn($rateLimitKey);
+            $mins    = ceil($seconds / 60);
+            $this->error = "Demasiados intentos. Espera {$mins} minuto(s) antes de volver a intentarlo.";
+            return;
+        }
+        RateLimiter::hit($rateLimitKey, 900); // 15 min
+
+        // ── Validar que el email pertenece a un usuario de esta instalación ──
+        $user = User::where('email', $this->email)->whereNotNull('organization_id')->first();
+
+        if (! $user) {
+            $this->error = 'No existe una cuenta activa con ese correo en este panel. Contacta al administrador de tu organización.';
+            return;
+        }
+
+        // ── Verificar SMTP configurado ──
         $smtpHost = config('mail.mailers.smtp.host', '');
         $smtpUser = config('mail.mailers.smtp.username', '');
-        if (empty($smtpHost) || in_array($smtpHost, ['', 'mailpit', 'localhost', 'smtp.example.com'])) {
-            $this->error = 'El servidor de correo no está configurado. Contacta al administrador para habilitar el envío de emails antes de restablecer la contraseña.';
-            return;
-        }
-        if (empty($smtpUser)) {
-            $this->error = 'Las credenciales del servidor de correo no están configuradas. Contacta al administrador.';
+        if (empty($smtpHost) || in_array($smtpHost, ['', 'mailpit', 'localhost', 'smtp.example.com']) || empty($smtpUser)) {
+            $this->error = 'El servidor de correo no está configurado. Contacta al administrador para habilitar el reset de contraseña.';
             return;
         }
 
-        $user = User::where('email', $this->email)->first();
+        // ── Rate limit por email: max 2 códigos cada 30 minutos ──
+        $emailKey = 'pwd_reset_email_' . md5($this->email);
+        if (RateLimiter::tooManyAttempts($emailKey, 2)) {
+            $this->error = 'Ya enviamos un código a este correo recientemente. Revisa tu bandeja o espera 30 minutos.';
+            return;
+        }
+        RateLimiter::hit($emailKey, 1800); // 30 min
 
-        // Always show success to prevent email enumeration
-        if ($user) {
-            $code = strtoupper(Str::random(6));
-            Cache::put('pwd_reset_' . md5($this->email), $code, now()->addMinutes(15));
+        $code = strtoupper(Str::random(6));
+        Cache::put('pwd_reset_' . md5($this->email), $code, now()->addMinutes(15));
 
-            try {
-                Mail::raw(
-                    "Tu código de recuperación de contraseña es: {$code}\n\nExpira en 15 minutos.\n\nSi no solicitaste esto, ignora este correo.",
-                    fn ($m) => $m
-                        ->to($user->email)
-                        ->subject('Recuperar contraseña — Nexova Desk')
-                );
-            } catch (\Throwable $e) {
-                $this->error = 'No se pudo enviar el email. Verifica que el servidor SMTP esté correctamente configurado.';
-                return;
-            }
+        $orgName = $user->organization?->name ?? config('app.name', 'Nexova Desk Edge');
+
+        try {
+            Mail::send([], [], function ($m) use ($user, $code, $orgName) {
+                $m->to($user->email)
+                  ->subject("Recuperar contraseña — {$orgName}")
+                  ->html($this->buildEmailHtml($code, $orgName, $user->name));
+            });
+        } catch (\Throwable $e) {
+            $this->error = 'No se pudo enviar el email. Verifica que el servidor SMTP esté correctamente configurado.';
+            Cache::forget('pwd_reset_' . md5($this->email));
+            return;
         }
 
-        $this->success = 'Si el email está registrado, recibirás un código en los próximos minutos.';
+        $this->success = 'Código enviado. Revisa tu bandeja de entrada.';
         $this->step    = 'code';
     }
 
     public function verifyCode(): void
     {
         $this->error = '';
+
+        // Rate limit: max 5 intentos de código por IP
+        $rateLimitKey = 'pwd_code_ip_' . request()->ip();
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 5)) {
+            $this->error = 'Demasiados intentos incorrectos. Solicita un nuevo código.';
+            $this->step  = 'email';
+            return;
+        }
+
         $stored = Cache::get('pwd_reset_' . md5($this->email));
 
         if (! $stored || strtoupper(trim($this->code)) !== $stored) {
+            RateLimiter::hit($rateLimitKey, 900);
             $this->error = 'Código incorrecto o expirado.';
             return;
         }
 
+        RateLimiter::clear($rateLimitKey);
         $this->success = '';
         $this->step    = 'reset';
     }
@@ -99,7 +130,7 @@ class ForgotPassword extends Component
             return;
         }
 
-        $user = User::where('email', $this->email)->first();
+        $user = User::where('email', $this->email)->whereNotNull('organization_id')->first();
         if ($user) {
             $user->update(['password' => Hash::make($this->newPass)]);
             Cache::forget('pwd_reset_' . md5($this->email));
@@ -107,6 +138,52 @@ class ForgotPassword extends Component
 
         $this->step    = 'done';
         $this->success = 'Contraseña actualizada correctamente. Ya puedes iniciar sesión.';
+    }
+
+    private function buildEmailHtml(string $code, string $orgName, string $userName): string
+    {
+        $year = date('Y');
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0d1117;font-family:'Inter',Arial,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0d1117;padding:40px 20px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:480px;background:#111827;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.08)">
+        <!-- Header -->
+        <tr><td style="padding:28px 32px 20px;border-bottom:1px solid rgba(255,255,255,.06)">
+          <p style="margin:0;font-size:15px;font-weight:700;color:#fff;letter-spacing:-.02em">{$orgName}</p>
+          <p style="margin:4px 0 0;font-size:11px;color:#22c55e;font-weight:600;letter-spacing:.08em;text-transform:uppercase">by Nexova Desk Edge</p>
+        </td></tr>
+        <!-- Body -->
+        <tr><td style="padding:32px">
+          <p style="margin:0 0 8px;font-size:20px;font-weight:700;color:#fff;letter-spacing:-.02em">Recuperar contraseña</p>
+          <p style="margin:0 0 28px;font-size:13px;color:rgba(255,255,255,.5);line-height:1.6">
+            Hola {$userName}, recibiste este correo porque solicitaste restablecer tu contraseña.
+          </p>
+          <!-- Code box -->
+          <div style="background:#0d1117;border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:22px;text-align:center;margin-bottom:28px">
+            <p style="margin:0 0 6px;font-size:10.5px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.1em;text-transform:uppercase">Tu código de verificación</p>
+            <p style="margin:0;font-size:34px;font-weight:800;color:#22c55e;letter-spacing:.18em;font-family:monospace">{$code}</p>
+            <p style="margin:10px 0 0;font-size:11.5px;color:rgba(255,255,255,.35)">Expira en 15 minutos</p>
+          </div>
+          <p style="margin:0;font-size:12px;color:rgba(255,255,255,.3);line-height:1.6">
+            Si no solicitaste este código, puedes ignorar este correo con seguridad. Nadie puede acceder a tu cuenta sin él.
+          </p>
+        </td></tr>
+        <!-- Footer -->
+        <tr><td style="padding:16px 32px;border-top:1px solid rgba(255,255,255,.06)">
+          <p style="margin:0;font-size:11px;color:rgba(255,255,255,.25);text-align:center">
+            © {$year} {$orgName} · Nexova Desk Edge · Este es un mensaje automático, no respondas.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+HTML;
     }
 
     public function render()

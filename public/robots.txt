@@ -4,4 +4,5 @@ Disallow: /nx-hq/
 Disallow: /app/
 Disallow: /login
 Disallow: /register
+Disallow: /forgot-password
 Disallow: /connect
