@@ -249,7 +249,7 @@
                     <button type="button" class="wc-seg-btn {{ $showOn === 'both' ? 'active' : '' }}"
                         wire:click="$set('showOn','both')">Todos</button>
                     <button type="button" class="wc-seg-btn {{ $showOn === 'desktop' ? 'active' : '' }}"
-                        wire:click="$set('showOn','desktop')">Desktop</button>
+                        wire:click="$set('showOn','desktop')">Escritorio</button>
                     <button type="button" class="wc-seg-btn {{ $showOn === 'mobile' ? 'active' : '' }}"
                         wire:click="$set('showOn','mobile')">Móvil</button>
                 </div>
