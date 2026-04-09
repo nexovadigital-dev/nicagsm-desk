@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Auth;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -16,6 +17,13 @@ class Login extends Component
     {
         $this->error = '';
 
+        // Partner Edition — verificar que el usuario pertenece a esta instalación
+        $user = User::where('email', trim($this->email))->first();
+        if (! $user || ! $user->organization_id) {
+            $this->error = 'Acceso denegado. Este panel es exclusivo para usuarios autorizados de esta instalación.';
+            return;
+        }
+
         if (! Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
             $this->error = 'Email o contraseña incorrectos.';
             return;
@@ -27,7 +35,7 @@ class Login extends Component
             return;
         }
 
-        $this->redirect(Auth::user()->isSuperAdmin() ? '/nx-hq' : '/app');
+        $this->redirect('/app');
     }
 
     public function render()
