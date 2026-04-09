@@ -2,9 +2,10 @@
      @loginSuccess.window="
          setTimeout(() => {
              const wrap = $el;
-             wrap.style.transition = 'opacity .32s ease, transform .32s ease';
+             wrap.style.transition = 'opacity .35s ease, transform .35s ease, filter .35s ease';
              wrap.style.opacity = '0';
              wrap.style.transform = 'scale(0.97)';
+             wrap.style.filter = 'blur(6px)';
              wrap.addEventListener('transitionend', () => {
                  window.location.href = $event.detail.url;
              }, { once: true });

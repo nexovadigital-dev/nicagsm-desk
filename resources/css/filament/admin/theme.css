@@ -565,7 +565,9 @@ textarea:focus {
 
 /* Contenido principal — GPU layer para transiciones suaves */
 .fi-main {
-    will-change: opacity, transform;
+    will-change: opacity, transform, filter;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 [wire\:navigate] { cursor: pointer; }

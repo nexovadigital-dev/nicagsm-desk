@@ -236,31 +236,39 @@ HTML;
         return document.querySelector('.fi-main') || document.querySelector('.fi-page-wrap');
     }
 
-    // SALIDA — fade-out del contenido antes de navegar
+    let isNavigating = false;
+
+    // SALIDA — blur + fade antes de navegar
     document.addEventListener('livewire:navigate', () => {
+        if (isNavigating) return;
+        isNavigating = true;
         const main = getMain();
         if (main) {
-            main.style.transition = 'opacity .15s ease, transform .15s ease';
+            main.style.transition = 'opacity .18s ease, transform .18s ease, filter .18s ease';
             main.style.opacity = '0';
-            main.style.transform = 'translateY(-4px)';
+            main.style.transform = 'translateY(5px)';
+            main.style.filter = 'blur(3px)';
         }
     });
 
     document.addEventListener('livewire:navigating', () => { syncLeft(); show(); });
 
-    // ENTRADA — fade-in limpio sin setTimeout
+    // ENTRADA — limpia blur y fade-in
     document.addEventListener('livewire:navigated', () => {
         hide();
         const main = getMain();
         if (main) {
             main.style.transition = 'none';
             main.style.opacity = '0';
-            main.style.transform = 'translateY(6px)';
+            main.style.transform = 'translateY(7px)';
+            main.style.filter = 'blur(3px)';
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    main.style.transition = 'opacity .24s ease, transform .24s ease';
+                    main.style.transition = 'opacity .24s ease, transform .24s ease, filter .24s ease';
                     main.style.opacity = '1';
                     main.style.transform = 'translateY(0)';
+                    main.style.filter = 'blur(0)';
+                    isNavigating = false;
                 });
             });
         }
