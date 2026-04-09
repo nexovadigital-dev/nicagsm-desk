@@ -119,6 +119,116 @@
             color: #4ade80; font-size: 11px; font-weight: 600;
             padding: 3px 10px; border-radius: 99px; margin-bottom: 20px;
         }
+
+        /* ── Entry animations ── */
+        @keyframes lf-fade-left {
+            from { opacity: 0; transform: translateX(-18px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes lf-fade-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes lf-spin {
+            to { transform: rotate(360deg); }
+        }
+        .auth-left  { animation: lf-fade-left .5s cubic-bezier(.16,1,.3,1) both; }
+        .auth-right { animation: lf-fade-up   .45s cubic-bezier(.16,1,.3,1) .08s both; }
+
+        /* ── Login form ── */
+        .lf-wrap { display: flex; flex-direction: column; }
+
+        .lf-head { margin-bottom: 28px; }
+        .lf-title { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -.02em; margin-bottom: 5px; }
+        .lf-sub   { font-size: 13px; color: rgba(255,255,255,.4); line-height: 1.5; }
+
+        .lf-alert {
+            display: flex; align-items: flex-start; gap: 9px;
+            border-radius: 8px; padding: 10px 13px;
+            font-size: 13px; line-height: 1.5; margin-bottom: 16px;
+        }
+        .lf-alert-err { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2); color: #f87171; }
+
+        .lf-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+        .lf-label {
+            font-size: 12.5px; font-weight: 500; color: rgba(255,255,255,.55);
+        }
+
+        .lf-input-wrap { position: relative; display: flex; align-items: center; }
+        .lf-icon {
+            position: absolute; left: 13px;
+            color: rgba(255,255,255,.3); display: flex; pointer-events: none;
+            transition: color .15s;
+        }
+        .lf-input {
+            width: 100%; background: rgba(255,255,255,.04);
+            border: 1px solid rgba(255,255,255,.09);
+            border-radius: 10px; color: #fff;
+            font-size: 14px; font-family: inherit;
+            padding: 12px 14px 12px 40px;
+            outline: none; transition: border-color .15s, background .15s, box-shadow .15s;
+        }
+        .lf-input-pass { padding-right: 42px; }
+        .lf-input:focus {
+            border-color: rgba(34,197,94,.5);
+            background: rgba(255,255,255,.06);
+            box-shadow: 0 0 0 3px rgba(34,197,94,.08);
+        }
+        .lf-input-wrap:focus-within .lf-icon { color: rgba(34,197,94,.7); }
+        .lf-input::placeholder { color: rgba(255,255,255,.2); }
+
+        .lf-eye {
+            position: absolute; right: 12px;
+            background: none; border: none; cursor: pointer;
+            color: rgba(255,255,255,.3); padding: 4px; display: flex;
+            transition: color .12s;
+        }
+        .lf-eye:hover { color: rgba(255,255,255,.7); }
+
+        /* Custom checkbox */
+        .lf-row {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 22px; gap: 12px;
+        }
+        .lf-check-wrap { display: flex; align-items: center; gap: 9px; cursor: pointer; user-select: none; }
+        .lf-check-input { position: absolute; opacity: 0; width: 0; height: 0; }
+        .lf-check-box {
+            width: 17px; height: 17px; border-radius: 5px; flex-shrink: 0;
+            border: 1.5px solid rgba(255,255,255,.2);
+            background: rgba(255,255,255,.04);
+            display: flex; align-items: center; justify-content: center;
+            transition: background .12s, border-color .12s;
+        }
+        .lf-check-input:checked ~ .lf-check-box {
+            background: #22c55e; border-color: #22c55e;
+        }
+        .lf-check-mark { color: #0d1117; opacity: 0; transition: opacity .1s; }
+        .lf-check-input:checked ~ .lf-check-box .lf-check-mark { opacity: 1; }
+        .lf-check-label { font-size: 13px; color: rgba(255,255,255,.5); }
+
+        .lf-forgot {
+            font-size: 12.5px; color: #22c55e; text-decoration: none; font-weight: 500;
+            white-space: nowrap; transition: color .1s;
+        }
+        .lf-forgot:hover { color: #4ade80; }
+
+        .lf-btn {
+            width: 100%; padding: 13px; border-radius: 10px;
+            background: #22c55e; color: #0d1117;
+            font-size: 14px; font-weight: 700; font-family: inherit;
+            border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: background .12s, transform .1s, box-shadow .12s;
+            box-shadow: 0 1px 2px rgba(0,0,0,.3);
+        }
+        .lf-btn:hover:not(:disabled) {
+            background: #16a34a;
+            box-shadow: 0 4px 14px rgba(34,197,94,.25);
+            transform: translateY(-1px);
+        }
+        .lf-btn:active:not(:disabled) { transform: translateY(0); }
+        .lf-btn:disabled { opacity: .55; cursor: not-allowed; }
+        .lf-spin { animation: lf-spin .8s linear infinite; }
     </style>
 </head>
 <body>
