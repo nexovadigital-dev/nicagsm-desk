@@ -476,15 +476,8 @@ html body, html.dark body { background: #f9fafb !important; }
         busy = false;
     }
 
-    document.addEventListener('DOMContentLoaded', fmt);
-    document.addEventListener('livewire:navigated', fmt);
-
-    var titleEl = document.querySelector('title');
-    if (titleEl) {
-        new MutationObserver(function() { if (!busy) fmt(); })
-            .observe(titleEl, { childList: true, characterData: true, subtree: true });
-    }
-    fmt();
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(fmt, 50); });
+    document.addEventListener('livewire:navigated', function(){ setTimeout(fmt, 50); });
 })();
 </script>
 HTML;
