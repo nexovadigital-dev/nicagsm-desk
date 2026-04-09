@@ -62,21 +62,19 @@
     <div class="sm-section">
         <div class="sm-section-label">
             <h3>Email de envío</h3>
-            <p>Dirección desde la que tus clientes recibirán los emails de tickets.</p>
+            <p>Dirección desde la que tus clientes recibirán los emails de tickets y notificaciones.</p>
         </div>
         <div>
             @if($enabled && $fromAddress)
                 <div class="sm-notice sm-notice-success">
-                    <strong>SMTP personalizado activo</strong><br>
+                    <strong>SMTP configurado</strong><br>
                     Los emails se enviarán desde <code>{{ $fromAddress }}</code> usando tu servidor SMTP.
                 </div>
             @else
-                <div class="sm-notice sm-notice-info">
-                    <strong>Email genérico de plataforma</strong><br>
-                    Sin SMTP propio configurado, los emails se envían desde
-                    <code>{{ $genericEmail }}</code> usando el servidor de Nexova Desk.<br><br>
-                    Para usar tu propio dominio, configura tu servidor SMTP abajo y actívalo.
-                    Necesitarás <a href="{{ url('/app/domain-settings') }}" style="text-decoration:underline">verificar tu dominio</a> para máxima entregabilidad.
+                <div class="sm-notice" style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);color:#92400e">
+                    <strong>SMTP no configurado</strong><br>
+                    Sin SMTP activo, el envío de emails (restablecimiento de contraseña, notificaciones de tickets) no funcionará.<br><br>
+                    Configura tu servidor SMTP abajo y actívalo para habilitar el envío de correos.
                 </div>
             @endif
         </div>

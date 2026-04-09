@@ -171,48 +171,13 @@
             </div>
         </div>
         @else
-        {{-- Regular user login panel --}}
-        <div>
-            <div class="auth-brand">
-                <img src="{{ asset('images/nexovadesklogo.png') }}" alt="Nexova Desk" class="auth-brand-logo">
-                <div>
-                    <div class="auth-brand-name">Nexova Desk</div>
-                    <div class="auth-brand-sub">by Nexova Digital Solutions</div>
-                </div>
-            </div>
-
-            <div style="margin-top:48px">
-                <div class="auth-tagline">Chat en vivo con<br><span>IA integrada</span><br>para tu negocio</div>
-                <div style="margin-top:16px;font-size:13.5px;color:rgba(255,255,255,.45);line-height:1.7">
-                    Atiende a tus clientes 24/7, automatiza respuestas y gestiona conversaciones desde un solo panel.
-                </div>
-            </div>
-
-            <div class="auth-features" style="margin-top:36px">
-                <div class="auth-feat">
-                    <div class="auth-feat-dot">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="10" height="10" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                    </div>
-                    <div class="auth-feat-text"><strong>Bot con IA</strong> — responde automáticamente usando tu base de conocimiento</div>
-                </div>
-                <div class="auth-feat">
-                    <div class="auth-feat-dot">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="10" height="10" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                    </div>
-                    <div class="auth-feat-text"><strong>Múltiples widgets</strong> — un widget diferente para cada sitio o producto</div>
-                </div>
-                <div class="auth-feat">
-                    <div class="auth-feat-dot">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="10" height="10" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                    </div>
-                    <div class="auth-feat-text"><strong>Equipo de agentes</strong> — invita agentes y asigna permisos individuales</div>
-                </div>
-                <div class="auth-feat">
-                    <div class="auth-feat-dot">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="10" height="10" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                    </div>
-                    <div class="auth-feat-text"><strong>Telegram + Web</strong> — todas las conversaciones en un solo lugar</div>
-                </div>
+        {{-- Partner Edition — solo branding, sin marketing --}}
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center">
+            <img src="{{ asset('images/nexovadesklogo.png') }}" alt="Nexova Desk"
+                 style="width:80px;height:80px;border-radius:16px;object-fit:contain;margin-bottom:20px">
+            <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-.03em">Nexova Desk</div>
+            <div style="font-size:12px;color:#22c55e;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-top:4px">
+                by Nexova Digital Solutions
             </div>
         </div>
         @endif

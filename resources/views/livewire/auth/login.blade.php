@@ -33,7 +33,4 @@
         <span wire:loading wire:target="submit">Entrando...</span>
     </button>
 
-    <div class="auth-link-row">
-        ¿No tienes cuenta? <a href="{{ route('auth.register') }}" class="auth-link">Regístrate gratis</a>
-    </div>
 </div>
