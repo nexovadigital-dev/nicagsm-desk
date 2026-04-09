@@ -172,11 +172,10 @@
         </div>
         @else
         {{-- Partner Edition — solo branding, sin marketing --}}
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding-bottom:60px">
             <img src="{{ asset('images/nexovadesklogo.png') }}" alt="Nexova Desk"
-                 style="width:130px;height:130px;border-radius:24px;object-fit:contain;margin-bottom:24px">
-            <div style="font-size:26px;font-weight:800;color:#fff;letter-spacing:-.03em">Nexova Desk</div>
-            <div style="font-size:12px;color:#22c55e;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-top:6px">
+                 style="width:130px;height:130px;border-radius:24px;object-fit:contain;margin-bottom:18px">
+            <div style="font-size:10.5px;color:#22c55e;font-weight:700;letter-spacing:.1em;text-transform:uppercase">
                 by Nexova Digital Solutions
             </div>
         </div>
