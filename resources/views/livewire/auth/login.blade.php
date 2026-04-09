@@ -57,9 +57,10 @@
 
     {{-- Remember + Forgot --}}
     <div class="lf-row">
-        <label class="lf-check-wrap">
-            <input type="checkbox" wire:model="remember" class="lf-check-input" id="remember">
-            <span class="lf-check-box">
+        <label class="lf-check-wrap" x-data="{ checked: false }">
+            <input type="checkbox" wire:model="remember" class="lf-check-input"
+                   x-on:change="checked = $event.target.checked">
+            <span class="lf-check-box" :class="checked ? 'lf-check-on' : ''">
                 <svg class="lf-check-mark" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="10" height="10">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
                 </svg>
@@ -71,13 +72,11 @@
 
     {{-- Submit --}}
     <button class="lf-btn" wire:click="submit" wire:loading.attr="disabled">
+        <svg wire:loading wire:target="submit" class="lf-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15" style="display:none">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
         <span wire:loading.remove wire:target="submit">Iniciar sesión</span>
-        <span wire:loading wire:target="submit" style="display:flex;align-items:center;gap:8px">
-            <svg class="lf-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-            Verificando...
-        </span>
+        <span wire:loading wire:target="submit" style="display:none">Verificando...</span>
     </button>
 
 </div>

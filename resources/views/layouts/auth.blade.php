@@ -199,11 +199,9 @@
             display: flex; align-items: center; justify-content: center;
             transition: background .12s, border-color .12s;
         }
-        .lf-check-input:checked ~ .lf-check-box {
-            background: #22c55e; border-color: #22c55e;
-        }
+        .lf-check-box.lf-check-on { background: #22c55e; border-color: #22c55e; }
         .lf-check-mark { color: #0d1117; opacity: 0; transition: opacity .1s; }
-        .lf-check-input:checked ~ .lf-check-box .lf-check-mark { opacity: 1; }
+        .lf-check-box.lf-check-on .lf-check-mark { opacity: 1; }
         .lf-check-label { font-size: 13px; color: rgba(255,255,255,.5); }
 
         .lf-forgot {
