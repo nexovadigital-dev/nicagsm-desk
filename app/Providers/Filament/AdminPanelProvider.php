@@ -33,7 +33,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('app')
             ->login(\App\Filament\Pages\CustomLogin::class)
-            ->brandName('')
+            ->brandName('Nexova Desk Edge')
             ->brandLogo(null)
             ->brandLogoHeight('0')
             ->favicon(asset('images/nexovadesklogo.svg'))
@@ -394,6 +394,46 @@ HTML;
 </script>
 HTML
             )
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                function (): string {
+                    $org     = auth()->user()?->organization;
+                    $orgName = addslashes($org?->name ?? '');
+                    return <<<HTML
+<script>
+(function(){
+    var ORG = '{$orgName}';
+    var APP = 'Nexova Desk Edge';
+    var SEP = ' \u2014 ';
+    var busy = false;
+
+    function fmt() {
+        if (busy) return;
+        var t = document.title;
+        if (!t || t.indexOf(APP) === -1) return; // Filament aún no lo añadió
+        if (ORG && t.indexOf(ORG) !== -1) return; // Ya tiene el org name
+        busy = true;
+        // Filament pone: "Página - Nexova Desk Edge"
+        // Queremos:      "Página — Nexova Desk Edge — OrgName"
+        document.title = t
+            .replace(' - ' + APP, SEP + APP)  // normaliza separador
+            .replace(SEP + APP, SEP + APP + (ORG ? SEP + ORG : ''));
+        busy = false;
+    }
+
+    document.addEventListener('DOMContentLoaded', fmt);
+    document.addEventListener('livewire:navigated', fmt);
+
+    var titleEl = document.querySelector('title');
+    if (titleEl) {
+        new MutationObserver(function() { if (!busy) fmt(); })
+            .observe(titleEl, { childList: true, characterData: true, subtree: true });
+    }
+    fmt();
+})();
+</script>
+HTML;
+                })
             ->renderHook(
                 PanelsRenderHook::SIDEBAR_NAV_START,
                 fn (): string => <<<'HTML'
