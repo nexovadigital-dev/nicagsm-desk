@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Partner license check — runs on all web requests, skips API/widget
         $middleware->web(append: [
             \App\Http\Middleware\PartnerLicenseCheck::class,
+            \App\Http\Middleware\DebugPanelEntry::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
