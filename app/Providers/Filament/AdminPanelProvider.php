@@ -433,6 +433,11 @@ HTML
                     $orgName = addslashes($org?->name ?? '');
                     return <<<HTML
 <!-- ── Force light mode BEFORE content renders ── -->
+<style>
+/* Forzar fondo claro siempre — override modo oscuro de Filament */
+html, html.dark { background: #f9fafb !important; color-scheme: light !important; }
+html body, html.dark body { background: #f9fafb !important; }
+</style>
 <script>
 (function(){
     localStorage.removeItem('theme');
