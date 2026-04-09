@@ -1,9 +1,13 @@
 <div x-data="{ showPass: false }" class="lf-wrap"
      @loginSuccess.window="
          setTimeout(() => {
-             document.body.style.transition = 'opacity .4s ease';
-             document.body.style.opacity = '0';
-             setTimeout(() => window.location.href = $event.detail.url, 420);
+             const wrap = $el;
+             wrap.style.transition = 'opacity .32s ease, transform .32s ease';
+             wrap.style.opacity = '0';
+             wrap.style.transform = 'scale(0.97)';
+             wrap.addEventListener('transitionend', () => {
+                 window.location.href = $event.detail.url;
+             }, { once: true });
          }, 900)
      ">
 
