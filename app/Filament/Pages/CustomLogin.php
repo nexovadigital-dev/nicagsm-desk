@@ -71,25 +71,20 @@ class CustomLogin extends Component
 
         session()->regenerate();
 
-        Log::info('[CustomLogin] session regenerated, dispatching loginSuccess', [
+        $panelUrl = filament()->getUrl();
+
+        Log::info('[CustomLogin] session regenerated — JS redirect queued', [
             'session_id'  => substr(session()->getId(), 0, 8) . '...',
             'filament_ok' => filament()->auth()->check(),
+            'redirect_to' => $panelUrl,
             'total_ms'    => round((microtime(true)-$t0)*1000),
         ]);
 
         $this->showSuccess = true;
-        $this->dispatch('loginSuccess');
+        // Redirect directo desde PHP via Livewire js() — no depende de eventos JS del DOM
+        $this->js("setTimeout(function(){ window.location.href = " . json_encode($panelUrl) . "; }, 1400);");
 
         return null;
-    }
-
-    public function performRedirect(): LoginResponse
-    {
-        Log::info('[CustomLogin] performRedirect called', [
-            'filament_ok' => filament()->auth()->check(),
-            'user_id'     => filament()->auth()->id(),
-        ]);
-        return app(LoginResponse::class);
     }
 
     public function render()

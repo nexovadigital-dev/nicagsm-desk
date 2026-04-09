@@ -1,15 +1,4 @@
-<div x-data="{ showPass: false }" class="lf-wrap"
-     @loginSuccess.window="
-         setTimeout(() => {
-             const wrap = $el;
-             wrap.style.transition = 'opacity .35s ease, transform .35s ease, filter .35s ease';
-             wrap.style.opacity = '0';
-             wrap.style.transform = 'scale(0.97)';
-             wrap.style.filter = 'blur(6px)';
-             // Usar timeout fijo en vez de transitionend (más robusto en máquinas lentas)
-             setTimeout(() => { window.location.href = '/app'; }, 400);
-         }, 900)
-     ">
+<div x-data="{ showPass: false }" class="lf-wrap">
 
     @if($showSuccess)
     {{-- ── Estado éxito ── --}}
