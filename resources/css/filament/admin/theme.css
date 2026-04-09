@@ -570,6 +570,22 @@ textarea:focus {
     -webkit-backface-visibility: hidden;
 }
 
+/* Micro-interacción sidebar — item activo desliza 2px */
+.fi-sidebar-item-btn[aria-current="page"],
+.fi-active > .fi-sidebar-item-btn {
+    transition: background .15s, border-color .15s, transform .15s !important;
+    transform: translateX(2px) !important;
+}
+
+/* Hover en cards — profundidad SaaS */
+.fi-card {
+    transition: transform .18s ease, box-shadow .18s ease !important;
+}
+.fi-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,.08) !important;
+}
+
 [wire\:navigate] { cursor: pointer; }
 
 /* ─────────────────────────────────────────
