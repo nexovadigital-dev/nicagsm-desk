@@ -43,7 +43,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->font('Inter')
             ->defaultThemeMode(ThemeMode::Light)
-            // ->spa() // temporarily disabled for redirect debug
+            ->spa()
             ->sidebarCollapsibleOnDesktop()
             ->topNavigation(false)
             ->viteTheme('resources/css/filament/admin/theme.css')
@@ -64,7 +64,6 @@ class AdminPanelProvider extends PanelProvider
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
-                \App\Http\Middleware\DebugAuthMiddleware::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,

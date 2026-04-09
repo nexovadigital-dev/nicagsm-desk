@@ -11,9 +11,10 @@ use App\Http\Controllers\WpConnectController;
 
 // ── Auth público ──────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
-    // Partner Edition — registro público desactivado, solo login y recuperación
-    Route::get('/register', fn () => redirect('/login'))->name('auth.register');
-    Route::get('/login',              Login::class)->name('auth.login');
+    // Partner Edition — registro público desactivado, solo recuperación
+    // Login ahora vive en /app/login (CustomLogin Filament) para auth correcto
+    Route::get('/register', fn () => redirect('/app/login'))->name('auth.register');
+    Route::get('/login',    fn () => redirect('/app/login'))->name('auth.login');
     Route::get('/forgot-password',    ForgotPassword::class)->name('auth.forgot');
     Route::get('/invitation/{token}', AcceptInvitation::class)->name('auth.invitation');
 });
