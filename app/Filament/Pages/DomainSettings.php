@@ -20,6 +20,7 @@ class DomainSettings extends Page
     protected static ?string $navigationLabel = 'Dominio Propio';
     protected static string|\UnitEnum|null $navigationGroup = 'Integraciones';
     protected static ?int $navigationSort = 21;
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function getNavigationIcon(): string|\BackedEnum|Htmlable|null
     {

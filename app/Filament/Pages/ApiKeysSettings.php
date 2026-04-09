@@ -27,17 +27,21 @@ class ApiKeysSettings extends Page
 
     public function getTitle(): string|Htmlable { return ''; }
 
-    public array $webhooks    = [];
-
-    // Org-own API keys
+    // Org-own API keys (input fields — always empty on load for security)
     public string $orgGroqKey    = '';
     public string $orgGroqKey2   = '';
     public string $orgGroqKey3   = '';
     public string $orgGeminiKey  = '';
 
+    // Whether each key is currently stored (for UI indicators)
+    public bool $groqKey1Set  = false;
+    public bool $groqKey2Set  = false;
+    public bool $groqKey3Set  = false;
+    public bool $geminiKeySet = false;
+
     // Usage limits
-    public int  $maxMsgPerSession  = 30;
-    public int  $maxSessionsPerDay = 100;
+    public int $maxMsgPerSession  = 30;
+    public int $maxSessionsPerDay = 100;
 
     public function mount(): void
     {
@@ -46,7 +50,11 @@ class ApiKeysSettings extends Page
             if ($org) {
                 $this->maxMsgPerSession  = $org->max_messages_per_session ?: 30;
                 $this->maxSessionsPerDay = $org->max_bot_sessions_per_day ?: 100;
-                // No pre-llenamos las keys por seguridad (son campos de contraseña)
+                // Show whether each key is stored (without revealing the value)
+                $this->groqKey1Set  = ! empty($org->getRawOriginal('ai_groq_key'));
+                $this->groqKey2Set  = ! empty($org->getRawOriginal('ai_groq_key_2'));
+                $this->groqKey3Set  = ! empty($org->getRawOriginal('ai_groq_key_3'));
+                $this->geminiKeySet = ! empty($org->getRawOriginal('ai_gemini_key'));
             }
         }
     }
@@ -55,18 +63,27 @@ class ApiKeysSettings extends Page
     {
         if (! $this->isOrgAdmin() || ! $orgId = $this->orgId()) return;
 
-        $data = ['ai_use_own_keys' => true]; // Partner siempre usa sus propias keys
+        $data = ['ai_use_own_keys' => true];
 
-        if (trim($this->orgGroqKey))  $data['ai_groq_key']   = encrypt(trim($this->orgGroqKey));
-        if (trim($this->orgGroqKey2)) $data['ai_groq_key_2'] = encrypt(trim($this->orgGroqKey2));
-        if (trim($this->orgGroqKey3)) $data['ai_groq_key_3'] = encrypt(trim($this->orgGroqKey3));
+        if (trim($this->orgGroqKey))   $data['ai_groq_key']   = encrypt(trim($this->orgGroqKey));
+        if (trim($this->orgGroqKey2))  $data['ai_groq_key_2'] = encrypt(trim($this->orgGroqKey2));
+        if (trim($this->orgGroqKey3))  $data['ai_groq_key_3'] = encrypt(trim($this->orgGroqKey3));
         if (trim($this->orgGeminiKey)) $data['ai_gemini_key'] = encrypt(trim($this->orgGeminiKey));
 
         Organization::where('id', $orgId)->update($data);
+
+        // Refresh indicators
+        $org = Organization::find($orgId);
+        $this->groqKey1Set  = ! empty($org?->getRawOriginal('ai_groq_key'));
+        $this->groqKey2Set  = ! empty($org?->getRawOriginal('ai_groq_key_2'));
+        $this->groqKey3Set  = ! empty($org?->getRawOriginal('ai_groq_key_3'));
+        $this->geminiKeySet = ! empty($org?->getRawOriginal('ai_gemini_key'));
+
         $this->orgGroqKey   = '';
         $this->orgGroqKey2  = '';
         $this->orgGroqKey3  = '';
         $this->orgGeminiKey = '';
+
         $this->dispatch('nexova-toast', type: 'success', message: 'Claves API guardadas correctamente');
     }
 
@@ -81,5 +98,4 @@ class ApiKeysSettings extends Page
 
         $this->dispatch('nexova-toast', type: 'success', message: 'Límites actualizados');
     }
-
 }
