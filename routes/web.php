@@ -10,11 +10,11 @@ use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\WpConnectController;
 
 // ── Auth público ──────────────────────────────────────────────────────────────
+// /register y /login redirigen a Filament — sin middleware guest para evitar loop
+Route::get('/register', fn () => redirect('/app/login'))->name('auth.register');
+Route::get('/login',    fn () => redirect('/app/login'))->name('auth.login');
+
 Route::middleware('guest')->group(function () {
-    // Partner Edition — registro público desactivado, solo recuperación
-    // Login ahora vive en /app/login (CustomLogin Filament) para auth correcto
-    Route::get('/register', fn () => redirect('/app/login'))->name('auth.register');
-    Route::get('/login',    fn () => redirect('/app/login'))->name('auth.login');
     Route::get('/forgot-password',    ForgotPassword::class)->name('auth.forgot');
     Route::get('/invitation/{token}', AcceptInvitation::class)->name('auth.invitation');
 });
@@ -27,8 +27,8 @@ Route::post('/logout', function () {
 })->name('auth.logout');
 
 // ── Landing / demo ────────────────────────────────────────────────────────────
-// Partner Edition — no landing page, redirect directly to login
-Route::get('/', fn () => redirect('/login'));
+// Partner Edition — redirect to Filament login directly (avoids guest-middleware loop)
+Route::get('/', fn () => redirect('/app/login'));
 
 // ── Blog / Novedades ──────────────────────────────────────────────────────────
 Route::get('/novedades', function () {
