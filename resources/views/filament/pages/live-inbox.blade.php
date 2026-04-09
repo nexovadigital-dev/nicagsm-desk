@@ -82,7 +82,7 @@ x-init="
 
 </div>
 
-<div wire:poll.8000ms class="nx-inbox">
+<div x-data="" @nexova-new-message.window="$wire.$refresh()" class="nx-inbox">
 
     {{-- ═══════════════════════════
          SIDEBAR — Lista de tickets
