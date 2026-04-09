@@ -365,6 +365,17 @@ x-init="
                         @continue
                     @endif
 
+                    @if ($msg->sender_type === 'note')
+                        <div class="nx-msg--note" wire:key="msg-{{ $msg->id }}">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13" style="flex-shrink:0;color:#d97706">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                            <span>{{ $msg->content }}</span>
+                            <time style="font-size:10px;color:#92400e;opacity:.6;margin-left:auto;white-space:nowrap">{{ $msg->created_at->format('H:i') }}</time>
+                        </div>
+                        @continue
+                    @endif
+
                     <div class="nx-msg {{ $isUser ? 'nx-msg--user' : 'nx-msg--' . $msg->sender_type }}" wire:key="msg-{{ $msg->id }}">
 
                         @if ($isUser)
@@ -436,6 +447,7 @@ x-init="
                 <footer class="nx-composer"
                     x-data="{
                         open: false,
+                        noteMode: false,
                         enterSend: JSON.parse(localStorage.getItem('nx_enter_send') || 'false'),
                         canned: @js(\App\Models\CannedResponse::orderBy('shortcut')->get(['shortcut','content'])->toArray()),
                         filtered: [],
@@ -529,12 +541,12 @@ x-init="
                         <textarea
                             x-ref="ta"
                             wire:model="replyContent"
-                            wire:keydown.ctrl.enter="sendReply"
+                            :wire:keydown.ctrl.enter="noteMode ? 'sendNote' : 'sendReply'"
                             wire:loading.attr="disabled"
-                            wire:target="sendReply"
+                            :wire:target="noteMode ? 'sendNote' : 'sendReply'"
                             rows="1"
-                            placeholder="Escribe una respuesta… (/ para respuestas rápidas)"
-                            class="nx-composer__input"
+                            :placeholder="noteMode ? '🔒 Nota interna (solo agentes)…' : 'Escribe una respuesta… (/ para respuestas rápidas)'"
+                            :class="noteMode ? 'nx-composer__input nx-composer__input--note' : 'nx-composer__input'"
                             @input="onInput($event.target.value); $event.target.style.height='auto'; $event.target.style.height=Math.min($event.target.scrollHeight,120)+'px'"
                             @keydown="onKeydown($event)"
                             @paste="
@@ -555,21 +567,35 @@ x-init="
                                 }
                             "
                         ></textarea>
-                        <button wire:click="sendReply"
-                                wire:loading.attr="disabled"
-                                wire:target="sendReply"
-                                class="nx-btn nx-btn--primary" title="Enviar (Ctrl+Enter)">
-                            <span wire:loading.remove wire:target="sendReply">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="15" height="15">
-                                    <path d="M3.105 2.289a.75.75 0 00-.826.95l1.903 6.557H13.5a.75.75 0 010 1.5H4.182l-1.903 6.557a.75.75 0 00.826.95 28.896 28.896 0 0015.293-7.154.75.75 0 000-1.115A28.897 28.897 0 003.105 2.289z"/>
-                                </svg>
+                        <button
+                            x-on:click="noteMode ? $wire.sendNote() : $wire.sendReply()"
+                            wire:loading.attr="disabled"
+                            :class="noteMode ? 'nx-btn nx-btn--note' : 'nx-btn nx-btn--primary'"
+                            :title="noteMode ? 'Guardar nota (Ctrl+Enter)' : 'Enviar (Ctrl+Enter)'">
+                            <span wire:loading.remove wire:target="sendReply,sendNote">
+                                <template x-if="!noteMode">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="15" height="15">
+                                        <path d="M3.105 2.289a.75.75 0 00-.826.95l1.903 6.557H13.5a.75.75 0 010 1.5H4.182l-1.903 6.557a.75.75 0 00.826.95 28.896 28.896 0 0015.293-7.154.75.75 0 000-1.115A28.897 28.897 0 003.105 2.289z"/>
+                                    </svg>
+                                </template>
+                                <template x-if="noteMode">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                    </svg>
+                                </template>
                             </span>
-                            <span wire:loading wire:target="sendReply">
+                            <span wire:loading wire:target="sendReply,sendNote">
                                 <div class="nx-send-spinner"></div>
                             </span>
                         </button>
                     </div>
                     <div class="nx-composer__footer">
+                        <button type="button" class="nx-note-toggle" :class="noteMode ? 'nx-note-toggle--on' : ''" @click="noteMode = !noteMode" title="Modo nota interna">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                            <span x-text="noteMode ? 'Nota interna activa' : 'Nota interna'"></span>
+                        </button>
                         <span class="nx-composer__hint" x-text="enterSend ? 'Enter para enviar · Shift+Enter nueva línea' : 'Ctrl+Enter para enviar'"></span>
                         <label class="nx-enter-toggle">
                             <span class="nx-enter-toggle__label">Enter envía</span>
@@ -772,9 +798,24 @@ x-init="
             </div>
             @endif
             @if($ticket->visitor_ip)
+            @php $isBanned = $this->isVisitorBanned(); @endphp
             <div class="nx-detail__row">
                 <span class="nx-detail__key">IP</span>
                 <span class="nx-detail__val nx-detail__val--mono">{{ $ticket->visitor_ip }}</span>
+            </div>
+            <div class="nx-detail__row" style="align-items:center">
+                <span class="nx-detail__key">Acceso</span>
+                @if($isBanned)
+                    <button wire:click="unbanVisitor" class="nx-ban-btn nx-ban-btn--unban" title="Quitar baneo">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        IP baneada · Desbanear
+                    </button>
+                @else
+                    <button wire:click="banVisitor" class="nx-ban-btn nx-ban-btn--ban" title="Banear IP">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                        Banear IP
+                    </button>
+                @endif
             </div>
             @endif
             @if($ticket->visitor_device)
@@ -1406,6 +1447,78 @@ x-init="
     content: ''; flex: 1; height: 1px; background: var(--nx-border);
 }
 .nx-msg--system span { white-space: nowrap; flex-shrink: 0; }
+
+/* ─── NOTA INTERNA ─── */
+.nx-msg--note {
+    display: flex; align-items: flex-start; gap: 7px;
+    background: rgba(251,191,36,.12);
+    border: 1px solid rgba(217,119,6,.2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12.5px;
+    color: #92400e;
+    line-height: 1.5;
+    margin: 2px 0;
+}
+.nx-msg--note span { flex: 1; white-space: pre-wrap; word-break: break-word; }
+
+/* Toggle modo nota */
+.nx-note-toggle {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: none; border: 1px solid var(--nx-border);
+    border-radius: 6px; padding: 3px 9px;
+    font-size: 10.5px; color: var(--nx-muted);
+    cursor: pointer; transition: all .12s;
+}
+.nx-note-toggle:hover { border-color: #d97706; color: #d97706; }
+.nx-note-toggle--on {
+    background: rgba(251,191,36,.12);
+    border-color: rgba(217,119,6,.3);
+    color: #d97706;
+}
+
+/* Input en modo nota */
+.nx-composer__input--note {
+    border-color: rgba(217,119,6,.3) !important;
+    background: rgba(251,191,36,.05) !important;
+}
+.nx-composer__input--note:focus {
+    border-color: #d97706 !important;
+    box-shadow: 0 0 0 3px rgba(217,119,6,.08) !important;
+}
+
+/* Botón enviar en modo nota */
+.nx-btn--note {
+    flex-shrink: 0;
+    background: #d97706;
+    color: #fff;
+    border: none; border-radius: 8px;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background .12s;
+}
+.nx-btn--note:hover { background: #b45309; }
+
+/* Ban/Unban buttons */
+.nx-ban-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    border-radius: 6px; padding: 3px 9px;
+    font-size: 10.5px; font-weight: 500;
+    cursor: pointer; border: 1px solid;
+    transition: all .12s;
+}
+.nx-ban-btn--ban {
+    background: rgba(239,68,68,.06);
+    border-color: rgba(239,68,68,.2);
+    color: #dc2626;
+}
+.nx-ban-btn--ban:hover { background: rgba(239,68,68,.12); }
+.nx-ban-btn--unban {
+    background: rgba(34,197,94,.06);
+    border-color: rgba(34,197,94,.2);
+    color: #16a34a;
+}
+.nx-ban-btn--unban:hover { background: rgba(34,197,94,.12); }
 
 /* ─── PANEL DE METADATOS ─── */
 .nx-meta-panel {

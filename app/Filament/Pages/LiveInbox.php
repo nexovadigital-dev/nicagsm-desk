@@ -7,6 +7,7 @@ namespace App\Filament\Pages;
 use App\Filament\Concerns\ScopedToOrganization;
 use App\Mail\SupportTicketMail;
 use App\Mail\TicketClosedMail;
+use App\Models\BannedIp;
 use App\Models\Contact;
 use App\Models\Department;
 use App\Models\Message;
@@ -336,6 +337,65 @@ class LiveInbox extends Page
     public function removeReplyAttachment(): void
     {
         $this->replyAttachment = null;
+    }
+
+    /** Nota interna — solo visible para agentes, nunca llega al visitante */
+    public function sendNote(): void
+    {
+        $content = trim($this->replyContent);
+        if (! $content || ! $this->selectedTicketId) return;
+
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
+        if (! $ticket || $ticket->status === 'closed') return;
+
+        Message::create([
+            'ticket_id'   => $ticket->id,
+            'sender_type' => 'note',
+            'content'     => $content,
+        ]);
+
+        $this->replyContent = '';
+    }
+
+    /** Banea la IP del visitante de este ticket */
+    public function banVisitor(): void
+    {
+        if (! $this->selectedTicketId) return;
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
+        if (! $ticket || ! $ticket->visitor_ip) return;
+
+        $orgId = $this->orgId();
+        BannedIp::firstOrCreate(
+            ['organization_id' => $orgId, 'ip' => $ticket->visitor_ip],
+            ['reason' => 'Baneado desde Live Inbox']
+        );
+
+        $this->dispatch('nexova-toast', type: 'success', message: 'IP baneada: ' . $ticket->visitor_ip);
+    }
+
+    /** Desbanea la IP del visitante de este ticket */
+    public function unbanVisitor(): void
+    {
+        if (! $this->selectedTicketId) return;
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
+        if (! $ticket || ! $ticket->visitor_ip) return;
+
+        $orgId = $this->orgId();
+        BannedIp::where('organization_id', $orgId)->where('ip', $ticket->visitor_ip)->delete();
+
+        $this->dispatch('nexova-toast', type: 'success', message: 'IP desbaneada: ' . $ticket->visitor_ip);
+    }
+
+    /** ¿Está baneada la IP del ticket seleccionado? */
+    public function isVisitorBanned(): bool
+    {
+        if (! $this->selectedTicketId) return false;
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
+        if (! $ticket || ! $ticket->visitor_ip) return false;
+
+        return BannedIp::where('organization_id', $this->orgId())
+            ->where('ip', $ticket->visitor_ip)
+            ->exists();
     }
 
     /**

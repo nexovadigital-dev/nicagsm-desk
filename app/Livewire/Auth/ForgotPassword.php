@@ -3,6 +3,8 @@
 namespace App\Livewire\Auth;
 
 use App\Models\User;
+use App\Models\SmtpSetting;
+use App\Services\OrgMailer;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
@@ -48,12 +50,19 @@ class ForgotPassword extends Component
             return;
         }
 
-        // ── Verificar SMTP configurado ──
-        $smtpHost = config('mail.mailers.smtp.host', '');
-        $smtpUser = config('mail.mailers.smtp.username', '');
-        if (empty($smtpHost) || in_array($smtpHost, ['', 'mailpit', 'localhost', 'smtp.example.com']) || empty($smtpUser)) {
-            $this->error = 'El servidor de correo no está configurado. Contacta al administrador para habilitar el reset de contraseña.';
-            return;
+        // ── Verificar SMTP configurado (panel admin o .env) ──
+        $org  = $user->organization;
+        $smtp = $org ? SmtpSetting::forOrg($org->id) : null;
+        $hasOrgSmtp = $smtp && $smtp->enabled && !empty($smtp->host) && !empty($smtp->username);
+
+        if (! $hasOrgSmtp) {
+            // Fallback: .env SMTP
+            $smtpHost = config('mail.mailers.smtp.host', '');
+            $smtpUser = config('mail.mailers.smtp.username', '');
+            if (empty($smtpHost) || in_array($smtpHost, ['', 'mailpit', 'localhost', 'smtp.example.com']) || empty($smtpUser)) {
+                $this->error = 'El servidor de correo no está configurado. El administrador debe configurar el SMTP en Integraciones → Email & SMTP.';
+                return;
+            }
         }
 
         // ── Rate limit por email: max 2 códigos cada 30 minutos ──
@@ -70,13 +79,27 @@ class ForgotPassword extends Component
         $orgName = $user->organization?->name ?? config('app.name', 'Nexova Desk Edge');
 
         try {
-            Mail::send([], [], function ($m) use ($user, $code, $orgName) {
+            $html = $this->buildEmailHtml($code, $orgName, $user->name);
+            $send = function ($m) use ($user, $orgName, $html) {
                 $m->to($user->email)
                   ->subject("Recuperar contraseña — {$orgName}")
-                  ->html($this->buildEmailHtml($code, $orgName, $user->name));
-            });
+                  ->html($html);
+            };
+
+            if ($org && $hasOrgSmtp) {
+                $mailerName = OrgMailer::mailerNameFor($org);
+                [$fromAddr, $fromName] = OrgMailer::fromFor($org);
+                Mail::mailer($mailerName)->send([], [], function ($m) use ($user, $orgName, $html, $fromAddr, $fromName) {
+                    $m->to($user->email)
+                      ->from($fromAddr, $fromName)
+                      ->subject("Recuperar contraseña — {$orgName}")
+                      ->html($html);
+                });
+            } else {
+                Mail::send([], [], $send);
+            }
         } catch (\Throwable $e) {
-            $this->error = 'No se pudo enviar el email. Verifica que el servidor SMTP esté correctamente configurado.';
+            $this->error = 'No se pudo enviar el email. Verifica la configuración SMTP en Integraciones → Email & SMTP.';
             Cache::forget('pwd_reset_' . md5($this->email));
             return;
         }
