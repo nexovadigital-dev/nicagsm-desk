@@ -13,7 +13,7 @@ class Organization extends Model
     protected $fillable = [
         'name', 'slug', 'website', 'support_email', 'support_name',
         'domain', 'domain_verified', 'domain_verify_token',
-        'ai_groq_key', 'ai_gemini_key', 'ai_use_own_keys', 'telegram_bot_token',
+        'ai_groq_key', 'ai_groq_key_2', 'ai_groq_key_3', 'ai_gemini_key', 'ai_use_own_keys', 'telegram_bot_token',
         'max_messages_per_session', 'max_bot_sessions_per_day',
         'bot_sessions_today', 'bot_messages_this_month', 'bot_messages_month_reset', 'usage_date',
         'plan', 'trial_ends_at', 'is_active', 'is_partner', 'partner_token', 'accent_color', 'logo_path',
@@ -33,7 +33,7 @@ class Organization extends Model
         'bot_messages_month_reset'  => 'date',
     ];
 
-    protected $hidden = ['ai_groq_key', 'ai_gemini_key', 'telegram_bot_token'];
+    protected $hidden = ['ai_groq_key', 'ai_groq_key_2', 'ai_groq_key_3', 'ai_gemini_key', 'telegram_bot_token'];
 
     protected static function booted(): void
     {
@@ -127,20 +127,30 @@ class Organization extends Model
     }
 
     /**
-     * Get the effective Groq API key: org's own key (if enabled) or null (fallback to platform).
+     * Devuelve todas las Groq API keys configuradas (hasta 3) como array.
+     * Partner Edition: ai_use_own_keys siempre true.
      */
+    public function effectiveGroqKeys(): array
+    {
+        $keys = [];
+        foreach (['ai_groq_key', 'ai_groq_key_2', 'ai_groq_key_3'] as $col) {
+            if ($this->{$col}) {
+                try { $keys[] = decrypt($this->{$col}); } catch (\Throwable) {}
+            }
+        }
+        return $keys;
+    }
+
+    /** @deprecated Use effectiveGroqKeys() */
     public function effectiveGroqKey(): ?string
     {
-        if ($this->ai_use_own_keys && $this->ai_groq_key) {
-            return decrypt($this->ai_groq_key);
-        }
-        return null;
+        return $this->effectiveGroqKeys()[0] ?? null;
     }
 
     public function effectiveGeminiKey(): ?string
     {
-        if ($this->ai_use_own_keys && $this->ai_gemini_key) {
-            return decrypt($this->ai_gemini_key);
+        if ($this->ai_gemini_key) {
+            try { return decrypt($this->ai_gemini_key); } catch (\Throwable) {}
         }
         return null;
     }

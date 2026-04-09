@@ -31,8 +31,9 @@ class ApiKeysSettings extends Page
 
     // Org-own API keys
     public string $orgGroqKey    = '';
+    public string $orgGroqKey2   = '';
+    public string $orgGroqKey3   = '';
     public string $orgGeminiKey  = '';
-    public bool   $orgUseOwnKeys = false;
 
     // Usage limits
     public int  $maxMsgPerSession  = 30;
@@ -40,14 +41,12 @@ class ApiKeysSettings extends Page
 
     public function mount(): void
     {
-        // Load org settings (owner/admin only)
         if ($this->isOrgAdmin() && $orgId = $this->orgId()) {
             $org = Organization::find($orgId);
             if ($org) {
-                $this->orgUseOwnKeys    = (bool) $org->ai_use_own_keys;
-                $this->maxMsgPerSession = $org->max_messages_per_session ?: 30;
-                $this->maxSessionsPerDay= $org->max_bot_sessions_per_day ?: 100;
-                // Don't pre-fill encrypted keys — security
+                $this->maxMsgPerSession  = $org->max_messages_per_session ?: 30;
+                $this->maxSessionsPerDay = $org->max_bot_sessions_per_day ?: 100;
+                // No pre-llenamos las keys por seguridad (son campos de contraseña)
             }
         }
     }
@@ -56,19 +55,19 @@ class ApiKeysSettings extends Page
     {
         if (! $this->isOrgAdmin() || ! $orgId = $this->orgId()) return;
 
-        $data = ['ai_use_own_keys' => $this->orgUseOwnKeys];
+        $data = ['ai_use_own_keys' => true]; // Partner siempre usa sus propias keys
 
-        if (trim($this->orgGroqKey)) {
-            $data['ai_groq_key'] = encrypt(trim($this->orgGroqKey));
-        }
-        if (trim($this->orgGeminiKey)) {
-            $data['ai_gemini_key'] = encrypt(trim($this->orgGeminiKey));
-        }
+        if (trim($this->orgGroqKey))  $data['ai_groq_key']   = encrypt(trim($this->orgGroqKey));
+        if (trim($this->orgGroqKey2)) $data['ai_groq_key_2'] = encrypt(trim($this->orgGroqKey2));
+        if (trim($this->orgGroqKey3)) $data['ai_groq_key_3'] = encrypt(trim($this->orgGroqKey3));
+        if (trim($this->orgGeminiKey)) $data['ai_gemini_key'] = encrypt(trim($this->orgGeminiKey));
 
         Organization::where('id', $orgId)->update($data);
         $this->orgGroqKey   = '';
+        $this->orgGroqKey2  = '';
+        $this->orgGroqKey3  = '';
         $this->orgGeminiKey = '';
-        $this->dispatch('nexova-toast', type: 'success', message: 'Configuración de IA guardada');
+        $this->dispatch('nexova-toast', type: 'success', message: 'Claves API guardadas correctamente');
     }
 
     public function saveLimits(): void

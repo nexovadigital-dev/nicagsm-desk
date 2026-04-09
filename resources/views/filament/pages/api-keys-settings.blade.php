@@ -101,38 +101,72 @@
     </p>
 </div>
 
-{{-- ── API propias de la organización (solo owner/admin) ── --}}
+{{-- ── Claves API de IA (solo owner/admin) ── --}}
 @if($this->isOrgAdmin())
 <div style="margin-top:40px;border-top:1px solid var(--c-border,#e3e6ea);padding-top:28px">
 
-    {{-- Keys propias --}}
     <div style="margin-bottom:20px">
-        <h2 style="font-size:16px;font-weight:700;color:var(--c-text,#111827);margin:0 0 4px">Llaves API de tu organización</h2>
-        <p style="font-size:12.5px;color:var(--c-sub,#6b7280);margin:0 0 20px;line-height:1.6">Opcional. Si las configuras y activas, el bot usará tus propias llaves en lugar de las de la plataforma.</p>
-        <div style="max-width:600px">
-        <div style="padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+        <h2 style="font-size:16px;font-weight:700;color:var(--c-text,#111827);margin:0 0 4px">Claves API de Inteligencia Artificial</h2>
+        <p style="font-size:12.5px;color:var(--c-sub,#6b7280);margin:0 0 8px;line-height:1.6">
+            Configura tus propias claves API para el bot de IA. Puedes agregar hasta 3 claves de Groq — el sistema las rotará automáticamente si una falla.
+        </p>
+        <div style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:99px;background:#f0fdf4;border:1px solid #bbf7d0;font-size:11.5px;font-weight:600;color:#15803d;margin-bottom:20px">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            Plan Partner — Claves propias activas
+        </div>
 
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--c-text,#111827)">
-                <input type="checkbox" wire:model.live="orgUseOwnKeys" style="width:15px;height:15px;accent-color:#22c55e">
-                Usar mis propias llaves API (si están configuradas)
-            </label>
+        <div style="max-width:640px;display:flex;flex-direction:column;gap:14px">
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                <div>
-                    <label style="font-size:11px;font-weight:700;color:var(--c-sub,#6b7280);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Groq API Key</label>
-                    <input type="password" wire:model="orgGroqKey" class="ak-input" placeholder="gsk_... (dejar vacío para no cambiar)" style="width:100%;box-sizing:border-box">
+            {{-- Groq Keys 1-3 --}}
+            <div style="background:var(--c-bg,#f9fafb);border:1px solid var(--c-border,#e3e6ea);border-radius:10px;padding:18px 20px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+                    <div style="width:28px;height:28px;border-radius:7px;background:#F55036;display:flex;align-items:center;justify-content:center">
+                        <span style="font-size:10px;font-weight:800;color:#fff">G</span>
+                    </div>
+                    <div>
+                        <div style="font-size:13px;font-weight:700;color:var(--c-text,#111827)">Groq</div>
+                        <div style="font-size:11px;color:var(--c-sub,#6b7280)">llama-3.3-70b-versatile — hasta 3 claves en rotación</div>
+                    </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    <div>
+                        <label style="font-size:10px;font-weight:700;color:var(--c-sub,#6b7280);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Clave 1 (principal)</label>
+                        <input type="password" wire:model="orgGroqKey" class="ak-input" placeholder="gsk_... (dejar vacío para no cambiar)" style="width:100%;box-sizing:border-box">
+                    </div>
+                    <div>
+                        <label style="font-size:10px;font-weight:700;color:var(--c-sub,#6b7280);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Clave 2 (fallback)</label>
+                        <input type="password" wire:model="orgGroqKey2" class="ak-input" placeholder="gsk_... (opcional)" style="width:100%;box-sizing:border-box">
+                    </div>
+                    <div>
+                        <label style="font-size:10px;font-weight:700;color:var(--c-sub,#6b7280);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Clave 3 (fallback)</label>
+                        <input type="password" wire:model="orgGroqKey3" class="ak-input" placeholder="gsk_... (opcional)" style="width:100%;box-sizing:border-box">
+                    </div>
+                </div>
+            </div>
+
+            {{-- Gemini Key --}}
+            <div style="background:var(--c-bg,#f9fafb);border:1px solid var(--c-border,#e3e6ea);border-radius:10px;padding:18px 20px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+                    <div style="width:28px;height:28px;border-radius:7px;background:#4285F4;display:flex;align-items:center;justify-content:center">
+                        <span style="font-size:10px;font-weight:800;color:#fff">G</span>
+                    </div>
+                    <div>
+                        <div style="font-size:13px;font-weight:700;color:var(--c-text,#111827)">Google Gemini</div>
+                        <div style="font-size:11px;color:var(--c-sub,#6b7280)">gemini-1.5-flash — fallback si Groq no está disponible</div>
+                    </div>
                 </div>
                 <div>
-                    <label style="font-size:11px;font-weight:700;color:var(--c-sub,#6b7280);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px">Gemini API Key</label>
+                    <label style="font-size:10px;font-weight:700;color:var(--c-sub,#6b7280);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Google AI API Key</label>
                     <input type="password" wire:model="orgGeminiKey" class="ak-input" placeholder="AIza... (dejar vacío para no cambiar)" style="width:100%;box-sizing:border-box">
                 </div>
             </div>
 
             <div>
                 <button class="ak-btn ak-btn-primary" wire:click="saveOrgKeys" wire:loading.attr="disabled">
-                    <span wire:loading.remove wire:target="saveOrgKeys">Guardar configuración</span>
+                    <span wire:loading.remove wire:target="saveOrgKeys">Guardar claves API</span>
                     <span wire:loading wire:target="saveOrgKeys">Guardando...</span>
                 </button>
+                <p style="font-size:11px;color:var(--c-sub,#6b7280);margin-top:6px">Las claves se almacenan cifradas. Deja los campos vacíos para mantener las claves actuales.</p>
             </div>
         </div>
     </div>

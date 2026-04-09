@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\ApiSetting;
 use App\Models\KnowledgeBase;
 use App\Models\Message;
 use App\Models\Ticket;
@@ -163,27 +162,15 @@ class NexovaAiService
     {
         $list = collect();
 
-        // Org-own keys (highest priority)
-        if ($org?->ai_use_own_keys) {
-            if ($key = $org->effectiveGroqKey()) {
-                $list->push(['type' => 'groq',   'key' => $key]);
+        // Partner Edition: usa SIEMPRE las keys propias de la org (hasta 3 Groq + Gemini)
+        // No hay fallback a platform keys — el partner configura sus propias keys.
+        if ($org) {
+            foreach ($org->effectiveGroqKeys() as $key) {
+                $list->push(['type' => 'groq', 'key' => $key]);
             }
             if ($key = $org->effectiveGeminiKey()) {
                 $list->push(['type' => 'gemini', 'key' => $key]);
             }
-        }
-
-        // Platform keys (fallback)
-        $platform = ApiSetting::query()
-            ->where('is_active', true)
-            ->whereIn('provider', self::PROVIDERS)
-            ->orderBy('priority')
-            ->get();
-
-        foreach ($platform as $p) {
-            // Avoid duplicating if org already added the same provider
-            if ($org?->ai_use_own_keys && $list->contains('type', $p->provider)) continue;
-            $list->push(['type' => $p->provider, 'key' => $p->api_key]);
         }
 
         return $list;
