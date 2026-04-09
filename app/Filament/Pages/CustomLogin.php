@@ -6,7 +6,7 @@ namespace App\Filament\Pages;
 
 use App\Models\User;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
 /**
@@ -44,24 +44,38 @@ class CustomLogin extends Component
     public function doLogin(): mixed
     {
         $this->error = '';
+        $t0 = microtime(true);
+
+        Log::info('[CustomLogin] doLogin START', ['email' => $this->email]);
 
         // Partner Edition: solo usuarios con organización asignada
         $user = User::where('email', trim($this->email))->first();
         if (! $user || ! $user->organization_id) {
             $this->error = 'Acceso denegado. Este panel es exclusivo para usuarios autorizados.';
+            Log::warning('[CustomLogin] doLogin BLOCKED — no org', ['email' => $this->email]);
             return null;
         }
 
         // Autenticar usando el guard de Filament (web guard)
-        if (! filament()->auth()->attempt(
+        $t1 = microtime(true);
+        $attempted = filament()->auth()->attempt(
             ['email' => $this->email, 'password' => $this->password],
             $this->remember,
-        )) {
+        );
+        Log::info('[CustomLogin] attempt done', ['ok' => $attempted, 'ms' => round((microtime(true)-$t1)*1000)]);
+
+        if (! $attempted) {
             $this->error = 'Email o contraseña incorrectos.';
             return null;
         }
 
         session()->regenerate();
+
+        Log::info('[CustomLogin] session regenerated, dispatching loginSuccess', [
+            'session_id'  => substr(session()->getId(), 0, 8) . '...',
+            'filament_ok' => filament()->auth()->check(),
+            'total_ms'    => round((microtime(true)-$t0)*1000),
+        ]);
 
         $this->showSuccess = true;
         $this->dispatch('loginSuccess');
@@ -71,6 +85,10 @@ class CustomLogin extends Component
 
     public function performRedirect(): LoginResponse
     {
+        Log::info('[CustomLogin] performRedirect called', [
+            'filament_ok' => filament()->auth()->check(),
+            'user_id'     => filament()->auth()->id(),
+        ]);
         return app(LoginResponse::class);
     }
 

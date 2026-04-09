@@ -43,7 +43,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->font('Inter')
             ->defaultThemeMode(ThemeMode::Light)
-            // ->spa() — desactivado: causa pantalla negra durante carga lenta en shared hosting
+            ->spa()
             ->sidebarCollapsibleOnDesktop()
             ->topNavigation(false)
             ->viteTheme('resources/css/filament/admin/theme.css')
@@ -70,6 +70,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                \App\Http\Middleware\DebugPanelEntry::class,
             ])
             ->authMiddleware([
                 Authenticate::class,
