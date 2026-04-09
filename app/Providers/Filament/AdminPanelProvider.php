@@ -249,7 +249,10 @@ HTML;
     document.addEventListener('livewire:navigated', () => {
         hide();
         const main = getMain();
-        if (main) {
+        if (!main) { isNavigating = false; return; }
+
+        if (isNavigating) {
+            // Llegamos vía navegación SPA — animar entrada
             main.style.transition = 'none';
             main.style.opacity = '0';
             main.style.transform = 'translateY(7px)';
@@ -263,6 +266,12 @@ HTML;
                     isNavigating = false;
                 });
             });
+        } else {
+            // Carga inicial — solo asegurar que el contenido sea visible
+            main.style.opacity = '1';
+            main.style.transform = '';
+            main.style.filter = '';
+            isNavigating = false;
         }
     });
 
