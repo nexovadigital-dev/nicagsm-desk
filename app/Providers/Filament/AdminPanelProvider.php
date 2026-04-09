@@ -33,7 +33,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('app')
             ->login(\App\Filament\Pages\CustomLogin::class)
-            ->brandName('Nexova Desk')
+            ->brandName('')
             ->brandLogo(null)
             ->brandLogoHeight('0')
             ->favicon(asset('images/nexovadesklogo.svg'))
@@ -398,26 +398,36 @@ HTML
                 PanelsRenderHook::SIDEBAR_NAV_START,
                 fn (): string => <<<'HTML'
 <style>
+/* Ocultar la cabecera de marca por defecto de Filament */
+.fi-sidebar-header { display: none !important; }
+
 .nx-brand {
-    padding: 12px 10px 10px;
+    padding: 14px 10px 12px;
     border-bottom: 1px solid #e5e7eb;
     margin-bottom: 2px;
 }
 .nx-brand a {
-    display: flex; align-items: center; gap: 9px;
-    padding: 6px 8px; border-radius: 6px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 8px; border-radius: 8px;
     text-decoration: none; transition: background .15s;
 }
-.nx-brand a:hover { background: #e2e8f0; }
-.nx-brand img { height: 26px; width: auto; flex-shrink: 0; }
-.nx-brand-name {
-    font-size: 13.5px; font-weight: 700; letter-spacing: -.02em;
-    flex: 1; min-width: 0; color: #111827;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+.nx-brand a:hover { background: #f1f5f9; }
+.nx-brand img {
+    height: 28px; width: 28px;
+    border-radius: 7px; object-fit: contain; flex-shrink: 0;
 }
+.nx-brand-name {
+    font-size: 14px; letter-spacing: -.02em;
+    flex: 1; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1;
+}
+.nx-brand-name strong { font-weight: 800; color: #111827; }
+.nx-brand-name span   { font-weight: 800; color: #22c55e; }
 .nx-brand-dot {
-    width: 6px; height: 6px; border-radius: 50%;
+    width: 7px; height: 7px; border-radius: 50%;
     background: #22c55e; flex-shrink: 0;
+    box-shadow: 0 0 0 2px rgba(34,197,94,.2);
 }
 .nx-brand-badge {
     min-width: 18px; height: 18px; border-radius: 99px;
@@ -435,9 +445,9 @@ HTML
          };
          load(); setInterval(load, 8000);
      ">
-    <a href="/admin">
-        <img src="/images/nexovadesklogo.svg" alt="Nexova Desk">
-        <span class="nx-brand-name">Nexova Desk</span>
+    <a href="/app">
+        <img src="/images/nexovadeskicon.png" alt="Nexova Desk">
+        <span class="nx-brand-name"><strong>Nexova</strong> <span>Desk</span></span>
         <span class="nx-brand-badge" x-show="count > 0" x-text="count > 99 ? '99+' : count" style="display:none"></span>
         <span class="nx-brand-dot" x-show="count === 0"></span>
     </a>
