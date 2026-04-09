@@ -36,6 +36,7 @@ class Login extends Component
             $redirectUrl = $redirect;
         }
 
+        session()->regenerate();
         $this->showSuccess = true;
         session(['login_redirect' => $redirectUrl]);
         $this->dispatch('loginSuccess');
