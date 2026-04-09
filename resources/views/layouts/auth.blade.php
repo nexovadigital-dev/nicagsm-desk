@@ -149,41 +149,52 @@
         }
         .lf-alert-err { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2); color: #f87171; }
 
-        .lf-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+        .lf-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
         .lf-label {
             font-size: 12.5px; font-weight: 500; color: rgba(255,255,255,.55);
         }
 
-        .lf-input-wrap { position: relative; display: flex; align-items: center; }
+        .lf-input-wrap { position: relative; }
         .lf-icon {
-            position: absolute; left: 13px;
-            color: rgba(255,255,255,.3); display: flex; pointer-events: none;
-            transition: color .15s;
+            position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+            color: rgba(255,255,255,.35); display: flex; pointer-events: none;
+            transition: color .15s; z-index: 2;
         }
         .lf-input {
-            width: 100%; background: rgba(255,255,255,.04);
-            border: 1px solid rgba(255,255,255,.09);
+            width: 100%; background: rgba(255,255,255,.05);
+            border: 1px solid rgba(255,255,255,.1);
             border-radius: 10px; color: #fff;
             font-size: 14px; font-family: inherit;
             padding: 12px 14px 12px 40px;
-            outline: none; transition: border-color .15s, background .15s, box-shadow .15s;
+            outline: none; transition: border-color .15s, box-shadow .15s;
+            position: relative; z-index: 1;
         }
-        .lf-input-pass { padding-right: 42px; }
+        .lf-input-pass { padding-right: 44px; }
         .lf-input:focus {
             border-color: rgba(34,197,94,.5);
-            background: rgba(255,255,255,.06);
             box-shadow: 0 0 0 3px rgba(34,197,94,.08);
         }
         .lf-input-wrap:focus-within .lf-icon { color: rgba(34,197,94,.7); }
         .lf-input::placeholder { color: rgba(255,255,255,.2); }
 
-        .lf-eye {
-            position: absolute; right: 12px;
-            background: none; border: none; cursor: pointer;
-            color: rgba(255,255,255,.3); padding: 4px; display: flex;
-            transition: color .12s;
+        /* Override Chrome autofill — mantener fondo oscuro */
+        .lf-input:-webkit-autofill,
+        .lf-input:-webkit-autofill:hover,
+        .lf-input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 1000px #161b26 inset !important;
+            -webkit-text-fill-color: #fff !important;
+            caret-color: #fff;
+            border-color: rgba(255,255,255,.1) !important;
+            transition: background-color 9999s ease-in-out 0s;
         }
-        .lf-eye:hover { color: rgba(255,255,255,.7); }
+
+        .lf-eye {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer;
+            color: rgba(255,255,255,.4); padding: 4px; display: flex;
+            transition: color .12s; z-index: 2;
+        }
+        .lf-eye:hover { color: rgba(255,255,255,.8); }
 
         /* Custom checkbox */
         .lf-row {
