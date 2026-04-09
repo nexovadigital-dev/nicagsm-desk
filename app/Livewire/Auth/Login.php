@@ -37,7 +37,15 @@ class Login extends Component
         }
 
         $this->showSuccess = true;
-        $this->dispatch('loginSuccess', url: $redirectUrl);
+        session(['login_redirect' => $redirectUrl]);
+        $this->dispatch('loginSuccess');
+    }
+
+    public function performRedirect(): mixed
+    {
+        $url = session('login_redirect', '/app');
+        session()->forget('login_redirect');
+        return $this->redirect($url, navigate: false);
     }
 
     public function render()

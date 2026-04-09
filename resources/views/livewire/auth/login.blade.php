@@ -7,7 +7,7 @@
              wrap.style.transform = 'scale(0.97)';
              wrap.style.filter = 'blur(6px)';
              wrap.addEventListener('transitionend', () => {
-                 window.location.href = $event.detail.url;
+                 $wire.performRedirect();
              }, { once: true });
          }, 900)
      ">
