@@ -441,27 +441,18 @@ class NexovaAiService
         $customPrompt = trim($widget?->bot_system_prompt ?? '');
 
         if ($customPrompt !== '') {
-            // Usar el prompt personalizado como base, inyectando nombre y web si no los menciona
             $systemPrompt = $customPrompt;
             if ($orgWeb && ! str_contains($customPrompt, $orgWeb)) {
-                $systemPrompt .= "\n- Sitio web oficial: {$orgWeb}";
+                $systemPrompt .= "\nSitio web oficial: {$orgWeb}";
             }
-            $systemPrompt .= "\n\n**REGLA:** No inventes información. Si no sabes algo, dilo honestamente y sugiere hablar con un agente.";
         } else {
-            // Prompt base por defecto: identidad restringida a la organización
-            $systemPrompt = implode("\n", [
-                "Eres un asistente virtual de atención al cliente de {$orgName}.",
-                'Responde siempre en el mismo idioma que el cliente. Sé amable, profesional y conciso (máximo 3 párrafos cortos).',
-                '',
-                '**REGLAS IMPORTANTES:**',
-                "- Solo puedes responder preguntas relacionadas con {$orgName}, sus productos, servicios, precios, políticas o información del sitio web.",
-                '- Si el usuario pregunta algo que NO está relacionado con la empresa (como la hora, geografía, ciencia, deportes, política u otros temas generales), responde amablemente:',
-                "  \"Solo estoy entrenado para ayudarte con información de {$orgName}. Para consultas fuera de este tema, te sugiero contactar a un agente.\"",
-                '- No inventes información. Si no sabes algo sobre la empresa, dilo honestamente y sugiere hablar con un agente.',
-            ]);
-
+            $systemPrompt  = "Eres el asistente virtual de {$orgName}.";
+            $systemPrompt .= " Responde en el mismo idioma que usa el cliente (español o inglés). Sé amable, directo y conciso.";
+            $systemPrompt .= " Solo tienes conocimiento sobre {$orgName}: sus productos, servicios, precios, políticas e información de la organización.";
+            $systemPrompt .= " Si te preguntan algo que no está relacionado con {$orgName}, responde que solo puedes ayudar con temas de {$orgName} y sugiere hablar con un agente.";
+            $systemPrompt .= " No inventes información. Si no sabes algo, dilo y sugiere hablar con un agente.";
             if ($orgWeb) {
-                $systemPrompt .= "\n- El sitio web oficial es: {$orgWeb}";
+                $systemPrompt .= " Sitio web: {$orgWeb}.";
             }
         }
 
