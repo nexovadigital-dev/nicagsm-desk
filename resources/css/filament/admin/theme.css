@@ -8,37 +8,54 @@
    Estilo Intercom-inspired: limpio, tipografía clara, acento único
    ═══════════════════════════════════════════════════════════════════ */
 
-/* ── Paleta — modo claro ── */
+/* ── Paleta — modo claro (tokens primarios --nx-*) ── */
 :root {
-    --c-bg:       #f5f6f8;
-    --c-surface:  #ffffff;
-    --c-surf2:    #f0f2f5;
-    --c-border:   #e3e6ea;
-    --c-text:     #111827;
-    --c-sub:      #6b7280;
-    --c-accent:   #16a34a;
-    --c-accent-h: #15803d;
-    --c-accent-s: rgba(34,197,94,.08);
-    --c-accent-b: rgba(34,197,94,.22);
-    --c-danger:   #dc2626;
-    --c-success:  #059669;
-    --c-warn:     #d97706;
+    --nx-bg:       #f5f6f8;
+    --nx-surface:  #ffffff;
+    --nx-surf2:    #f0f2f5;
+    --nx-border:   #e3e6ea;
+    --nx-text:     #111827;
+    --nx-muted:    #6b7280;
+    --nx-accent:   #16a34a;
+    --nx-accent-h: #15803d;
+    --nx-accent-s: rgba(34,197,94,.08);
+    --nx-accent-b: rgba(34,197,94,.22);
+    --nx-danger:   #dc2626;
+    --nx-success:  #059669;
+    --nx-warn:     #d97706;
+    /* ── Legacy aliases (retrocompatibilidad) ── */
+    --c-bg:       var(--nx-bg);
+    --c-surface:  var(--nx-surface);
+    --c-surf2:    var(--nx-surf2);
+    --c-border:   var(--nx-border);
+    --c-text:     var(--nx-text);
+    --c-sub:      var(--nx-muted);
+    --c-accent:   var(--nx-accent);
+    --c-accent-h: var(--nx-accent-h);
+    --c-accent-s: var(--nx-accent-s);
+    --c-accent-b: var(--nx-accent-b);
+    --c-danger:   var(--nx-danger);
+    --c-success:  var(--nx-success);
+    --c-warn:     var(--nx-warn);
 }
 
 /* ── Paleta — modo oscuro ── */
 html.dark {
-    --c-bg:       #0f1117;
-    --c-surface:  #181b21;
-    --c-surf2:    #1e2229;
-    --c-border:   #2a2f3a;
-    --c-text:     #e4e8ef;
-    --c-sub:      #7e8799;
-    --c-accent:   #22c55e;
-    --c-accent-h: #16a34a;
-    --c-accent-s: rgba(34,197,94,.13);
-    --c-accent-b: rgba(34,197,94,.3);
+    --nx-bg:       #0f1117;
+    --nx-surface:  #181b21;
+    --nx-surf2:    #1e2229;
+    --nx-border:   #2a2f3a;
+    --nx-text:     #e4e8ef;
+    --nx-muted:    #7e8799;
+    --nx-accent:   #22c55e;
+    --nx-accent-h: #16a34a;
+    --nx-accent-s: rgba(34,197,94,.13);
+    --nx-accent-b: rgba(34,197,94,.3);
     color-scheme: dark;
 }
+
+/* Instant background — sin JS, sin flash */
+html { background: var(--nx-bg); }
 
 /* ─────────────────────────────────────────
    LAYOUT BASE
@@ -185,12 +202,6 @@ body, .fi-body { background: var(--c-bg) !important; color: var(--c-text) !impor
 .fi-topbar-end { display: none !important; }
 
 /* ── Topbar — solo el botón de colapsar ── */
-.fi-topbar, .fi-topbar-ctn {
-    background: var(--c-surface) !important;
-    border-bottom: 1px solid var(--c-border) !important;
-    box-shadow: none !important;
-    height: 52px !important;
-}
 .fi-topbar .fi-icon-btn {
     color: var(--c-sub) !important;
     border-radius: 8px !important;
@@ -720,6 +731,45 @@ html.dark .fi-dropdown-list-item-btn:hover,
 html.dark .fi-user-menu-item-btn:hover { background: #222836 !important; }
 html.dark .fi-dropdown-list-item-label { color: var(--c-text) !important; }
 
+/* Filament form components — toggle, checkbox, radio */
+html.dark .fi-fo-toggle-on { background: #22c55e !important; }
+html.dark .fi-fo-toggle-off { background: var(--c-border) !important; }
+html.dark .fi-checkbox-input,
+html.dark .fi-radio-input {
+    background: var(--c-surface) !important;
+    border-color: var(--c-border) !important;
+}
+html.dark .fi-checkbox-input:checked,
+html.dark .fi-radio-input:checked {
+    background: #22c55e !important;
+    border-color: #22c55e !important;
+}
+
+/* Filament section heading */
+html.dark .fi-section-header { border-bottom-color: var(--c-border) !important; }
+html.dark .fi-section-header-heading { color: var(--c-text) !important; }
+html.dark .fi-section-content { color: var(--c-text) !important; }
+
+/* Filament table filters/search/sort */
+html.dark .fi-ta-filters-form { background: var(--c-surface) !important; border-color: var(--c-border) !important; }
+html.dark .fi-ta-search-input { background: var(--c-surf2) !important; border-color: var(--c-border) !important; color: var(--c-text) !important; }
+html.dark .fi-ta-search-input:focus { background: var(--c-surface) !important; border-color: #22c55e !important; }
+html.dark .fi-ta-sort-btn { color: var(--c-sub) !important; }
+html.dark .fi-ta-sort-btn:hover { color: var(--c-text) !important; background: var(--c-surf2) !important; }
+html.dark .fi-ta-filter-trigger-btn { color: var(--c-sub) !important; border-color: var(--c-border) !important; }
+html.dark .fi-ta-filter-trigger-btn:hover { background: var(--c-surf2) !important; }
+html.dark .fi-ta-empty-state-heading { color: var(--c-text) !important; }
+html.dark .fi-ta-empty-state-description { color: var(--c-sub) !important; }
+
+/* Filament breadcrumbs */
+html.dark .fi-breadcrumbs-item-label { color: var(--c-sub) !important; }
+html.dark .fi-breadcrumbs-separator  { color: var(--c-sub) !important; }
+html.dark .fi-breadcrumbs-item-label:last-child { color: var(--c-text) !important; }
+
+/* Filament action groups */
+html.dark .fi-ac-group-btn { color: var(--c-sub) !important; border-color: var(--c-border) !important; background: var(--c-surface) !important; }
+html.dark .fi-ac-group-btn:hover { background: var(--c-surf2) !important; color: var(--c-text) !important; }
+
 /* Inputs dark — Filament already handles via dark: variants but reinforce */
 html.dark .fi-input,
 html.dark .fi-select-input,
@@ -797,6 +847,11 @@ html.dark .nx-qa:hover svg { color: var(--c-text) !important; }
 html.dark .nx-rt-name { color: var(--c-text) !important; }
 html.dark .nx-rt-subj { color: var(--c-sub) !important; }
 html.dark .nx-rt-time { color: var(--c-sub) !important; }
+html.dark .nx-rt-row  { border-bottom-color: var(--c-border) !important; }
+html.dark .nx-plat-icon { background: var(--c-surf2) !important; border-color: var(--c-border) !important; }
+html.dark .nx-qa { background: var(--c-surface) !important; border-color: var(--c-border) !important; }
+html.dark .nx-rrow__label { color: var(--c-text) !important; }
+html.dark .nx-card__sub { color: var(--c-sub) !important; }
 
 /* ── Tickets page (tk-*) ── */
 html.dark .tk-toolbar { background: var(--c-surface) !important; border-color: var(--c-border) !important; }
@@ -810,11 +865,21 @@ html.dark .tk-thead tr th { color: var(--c-sub) !important; }
 html.dark .tk-tbody tr { border-bottom-color: var(--c-border) !important; }
 html.dark .tk-tbody tr:hover { background: var(--c-surf2) !important; }
 html.dark .tk-tbody td { color: var(--c-text) !important; }
-html.dark .tk-badge-closed { background: var(--c-surf2) !important; color: var(--c-sub) !important; }
+html.dark .tk-badge-closed { background: var(--c-surf2) !important; color: var(--c-sub) !important; border-color: var(--c-border) !important; }
+html.dark .tk-badge-open   { background: rgba(5,150,105,.15) !important; color: #34d399 !important; border-color: rgba(52,211,153,.3) !important; }
+html.dark .tk-badge-bot    { background: rgba(99,102,241,.15) !important; color: #a5b4fc !important; border-color: rgba(165,180,252,.3) !important; }
+html.dark .tk-badge-human  { background: rgba(59,130,246,.15) !important; color: #93c5fd !important; border-color: rgba(147,197,253,.3) !important; }
+html.dark .tk-badge-urgent { background: rgba(220,38,38,.15) !important; color: #fca5a5 !important; border-color: rgba(252,165,165,.3) !important; }
+html.dark .tk-badge-high   { background: rgba(217,119,6,.15) !important; color: #fcd34d !important; border-color: rgba(252,211,77,.3) !important; }
+html.dark .tk-badge-normal { background: rgba(59,130,246,.12) !important; color: #93c5fd !important; border-color: rgba(147,197,253,.25) !important; }
+html.dark .tk-badge-low    { background: var(--c-surf2) !important; color: var(--c-sub) !important; border-color: var(--c-border) !important; }
+html.dark .tk-tab-btn { background: var(--c-surf2) !important; color: var(--c-sub) !important; border-color: var(--c-border) !important; }
+html.dark .tk-tab-btn.tk-tab-on { background: var(--c-surface) !important; color: var(--c-text) !important; border-bottom-color: var(--c-surface) !important; }
 html.dark .tk-empty { color: var(--c-sub) !important; }
 html.dark .tk-pagination { border-top-color: var(--c-border) !important; color: var(--c-sub) !important; }
 html.dark .tk-modal-title { color: var(--c-text) !important; }
-html.dark .tk-input { background: var(--c-bg) !important; border-color: var(--c-border) !important; color: var(--c-text) !important; }
+html.dark .tk-input { background: var(--c-surf2) !important; border-color: var(--c-border) !important; color: var(--c-text) !important; }
+html.dark .tk-input:focus { background: var(--c-surface) !important; border-color: #22c55e !important; }
 html.dark .tk-icon-btn { border-color: var(--c-border) !important; background: var(--c-surf2) !important; color: var(--c-sub) !important; }
 html.dark .tk-icon-btn:hover { background: var(--c-border) !important; color: var(--c-text) !important; }
 
@@ -829,9 +894,27 @@ html.dark .vp-history { background: var(--c-surf2) !important; border-color: var
 html.dark .vp-history-item { color: var(--c-sub) !important; border-bottom-color: var(--c-border) !important; }
 html.dark .vp-history-item--current { background: rgba(34,197,94,.08) !important; }
 html.dark .vp-status-pill--hidden { background: var(--c-surf2) !important; color: var(--c-sub) !important; }
+html.dark .vp-stat { color: var(--c-sub) !important; }
 html.dark .vp-stat strong { color: var(--c-text) !important; }
+html.dark .vp-empty { background: var(--c-surface) !important; border-color: var(--c-border) !important; color: var(--c-sub) !important; }
 html.dark .vp-empty h3 { color: var(--c-text) !important; }
+html.dark .vp-section-title { color: var(--c-sub) !important; }
+html.dark .vp-banned-list { background: var(--c-surface) !important; border-color: var(--c-border) !important; }
+html.dark .vp-banned-row { border-bottom-color: var(--c-border) !important; color: var(--c-text) !important; }
+html.dark .vp-btn--unban { background: var(--c-surf2) !important; border-color: var(--c-border) !important; color: var(--c-text) !important; }
+html.dark .vp-btn--unban:hover { background: var(--c-border) !important; }
+html.dark .vp-modal { background: var(--c-surface) !important; }
+html.dark .vp-modal__header { border-bottom-color: var(--c-border) !important; }
+html.dark .vp-modal__footer { border-top-color: var(--c-border) !important; }
+html.dark .vp-modal__title { color: var(--c-text) !important; }
+html.dark .vp-modal__close { color: var(--c-sub) !important; }
+html.dark .vp-modal__close:hover { color: var(--c-text) !important; }
 html.dark .vp-label { color: var(--c-sub) !important; }
+html.dark .vp-input, html.dark .vp-textarea { background: var(--c-surf2) !important; border-color: var(--c-border) !important; color: var(--c-text) !important; }
+html.dark .vp-input:focus, html.dark .vp-textarea:focus { background: var(--c-surface) !important; border-color: #22c55e !important; }
+html.dark .vp-btn-ghost { background: transparent !important; border-color: var(--c-border) !important; color: var(--c-text) !important; }
+html.dark .vp-btn-ghost:hover { background: var(--c-surf2) !important; }
+html.dark .vp-widget-min { background: var(--c-surf2) !important; color: var(--c-sub) !important; border-color: var(--c-border) !important; }
 
 /* ═══════════════════════════════════════════════════════════════════
    PREMIUM THEME SWITCHER — Nexova Desk Edge
@@ -957,7 +1040,20 @@ html.dark .nx-ts-option.nx-ts-on .nx-ts-icon { background: rgba(34,197,94,.13); 
     transform: scale(1);
 }
 
-/* Smooth transition when switching themes (applied momentarily) */
+/* ── Installation page (inst-*) ── */
+html.dark .inst-step-num { background: var(--c-text) !important; color: var(--c-bg) !important; }
+html.dark .inst-woo-box { background: rgba(14,165,233,.08) !important; border-color: rgba(14,165,233,.2) !important; color: #7dd3fc !important; }
+
+/* Flash prevention — disable ALL transitions during initial render and SPA nav */
+html.nx-preload,
+html.nx-preload *,
+html.nx-preload *::before,
+html.nx-preload *::after {
+    transition: none !important;
+    animation-duration: 0.001ms !important;
+}
+
+/* Smooth transition when switching themes (applied momentarily via JS) */
 html.nx-switching,
 html.nx-switching *,
 html.nx-switching *::before,

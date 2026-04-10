@@ -51,7 +51,7 @@ x-init="
 
 /* ── Header row ── */
 .vp-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-.vp-title { font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 9px; }
+.vp-title { font-size: 18px; font-weight: 800; color: var(--nx-text); display: flex; align-items: center; gap: 9px; }
 .vp-count-badge {
     display: inline-flex; align-items: center; gap: 5px;
     background: #dcfce7; color: #15803d;
@@ -71,8 +71,8 @@ x-init="
 
 /* ── Visitor card ── */
 .vp-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
+    background: var(--nx-surface);
+    border: 1px solid var(--nx-border);
     border-radius: 12px;
     padding: 14px 16px;
     display: flex; flex-direction: column; gap: 10px;
@@ -93,8 +93,8 @@ x-init="
     font-size: 13px; font-weight: 800; color: #fff; flex-shrink: 0;
 }
 .vp-card__meta { flex: 1; min-width: 0; }
-.vp-card__name { font-size: 13px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 6px; }
-.vp-card__sub  { font-size: 11.5px; color: #64748b; margin-top: 1px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.vp-card__name { font-size: 13px; font-weight: 700; color: var(--nx-text); display: flex; align-items: center; gap: 6px; }
+.vp-card__sub  { font-size: 11.5px; color: var(--nx-muted); margin-top: 1px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 
 .vp-status-pill {
     display: inline-flex; align-items: center; gap: 4px;
@@ -106,19 +106,19 @@ x-init="
 
 /* Page info (legacy, keep for compat) */
 .vp-card__page-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
-.vp-card__page-url   { color: #94a3b8; font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
+.vp-card__page-url   { color: var(--nx-muted); font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
 
 /* Pages history */
 .vp-history {
     display: flex; flex-direction: column; gap: 0;
-    border: 1px solid #e2e8f0; border-radius: 7px; overflow: hidden;
-    background: #f8fafc;
+    border: 1px solid var(--nx-border); border-radius: 7px; overflow: hidden;
+    background: var(--nx-surf2);
 }
 .vp-history-item {
-    font-size: 10.5px; color: #64748b;
+    font-size: 10.5px; color: var(--nx-muted);
     display: flex; align-items: center; gap: 6px;
     padding: 5px 8px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--nx-border);
 }
 .vp-history-item:last-child { border-bottom: none; }
 .vp-history-item--current { background: #f0fdf4; }
@@ -127,8 +127,8 @@ x-init="
 
 /* Stats row */
 .vp-card__stats { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.vp-stat { display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: #64748b; }
-.vp-stat strong { color: #0f172a; font-weight: 700; }
+.vp-stat { display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--nx-muted); }
+.vp-stat strong { color: var(--nx-text); font-weight: 700; }
 
 /* Action buttons */
 .vp-card__actions { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -172,34 +172,34 @@ x-init="
 /* ── Empty state ── */
 .vp-empty {
     text-align: center; padding: 60px 24px;
-    background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
-    color: #94a3b8;
+    background: var(--nx-surface); border: 1px solid var(--nx-border); border-radius: 12px;
+    color: var(--nx-muted);
 }
 .vp-empty svg { margin: 0 auto 12px; display: block; opacity: .3; }
-.vp-empty h3 { font-size: 15px; font-weight: 700; color: #64748b; margin-bottom: 6px; }
+.vp-empty h3 { font-size: 15px; font-weight: 700; color: var(--nx-muted); margin-bottom: 6px; }
 .vp-empty p  { font-size: 13px; }
 
 /* ── Banned IPs section ── */
 .vp-section-title {
-    font-size: 12px; font-weight: 700; color: #64748b;
+    font-size: 12px; font-weight: 700; color: var(--nx-muted);
     text-transform: uppercase; letter-spacing: .06em;
     margin-bottom: 8px; display: flex; align-items: center; gap: 7px;
 }
 .vp-banned-list {
-    background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;
+    background: var(--nx-surface); border: 1px solid var(--nx-border); border-radius: 8px; overflow: hidden;
 }
 .vp-banned-row {
     display: flex; align-items: center; gap: 12px;
-    padding: 10px 14px; border-bottom: 1px solid #f1f5f9;
-    font-size: 12.5px;
+    padding: 10px 14px; border-bottom: 1px solid var(--nx-border);
+    font-size: 12.5px; color: var(--nx-text);
 }
 .vp-banned-row:last-child { border-bottom: none; }
 .vp-btn--unban {
     margin-left: auto; padding: 3px 9px; border-radius: 6px;
     font-size: 11px; font-weight: 600; cursor: pointer;
-    background: #f1f5f9; border: 1px solid #e2e8f0; color: #374151; font-family: inherit;
+    background: var(--nx-surf2); border: 1px solid var(--nx-border); color: var(--nx-text); font-family: inherit;
 }
-.vp-btn--unban:hover { background: #e2e8f0; }
+.vp-btn--unban:hover { background: var(--nx-border); }
 
 /* ── Modals ── */
 .vp-overlay {
@@ -207,33 +207,33 @@ x-init="
     z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;
 }
 .vp-modal {
-    background: #fff; border-radius: 12px; width: 100%; max-width: 440px;
+    background: var(--nx-surface); border-radius: 12px; width: 100%; max-width: 440px;
     box-shadow: 0 20px 60px rgba(0,0,0,.18); overflow: hidden;
     display: flex; flex-direction: column;
 }
 .vp-modal__header {
-    padding: 16px 20px; border-bottom: 1px solid #e2e8f0;
+    padding: 16px 20px; border-bottom: 1px solid var(--nx-border);
     display: flex; align-items: center; justify-content: space-between;
 }
-.vp-modal__title { font-size: 14px; font-weight: 700; color: #0f172a; }
-.vp-modal__close { background: none; border: none; cursor: pointer; color: #94a3b8; display: flex; padding: 2px; }
-.vp-modal__close:hover { color: #0f172a; }
+.vp-modal__title { font-size: 14px; font-weight: 700; color: var(--nx-text); }
+.vp-modal__close { background: none; border: none; cursor: pointer; color: var(--nx-muted); display: flex; padding: 2px; }
+.vp-modal__close:hover { color: var(--nx-text); }
 .vp-modal__body { padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
-.vp-modal__footer { padding: 12px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px; }
-.vp-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .04em; display: block; margin-bottom: 5px; }
+.vp-modal__footer { padding: 12px 20px; border-top: 1px solid var(--nx-border); display: flex; justify-content: flex-end; gap: 8px; }
+.vp-label { font-size: 11px; font-weight: 700; color: var(--nx-muted); text-transform: uppercase; letter-spacing: .04em; display: block; margin-bottom: 5px; }
 .vp-input, .vp-textarea {
-    width: 100%; border: 1px solid #e2e8f0; border-radius: 8px;
+    width: 100%; border: 1px solid var(--nx-border); border-radius: 8px;
     padding: 8px 11px; font-size: 13px; font-family: inherit;
-    color: #0f172a; outline: none; background: #f8fafc;
+    color: var(--nx-text); outline: none; background: var(--nx-surf2);
     box-sizing: border-box; transition: border-color .15s;
 }
-.vp-input:focus, .vp-textarea:focus { border-color: #334155; background: #fff; }
+.vp-input:focus, .vp-textarea:focus { border-color: #22c55e; background: var(--nx-surface); }
 .vp-textarea { resize: vertical; min-height: 72px; }
 .vp-btn-ghost {
-    background: transparent; border: 1px solid #e2e8f0; border-radius: 8px;
-    padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; color: #374151;
+    background: transparent; border: 1px solid var(--nx-border); border-radius: 8px;
+    padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; color: var(--nx-text);
 }
-.vp-btn-ghost:hover { background: #f8fafc; }
+.vp-btn-ghost:hover { background: var(--nx-surf2); }
 .vp-btn-primary {
     background: #22c55e; color: #fff; border: none; border-radius: 8px;
     padding: 7px 18px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
@@ -256,7 +256,7 @@ x-init="
         {{-- Sound toggle — requires user click to init AudioContext --}}
         <button @click="initAudio()"
                 :title="soundEnabled ? 'Sonido activado' : 'Activar alerta de sonido'"
-                style="background:none;border:1px solid #e2e8f0;border-radius:7px;padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11.5px;color:#64748b;font-family:inherit;transition:background .12s"
+                style="background:none;border:1px solid var(--nx-border);border-radius:7px;padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--nx-muted);font-family:inherit;transition:background .12s"
                 :style="soundEnabled ? 'background:#f0fdf4;border-color:#bbf7d0;color:#15803d' : ''">
             <svg x-show="!soundEnabled" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
             <svg x-show="soundEnabled" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6v12m0 0l-3-3m3 3l3-3M9 12H3"/></svg>

@@ -230,10 +230,11 @@ HTML;
 
     let isNavigating = false;
 
-    // SALIDA — blur + fade antes de navegar
+    // SALIDA — blur + fade antes de navegar, nx-preload para evitar flash de tema
     document.addEventListener('livewire:navigate', () => {
         if (isNavigating) return;
         isNavigating = true;
+        document.documentElement.classList.add('nx-preload');
         const main = getMain();
         if (main) {
             main.style.transition = 'opacity .18s ease, transform .18s ease, filter .18s ease';
@@ -496,10 +497,13 @@ document.addEventListener('alpine:init', () => {
     }
     // After ALL Alpine components (including Filament's fi-color-mode-switcher) have init'd
     document.addEventListener('alpine:initialized', nxAssertTheme);
-    // After each Livewire SPA navigation, wait for Alpine re-init then re-assert
+    // After each Livewire SPA navigation: assert theme + remove nx-preload after double-RAF
     document.addEventListener('livewire:navigated', function() {
         requestAnimationFrame(function() {
-            requestAnimationFrame(nxAssertTheme);
+            requestAnimationFrame(function() {
+                nxAssertTheme();
+                document.documentElement.classList.remove('nx-preload');
+            });
         });
     });
 })();
@@ -517,10 +521,14 @@ HTML
 (function(){
     var s = localStorage.getItem('nx-theme') || 'auto';
     var dark = s === 'dark' || (s === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    // nx-preload disables all transitions during initial paint
+    document.documentElement.classList.add('nx-preload');
     document.documentElement.classList.toggle('dark', dark);
     document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
     // Sync Filament's own key so it doesn't override us on Alpine init
     try { localStorage.setItem('_x_colorMode', dark ? 'dark' : 'light'); } catch(e) {}
+    // Remove preload after first paint so transitions work normally
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ document.documentElement.classList.remove('nx-preload'); }); });
 })();
 </script>
 <script>
