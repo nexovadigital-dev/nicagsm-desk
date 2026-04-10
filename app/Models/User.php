@@ -73,8 +73,13 @@ class User extends Authenticatable implements FilamentUser
         if ($panel->getId() === 'superadmin') {
             return $this->isSuperAdmin();
         }
-        // Admin panel (/app): org users + super admins (impersonation)
-        return $this->organization_id !== null || $this->isSuperAdmin();
+        if ($this->isSuperAdmin()) return true;
+        if ($this->organization_id !== null) {
+            $org = $this->organization;
+            if ($org && ! $org->is_active) return false;
+            return true;
+        }
+        return false;
     }
 
     public function isOwner(): bool       { return $this->role === 'owner'; }

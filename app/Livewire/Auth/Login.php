@@ -30,6 +30,13 @@ class Login extends Component
             return;
         }
 
+        $authedUser = Auth::user();
+        if ($authedUser->organization_id && $authedUser->organization && ! $authedUser->organization->is_active) {
+            Auth::logout();
+            $this->error = 'Esta licencia Partner está desactivada. Contacta con Nexova para más información.';
+            return;
+        }
+
         $redirectUrl = '/app';
         $redirect    = request()->query('redirect');
         if ($redirect && str_starts_with($redirect, '/')) {
