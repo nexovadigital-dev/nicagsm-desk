@@ -21,24 +21,24 @@
 
 /* ── Widget selector ── */
 .inst-widget-selector {
-    background: var(--c-surface,#fff); border: 1px solid var(--c-border,#e2e8f0);
-    border-radius: 12px; padding: 14px 18px; display: flex; align-items: center;
+    background: var(--c-surface,#fff); border: 1px solid var(--c-border,#e3e6ea);
+    border-radius: 10px; padding: 12px 16px; display: flex; align-items: center;
     gap: 12px; flex-wrap: wrap;
 }
-.inst-widget-selector label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+.inst-widget-selector label { font-size: 10px; font-weight: 700; color: var(--c-sub,#6b7280); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
 .inst-widget-select {
     flex: 1; min-width: 180px; max-width: 360px;
-    border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 11px;
-    font-size: 13px; font-family: inherit; color: #1e293b;
-    background: #f8fafc; outline: none; transition: border-color .15s;
+    border: 1px solid var(--c-border,#e3e6ea); border-radius: 7px; padding: 8px 11px;
+    font-size: 13px; font-family: inherit; color: var(--c-text,#111827);
+    background: var(--c-bg,#f5f6f8); outline: none; transition: border-color .12s;
 }
-.inst-widget-select:focus { border-color: #475569; }
+.inst-widget-select:focus { border-color: #22c55e; }
 .inst-widget-token {
-    font-family: ui-monospace,monospace; font-size: 10.5px; color: #64748b;
-    background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px;
-    padding: 4px 10px; word-break: break-all; max-width: 260px;
+    font-family: ui-monospace,monospace; font-size: 10.5px; color: var(--c-sub,#6b7280);
+    background: var(--c-bg,#f5f6f8); border: 1px solid var(--c-border,#e3e6ea);
+    border-radius: 6px; padding: 4px 10px; word-break: break-all; max-width: 260px;
 }
-.inst-no-widgets { font-size: 13px; color: #94a3b8; display: flex; align-items: center; gap: 8px; }
+.inst-no-widgets { font-size: 13px; color: var(--c-sub,#9ca3af); display: flex; align-items: center; gap: 8px; }
 
 /* ── Card principal ── */
 .inst-card {
@@ -215,14 +215,46 @@ $platforms = [
                 <img src="https://cdn.simpleicons.org/wordpress/21759B" width="22" height="22" style="border-radius:4px">
                 WordPress / WooCommerce
             </div>
-            <p class="inst-card-sub">Elige el método de instalación. Si usas WooCommerce, el Método B reconoce automáticamente al cliente logueado y lo vincula con sus conversaciones.</p>
+            <p class="inst-card-sub">Instala el plugin oficial o usa una de las alternativas manuales. El plugin es la opción más rápida y completa.</p>
+
+            {{-- ── Opción 1: Plugin oficial ── --}}
+            <div class="inst-step">
+                <div class="inst-step-num star">★</div>
+                <div class="inst-step-body">
+                    <div class="inst-step-title">
+                        Plugin oficial de Nexova Desk
+                        <span class="inst-badge-ok">Recomendado</span>
+                    </div>
+                    <div class="inst-step-text" style="margin-bottom:12px">
+                        Instala el plugin directamente desde el repositorio oficial de WordPress. Configura el widget automáticamente con tu token, sin tocar código.
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                        {{-- Botón descarga — deshabilitado hasta publicar en WP.org --}}
+                        <a href="#"
+                           style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:#21759B;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;opacity:.45;cursor:not-allowed;pointer-events:none"
+                           title="Disponible próximamente en WordPress.org">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            Descargar desde WordPress.org
+                        </a>
+                        <span class="inst-badge-soon">Próximamente</span>
+                    </div>
+                    <div class="inst-tip" style="margin-top:12px">
+                        <strong>Instalación:</strong> Una vez disponible, ve a tu panel de WordPress → <em>Plugins → Añadir nuevo → Buscar "Nexova Desk Chat"</em> → Instalar → Activar. Después ingresa tu token de widget en <em>Ajustes → Nexova Desk</em>.
+                    </div>
+                </div>
+            </div>
+
+            <div class="inst-divider" style="margin:4px 0 18px"></div>
+            <div style="font-size:11px;font-weight:700;color:var(--c-sub,#6b7280);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Alternativas sin plugin</div>
 
             {{-- Método A: script simple --}}
             <div class="inst-step">
                 <div class="inst-step-num">A</div>
                 <div class="inst-step-body">
-                    <div class="inst-step-title">Método A — Script HTML (rápido, cualquier WordPress)</div>
-                    <div class="inst-step-text">Instala el plugin gratuito <strong>"Insert Headers and Footers"</strong> desde WordPress.org → <em>Ajustes → Insert H&amp;F → Scripts in Footer</em>. Pega:</div>
+                    <div class="inst-step-title">Script HTML — cualquier WordPress</div>
+                    <div class="inst-step-text">Instala el plugin gratuito <strong>"Insert Headers and Footers"</strong> (WordPress.org) → <em>Ajustes → Insert H&amp;F → Scripts in Footer</em>. Pega:</div>
                     <div class="inst-code-block" x-data="{{ '{}' }}">{{ $embedCode }}<button class="inst-copy-btn" @click="navigator.clipboard.writeText($el.previousSibling?.textContent ?? ''); $el.textContent='✓ Copiado'">📋 Copiar</button></div>
                     <div style="margin-top:6px"><span class="inst-badge-ok">✓ Compatible con todos los temas</span></div>
                 </div>
@@ -235,27 +267,15 @@ $platforms = [
                 <div class="inst-step-num">B</div>
                 <div class="inst-step-body">
                     <div class="inst-step-title">
-                        Método B — WooCommerce (reconocimiento de cliente)
+                        functions.php — WooCommerce (reconocimiento de cliente)
                         <span class="inst-badge-woo">WooCommerce</span>
                     </div>
-                    <div class="inst-step-text">Agrega este código en <code>functions.php</code> de tu tema hijo (child theme). Cuando el cliente esté logueado en WooCommerce, el chat lo reconocerá automáticamente y vinculará su historial de conversaciones.</div>
+                    <div class="inst-step-text">Agrega este código en <code>functions.php</code> de tu tema hijo. Cuando el cliente esté logueado, el chat lo reconocerá automáticamente.</div>
                     <div class="inst-code-block" x-data="{{ '{}' }}">{{ $wooCode }}<button class="inst-copy-btn" @click="navigator.clipboard.writeText($el.previousSibling?.textContent ?? ''); $el.textContent='✓ Copiado'">📋 Copiar</button></div>
                     <div class="inst-woo-box">
-                        <strong>¿Cómo funciona?</strong><br>
-                        El código genera un <strong>HMAC-SHA256</strong> firmado con el token de tu widget. El sistema verifica la firma y asocia al visitante con su cuenta de WooCommerce de forma segura, sin exponer datos sensibles.<br><br>
-                        <strong>Clientes no logueados</strong> — el chat funciona igualmente, sin identidad pre-cargada. El agente puede identificarlos manualmente durante la conversación.
+                        <strong>¿Cómo funciona?</strong> Genera un HMAC-SHA256 con el token del widget. El sistema verifica la firma y asocia al visitante con su cuenta WooCommerce de forma segura.<br><br>
+                        <strong>Clientes no logueados</strong> — el chat funciona igual, el agente puede identificarlos manualmente.
                     </div>
-                </div>
-            </div>
-
-            <div class="inst-divider" style="margin:4px 0 18px"></div>
-
-            {{-- Plugin próximamente --}}
-            <div class="inst-step">
-                <div class="inst-step-num star">★</div>
-                <div class="inst-step-body">
-                    <div class="inst-step-title">Plugin oficial Nexova Chat <span class="inst-badge-soon">Próximamente</span></div>
-                    <div class="inst-step-text">Estamos desarrollando un plugin nativo de WordPress/WooCommerce que instalará y configurará el widget directamente desde el panel de WordPress, con soporte completo para datos de clientes, pedidos y más.</div>
                 </div>
             </div>
 

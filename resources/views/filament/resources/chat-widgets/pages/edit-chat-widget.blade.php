@@ -857,10 +857,10 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
             &nbsp;&nbsp;&nbsp;&nbsp;widgetToken: "{{ $widgetToken }}"<br>
             &nbsp;&nbsp;};<br>
             &lt;/script&gt;<br>
-            &lt;script src="{{ rtrim(config('app.url'),'/') }}/chat-widget.js" defer&gt;&lt;/script&gt;
+            &lt;script src="{{ rtrim(config('app.url'),'/') }}/widget.js" defer&gt;&lt;/script&gt;
         </div>
         <button type="button" style="margin-top:8px;width:100%" class="wc-btn wc-btn-ghost"
-            @click="navigator.clipboard.writeText(`<script>\n  window.NexovaChatConfig = { apiUrl: '{{ rtrim(config('app.url'),'/') }}', widgetToken: '{{ $widgetToken }}' };\n<\/script>\n<script src='{{ rtrim(config('app.url'),'/') }}/chat-widget.js' defer><\/script>`); $dispatch('nexova-toast', {type:'success',message:'Código copiado'})">
+            @click="navigator.clipboard.writeText(`<script>\n  window.NexovaChatConfig = { apiUrl: '{{ rtrim(config('app.url'),'/') }}', widgetToken: '{{ $widgetToken }}' };\n<\/script>\n<script src='{{ rtrim(config('app.url'),'/') }}/widget.js' defer><\/script>`); $dispatch('nexova-toast', {type:'success',message:'Código copiado'})">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
             Copiar código
         </button>
