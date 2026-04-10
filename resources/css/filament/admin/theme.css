@@ -740,33 +740,138 @@ html.dark *::-webkit-scrollbar-thumb:hover { background: #3a4255; }
 /* Spinner dark */
 html.dark #nx-page-loader .nx-spinner { border-top-color: #22c55e; border-color: rgba(255,255,255,.08); border-top-color: #22c55e; }
 
-/* ── Theme switcher pill (3-way) ── */
-.nx-theme-row {
-    display: flex; gap: 3px;
-    padding: 6px 10px 8px;
-    border-bottom: 1px solid var(--c-border, #f3f4f6);
+/* ═══════════════════════════════════════════════════════════════════
+   PREMIUM THEME SWITCHER — Nexova Desk Edge
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Trigger — small icon button in sidebar footer */
+.nx-ts-row {
+    display: flex; align-items: center; justify-content: flex-end;
+    padding: 2px 12px 6px;
 }
-.nx-theme-label {
-    font-size: 10px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .06em; color: var(--c-sub, #9ca3af);
-    padding: 6px 10px 4px; display: block;
-}
-.nx-theme-btn {
-    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px;
-    padding: 5px 6px; border-radius: 6px;
-    font-size: 11px; font-weight: 500; font-family: inherit;
-    border: 1px solid transparent; background: transparent;
-    color: var(--c-sub, #6b7280); cursor: pointer;
-    transition: background .1s, color .1s, border-color .1s;
-    white-space: nowrap;
-}
-.nx-theme-btn:hover { background: var(--c-surf2, #f0f2f5); color: var(--c-text, #111); }
-.nx-theme-btn.nx-active {
+.nx-ts-trigger {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 9px; border-radius: 7px;
+    border: 1px solid var(--c-border, #e3e6ea);
     background: var(--c-surface, #fff);
-    border-color: var(--c-border, #e3e6ea);
-    color: var(--c-text, #111);
-    font-weight: 600;
-    box-shadow: 0 1px 3px rgba(0,0,0,.07);
+    color: var(--c-sub, #6b7280);
+    cursor: pointer; font-family: inherit; font-size: 11px; font-weight: 500;
+    transition: background 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,.05);
 }
-html.dark .nx-theme-row { border-bottom-color: #20242f; }
-html.dark .nx-theme-btn.nx-active { background: #222836; box-shadow: none; }
+.nx-ts-trigger:hover {
+    background: var(--c-surf2, #f0f2f5);
+    border-color: var(--c-sub, #6b7280);
+    color: var(--c-text, #111);
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+html.dark .nx-ts-trigger { box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+html.dark .nx-ts-trigger:hover { border-color: #4b5669; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+
+/* Popover panel */
+.nx-ts-popover {
+    position: fixed; z-index: 99998;
+    width: 236px;
+    background: var(--c-surface, #fff);
+    border: 1px solid var(--c-border, #e3e6ea);
+    border-radius: 14px;
+    padding: 5px;
+    /* Elevated shadow — multi-layer for depth */
+    box-shadow:
+        0 0 0 1px rgba(0,0,0,.03),
+        0 4px 6px rgba(0,0,0,.04),
+        0 12px 28px rgba(0,0,0,.1),
+        0 24px 48px rgba(0,0,0,.06);
+}
+html.dark .nx-ts-popover {
+    background: #1a1e2a;
+    border-color: #2a2f3a;
+    box-shadow:
+        0 0 0 1px rgba(255,255,255,.04),
+        0 4px 6px rgba(0,0,0,.2),
+        0 12px 28px rgba(0,0,0,.5),
+        0 24px 48px rgba(0,0,0,.3);
+}
+
+.nx-ts-popover-title {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--c-sub, #9ca3af);
+    padding: 7px 9px 5px;
+}
+
+/* Each option row */
+.nx-ts-option {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 8px 9px;
+    border-radius: 9px; border: none;
+    background: transparent;
+    cursor: pointer; font-family: inherit; text-align: left;
+    transition: background 150ms ease, transform 100ms ease;
+    position: relative;
+}
+.nx-ts-option:hover {
+    background: var(--c-surf2, #f0f2f5);
+    transform: scale(1.008);
+}
+html.dark .nx-ts-option:hover { background: #222836; }
+.nx-ts-option:active { transform: scale(.998); }
+
+/* Active option */
+.nx-ts-option.nx-ts-on {
+    background: var(--c-accent-s, rgba(34,197,94,.07));
+}
+html.dark .nx-ts-option.nx-ts-on { background: rgba(34,197,94,.1); }
+
+/* Icon box */
+.nx-ts-icon {
+    width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--c-bg, #f5f6f8);
+    border: 1px solid var(--c-border, #e3e6ea);
+    color: var(--c-sub, #6b7280);
+    transition: background 200ms, border-color 200ms, color 200ms;
+}
+.nx-ts-option.nx-ts-on .nx-ts-icon {
+    background: var(--c-accent-s, rgba(34,197,94,.08));
+    border-color: var(--c-accent-b, rgba(34,197,94,.3));
+    color: #22c55e;
+}
+html.dark .nx-ts-icon { background: #1e2229; border-color: #2a2f3a; }
+html.dark .nx-ts-option.nx-ts-on .nx-ts-icon { background: rgba(34,197,94,.13); border-color: rgba(34,197,94,.35); }
+
+/* Labels */
+.nx-ts-info { flex: 1; min-width: 0; }
+.nx-ts-name {
+    font-size: 12.5px; font-weight: 600; line-height: 1.25;
+    color: var(--c-text, #111827);
+}
+.nx-ts-desc {
+    font-size: 11px; margin-top: 1px; line-height: 1.3;
+    color: var(--c-sub, #6b7280);
+}
+
+/* Check indicator */
+.nx-ts-check {
+    width: 16px; height: 16px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #22c55e;
+    opacity: 0;
+    transform: scale(.6);
+    transition: opacity 180ms ease, transform 180ms cubic-bezier(.34,1.56,.64,1);
+}
+.nx-ts-option.nx-ts-on .nx-ts-check {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Smooth transition when switching themes (applied momentarily) */
+html.nx-switching,
+html.nx-switching *,
+html.nx-switching *::before,
+html.nx-switching *::after {
+    transition:
+        background-color 200ms ease,
+        border-color 200ms ease,
+        color 160ms ease,
+        box-shadow 200ms ease !important;
+}

@@ -434,27 +434,47 @@ HTML;
 })();
 </script>
 
-<!-- ── Theme switcher Alpine component ── -->
+<!-- ── Premium Theme Switcher — Alpine component ── -->
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('nxTheme', () => ({
-        cur: localStorage.getItem('nx-theme') || 'auto',
+        cur:          localStorage.getItem('nx-theme') || 'auto',
+        popover:      false,
+        popoverStyle: '',
+
+        get modeLabel() {
+            return { light: 'Claro', dark: 'Oscuro', auto: 'Automático' }[this.cur] ?? 'Automático';
+        },
+
         init() {
-            // Respond to system preference changes in auto mode
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
                 if (this.cur === 'auto') this._apply('auto');
             });
         },
+
+        togglePopover(el) {
+            if (this.popover) { this.popover = false; return; }
+            const rect = el.getBoundingClientRect();
+            const left = Math.max(8, Math.min(rect.left - 4, window.innerWidth - 252));
+            this.popoverStyle = `bottom:${window.innerHeight - rect.top + 10}px;left:${left}px;`;
+            this.popover = true;
+        },
+
         _apply(v) {
             const dark = v === 'dark' || (v === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            // Smooth transition on all color properties
+            document.documentElement.classList.add('nx-switching');
             document.documentElement.classList.toggle('dark', dark);
             document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
             try { localStorage.setItem('_x_colorMode', dark ? 'dark' : 'light'); } catch(e) {}
+            setTimeout(() => document.documentElement.classList.remove('nx-switching'), 260);
         },
+
         set(v) {
             this.cur = v;
             localStorage.setItem('nx-theme', v);
             this._apply(v);
+            this.popover = false;
         }
     }));
 });
@@ -694,33 +714,6 @@ HTML
 
         <div class="nx-sf-panel-email">{$email}</div>
 
-        <!-- Theme switcher -->
-        <div x-data="nxTheme()">
-            <span class="nx-theme-label">Tema</span>
-            <div class="nx-theme-row" style="border-bottom:none;padding:0 10px 10px">
-                <button type="button" class="nx-theme-btn" :class="cur==='light' ? 'nx-active' : ''" @click="set('light')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12">
-                        <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-                    </svg>
-                    Claro
-                </button>
-                <button type="button" class="nx-theme-btn" :class="cur==='dark' ? 'nx-active' : ''" @click="set('dark')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                    </svg>
-                    Oscuro
-                </button>
-                <button type="button" class="nx-theme-btn" :class="cur==='auto' ? 'nx-active' : ''" @click="set('auto')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12">
-                        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
-                    </svg>
-                    Auto
-                </button>
-            </div>
-        </div>
-
-        <div class="nx-sf-sep"></div>
-
         <a href="{$profileUrl}" class="nx-sf-item" @click="open=false">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
             Mi perfil
@@ -754,6 +747,102 @@ HTML
                 <svg fill="currentColor" viewBox="0 0 20 20" width="14" height="14"><circle cx="10" cy="4" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="10" cy="16" r="1.5"/></svg>
             </div>
         </button>
+    </div>
+
+    <!-- ── Premium Theme Switcher ── -->
+    <div class="nx-ts-row" x-data="nxTheme()" @click.outside="popover=false">
+
+        <button type="button" class="nx-ts-trigger" @click.stop="togglePopover(\$el)" :title="modeLabel">
+            <!-- Sun — light -->
+            <template x-if="cur === 'light'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13">
+                    <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+                </svg>
+            </template>
+            <!-- Moon — dark -->
+            <template x-if="cur === 'dark'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+            </template>
+            <!-- Monitor — auto -->
+            <template x-if="cur === 'auto'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="13" height="13">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+                </svg>
+            </template>
+            <span x-text="modeLabel"></span>
+        </button>
+
+        <!-- Popover -->
+        <div class="nx-ts-popover"
+             x-show="popover"
+             x-cloak
+             :style="popoverStyle"
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-1"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-100"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95">
+
+            <div class="nx-ts-popover-title">Apariencia</div>
+
+            <!-- Claro -->
+            <button type="button" class="nx-ts-option" :class="cur === 'light' ? 'nx-ts-on' : ''" @click="set('light')">
+                <div class="nx-ts-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15">
+                        <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+                    </svg>
+                </div>
+                <div class="nx-ts-info">
+                    <div class="nx-ts-name">Claro</div>
+                    <div class="nx-ts-desc">Apariencia clara</div>
+                </div>
+                <div class="nx-ts-check">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14">
+                        <path d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+            </button>
+
+            <!-- Oscuro -->
+            <button type="button" class="nx-ts-option" :class="cur === 'dark' ? 'nx-ts-on' : ''" @click="set('dark')">
+                <div class="nx-ts-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </div>
+                <div class="nx-ts-info">
+                    <div class="nx-ts-name">Oscuro</div>
+                    <div class="nx-ts-desc">Modo oscuro permanente</div>
+                </div>
+                <div class="nx-ts-check">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14">
+                        <path d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+            </button>
+
+            <!-- Automático -->
+            <button type="button" class="nx-ts-option" :class="cur === 'auto' ? 'nx-ts-on' : ''" @click="set('auto')">
+                <div class="nx-ts-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+                    </svg>
+                </div>
+                <div class="nx-ts-info">
+                    <div class="nx-ts-name">Automático</div>
+                    <div class="nx-ts-desc">Sigue tu sistema</div>
+                </div>
+                <div class="nx-ts-check">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14">
+                        <path d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+            </button>
+
+        </div>
     </div>
 
     <button class="nx-sf-trigger" type="button" x-ref="trigger" @click="toggle()">
