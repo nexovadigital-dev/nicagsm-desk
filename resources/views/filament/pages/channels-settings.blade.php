@@ -202,15 +202,20 @@
                 </div>
                 <span class="ch-channel-name">Web Widget</span>
             </div>
-            <p class="ch-channel-desc">Añade el widget de chat a cualquier sitio web con un snippet de código.</p>
+            <p class="ch-channel-desc">Añade el widget de chat a cualquier sitio web. Cada widget tiene su propio snippet de instalación con token único.</p>
         </div>
         <div class="ch-panel">
-            <div style="font-size:12px;color:var(--c-sub);margin-bottom:10px">
-                Pega este código en el <code style="background:var(--c-bg);padding:1px 5px;border-radius:4px;font-size:11px">&lt;head&gt;</code> de tu sitio:
-            </div>
-            <pre class="ch-code-block"><code>&lt;div id="nexova-chat-root"&gt;&lt;/div&gt;
-@vite(['resources/css/widget.css','resources/js/widget/widget.jsx'])
-&lt;script&gt;window.NexovaChatConfig={apiUrl:"{{ url('/') }}"}&lt;/script&gt;</code></pre>
+            <p style="font-size:13px;color:var(--c-text,#374151);line-height:1.6;margin:0 0 14px">
+                Puedes crear varios widgets — uno por sitio web o marca. Cada uno tiene su propio snippet de código con token único que encuentras dentro de la configuración del widget.
+            </p>
+            <a href="{{ \App\Filament\Resources\ChatWidgetResource::getUrl('index') }}"
+               style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#1e293b;color:#f8fafc;border-radius:7px;font-size:12.5px;font-weight:500;text-decoration:none;transition:background .1s"
+               onmouseover="this.style.background='#0f172a'" onmouseout="this.style.background='#1e293b'">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+                Ir a Widgets
+            </a>
         </div>
     </div>
 
