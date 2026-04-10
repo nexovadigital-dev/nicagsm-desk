@@ -41,11 +41,30 @@ class WpApiController extends Controller
         }
 
         $org = $token->organization;
+
+        if (! $org->is_active) {
+            return response()->json([
+                'ok'      => false,
+                'active'  => false,
+                'message' => 'Cuenta desactivada.',
+            ], 403);
+        }
+
+        // Determine plan label for WP plugin display
+        $plan = $org->plan ?? 'free';
+        if ($org->is_partner) {
+            // Check if this is an Edge installation (partner_domain set)
+            $plan = $org->partner_domain ? 'partner_edge' : 'partner';
+        }
+
         return response()->json([
-            'ok'       => true,
-            'org_name' => $org->name,
-            'org_id'   => $token->organization_id,
-            'org_plan' => $org->plan ?? 'free',
+            'ok'         => true,
+            'active'     => true,
+            'org_name'   => $org->name,
+            'org_id'     => $token->organization_id,
+            'org_plan'   => $plan,
+            'is_partner' => (bool) $org->is_partner,
+            'is_edge'    => (bool) ($org->is_partner && $org->partner_domain),
         ]);
     }
 

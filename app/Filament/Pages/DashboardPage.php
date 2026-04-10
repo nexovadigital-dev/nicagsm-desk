@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Filament\Concerns\ScopedToOrganization;
+use App\Models\ChatWidget;
 use App\Models\Message;
 use App\Models\Ticket;
 use Filament\Pages\Page;
@@ -29,6 +30,20 @@ class DashboardPage extends Page
     }
 
     public function getTitle(): string|Htmlable { return ''; }
+
+    /**
+     * Widgets de la org que tienen el bot desactivado — para mostrar alerta en el dashboard.
+     */
+    public function getBotsDisabledProperty(): \Illuminate\Support\Collection
+    {
+        $orgId = auth()->user()?->organization_id;
+        if (! $orgId) return collect();
+
+        return ChatWidget::where('organization_id', $orgId)
+            ->where('is_active', true)
+            ->where('bot_enabled', false)
+            ->pluck('name');
+    }
 
     private function orgTickets(): \Illuminate\Database\Eloquent\Builder
     {

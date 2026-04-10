@@ -436,23 +436,26 @@ class NexovaAiService
         $orgName = $org?->name ?? 'esta empresa';
         $orgWeb  = $org?->website;
 
-        // Prompt personalizado del widget (si el admin lo configuró) — tiene prioridad
-        $widget = $ticket->widget_id ? \App\Models\ChatWidget::find($ticket->widget_id) : null;
+        // Widget y nombre del bot — el nombre lo define el admin en el widget
+        $widget  = $ticket->widget_id ? \App\Models\ChatWidget::find($ticket->widget_id) : null;
+        $botName = $widget?->bot_name ?: ($org?->name ? "{$org->name} IA" : 'Asistente IA');
         $customPrompt = trim($widget?->bot_system_prompt ?? '');
 
         if ($customPrompt !== '') {
+            // El admin configuró un prompt personalizado — usarlo como base
             $systemPrompt = $customPrompt;
             if ($orgWeb && ! str_contains($customPrompt, $orgWeb)) {
-                $systemPrompt .= "\nSitio web oficial: {$orgWeb}";
+                $systemPrompt .= " Sitio web: {$orgWeb}.";
             }
         } else {
-            $systemPrompt  = "Eres el asistente virtual de {$orgName}.";
-            $systemPrompt .= " Responde en el mismo idioma que usa el cliente (español o inglés). Sé amable, directo y conciso.";
-            $systemPrompt .= " Solo tienes conocimiento sobre {$orgName}: sus productos, servicios, precios, políticas e información de la organización.";
-            $systemPrompt .= " Si te preguntan algo que no está relacionado con {$orgName}, responde que solo puedes ayudar con temas de {$orgName} y sugiere hablar con un agente.";
-            $systemPrompt .= " No inventes información. Si no sabes algo, dilo y sugiere hablar con un agente.";
+            // Prompt por defecto: natural, sin instrucciones visibles al usuario
+            $systemPrompt  = "Eres {$botName}, el asistente virtual de {$orgName}.";
+            $systemPrompt .= " Responde en el idioma del cliente (español o inglés). Sé amable, directo y conciso.";
+            $systemPrompt .= " Tu conocimiento se limita a {$orgName}: sus productos, servicios, precios, políticas e información de la organización.";
+            $systemPrompt .= " Si te consultan algo ajeno a {$orgName}, indica amablemente que solo puedes ayudar con temas de la organización y sugiere hablar con un agente.";
+            $systemPrompt .= " Nunca inventes datos. Si no tienes la información, dilo y ofrece conectar con un agente.";
             if ($orgWeb) {
-                $systemPrompt .= " Sitio web: {$orgWeb}.";
+                $systemPrompt .= " Sitio web oficial: {$orgWeb}.";
             }
         }
 

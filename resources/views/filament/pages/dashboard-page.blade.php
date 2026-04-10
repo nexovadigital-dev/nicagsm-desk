@@ -8,11 +8,11 @@
 
 /* ══ Header ═════════════════════════════════════════ */
 .nx-db-hd { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-.nx-db-greeting { font-size: 21px; font-weight: 700; color: var(--nx-text); letter-spacing: -.025em; line-height: 1.2; }
-.nx-db-greeting-sub { font-size: 13px; color: var(--nx-muted); margin-top: 4px; }
+.nx-db-greeting { font-size: 21px; font-weight: 700; color: #0f172a; letter-spacing: -.025em; line-height: 1.2; }
+.nx-db-greeting-sub { font-size: 13px; color: #64748b; margin-top: 4px; }
 .nx-db-date-block { text-align: right; flex-shrink: 0; }
-.nx-db-date-main { font-size: 13px; font-weight: 600; color: var(--nx-text); }
-.nx-db-date-sub  { font-size: 12px; color: var(--nx-muted); margin-top: 2px; }
+.nx-db-date-main { font-size: 13px; font-weight: 600; color: #0f172a; }
+.nx-db-date-sub  { font-size: 12px; color: #94a3b8; margin-top: 2px; }
 
 /* ══ KPI grid ════════════════════════════════════════ */
 .nx-kpis { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
@@ -20,15 +20,15 @@
 @media (max-width:600px)  { .nx-kpis { grid-template-columns: 1fr; } }
 
 .nx-kpi {
-    background: var(--nx-surface);
-    border: 1px solid var(--nx-border);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
     padding: 20px 64px 20px 20px;
     position: relative;
     transition: border-color .15s;
     overflow: hidden;
 }
-.nx-kpi:hover { border-color: var(--nx-muted); }
+.nx-kpi:hover { border-color: #cbd5e1; }
 
 /* Left accent stripe — single brand green */
 .nx-kpi::before {
@@ -46,24 +46,24 @@
     background: rgba(34,197,94,.09);
 }
 .nx-kpi__label {
-    font-size: 11px; font-weight: 600; color: var(--nx-muted);
+    font-size: 11px; font-weight: 600; color: #94a3b8;
     text-transform: uppercase; letter-spacing: .07em;
     margin-bottom: 10px; line-height: 1;
 }
 .nx-kpi__value {
-    font-size: 32px; font-weight: 700; color: var(--nx-text);
+    font-size: 32px; font-weight: 700; color: #0f172a;
     line-height: 1; letter-spacing: -.03em; margin-bottom: 10px;
 }
-.nx-kpi__value em { font-size: 17px; font-weight: 500; color: var(--nx-muted); font-style: normal; letter-spacing: 0; }
+.nx-kpi__value em { font-size: 17px; font-weight: 500; color: #94a3b8; font-style: normal; letter-spacing: 0; }
 .nx-kpi__pills { display: flex; flex-wrap: wrap; gap: 5px; }
 .nx-kpi__pill {
     font-size: 11px; font-weight: 600; padding: 2px 8px;
     border-radius: 99px; white-space: nowrap;
 }
-.nx-kpi__meta { font-size: 12px; color: var(--nx-muted); }
+.nx-kpi__meta { font-size: 12px; color: #94a3b8; }
 .nx-stars { display: flex; gap: 2px; margin-top: 2px; }
 .nx-star { font-size: 13px; color: #f59e0b; }
-.nx-star.off { color: var(--nx-border); }
+.nx-star.off { color: #e2e8f0; }
 
 /* ══ Main 2-col grid ════════════════════════════════ */
 .nx-db-main { display: grid; grid-template-columns: 1fr 280px; gap: 14px; }
@@ -71,17 +71,17 @@
 
 /* ══ Card base ══════════════════════════════════════ */
 .nx-card {
-    background: var(--nx-surface);
-    border: 1px solid var(--nx-border);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
     border-radius: 8px; overflow: hidden;
 }
 .nx-card__hd {
     padding: 15px 20px 13px;
-    border-bottom: 1px solid var(--nx-border);
+    border-bottom: 1px solid #e2e8f0;
     display: flex; align-items: center; justify-content: space-between;
 }
-.nx-card__title { font-size: 13px; font-weight: 600; color: var(--nx-text); letter-spacing: -.01em; }
-.nx-card__sub   { font-size: 11.5px; color: var(--nx-muted); }
+.nx-card__title { font-size: 13px; font-weight: 600; color: #0f172a; letter-spacing: -.01em; }
+.nx-card__sub   { font-size: 11.5px; color: #94a3b8; }
 .nx-card__body  { padding: 20px; }
 
 /* ══ Bar chart ═══════════════════════════════════════ */
@@ -97,7 +97,7 @@
     position: relative; gap: 0; cursor: default;
 }
 .nx-chart-val {
-    font-size: 10px; font-weight: 700; color: var(--nx-text);
+    font-size: 10px; font-weight: 700; color: #0f172a;
     margin-bottom: 5px; line-height: 1; opacity: 0;
     transition: opacity .15s;
 }
@@ -111,7 +111,7 @@
 .nx-chart-col:hover .nx-chart-bar { opacity: 1; }
 .nx-chart-day {
     position: absolute; bottom: -18px;
-    font-size: 9.5px; color: var(--nx-muted);
+    font-size: 9.5px; color: #94a3b8;
     letter-spacing: .02em; text-transform: uppercase;
     font-weight: 500; white-space: nowrap;
 }
@@ -120,19 +120,19 @@
 .nx-catlist { display: flex; flex-direction: column; }
 .nx-cat {
     display: flex; align-items: center; gap: 11px;
-    padding: 10px 0; border-bottom: 1px solid var(--nx-border);
+    padding: 10px 0; border-bottom: 1px solid #f1f5f9;
 }
 .nx-cat:last-child { border-bottom: none; padding-bottom: 0; }
 .nx-cat__dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.nx-cat__label { font-size: 13px; font-weight: 500; color: var(--nx-text); flex: 1; }
-.nx-cat__track { flex: 2; height: 5px; background: var(--nx-surf2); border-radius: 99px; overflow: hidden; }
+.nx-cat__label { font-size: 13px; font-weight: 500; color: #0f172a; flex: 1; }
+.nx-cat__track { flex: 2; height: 5px; background: #f1f5f9; border-radius: 99px; overflow: hidden; }
 .nx-cat__fill  { height: 5px; border-radius: 99px; transition: width .4s ease; }
-.nx-cat__count { font-size: 13px; font-weight: 600; color: var(--nx-text); min-width: 28px; text-align: right; }
+.nx-cat__count { font-size: 13px; font-weight: 600; color: #0f172a; min-width: 28px; text-align: right; }
 
 /* ══ Platform icon ═══════════════════════════════════ */
 .nx-plat-icon {
     width: 28px; height: 28px; border-radius: 7px;
-    background: var(--nx-surf2); border: 1px solid var(--nx-border);
+    background: #f8fafc; border: 1px solid #e2e8f0;
     display: flex; align-items: center; justify-content: center;
     font-size: 13px; flex-shrink: 0;
 }
@@ -140,29 +140,29 @@
 /* ══ Rating dist ═════════════════════════════════════ */
 .nx-rrow { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
 .nx-rrow__stars { font-size: 11px; color: #f59e0b; font-weight: 600; flex-shrink: 0; width: 62px; }
-.nx-rrow__track { flex: 1; height: 5px; background: var(--nx-surf2); border-radius: 99px; overflow: hidden; }
+.nx-rrow__track { flex: 1; height: 5px; background: #f1f5f9; border-radius: 99px; overflow: hidden; }
 .nx-rrow__fill  { height: 5px; background: #f59e0b; border-radius: 99px; }
-.nx-rrow__n { font-size: 12px; font-weight: 600; color: var(--nx-muted); min-width: 20px; text-align: right; }
+.nx-rrow__n { font-size: 12px; font-weight: 600; color: #0f172a; min-width: 20px; text-align: right; }
 
 /* ══ Satisfaction 2-col ══════════════════════════════ */
 .nx-db-sat { display: grid; grid-template-columns: 1fr 280px; gap: 14px; }
 @media (max-width:1100px) { .nx-db-sat { grid-template-columns: 1fr; } }
 
 /* ══ Empty ══════════════════════════════════════════ */
-.nx-empty { font-size: 12.5px; color: var(--nx-muted); text-align: center; padding: 18px 0; }
+.nx-empty { font-size: 12.5px; color: #94a3b8; text-align: center; padding: 18px 0; }
 
 /* ══ Quick actions ═══════════════════════════════════ */
 .nx-qactions { display: flex; gap: 10px; flex-wrap: wrap; }
 .nx-qa {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 9px 16px; border-radius: 8px;
-    font-size: 13px; font-weight: 500; color: var(--nx-text);
-    background: var(--nx-surface); border: 1px solid var(--nx-border);
+    font-size: 13px; font-weight: 500; color: #374151;
+    background: #ffffff; border: 1px solid #e2e8f0;
     text-decoration: none; cursor: pointer;
     transition: border-color .15s, background .15s, color .15s;
 }
-.nx-qa:hover { background: var(--nx-surf2); border-color: #22c55e; color: #15803d; }
-.nx-qa svg { color: var(--nx-muted); flex-shrink: 0; transition: color .15s; }
+.nx-qa:hover { background: #f8fafc; border-color: #22c55e; color: #15803d; }
+.nx-qa svg { color: #64748b; flex-shrink: 0; transition: color .15s; }
 .nx-qa:hover svg { color: #22c55e; }
 
 /* ══ Recent tickets ══════════════════════════════════ */
@@ -171,7 +171,7 @@
 @media (max-width:1100px) { .nx-recent-grid { grid-template-columns: 1fr; } }
 .nx-rt-row {
     display: flex; align-items: center; gap: 12px;
-    padding: 10px 0; border-bottom: 1px solid var(--nx-border);
+    padding: 10px 0; border-bottom: 1px solid #f1f5f9;
 }
 .nx-rt-row:last-child { border-bottom: none; padding-bottom: 0; }
 .nx-rt-avatar {
@@ -180,10 +180,10 @@
     font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
 }
 .nx-rt-info { flex: 1; min-width: 0; }
-.nx-rt-name { font-size: 13px; font-weight: 600; color: var(--nx-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.nx-rt-subj { font-size: 11.5px; color: var(--nx-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.nx-rt-name { font-size: 13px; font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nx-rt-subj { font-size: 11.5px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
 .nx-rt-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
-.nx-rt-time  { font-size: 11px; color: var(--nx-muted); }
+.nx-rt-time  { font-size: 11px; color: #94a3b8; }
 .nx-rt-badge {
     display: inline-flex; align-items: center; padding: 2px 7px;
     border-radius: 99px; font-size: 10px; font-weight: 700;
@@ -224,6 +224,22 @@
         <div class="nx-db-date-sub">{{ now()->format('Y') }} · {{ now()->format('H:i') }}</div>
     </div>
 </div>
+
+{{-- ══ Alerta: bot desactivado ══════════════════════════════════ --}}
+@if($this->botsDisabled->isNotEmpty())
+<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px;margin-bottom:16px;background:#fefce8;border:1px solid #fde047;border-radius:10px;color:#713f12">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18" style="flex-shrink:0;margin-top:1px">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <div style="font-size:13px;line-height:1.5">
+        <strong>Bot de IA desactivado</strong> en:
+        {{ $this->botsDisabled->implode(', ') }}.
+        Los visitantes serán atendidos solo por agentes humanos.
+        <a href="{{ route('filament.admin.resources.chat-widgets.index') }}" style="color:#92400e;font-weight:600;text-decoration:underline;margin-left:4px">Activar bot →</a>
+    </div>
+</div>
+@endif
 
 {{-- ══ KPI cards ═══════════════════════════════════════════════ --}}
 <div class="nx-kpis">
