@@ -113,6 +113,14 @@ class SmtpSettings extends Page
         $org  = auth()->user()->organization;
         $smtp = SmtpSetting::forOrg($orgId);
 
+        // Bloquear si SMTP propio está activado pero incompleto
+        if ($smtp->enabled) {
+            if (empty($smtp->host) || empty($smtp->username) || empty($smtp->from_address)) {
+                $this->dispatch('nexova-toast', type: 'error', message: 'Completa y guarda la configuración SMTP antes de hacer una prueba.');
+                return;
+            }
+        }
+
         try {
             $mailerName = OrgMailer::mailerNameFor($org);
             [$fromAddr, $fromName] = OrgMailer::fromFor($org);

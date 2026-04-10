@@ -97,6 +97,11 @@
                     <span class="sm-slider"></span>
                 </label>
             </div>
+            @if($notificationsEnabled && ! $smtpReady)
+                <div class="sm-notice" style="margin-top:10px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);color:#b91c1c">
+                    Las notificaciones están activadas pero el SMTP no está configurado — los emails no se enviarán.
+                </div>
+            @endif
         </div>
     </div>
 
@@ -167,24 +172,37 @@
     </div>
 
     {{-- ── Probar configuración ── --}}
+    @php
+        $smtpReady = $enabled && !empty($host) && !empty($username) && !empty($fromAddress);
+    @endphp
     <div class="sm-section">
         <div class="sm-section-label">
             <h3>Probar envío</h3>
             <p>Verifica que el email llega correctamente antes de activarlo para tus clientes.</p>
         </div>
         <div>
-            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-                <input type="email" class="sm-input" wire:model="testEmail" placeholder="email@destino.com" style="max-width:260px">
-                <button class="sm-btn sm-btn-ghost" wire:click="sendTest" wire:loading.attr="disabled">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                    </svg>
-                    Enviar prueba
-                </button>
-            </div>
-            <p style="font-size:11.5px;color:var(--c-sub,#6b7280);margin-top:8px">
-                Se usará el SMTP activo (propio si está habilitado, o el de la plataforma).
-            </p>
+            @if(! $smtpReady)
+                <div class="sm-notice" style="background:rgba(100,116,139,.07);border:1px solid rgba(100,116,139,.2);color:var(--c-sub,#6b7280)">
+                    Configura y guarda tu SMTP primero para poder hacer una prueba de envío.
+                </div>
+            @else
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                    <input type="email" class="sm-input" wire:model="testEmail" placeholder="email@destino.com" style="max-width:260px">
+                    <button class="sm-btn sm-btn-ghost" wire:click="sendTest" wire:loading.attr="disabled">
+                        <svg wire:loading wire:target="sendTest" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12" style="animation:spin 1s linear infinite">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        <svg wire:loading.remove wire:target="sendTest" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                        <span wire:loading.remove wire:target="sendTest">Enviar prueba</span>
+                        <span wire:loading wire:target="sendTest">Enviando…</span>
+                    </button>
+                </div>
+                <p style="font-size:11.5px;color:var(--c-sub,#6b7280);margin-top:8px">
+                    Se enviará desde <strong>{{ $fromAddress }}</strong> usando tu servidor SMTP.
+                </p>
+            @endif
         </div>
     </div>
 
