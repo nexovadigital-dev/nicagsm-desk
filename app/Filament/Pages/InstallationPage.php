@@ -62,7 +62,7 @@ class InstallationPage extends Page
         $appUrl = rtrim(config('app.url', url('/')), '/');
         $token  = $this->getSelectedWidgetModel()?->token ?? 'TU_WIDGET_TOKEN';
 
-        return "<script>\n  window.NexovaChatConfig = { apiUrl: \"{$appUrl}\", widgetToken: \"{$token}\" };\n</script>\n<script src=\"{$appUrl}/widget.js\" defer></script>";
+        return "<script>\n  window.NexovaChatConfig = { apiUrl: \"{$appUrl}\", token: \"{$token}\" };\n</script>\n<script src=\"{$appUrl}/widget.js\" defer></script>";
     }
 
     public function getWooCommerceSnippet(): string
@@ -70,7 +70,7 @@ class InstallationPage extends Page
         $appUrl = rtrim(config('app.url', url('/')), '/');
         $token  = $this->getSelectedWidgetModel()?->token ?? 'TU_WIDGET_TOKEN';
 
-        return "add_action('wp_footer', function () {\n    \$customer = [];\n    if (is_user_logged_in()) {\n        \$uid   = get_current_user_id();\n        \$user  = wp_get_current_user();\n        \$hmac  = hash_hmac('sha256', \$uid . '|' . \$user->user_email, '{$token}');\n        \$customer = ['id' => \$uid, 'email' => \$user->user_email,\n                     'name' => \$user->display_name, 'token' => \$hmac];\n    }\n    echo \"<script>window.NexovaChatConfig={apiUrl:'{$appUrl}',widgetToken:'{$token}',customer:\".wp_json_encode(\$customer).\"}</s\".\"cript>\";\n    echo \"<script src='{$appUrl}/widget.js' defer></s\".\"cript>\";\n});";
+        return "add_action('wp_footer', function () {\n    \$customer = [];\n    if (is_user_logged_in()) {\n        \$uid   = get_current_user_id();\n        \$user  = wp_get_current_user();\n        \$hmac  = hash_hmac('sha256', \$uid . '|' . \$user->user_email, '{$token}');\n        \$customer = ['id' => \$uid, 'email' => \$user->user_email,\n                     'name' => \$user->display_name, 'token' => \$hmac];\n    }\n    echo \"<script>window.NexovaChatConfig={apiUrl:'{$appUrl}',token:'{$token}',customer:\".wp_json_encode(\$customer).\"}</s\".\"cript>\";\n    echo \"<script src='{$appUrl}/widget.js' defer></s\".\"cript>\";\n});";
     }
 
     public function getReactCode(): string
@@ -78,6 +78,6 @@ class InstallationPage extends Page
         $appUrl = rtrim(config('app.url', url('/')), '/');
         $token  = $this->getSelectedWidgetModel()?->token ?? 'TU_WIDGET_TOKEN';
 
-        return "import { useEffect } from 'react';\n\nexport default function NexovaChat() {\n  useEffect(() => {\n    window.NexovaChatConfig = { apiUrl: '{$appUrl}', widgetToken: '{$token}' };\n    const s = document.createElement('script');\n    s.src = '{$appUrl}/widget.js';\n    s.defer = true;\n    document.body.appendChild(s);\n    return () => document.body.removeChild(s);\n  }, []);\n  return null;\n}\n// En tu layout: <NexovaChat />";
+        return "import { useEffect } from 'react';\n\nexport default function NexovaChat() {\n  useEffect(() => {\n    window.NexovaChatConfig = { apiUrl: '{$appUrl}', token: '{$token}' };\n    const s = document.createElement('script');\n    s.src = '{$appUrl}/widget.js';\n    s.defer = true;\n    document.body.appendChild(s);\n    return () => document.body.removeChild(s);\n  }, []);\n  return null;\n}\n// En tu layout: <NexovaChat />";
     }
 }
