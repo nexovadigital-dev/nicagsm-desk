@@ -55,7 +55,7 @@ class SubscriptionPage extends Page
 
             if ($response->successful()) {
                 $data = $response->json();
-                $this->licenseValid      = (bool) ($data['active'] ?? false);
+                $this->licenseValid      = (bool) ($data['valid'] ?? $data['active'] ?? false);
                 $this->licenseStatus     = $this->licenseValid ? 'active' : 'inactive';
             } else {
                 $this->licenseStatus = 'error';
