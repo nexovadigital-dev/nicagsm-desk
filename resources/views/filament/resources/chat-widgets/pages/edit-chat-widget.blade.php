@@ -214,6 +214,17 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
             </div>
         </div>
 
+        {{-- Prompt maestro del bot --}}
+        @if(!$isAiBlocked)
+        <div class="wc-field" style="margin-top:14px">
+            <label class="wc-label">Prompt maestro del bot <span style="font-weight:400;text-transform:none;color:#9ca3af">(opcional)</span></label>
+            <textarea class="wc-input" wire:model="botSystemPrompt" rows="5"
+                style="resize:vertical;line-height:1.5;font-family:inherit"
+                placeholder="Ej: Eres el asistente virtual de NicaGSM, especializado en telefonía y reparación de equipos móviles. Responde en español, sé amable y conciso. Solo responde sobre productos, precios, servicios y políticas de NicaGSM. Si el cliente pregunta algo fuera de este tema, sugiere hablar con un agente."></textarea>
+            <p style="font-size:11px;color:var(--c-sub);margin:3px 0 0">Define cómo debe comportarse el bot. Si lo dejas vacío se usará el prompt por defecto. La base de conocimiento y el contexto de la tienda se agregan automáticamente.</p>
+        </div>
+        @endif
+
         {{-- Widget name (internal) --}}
         <div class="wc-field" style="margin-top:12px">
             <label class="wc-label">Nombre interno del widget</label>

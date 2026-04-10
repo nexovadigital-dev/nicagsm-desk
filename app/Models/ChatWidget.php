@@ -19,7 +19,7 @@ class ChatWidget extends Model
         'show_branding', 'sound_enabled', 'require_rating', 'rating_message',
         'pre_chat_enabled', 'pre_chat_fields',
         'button_style', 'button_icon', 'button_text', 'button_text_color', 'button_image',
-        'agent_call_timeout', 'agent_no_response', 'bot_enabled', 'bot_avatar',
+        'agent_call_timeout', 'agent_no_response', 'bot_enabled', 'bot_avatar', 'bot_system_prompt',
     ];
 
     protected $casts = [

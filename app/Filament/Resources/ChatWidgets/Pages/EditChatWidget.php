@@ -29,6 +29,7 @@ class EditChatWidget extends Page
     public string $botName        = 'Nexova IA';
     public bool   $botEnabled     = true;
     public string $botAvatar      = '';
+    public string $botSystemPrompt = '';
     public $botAvatarFile         = null;
     public string $botAvatarPreview = '';
     public string $welcomeMessage = 'Hola, ¿en qué te puedo ayudar?';
@@ -83,6 +84,7 @@ class EditChatWidget extends Page
         $this->botName             = $w->bot_name;
         $this->botEnabled          = (bool) ($w->bot_enabled ?? true);
         $this->botAvatar           = $w->bot_avatar ?? '';
+        $this->botSystemPrompt     = $w->bot_system_prompt ?? '';
         $this->welcomeMessage      = $w->welcome_message;
         $this->accentColor         = $w->accent_color;
         $this->widgetPosition      = $w->widget_position;
@@ -173,6 +175,7 @@ class EditChatWidget extends Page
             'bot_name'                => $this->botName,
             'bot_enabled'             => $this->botEnabled,
             'bot_avatar'              => $this->botAvatar ?: null,
+            'bot_system_prompt'       => trim($this->botSystemPrompt) ?: null,
             'welcome_message'         => $this->welcomeMessage,
             'accent_color'            => $this->accentColor,
             'widget_position'         => $this->widgetPosition,

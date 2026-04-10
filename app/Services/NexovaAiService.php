@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\ApiSetting;
 use App\Models\KnowledgeBase;
 use App\Models\Message;
 use App\Models\Ticket;
@@ -162,15 +163,27 @@ class NexovaAiService
     {
         $list = collect();
 
-        // Partner Edition: usa SIEMPRE las keys propias de la org (hasta 3 Groq + Gemini)
-        // No hay fallback a platform keys — el partner configura sus propias keys.
-        if ($org) {
-            foreach ($org->effectiveGroqKeys() as $key) {
-                $list->push(['type' => 'groq', 'key' => $key]);
+        // Org-own keys (highest priority)
+        if ($org?->ai_use_own_keys) {
+            if ($key = $org->effectiveGroqKey()) {
+                $list->push(['type' => 'groq',   'key' => $key]);
             }
             if ($key = $org->effectiveGeminiKey()) {
                 $list->push(['type' => 'gemini', 'key' => $key]);
             }
+        }
+
+        // Platform keys (fallback)
+        $platform = ApiSetting::query()
+            ->where('is_active', true)
+            ->whereIn('provider', self::PROVIDERS)
+            ->orderBy('priority')
+            ->get();
+
+        foreach ($platform as $p) {
+            // Avoid duplicating if org already added the same provider
+            if ($org?->ai_use_own_keys && $list->contains('type', $p->provider)) continue;
+            $list->push(['type' => $p->provider, 'key' => $p->api_key]);
         }
 
         return $list;
@@ -423,20 +436,33 @@ class NexovaAiService
         $orgName = $org?->name ?? 'esta empresa';
         $orgWeb  = $org?->website;
 
-        // Prompt base: identidad del bot restringida a la organización
-        $systemPrompt = implode("\n", [
-            "Eres un asistente virtual de atención al cliente de {$orgName}.",
-            'Responde siempre en el mismo idioma que el cliente. Sé amable, profesional y conciso (máximo 3 párrafos cortos).',
-            '',
-            '**REGLAS IMPORTANTES:**',
-            "- Solo puedes responder preguntas relacionadas con {$orgName}, sus productos, servicios, precios, políticas o información del sitio web.",
-            '- Si el usuario pregunta algo que NO está relacionado con la empresa (como la hora, geografía, ciencia, deportes, política u otros temas generales), responde amablemente:',
-            "  \"Solo estoy entrenado para ayudarte con información de {$orgName}. Para consultas fuera de este tema, te sugiero contactar a un agente.\"",
-            '- No inventes información. Si no sabes algo sobre la empresa, dilo honestamente y sugiere hablar con un agente.',
-        ]);
+        // Prompt personalizado del widget (si el admin lo configuró) — tiene prioridad
+        $widget = $ticket->widget_id ? \App\Models\ChatWidget::find($ticket->widget_id) : null;
+        $customPrompt = trim($widget?->bot_system_prompt ?? '');
 
-        if ($orgWeb) {
-            $systemPrompt .= "\n- El sitio web oficial es: {$orgWeb}";
+        if ($customPrompt !== '') {
+            // Usar el prompt personalizado como base, inyectando nombre y web si no los menciona
+            $systemPrompt = $customPrompt;
+            if ($orgWeb && ! str_contains($customPrompt, $orgWeb)) {
+                $systemPrompt .= "\n- Sitio web oficial: {$orgWeb}";
+            }
+            $systemPrompt .= "\n\n**REGLA:** No inventes información. Si no sabes algo, dilo honestamente y sugiere hablar con un agente.";
+        } else {
+            // Prompt base por defecto: identidad restringida a la organización
+            $systemPrompt = implode("\n", [
+                "Eres un asistente virtual de atención al cliente de {$orgName}.",
+                'Responde siempre en el mismo idioma que el cliente. Sé amable, profesional y conciso (máximo 3 párrafos cortos).',
+                '',
+                '**REGLAS IMPORTANTES:**',
+                "- Solo puedes responder preguntas relacionadas con {$orgName}, sus productos, servicios, precios, políticas o información del sitio web.",
+                '- Si el usuario pregunta algo que NO está relacionado con la empresa (como la hora, geografía, ciencia, deportes, política u otros temas generales), responde amablemente:',
+                "  \"Solo estoy entrenado para ayudarte con información de {$orgName}. Para consultas fuera de este tema, te sugiero contactar a un agente.\"",
+                '- No inventes información. Si no sabes algo sobre la empresa, dilo honestamente y sugiere hablar con un agente.',
+            ]);
+
+            if ($orgWeb) {
+                $systemPrompt .= "\n- El sitio web oficial es: {$orgWeb}";
+            }
         }
 
         // Contexto de tienda WooCommerce (inyectado por el plugin, prioridad alta)
