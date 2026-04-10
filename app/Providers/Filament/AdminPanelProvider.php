@@ -42,7 +42,7 @@ class AdminPanelProvider extends PanelProvider
                 'gray'    => Color::Zinc,
             ])
             ->font('Inter')
-            ->defaultThemeMode(ThemeMode::Light)
+            ->defaultThemeMode(ThemeMode::System)
             ->spa()
             ->sidebarCollapsibleOnDesktop()
             ->topNavigation(false)
@@ -433,6 +433,32 @@ HTML;
     }
 })();
 </script>
+
+<!-- ── Theme switcher Alpine component ── -->
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('nxTheme', () => ({
+        cur: localStorage.getItem('nx-theme') || 'auto',
+        init() {
+            // Respond to system preference changes in auto mode
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                if (this.cur === 'auto') this._apply('auto');
+            });
+        },
+        _apply(v) {
+            const dark = v === 'dark' || (v === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.toggle('dark', dark);
+            document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+            try { localStorage.setItem('_x_colorMode', dark ? 'dark' : 'light'); } catch(e) {}
+        },
+        set(v) {
+            this.cur = v;
+            localStorage.setItem('nx-theme', v);
+            this._apply(v);
+        }
+    }));
+});
+</script>
 HTML
             )
             ->renderHook(
@@ -441,18 +467,15 @@ HTML
                     $org     = auth()->user()?->organization;
                     $orgName = addslashes($org?->name ?? '');
                     return <<<HTML
-<!-- ── Force light mode BEFORE content renders ── -->
-<style>
-/* Forzar fondo claro siempre — override modo oscuro de Filament */
-html, html.dark { background: #f9fafb !important; color-scheme: light !important; }
-html body, html.dark body { background: #f9fafb !important; }
-</style>
+<!-- ── Theme init — NO flash, runs before render ── -->
 <script>
 (function(){
-    localStorage.removeItem('theme');
-    document.documentElement.classList.remove('dark');
-    document.documentElement.classList.add('light');
-    document.documentElement.style.colorScheme = 'light';
+    var s = localStorage.getItem('nx-theme') || 'auto';
+    var dark = s === 'dark' || (s === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.classList.toggle('dark', dark);
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+    // Sync Filament's own key so it doesn't override us on Alpine init
+    try { localStorage.setItem('_x_colorMode', dark ? 'dark' : 'light'); } catch(e) {}
 })();
 </script>
 <script>
@@ -670,6 +693,33 @@ HTML
          x-transition:leave-end="opacity-0">
 
         <div class="nx-sf-panel-email">{$email}</div>
+
+        <!-- Theme switcher -->
+        <div x-data="nxTheme()">
+            <span class="nx-theme-label">Tema</span>
+            <div class="nx-theme-row" style="border-bottom:none;padding:0 10px 10px">
+                <button type="button" class="nx-theme-btn" :class="cur==='light' ? 'nx-active' : ''" @click="set('light')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12">
+                        <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+                    </svg>
+                    Claro
+                </button>
+                <button type="button" class="nx-theme-btn" :class="cur==='dark' ? 'nx-active' : ''" @click="set('dark')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                    Oscuro
+                </button>
+                <button type="button" class="nx-theme-btn" :class="cur==='auto' ? 'nx-active' : ''" @click="set('auto')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+                    </svg>
+                    Auto
+                </button>
+            </div>
+        </div>
+
+        <div class="nx-sf-sep"></div>
 
         <a href="{$profileUrl}" class="nx-sf-item" @click="open=false">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>

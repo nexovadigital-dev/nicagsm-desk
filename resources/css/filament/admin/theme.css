@@ -25,7 +25,20 @@
     --c-warn:     #d97706;
 }
 
-/* modo oscuro deshabilitado — panel siempre en modo claro */
+/* ── Paleta — modo oscuro ── */
+html.dark {
+    --c-bg:       #0f1117;
+    --c-surface:  #181b21;
+    --c-surf2:    #1e2229;
+    --c-border:   #2a2f3a;
+    --c-text:     #e4e8ef;
+    --c-sub:      #7e8799;
+    --c-accent:   #22c55e;
+    --c-accent-h: #16a34a;
+    --c-accent-s: rgba(34,197,94,.13);
+    --c-accent-b: rgba(34,197,94,.3);
+    color-scheme: dark;
+}
 
 /* ─────────────────────────────────────────
    LAYOUT BASE
@@ -602,3 +615,158 @@ textarea:focus {
     border-radius: 99px;
 }
 *::-webkit-scrollbar-thumb:hover { background: var(--c-sub); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   DARK MODE — overrides completos
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Layout */
+html.dark body,
+html.dark .fi-body              { background: var(--c-bg) !important; }
+html.dark .fi-layout,
+html.dark .fi-main-ctn,
+html.dark .fi-main              { background: var(--c-bg) !important; }
+
+/* Sidebar */
+html.dark .fi-sidebar           { background: #0b0e14 !important; border-right-color: #1a1e28 !important; }
+html.dark .fi-sidebar-footer    { background: #0b0e14 !important; }
+html.dark .fi-sidebar-group-label { color: #3a4255 !important; }
+html.dark .fi-sidebar-item-label   { color: #c9d1d9 !important; }
+html.dark .fi-sidebar-item-icon,
+html.dark .fi-sidebar-item-icon svg { color: #4b5669 !important; }
+html.dark .fi-sidebar-item-btn:hover { background: #131720 !important; }
+html.dark .fi-sidebar-item-btn:hover .fi-sidebar-item-label { color: var(--c-text) !important; }
+html.dark .fi-sidebar-item-btn:hover .fi-sidebar-item-icon { color: #7e8799 !important; }
+html.dark .fi-sidebar-item-btn[aria-current="page"],
+html.dark .fi-active > .fi-sidebar-item-btn { background: rgba(34,197,94,.1) !important; border-left-color: #22c55e !important; }
+html.dark .fi-sidebar-item-btn[aria-current="page"] .fi-sidebar-item-label,
+html.dark .fi-active > .fi-sidebar-item-btn .fi-sidebar-item-label { color: #22c55e !important; }
+html.dark .fi-sidebar-item-btn[aria-current="page"] .fi-sidebar-item-icon,
+html.dark .fi-active > .fi-sidebar-item-btn .fi-sidebar-item-icon { color: #22c55e !important; }
+html.dark .fi-sidebar-close-btn { color: #3a4255 !important; }
+html.dark .fi-sidebar-close-btn:hover { background: #131720 !important; color: #7e8799 !important; }
+
+/* Topbar */
+html.dark .fi-topbar,
+html.dark .fi-topbar-ctn { background: #10131a !important; border-bottom-color: #1e2330 !important; }
+html.dark .fi-topbar .fi-icon-btn:hover { background: var(--c-surf2) !important; }
+
+/* Custom brand (nx-brand) */
+html.dark .nx-brand           { border-bottom-color: #1e2229 !important; }
+html.dark .nx-brand a:hover   { background: #131720 !important; }
+html.dark .nx-brand-name strong { color: var(--c-text) !important; }
+html.dark .nx-brand-badge     { background: rgba(34,197,94,.15) !important; color: #22c55e !important; }
+
+/* Custom user panel (nx-sf) */
+html.dark .nx-sf-panel {
+    background: #1a1e2a !important;
+    border-color: #2a2f3a !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.25) !important;
+}
+html.dark .nx-sf-panel-email  { color: #3a4255 !important; border-bottom-color: #20242f !important; }
+html.dark .nx-sf-sep          { background: #20242f !important; }
+html.dark .nx-sf-item         { color: #c9d1d9 !important; }
+html.dark .nx-sf-item:hover   { background: #222836 !important; color: var(--c-text) !important; }
+html.dark .nx-sf-item svg     { color: #3a4255 !important; }
+html.dark .nx-sf-item-arrow   { opacity: .3 !important; }
+html.dark .nx-sf-item--danger { color: #f87171 !important; }
+html.dark .nx-sf-item--danger:hover { background: rgba(248,113,113,.07) !important; }
+html.dark .nx-sf-item--danger svg   { color: #f87171 !important; }
+html.dark .nx-sf-trigger:hover      { background: #131720 !important; }
+html.dark .nx-sf-panel-user         { border-top-color: #20242f !important; }
+html.dark .nx-sf-panel-user:hover   { background: #222836 !important; }
+html.dark .nx-sf-name   { color: var(--c-text) !important; }
+html.dark .nx-sf-role   { color: #3a4255 !important; }
+html.dark .nx-sf-dots   { color: #3a4255 !important; }
+html.dark .nx-sf-avatar { background: #22c55e !important; color: #0a0f14 !important; }
+
+/* Skeleton dark */
+html.dark #nx-skeleton { background: var(--c-surface) !important; }
+html.dark .nx-sk-line {
+    background: linear-gradient(90deg, rgba(255,255,255,.04) 25%, rgba(255,255,255,.08) 50%, rgba(255,255,255,.04) 75%) !important;
+    background-size: 600px 100% !important;
+}
+html.dark .nx-sk-block {
+    background: linear-gradient(90deg, rgba(255,255,255,.03) 25%, rgba(255,255,255,.06) 50%, rgba(255,255,255,.03) 75%) !important;
+    background-size: 600px 100% !important;
+}
+
+/* Botón primario dark */
+html.dark .fi-btn-color-primary {
+    background: #22c55e !important;
+    border-color: #22c55e !important;
+    color: #0a0f14 !important;
+}
+html.dark .fi-btn-color-primary:hover {
+    background: #16a34a !important;
+    border-color: #16a34a !important;
+    box-shadow: 0 2px 8px rgba(34,197,94,.3) !important;
+}
+
+/* Modales dark */
+html.dark .fi-modal-window  { background: #1a1e2a !important; border-color: #2a2f3a !important; box-shadow: 0 24px 64px rgba(0,0,0,.6) !important; }
+html.dark .fi-modal-header  { border-bottom-color: #2a2f3a !important; }
+html.dark .fi-modal-footer  { border-top-color:    #2a2f3a !important; }
+html.dark .fi-modal-heading { color: var(--c-text) !important; }
+
+/* Dropdowns dark */
+html.dark .fi-dropdown-panel,
+html.dark .fi-user-menu-panel { background: #1a1e2a !important; border-color: #2a2f3a !important; box-shadow: 0 4px 20px rgba(0,0,0,.4) !important; }
+html.dark .fi-dropdown-list-item-btn:hover,
+html.dark .fi-user-menu-item-btn:hover { background: #222836 !important; }
+html.dark .fi-dropdown-list-item-label { color: var(--c-text) !important; }
+
+/* Inputs dark — Filament already handles via dark: variants but reinforce */
+html.dark .fi-input,
+html.dark .fi-select-input,
+html.dark .fi-textarea,
+html.dark input[type="text"],
+html.dark input[type="email"],
+html.dark input[type="password"],
+html.dark input[type="number"],
+html.dark input[type="search"],
+html.dark select,
+html.dark textarea {
+    background: var(--c-surface) !important;
+    border-color: var(--c-border) !important;
+    color: var(--c-text) !important;
+}
+
+/* Scrollbar dark */
+html.dark * { scrollbar-color: #2a2f3a transparent; }
+html.dark *::-webkit-scrollbar-thumb { background: #2a2f3a; }
+html.dark *::-webkit-scrollbar-thumb:hover { background: #3a4255; }
+
+/* Spinner dark */
+html.dark #nx-page-loader .nx-spinner { border-top-color: #22c55e; border-color: rgba(255,255,255,.08); border-top-color: #22c55e; }
+
+/* ── Theme switcher pill (3-way) ── */
+.nx-theme-row {
+    display: flex; gap: 3px;
+    padding: 6px 10px 8px;
+    border-bottom: 1px solid var(--c-border, #f3f4f6);
+}
+.nx-theme-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--c-sub, #9ca3af);
+    padding: 6px 10px 4px; display: block;
+}
+.nx-theme-btn {
+    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+    padding: 5px 6px; border-radius: 6px;
+    font-size: 11px; font-weight: 500; font-family: inherit;
+    border: 1px solid transparent; background: transparent;
+    color: var(--c-sub, #6b7280); cursor: pointer;
+    transition: background .1s, color .1s, border-color .1s;
+    white-space: nowrap;
+}
+.nx-theme-btn:hover { background: var(--c-surf2, #f0f2f5); color: var(--c-text, #111); }
+.nx-theme-btn.nx-active {
+    background: var(--c-surface, #fff);
+    border-color: var(--c-border, #e3e6ea);
+    color: var(--c-text, #111);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0,0,0,.07);
+}
+html.dark .nx-theme-row { border-bottom-color: #20242f; }
+html.dark .nx-theme-btn.nx-active { background: #222836; box-shadow: none; }
