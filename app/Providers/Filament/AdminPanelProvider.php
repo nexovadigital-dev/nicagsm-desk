@@ -461,23 +461,48 @@ document.addEventListener('alpine:init', () => {
         },
 
         _apply(v) {
+            // Silent apply — no animation (used for init / SPA re-assertion)
             const dark = v === 'dark' || (v === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            // Smooth transition on all color properties
-            document.documentElement.classList.add('nx-switching');
             document.documentElement.classList.toggle('dark', dark);
             document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
             try { localStorage.setItem('_x_colorMode', dark ? 'dark' : 'light'); } catch(e) {}
-            setTimeout(() => document.documentElement.classList.remove('nx-switching'), 260);
         },
 
         set(v) {
             this.cur = v;
             localStorage.setItem('nx-theme', v);
-            this._apply(v);
+            // Animated apply — only on explicit user action
+            const dark = v === 'dark' || (v === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.add('nx-switching');
+            document.documentElement.classList.toggle('dark', dark);
+            document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+            try { localStorage.setItem('_x_colorMode', dark ? 'dark' : 'light'); } catch(e) {}
+            setTimeout(() => document.documentElement.classList.remove('nx-switching'), 260);
             this.popover = false;
         }
     }));
 });
+</script>
+
+<!-- ── Theme persistence — survives SPA nav & Filament Alpine re-init ── -->
+<script>
+(function(){
+    function nxAssertTheme() {
+        var s = localStorage.getItem('nx-theme') || 'auto';
+        var dark = s === 'dark' || (s === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', dark);
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+        try { localStorage.setItem('_x_colorMode', dark ? 'dark' : 'light'); } catch(e) {}
+    }
+    // After ALL Alpine components (including Filament's fi-color-mode-switcher) have init'd
+    document.addEventListener('alpine:initialized', nxAssertTheme);
+    // After each Livewire SPA navigation, wait for Alpine re-init then re-assert
+    document.addEventListener('livewire:navigated', function() {
+        requestAnimationFrame(function() {
+            requestAnimationFrame(nxAssertTheme);
+        });
+    });
+})();
 </script>
 HTML
             )
