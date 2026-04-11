@@ -120,7 +120,7 @@ Route::middleware('auth')->prefix('api/panel')->group(function () {
         return response()->json(['ok' => true, 'inbox_url' => $inboxUrl]);
     });
 
-    // Rechazar ticket — bot retoma
+    // Rechazar ticket — respeta flujo agent_no_response configurado en el widget
     Route::post('/reject-ticket/{id}', function (int $id) {
         $user   = auth()->user();
         $ticket = \App\Models\Ticket::where('id', $id)
@@ -129,9 +129,13 @@ Route::middleware('auth')->prefix('api/panel')->group(function () {
         if (! $ticket) {
             return response()->json(['error' => 'No encontrado'], 404);
         }
+        $noResponse = $ticket->widget?->agent_no_response ?? 'bot';
         $ticket->update(['status' => 'bot', 'assigned_agent' => null, 'agent_called_at' => null]);
         \App\Models\Message::create(['ticket_id' => $ticket->id, 'sender_type' => 'system', 'content' => 'Agente no disponible.']);
-        \App\Models\Message::create(['ticket_id' => $ticket->id, 'sender_type' => 'bot', 'content' => 'En este momento no hay agentes disponibles. Puedo seguir ayudándote. ¿En qué más puedo asistirte?']);
+        // Solo mensaje del bot si el flujo es "volver al bot" — si es "ticket", el widget muestra el formulario
+        if ($noResponse !== 'ticket') {
+            \App\Models\Message::create(['ticket_id' => $ticket->id, 'sender_type' => 'bot', 'content' => 'En este momento no hay agentes disponibles. Puedo seguir ayudándote. ¿En qué más puedo asistirte?']);
+        }
         return response()->json(['ok' => true]);
     });
 });

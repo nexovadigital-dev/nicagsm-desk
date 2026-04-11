@@ -442,27 +442,33 @@ class LiveInbox extends Page
         $ticket = $this->findOrgTicket($this->selectedTicketId);
         if (! $ticket) return;
 
+        // Respetar el flujo configurado en el widget (agent_no_response)
+        $noResponse = $ticket->widget?->agent_no_response ?? 'bot';
+
         $ticket->update([
-            'status'          => 'bot',
+            'status'          => 'bot', // siempre vuelve a bot — el widget decide la UX
             'assigned_agent'  => null,
             'agent_called_at' => null,
         ]);
 
-        // El widget interpreta este mensaje y muestra texto humanizado
+        // Notificar al widget para que ejecute el flujo correcto
         Message::create([
             'ticket_id'   => $ticket->id,
             'sender_type' => 'system',
             'content'     => 'Agente no disponible.',
         ]);
 
-        // El bot toma el relevo con un mensaje explicativo
-        Message::create([
-            'ticket_id'   => $ticket->id,
-            'sender_type' => 'bot',
-            'content'     => 'En este momento no hay agentes disponibles para atenderte. Puedo seguir ayudándote o puedes intentarlo más tarde. ¿En qué más puedo ayudarte?',
-        ]);
+        // Solo añadir mensaje del bot si el flujo es "volver al bot"
+        // Si es "ticket", el widget mostrará el formulario y no necesita msg del bot
+        if ($noResponse !== 'ticket') {
+            Message::create([
+                'ticket_id'   => $ticket->id,
+                'sender_type' => 'bot',
+                'content'     => 'En este momento no hay agentes disponibles. Puedo seguir ayudándote. ¿En qué más puedo asistirte?',
+            ]);
+        }
 
-        $this->dispatch('nexova-toast', type: 'warning', message: 'Solicitud rechazada — bot retoma el chat');
+        $this->dispatch('nexova-toast', type: 'warning', message: 'Solicitud rechazada');
     }
 
     public function handBackToBot(): void
