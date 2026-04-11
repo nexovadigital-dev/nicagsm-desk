@@ -7,38 +7,87 @@ $banned   = $this->bannedIps;
 
 <div x-data="{
     audioCtx: null,
-    soundEnabled: false,
-    initAudio() {
-        // Only create AudioContext after explicit user interaction
-        if (!this.audioCtx) {
-            try { this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    soundEnabled: localStorage.getItem('nx_visitor_sound') !== 'false',
+    knownIds: new Set({{ json_encode($visitors->pluck('id')->values()->all()) }}),
+    newIds: new Set(),
+
+    toggleSound() {
+        if (!this.soundEnabled) {
+            // First enable — init AudioContext (requires user gesture)
+            if (!this.audioCtx) {
+                try { this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+            }
+            if (this.audioCtx && this.audioCtx.state === 'suspended') {
+                this.audioCtx.resume().catch(() => {});
+            }
         }
-        if (this.audioCtx && this.audioCtx.state === 'suspended') {
-            this.audioCtx.resume().catch(() => {});
-        }
-        this.soundEnabled = true;
+        this.soundEnabled = !this.soundEnabled;
+        localStorage.setItem('nx_visitor_sound', this.soundEnabled ? 'true' : 'false');
     },
+
     playDing() {
-        if (!this.soundEnabled || !this.audioCtx) return;
+        if (!this.soundEnabled) return;
+        if (!this.audioCtx) {
+            try { this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return; }
+        }
+        if (this.audioCtx.state === 'suspended') { this.audioCtx.resume().catch(() => {}); return; }
         try {
-            const o = this.audioCtx.createOscillator();
-            const g = this.audioCtx.createGain();
-            o.connect(g); g.connect(this.audioCtx.destination);
-            o.type = 'sine'; o.frequency.value = 880;
-            g.gain.setValueAtTime(0, this.audioCtx.currentTime);
-            g.gain.linearRampToValueAtTime(0.15, this.audioCtx.currentTime + 0.02);
-            g.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.6);
-            o.start(); o.stop(this.audioCtx.currentTime + 0.6);
+            [880, 1100].forEach((freq, i) => {
+                const o = this.audioCtx.createOscillator();
+                const g = this.audioCtx.createGain();
+                o.connect(g); g.connect(this.audioCtx.destination);
+                o.type = 'sine'; o.frequency.value = freq;
+                const t = this.audioCtx.currentTime + i * 0.12;
+                g.gain.setValueAtTime(0, t);
+                g.gain.linearRampToValueAtTime(0.12, t + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+                o.start(t); o.stop(t + 0.45);
+            });
         } catch(e) {}
+    },
+
+    onVisitorUpdate(ids) {
+        const incoming = ids.filter(id => !this.knownIds.has(id));
+        if (incoming.length > 0) {
+            this.playDing();
+            incoming.forEach(id => {
+                this.newIds.add(id);
+                // Clean up new state after 3.5s
+                setTimeout(() => {
+                    this.newIds.delete(id);
+                    const card = document.querySelector('[data-visitor-id=\"' + id + '\"]');
+                    if (card) card.classList.remove('vp-card--new', 'vp-card--animating');
+                }, 3500);
+            });
+        }
+        // Update known IDs to full current list
+        this.knownIds = new Set(ids);
     }
 }"
 x-init="
-    let prev = {{ $visitors->count() }};
-    document.addEventListener('livewire:navigated', () => { prev = 0; });
+    document.addEventListener('livewire:navigated', () => {
+        knownIds = new Set({{ json_encode($visitors->pluck('id')->values()->all()) }});
+        newIds = new Set();
+    });
     Livewire.on('visitor-count-updated', (data) => {
-        const n = data[0]?.count ?? 0;
-        if (n > prev) playDing();
-        prev = n;
+        const ids = data[0]?.ids ?? [];
+        onVisitorUpdate(ids);
+    });
+    // After each Livewire DOM update, animate new cards and show badge
+    document.addEventListener('livewire:updated', () => {
+        newIds.forEach(id => {
+            const card = document.querySelector('[data-visitor-id=\"' + id + '\"]');
+            if (card && !card.classList.contains('vp-card--animating')) {
+                card.classList.add('vp-card--new', 'vp-card--animating');
+                const badge = card.querySelector('[data-new-badge]');
+                if (badge) {
+                    badge.style.display = '';
+                    setTimeout(() => {
+                        if (badge) badge.style.display = 'none';
+                    }, 3000);
+                }
+            }
+        });
     });
 " style="display:none"></div>
 
@@ -61,6 +110,31 @@ x-init="
 }
 .vp-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; animation: vp-pulse 1.5s ease-in-out infinite; }
 @keyframes vp-pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(1.3); } }
+
+/* ── New visitor entrance animation ── */
+@keyframes vp-new-in {
+    0%   { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes vp-glow-fade {
+    0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+    30%  { box-shadow: 0 0 0 4px rgba(34,197,94,0.25); }
+    100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+}
+.vp-card--new {
+    animation: vp-new-in 0.35s ease-out both, vp-glow-fade 2.5s ease-out both;
+}
+.vp-new-badge {
+    display: inline-flex; align-items: center;
+    padding: 1px 7px; border-radius: 99px;
+    font-size: 9px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+    background: #22c55e; color: #fff;
+    animation: vp-badge-pop 0.25s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes vp-badge-pop {
+    0%   { opacity: 0; transform: scale(0.6); }
+    100% { opacity: 1; transform: scale(1); }
+}
 
 /* ── Grid of visitor cards ── */
 .vp-grid {
@@ -253,14 +327,16 @@ x-init="
         Visitantes en Vivo
     </div>
     <div style="display:flex;align-items:center;gap:10px">
-        {{-- Sound toggle — requires user click to init AudioContext --}}
-        <button @click="initAudio()"
-                :title="soundEnabled ? 'Sonido activado' : 'Activar alerta de sonido'"
-                style="background:none;border:1px solid var(--nx-border);border-radius:7px;padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--nx-muted);font-family:inherit;transition:background .12s"
+        {{-- Sound toggle --}}
+        <button @click="toggleSound()"
+                :title="soundEnabled ? 'Silenciar notificaciones' : 'Activar notificaciones de sonido'"
+                style="background:none;border:1px solid var(--nx-border);border-radius:7px;padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--nx-muted);font-family:inherit;transition:background .12s,border-color .12s,color .12s"
                 :style="soundEnabled ? 'background:#f0fdf4;border-color:#bbf7d0;color:#15803d' : ''">
+            {{-- muted icon --}}
             <svg x-show="!soundEnabled" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
-            <svg x-show="soundEnabled" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6v12m0 0l-3-3m3 3l3-3M9 12H3"/></svg>
-            <span x-text="soundEnabled ? 'Sonido ON' : 'Activar sonido'"></span>
+            {{-- sound on icon --}}
+            <svg x-show="soundEnabled" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6v12M9 6.341A8 8 0 014 12a8 8 0 015 5.659M3 12h2"/></svg>
+            <span x-text="soundEnabled ? 'Sonido ON' : 'Sonido OFF'"></span>
         </button>
         <div class="vp-count-badge">
             <span class="vp-dot"></span>
@@ -291,7 +367,7 @@ x-init="
         $timeOnSite = $visitor->time_on_site;
         $timeLabel = $timeOnSite < 60 ? $timeOnSite.'s' : floor($timeOnSite/60).'m '.($timeOnSite%60).'s';
     @endphp
-    <div class="vp-card vp-card--{{ $displayStatus }}" wire:key="visitor-{{ $visitor->id }}">
+    <div class="vp-card vp-card--{{ $displayStatus }}" wire:key="visitor-{{ $visitor->id }}" data-visitor-id="{{ $visitor->id }}">
 
         {{-- Top: avatar + name + status --}}
         <div class="vp-card__top">
@@ -301,6 +377,7 @@ x-init="
             <div class="vp-card__meta">
                 <div class="vp-card__name">
                     {{ $visitor->friendly_name }}
+                    <span class="vp-new-badge" style="display:none" data-new-badge>Nuevo</span>
                     @if($visitor->session_id)
                     <span class="vp-chat-badge">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="9" height="9"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>

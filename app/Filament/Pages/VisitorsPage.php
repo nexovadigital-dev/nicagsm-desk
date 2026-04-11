@@ -45,10 +45,10 @@ class VisitorsPage extends Page
 
     public function notifyCount(): void
     {
-        $count = $this->scopeToOrg(ActiveVisitor::query())
+        $visitors = $this->scopeToOrg(ActiveVisitor::query())
             ->where('last_ping_at', '>=', now()->subSeconds(90))
-            ->count();
-        $this->dispatch('visitor-count-updated', count: $count);
+            ->pluck('id');
+        $this->dispatch('visitor-count-updated', count: $visitors->count(), ids: $visitors->values()->all());
     }
 
     // ── Proactive chat modal ─────────────────────────────────────────────────
