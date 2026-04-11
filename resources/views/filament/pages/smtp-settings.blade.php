@@ -1,4 +1,5 @@
 <x-filament-panels::page>
+@php $smtpReady = $enabled && !empty($host) && !empty($username) && !empty($fromAddress); @endphp
 <style>
 .fi-page-header, .fi-breadcrumbs { display: none !important; }
 
