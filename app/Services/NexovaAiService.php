@@ -125,19 +125,20 @@ class NexovaAiService
                     default  => throw new \RuntimeException("Proveedor no soportado: {$type}"),
                 };
 
-                // If the AI itself suggests talking to an agent, flag for escalation offer
-                $lowerReply = mb_strtolower($reply);
-                $escalationKeywords = ['agente', 'agent', 'representante', 'asesor', 'no tengo información', 'no sé', 'no puedo'];
-                $aiSuggestsEscalation = false;
-                foreach ($escalationKeywords as $kw) {
-                    if (str_contains($lowerReply, $kw)) { $aiSuggestsEscalation = true; break; }
-                }
+                // Strip markdown formatting — bot responses must be plain text
+                $reply = $this->stripMarkdown($reply);
 
                 // WOO_VERIFY_FLAG already embedded by the AI — don't double-add ESCALATE
                 if (str_contains($reply, self::WOO_VERIFY_FLAG)) {
                     $org?->incrementBotMessageCount();
                     Log::info("[NexovaBot] Respuesta con WOO_VERIFY via {$type} — ticket #{$ticket->id}");
                     return $reply;
+                }
+
+                // Only escalate if AI itself emits __ESCALATE__ flag
+                $aiSuggestsEscalation = str_contains($reply, self::ESCALATE_FLAG);
+                if ($aiSuggestsEscalation) {
+                    $reply = trim(str_replace(self::ESCALATE_FLAG, '', $reply));
                 }
 
                 $org?->incrementBotMessageCount();
@@ -259,7 +260,7 @@ class NexovaAiService
 
         // Umbral: 0.45 (más sensible que el 60% anterior, pero combinado)
         if ($bestArticle && $bestScore >= 0.45) {
-            return $bestArticle->content;
+            return $this->stripMarkdown($bestArticle->content);
         }
 
         return null;
@@ -387,8 +388,8 @@ class NexovaAiService
 
         if (! $isGreeting) return null;
 
-        $botName = $org?->name ? "Soy el asistente de {$org->name}" : 'Soy Nexova, tu asistente virtual';
-        return "{$botName}. ¡Hola! 👋 ¿En qué puedo ayudarte hoy?";
+        $botName = $org?->name ? "el asistente de {$org->name}" : 'tu asistente virtual';
+        return "Hola, soy {$botName}. ¿En qué puedo ayudarte?";
     }
 
     // =========================================================================
@@ -441,9 +442,12 @@ class NexovaAiService
         $botName = $widget?->bot_name ?: ($org?->name ? "{$org->name} IA" : 'Asistente IA');
         $customPrompt = trim($widget?->bot_system_prompt ?? '');
 
+        // Instrucción de formato que aplica SIEMPRE (custom prompt o no)
+        $formatRule = " IMPORTANTE: Responde SIEMPRE en texto plano sin formato Markdown. No uses **, *, #, __, backticks ni ningún símbolo de formato. No uses emojis salvo que el usuario los use primero. Las listas deben ir con guiones simples o numeradas con punto.";
+
         if ($customPrompt !== '') {
             // El admin configuró un prompt personalizado — usarlo como base
-            $systemPrompt = $customPrompt;
+            $systemPrompt = $customPrompt . $formatRule;
             if ($orgWeb && ! str_contains($customPrompt, $orgWeb)) {
                 $systemPrompt .= " Sitio web: {$orgWeb}.";
             }
@@ -457,6 +461,7 @@ class NexovaAiService
             if ($orgWeb) {
                 $systemPrompt .= " Sitio web oficial: {$orgWeb}.";
             }
+            $systemPrompt .= $formatRule;
         }
 
         // Contexto de tienda WooCommerce (inyectado por el plugin, prioridad alta)
@@ -495,6 +500,45 @@ class NexovaAiService
         }
 
         return $messages;
+    }
+
+    // =========================================================================
+    // Utilidades de texto
+    // =========================================================================
+
+    /**
+     * Convierte respuesta Markdown a texto plano limpio.
+     * Los LLMs suelen usar ** ** para negritas, # para títulos, etc.
+     * El widget muestra texto plano — ningún Markdown debe llegar al usuario.
+     */
+    private function stripMarkdown(string $text): string
+    {
+        // Negritas e itálicas: **texto**, *texto*, __texto__, _texto_
+        $text = preg_replace('/\*{1,3}(.+?)\*{1,3}/u', '$1', $text);
+        $text = preg_replace('/_{1,3}(.+?)_{1,3}/u', '$1', $text);
+
+        // Encabezados: ## Texto → Texto
+        $text = preg_replace('/^#{1,6}\s+/mu', '', $text);
+
+        // Código inline: `texto` → texto
+        $text = preg_replace('/`([^`]+)`/', '$1', $text);
+
+        // Bloques de código: ```...``` → solo el contenido
+        $text = preg_replace('/```[\w]*\n?(.*?)```/su', '$1', $text);
+
+        // Links: [texto](url) → texto
+        $text = preg_replace('/\[([^\]]+)\]\([^\)]+\)/', '$1', $text);
+
+        // Viñetas markdown: - item o * item al inicio de línea
+        $text = preg_replace('/^[\*\-]\s+/mu', '• ', $text);
+
+        // Líneas horizontales: ---
+        $text = preg_replace('/^---+$/mu', '', $text);
+
+        // Múltiples saltos de línea → máximo dos
+        $text = preg_replace('/\n{3,}/', "\n\n", $text);
+
+        return trim($text);
     }
 
     // =========================================================================
