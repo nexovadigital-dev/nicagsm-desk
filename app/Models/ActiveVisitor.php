@@ -37,7 +37,7 @@ class ActiveVisitor extends Model
     public function getFriendlyNameAttribute(): string
     {
         $hash = abs(crc32($this->visitor_key));
-        return 'Visitante#' . str_pad(($hash % 900000 + 100000), 6, '0', STR_PAD_LEFT);
+        return 'Visitante#' . str_pad((string) ($hash % 900000 + 100000), 6, '0', STR_PAD_LEFT);
     }
 
     /** Status: active | idle | hidden */
