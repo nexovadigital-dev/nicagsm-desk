@@ -402,13 +402,45 @@ class="nx-inbox">
             </header>
 
             {{-- Mensajes --}}
+            @php
+                $allMsgs     = $this->chatMessages();
+                $lastUserMsg = $allMsgs->where('sender_type', 'user')->last();
+                $lastUserMsgId = $lastUserMsg?->id ?? 0;
+                $ticket = $this->selectedTicket();
+                $isAssignedToMe = $ticket && $ticket->status === 'human' && auth()->id();
+            @endphp
             <section class="nx-messages"
+                     data-last-user-msg="{{ $lastUserMsgId }}"
                      x-data="{
                          loading: true,
-                         snap() { this.$el.scrollTop = this.$el.scrollHeight }
+                         prevUserMsgId: {{ $lastUserMsgId }},
+                         snap() { this.$el.scrollTop = this.$el.scrollHeight },
+                         checkNewUserMsg() {
+                             const newId = parseInt(this.$el.dataset.lastUserMsg || '0');
+                             if (newId && newId !== this.prevUserMsgId) {
+                                 this.prevUserMsgId = newId;
+                                 // Solo sonar si el ticket está asignado (modo human) y el sonido está activo
+                                 const soundBtn = document.querySelector('[data-inbox-sound]');
+                                 const soundOn = !soundBtn || soundBtn.dataset.inboxSound !== 'false';
+                                 if (soundOn) {
+                                     const ctx = window._nxAudioCtx || (window._nxAudioCtx = new (window.AudioContext || window.webkitAudioContext)());
+                                     if (ctx.state === 'suspended') ctx.resume();
+                                     [880, 1100].forEach((freq, i) => {
+                                         const o = ctx.createOscillator(), g = ctx.createGain();
+                                         o.connect(g); g.connect(ctx.destination);
+                                         o.type = 'sine'; o.frequency.value = freq;
+                                         const t = ctx.currentTime + i * 0.13;
+                                         g.gain.setValueAtTime(0, t);
+                                         g.gain.linearRampToValueAtTime(0.13, t + 0.04);
+                                         g.gain.linearRampToValueAtTime(0, t + 0.25);
+                                         o.start(t); o.stop(t + 0.28);
+                                     });
+                                 }
+                             }
+                         }
                      }"
                      x-init="$nextTick(() => { loading = false; $nextTick(() => snap()) })"
-                     x-on:livewire:updated.window="$nextTick(() => snap())">
+                     x-on:livewire:updated.window="$nextTick(() => { snap(); checkNewUserMsg(); })">
 
                 {{-- Skeleton loading --}}
                 <template x-if="loading">
@@ -442,7 +474,7 @@ class="nx-inbox">
                     </div>
                 </template>
 
-                @forelse ($this->chatMessages() as $msg)
+                @forelse ($allMsgs as $msg)
                     @php
                         $isUser = $msg->sender_type === 'user';
                         $vcPalette = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1'];
