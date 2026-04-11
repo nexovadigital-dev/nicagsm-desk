@@ -42,6 +42,7 @@ class EditChatWidget extends Page
     public bool   $previewMessageEnabled = false;
     public string $previewMessage  = '';
     public bool   $faqEnabled      = false;
+    public bool   $faqQuickReply   = true;
     public array  $faqItems        = [];
     public array  $socialChannels  = [];
     public bool   $workingHoursEnabled = false;
@@ -95,6 +96,7 @@ class EditChatWidget extends Page
         $this->previewMessageEnabled = (bool) $w->preview_message_enabled;
         $this->previewMessage      = $w->preview_message ?? '';
         $this->faqEnabled          = (bool) $w->faq_enabled;
+        $this->faqQuickReply       = (bool) ($w->faq_quick_reply ?? true);
         $this->faqItems            = $w->faq_items ?? [];
         $this->socialChannels      = $w->social_channels ?? [];
         $this->workingHoursEnabled = (bool) $w->working_hours_enabled;
@@ -186,6 +188,7 @@ class EditChatWidget extends Page
             'preview_message_enabled' => $this->previewMessageEnabled,
             'preview_message'         => $this->previewMessage,
             'faq_enabled'             => $this->faqEnabled,
+            'faq_quick_reply'         => $this->faqQuickReply,
             'faq_items'               => $this->faqItems,
             'social_channels'         => $this->socialChannels,
             'working_hours_enabled'   => $this->workingHoursEnabled,

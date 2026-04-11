@@ -447,6 +447,17 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
             </div>
             <div x-show="open" x-transition style="padding-top:12px">
                 @if($faqEnabled)
+                {{-- Quick-reply toggle --}}
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--c-bg);border-radius:8px;margin-bottom:10px">
+                    <div>
+                        <div style="font-size:12.5px;font-weight:600;color:var(--c-text)">Mostrar como botones en bienvenida</div>
+                        <div style="font-size:11.5px;color:var(--c-sub)">Las primeras preguntas aparecen como accesos rápidos antes de iniciar el chat</div>
+                    </div>
+                    <label class="wc-toggle">
+                        <input type="checkbox" wire:model.live="faqQuickReply">
+                        <span class="wc-slider"></span>
+                    </label>
+                </div>
                 <div style="display:flex;flex-direction:column;gap:8px">
                     @forelse($faqItems as $i => $faq)
                     <div class="wc-item-row">
