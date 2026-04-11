@@ -169,49 +169,21 @@ $visitorIds = $visitors->pluck('id')->values()->all();
 <div class="vp-page"
      wire:poll.10000ms="notifyCount"
      x-data="{
-        audioCtx: null,
-        audioReady: false,
         soundEnabled: localStorage.getItem('nx_visitor_sound') !== 'false',
         knownIds: new Set({{ json_encode($visitorIds) }}),
         newIds: new Set(),
 
         toggleSound() {
-            // Always init AudioContext on user click — this is the required gesture
-            if (!this.audioCtx) {
-                try { this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
-            }
-            if (this.audioCtx && this.audioCtx.state === 'suspended') {
-                this.audioCtx.resume().catch(() => {});
-            }
-            if (this.audioCtx && this.audioCtx.state === 'running') {
-                this.audioReady = true;
-            }
             this.soundEnabled = !this.soundEnabled;
             localStorage.setItem('nx_visitor_sound', this.soundEnabled ? 'true' : 'false');
-            // Play a test ding so user confirms it works
-            if (this.soundEnabled) this._ding();
-        },
-
-        _ding() {
-            if (!this.audioCtx || !this.audioReady) return;
-            try {
-                [820, 1050].forEach((freq, i) => {
-                    const o = this.audioCtx.createOscillator();
-                    const g = this.audioCtx.createGain();
-                    o.connect(g); g.connect(this.audioCtx.destination);
-                    o.type = 'sine'; o.frequency.value = freq;
-                    const t = this.audioCtx.currentTime + i * 0.13;
-                    g.gain.setValueAtTime(0, t);
-                    g.gain.linearRampToValueAtTime(0.1, t + 0.02);
-                    g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
-                    o.start(t); o.stop(t + 0.5);
-                });
-            } catch(e) {}
         },
 
         playDing() {
-            if (!this.soundEnabled || !this.audioReady) return;
-            this._ding();
+            if (!this.soundEnabled) return;
+            const el = document.getElementById('vp-ding');
+            if (!el) return;
+            el.currentTime = 0;
+            el.play().catch(() => {});
         },
 
         onVisitorUpdate(ids) {
@@ -263,22 +235,19 @@ $visitorIds = $visitors->pluck('id')->values()->all();
     <div style="display:flex;align-items:center;gap:8px">
         {{-- Sound toggle --}}
         <button @click="toggleSound()"
-                :class="soundEnabled && audioReady ? 'vp-sound-btn is-on' : 'vp-sound-btn'"
-                :title="!audioReady ? 'Click para activar sonido (requerido una vez)' : (soundEnabled ? 'Click para silenciar' : 'Click para activar sonido')">
-            {{-- muted --}}
+                :class="soundEnabled ? 'vp-sound-btn is-on' : 'vp-sound-btn'"
+                :title="soundEnabled ? 'Silenciar notificaciones' : 'Activar notificaciones de sonido'">
             <svg x-show="!soundEnabled" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
             </svg>
-            {{-- on but not ready yet (needs click) --}}
-            <svg x-show="soundEnabled && !audioReady" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
+            <svg x-show="soundEnabled" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6v12m-3-9.659A8 8 0 014 12a8 8 0 015 7.659M3 12h1"/>
             </svg>
-            {{-- on and ready --}}
-            <svg x-show="soundEnabled && audioReady" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6v12m-3-9.659A8 8 0 014 12a8 8 0 015 7.659M3 12h1"/>
-            </svg>
-            <span x-text="!audioReady && soundEnabled ? 'Activar sonido' : (soundEnabled ? 'Sonido ON' : 'Sonido OFF')" style="font-weight:600"></span>
+            <span x-text="soundEnabled ? 'Sonido ON' : 'Sonido OFF'" style="font-weight:600"></span>
         </button>
+        <audio id="vp-ding" preload="auto" style="display:none">
+            <source src="/ding.wav" type="audio/wav">
+        </audio>
         <div class="vp-count-badge">
             <span class="vp-dot"></span>
             {{ $visitors->count() }} {{ $visitors->count() === 1 ? 'visitante' : 'visitantes' }} ahora
