@@ -16,8 +16,8 @@ class NotificationSettings extends Page
 
     protected Width|string|null $maxContentWidth = 'full';
 
-    protected static ?string $navigationLabel = 'Notificaciones';
-    protected static string|\UnitEnum|null $navigationGroup = 'Cuenta';
+    protected static ?string $navigationLabel = 'Alertas';
+    protected static string|\UnitEnum|null $navigationGroup = 'Correo y Notificaciones';
     protected static ?int    $navigationSort  = 20;
 
     public static function getNavigationIcon(): string|\BackedEnum|Htmlable|null

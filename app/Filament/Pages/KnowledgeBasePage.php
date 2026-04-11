@@ -20,7 +20,7 @@ class KnowledgeBasePage extends Page
 
     protected static ?string $navigationLabel = 'Base de Conocimiento';
     protected static string|\UnitEnum|null $navigationGroup = 'Inteligencia';
-    protected static ?int    $navigationSort  = 1;
+    protected static ?int    $navigationSort  = 10;
 
     public static function getNavigationIcon(): string|\BackedEnum|Htmlable|null
     {

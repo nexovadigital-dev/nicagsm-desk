@@ -18,7 +18,7 @@ class ChannelsSettings extends Page
     protected Width|string|null $maxContentWidth = 'full';
 
     protected static ?string $navigationLabel = 'Canales';
-    protected static string|\UnitEnum|null $navigationGroup = 'Integraciones';
+    protected static string|\UnitEnum|null $navigationGroup = 'Canales';
     protected static ?int $navigationSort = 10;
 
     public static function getNavigationIcon(): string|\BackedEnum|Htmlable|null
