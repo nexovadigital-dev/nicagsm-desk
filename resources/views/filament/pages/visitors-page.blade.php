@@ -1,109 +1,120 @@
 <x-filament-panels::page>
 
 @php
-$visitors = $this->activeVisitors;
-$banned   = $this->bannedIps;
-$visitorIds = $visitors->pluck('id')->values()->all();
+$visitors    = $this->activeVisitors;
+$banned      = $this->bannedIps;
+$visitorIds  = $visitors->pluck('id')->values()->all();
 @endphp
 
 <style>
 .fi-page-header, .fi-breadcrumbs { display: none !important; }
 
-.vp-page { display: flex; flex-direction: column; gap: 20px; padding: 20px 24px 48px; }
+/* ── Page shell ── */
+.vp-page { display: flex; flex-direction: column; gap: 0; padding: 0 0 48px; }
 
-/* ── Header ── */
-.vp-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-.vp-title  { font-size: 17px; font-weight: 800; color: var(--nx-text); display: flex; align-items: center; gap: 8px; }
-.vp-count-badge {
+/* ── Toolbar ── */
+.vp-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-bottom: 1px solid var(--nx-border);
+    background: var(--nx-surface); position: sticky; top: 0; z-index: 10;
+}
+.vp-toolbar-left  { display: flex; align-items: center; gap: 10px; }
+.vp-toolbar-right { display: flex; align-items: center; gap: 8px; }
+.vp-title { font-size: 14px; font-weight: 800; color: var(--nx-text); }
+.vp-live-badge {
     display: inline-flex; align-items: center; gap: 5px;
     background: #dcfce7; color: #15803d;
     border: 1px solid #bbf7d0; border-radius: 99px;
-    font-size: 11.5px; font-weight: 700; padding: 3px 10px;
+    font-size: 11px; font-weight: 700; padding: 2px 9px;
 }
-.vp-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; animation: vp-pulse 1.5s ease-in-out infinite; }
-@keyframes vp-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+.vp-live-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; animation: vp-pulse 1.5s ease-in-out infinite; flex-shrink:0; }
+@keyframes vp-pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
 
 /* ── Sound toggle ── */
 .vp-sound-btn {
     background: none; border: 1px solid var(--nx-border); border-radius: 7px;
-    padding: 5px 11px; cursor: pointer; display: flex; align-items: center; gap: 5px;
-    font-size: 11.5px; color: var(--nx-muted); font-family: inherit;
-    transition: background .15s, border-color .15s, color .15s;
+    padding: 4px 10px; cursor: pointer; display: flex; align-items: center; gap: 4px;
+    font-size: 11px; color: var(--nx-muted); font-family: inherit; transition: all .15s;
 }
 .vp-sound-btn.is-on { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
 
-/* ── Grid ── */
-.vp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
-
-/* ── Card ── */
-.vp-card {
-    background: var(--nx-surface); border: 1px solid var(--nx-border); border-radius: 10px;
-    padding: 12px 14px; display: flex; flex-direction: column; gap: 9px;
-    position: relative; transition: box-shadow .15s, transform .15s;
+/* ── Visitor list table ── */
+.vp-list { width: 100%; border-collapse: collapse; }
+.vp-list-head th {
+    padding: 7px 14px; text-align: left;
+    font-size: 10.5px; font-weight: 700; color: var(--nx-muted);
+    text-transform: uppercase; letter-spacing: .06em;
+    border-bottom: 1px solid var(--nx-border);
+    background: var(--nx-surf2);
 }
-.vp-card:hover { box-shadow: 0 2px 14px rgba(0,0,0,.07); transform: translateY(-1px); }
-.vp-card--active { border-left: 3px solid #22c55e; }
-.vp-card--idle   { border-left: 3px solid #f59e0b; }
-.vp-card--hidden { border-left: 3px solid #94a3b8; }
+.vp-row {
+    border-bottom: 1px solid var(--nx-border);
+    transition: background .1s;
+    animation: vp-row-in .25s ease-out both;
+}
+.vp-row:hover { background: var(--nx-surf2); }
+@keyframes vp-row-in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.vp-row--new { animation: vp-row-in .25s ease-out both, vp-glow-row 2.5s ease-out both; }
+@keyframes vp-glow-row { 0%{background:rgba(34,197,94,.12)} 100%{background:transparent} }
 
-/* New visitor animation */
-@keyframes vp-new-in   { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-@keyframes vp-glow-out { 0%{box-shadow:0 0 0 0 rgba(34,197,94,.3)} 60%{box-shadow:0 0 0 5px rgba(34,197,94,.15)} 100%{box-shadow:0 0 0 0 rgba(34,197,94,0)} }
-.vp-card--new { animation: vp-new-in .3s ease-out both, vp-glow-out 2.5s ease-out both; }
-@keyframes vp-badge-pop { from{opacity:0;transform:scale(.6)} to{opacity:1;transform:scale(1)} }
+.vp-row td { padding: 9px 14px; vertical-align: middle; }
+
+/* Visitor identity cell */
+.vp-id-cell { display: flex; align-items: center; gap: 9px; }
+.vp-avatar {
+    width: 30px; height: 30px; border-radius: 7px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; color: #fff; letter-spacing: -.5px;
+}
+.vp-visitor-name { font-size: 12.5px; font-weight: 700; color: var(--nx-text); font-family: ui-monospace, monospace; }
 .vp-new-badge {
     display: none; align-items: center;
-    padding: 1px 6px; border-radius: 99px;
+    padding: 1px 5px; border-radius: 99px;
     font-size: 9px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
     background: #22c55e; color: #fff;
     animation: vp-badge-pop .2s cubic-bezier(.34,1.56,.64,1) both;
 }
 .vp-new-badge.visible { display: inline-flex; }
+@keyframes vp-badge-pop { from{opacity:0;transform:scale(.5)} to{opacity:1;transform:scale(1)} }
 
-/* Card top */
-.vp-card__top  { display: flex; align-items: flex-start; gap: 9px; }
-.vp-card__av   {
-    width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 800; color: #fff;
+/* Status pill */
+.vp-status {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 99px;
+    font-size: 10.5px; font-weight: 700;
 }
-.vp-card__meta { flex: 1; min-width: 0; }
-.vp-card__name { font-size: 12.5px; font-weight: 700; color: var(--nx-text); display: flex; align-items: center; gap: 5px; flex-wrap: wrap; line-height: 1.3; }
-.vp-card__sub  { font-size: 11px; color: var(--nx-muted); margin-top: 3px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.vp-status-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink:0; }
+.vp-status--active { background: #dcfce7; color: #15803d; }
+.vp-status--active .vp-status-dot { background: #22c55e; animation: vp-pulse 1.5s ease-in-out infinite; }
+.vp-status--idle   { background: #fef3c7; color: #92400e; }
+.vp-status--idle   .vp-status-dot { background: #f59e0b; }
+.vp-status--hidden { background: #f1f5f9; color: #475569; }
+.vp-status--hidden .vp-status-dot { background: #94a3b8; }
 
-/* Pill badges */
-.vp-pill {
+/* Page cell */
+.vp-page-cell { max-width: 240px; }
+.vp-page-title { font-size: 12px; font-weight: 600; color: var(--nx-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.vp-page-url   { font-size: 10.5px; color: var(--nx-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* Location */
+.vp-location { font-size: 11.5px; color: var(--nx-muted); white-space:nowrap; }
+
+/* Time */
+.vp-time-cell { font-size: 12px; font-weight: 700; color: var(--nx-text); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.vp-pages-count { font-size: 11px; color: var(--nx-muted); white-space:nowrap; }
+
+/* Chat pill */
+.vp-chat-pill {
     display: inline-flex; align-items: center; gap: 3px;
-    padding: 1px 7px; border-radius: 99px; font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 99px; font-size: 10px; font-weight: 700;
+    background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;
 }
-.vp-pill--active { background:#dcfce7; color:#15803d; }
-.vp-pill--idle   { background:#fef3c7; color:#92400e; }
-.vp-pill--hidden { background:#f1f5f9; color:#475569; }
-.vp-pill--chat   { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
-.vp-pill--open   { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
-.vp-pill--min    { background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; }
-
-/* Page history */
-.vp-history { border: 1px solid var(--nx-border); border-radius: 7px; overflow: hidden; background: var(--nx-surf2); }
-.vp-history-row {
-    display: flex; align-items: center; gap: 6px; padding: 4px 8px;
-    border-bottom: 1px solid var(--nx-border); font-size: 10.5px; color: var(--nx-muted);
-}
-.vp-history-row:last-child { border-bottom: none; }
-.vp-history-row--now { background: #f0fdf4; }
-.vp-hdot { width: 5px; height: 5px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
-.vp-hdot--live { background: #22c55e; animation: vp-pulse 1.5s ease-in-out infinite; }
-
-/* Stats row */
-.vp-stats { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.vp-stat  { display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--nx-muted); }
-.vp-stat strong { color: var(--nx-text); font-weight: 700; }
 
 /* Action buttons */
-.vp-card__actions { display: flex; gap: 5px; flex-wrap: wrap; }
+.vp-actions { display: flex; align-items: center; gap: 5px; white-space:nowrap; }
 .vp-btn {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 4px 9px; border-radius: 6px; font-size: 11px; font-weight: 600;
     cursor: pointer; border: none; font-family: inherit; transition: background .12s;
     text-decoration: none;
 }
@@ -111,27 +122,35 @@ $visitorIds = $visitors->pluck('id')->values()->all();
 .vp-btn--chat:hover { background: #16a34a; }
 .vp-btn--goto  { background: #1e293b; color: #f8fafc; }
 .vp-btn--goto:hover { background: #0f172a; }
-.vp-btn--ban   { background: transparent; border: 1px solid #fecaca; color: #dc2626; }
+.vp-btn--ban   { background: transparent; border: 1px solid #fecaca; color: #dc2626; padding: 3px 7px; }
 .vp-btn--ban:hover { background: #fef2f2; }
 
-/* Empty state */
+/* ── Skeleton loading ── */
+.vp-skeleton-row td { padding: 10px 14px; }
+.sk { border-radius: 5px; background: linear-gradient(90deg, var(--nx-border) 25%, var(--nx-surf2) 50%, var(--nx-border) 75%); background-size: 200% 100%; animation: sk-shimmer 1.4s ease-in-out infinite; }
+@keyframes sk-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.sk-av   { width:30px; height:30px; border-radius:7px; flex-shrink:0; }
+.sk-text { height:12px; border-radius:4px; }
+.sk-pill { height:18px; border-radius:99px; }
+
+/* ── Empty state ── */
 .vp-empty {
-    text-align: center; padding: 60px 24px;
-    background: var(--nx-surface); border: 1px solid var(--nx-border); border-radius: 12px; color: var(--nx-muted);
+    text-align: center; padding: 64px 24px;
+    color: var(--nx-muted);
 }
-.vp-empty svg { margin: 0 auto 12px; display: block; opacity: .3; }
-.vp-empty h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
-.vp-empty p  { font-size: 13px; }
+.vp-empty-icon { margin: 0 auto 14px; display:flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:14px; background:var(--nx-surf2); }
+.vp-empty h3 { font-size: 14px; font-weight: 700; margin-bottom: 5px; color: var(--nx-text); }
+.vp-empty p  { font-size: 12.5px; }
 
-/* Section title */
-.vp-section-title {
-    font-size: 11.5px; font-weight: 700; color: var(--nx-muted);
-    text-transform: uppercase; letter-spacing: .06em;
-    margin-bottom: 8px; display: flex; align-items: center; gap: 7px;
+/* ── Section label ── */
+.vp-section-label {
+    padding: 8px 14px; font-size: 10.5px; font-weight: 700; color: var(--nx-muted);
+    text-transform: uppercase; letter-spacing: .07em;
+    background: var(--nx-surf2); border-bottom: 1px solid var(--nx-border);
+    display: flex; align-items: center; gap: 6px;
 }
 
-/* Banned list */
-.vp-banned-list { background: var(--nx-surface); border: 1px solid var(--nx-border); border-radius: 8px; overflow: hidden; }
+/* ── Banned list ── */
 .vp-banned-row {
     display: flex; align-items: center; gap: 10px;
     padding: 9px 14px; border-bottom: 1px solid var(--nx-border); font-size: 12.5px; color: var(--nx-text);
@@ -144,7 +163,7 @@ $visitorIds = $visitors->pluck('id')->values()->all();
 }
 .vp-btn--unban:hover { background: var(--nx-border); }
 
-/* Modals */
+/* ── Modals ── */
 .vp-overlay { position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px; }
 .vp-modal { background:var(--nx-surface);border-radius:12px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.18);overflow:hidden;display:flex;flex-direction:column; }
 .vp-modal__hd { padding:16px 20px;border-bottom:1px solid var(--nx-border);display:flex;align-items:center;justify-content:space-between; }
@@ -165,13 +184,14 @@ $visitorIds = $visitors->pluck('id')->values()->all();
 .vp-btn-danger:hover  { background:#b91c1c; }
 </style>
 
-{{-- ══ Main wrapper — x-data aquí para que Alpine lo inicialice correctamente ══ --}}
+{{-- ══ Main wrapper ══ --}}
 <div class="vp-page"
      wire:poll.10000ms="notifyCount"
      x-data="{
         soundEnabled: localStorage.getItem('nx_visitor_sound') !== 'false',
         knownIds: new Set({{ json_encode($visitorIds) }}),
         newIds: new Set(),
+        loading: false,
 
         toggleSound() {
             this.soundEnabled = !this.soundEnabled;
@@ -194,201 +214,248 @@ $visitorIds = $visitors->pluck('id')->values()->all();
                     this.newIds.add(id);
                     setTimeout(() => {
                         this.newIds.delete(id);
-                        const card = document.querySelector('[data-visitor-id=\'' + id + '\']');
-                        if (card) {
-                            card.classList.remove('vp-card--new');
-                            const badge = card.querySelector('.vp-new-badge');
+                        const row = document.querySelector('[data-visitor-id=\'' + id + '\']');
+                        if (row) {
+                            row.classList.remove('vp-row--new');
+                            const badge = row.querySelector('.vp-new-badge');
                             if (badge) badge.classList.remove('visible');
                         }
-                    }, 3500);
+                    }, 4000);
                 });
             }
             this.knownIds = new Set(ids);
+            this.loading = false;
         }
      }"
      x-init="
         const _vp = $data;
+
+        // Show skeleton briefly on first poll
+        document.addEventListener('livewire:request', () => { _vp.loading = true; });
+        document.addEventListener('livewire:response', () => { _vp.loading = false; });
+
         Livewire.on('visitor-count-updated', (data) => {
             _vp.onVisitorUpdate(data[0]?.ids ?? []);
         });
+
         document.addEventListener('livewire:updated', () => {
             _vp.newIds.forEach(id => {
-                const card = document.querySelector('[data-visitor-id=\'' + id + '\']');
-                if (card && !card.classList.contains('vp-card--new')) {
-                    card.classList.add('vp-card--new');
-                    const badge = card.querySelector('.vp-new-badge');
+                const row = document.querySelector('[data-visitor-id=\'' + id + '\']');
+                if (row && !row.classList.contains('vp-row--new')) {
+                    row.classList.add('vp-row--new');
+                    const badge = row.querySelector('.vp-new-badge');
                     if (badge) {
                         badge.classList.add('visible');
-                        setTimeout(() => badge.classList.remove('visible'), 3000);
+                        setTimeout(() => badge.classList.remove('visible'), 3500);
                     }
                 }
             });
         });
      ">
 
-{{-- ── Header ── --}}
-<div class="vp-header">
-    <div class="vp-title">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="19" height="19"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-        Visitantes en Vivo
+{{-- ── Toolbar ── --}}
+<div class="vp-toolbar">
+    <div class="vp-toolbar-left">
+        <span class="vp-title">Visitantes en Vivo</span>
+        <div class="vp-live-badge">
+            <span class="vp-live-dot"></span>
+            {{ $visitors->count() }} {{ $visitors->count() === 1 ? 'ahora' : 'ahora' }}
+        </div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px">
-        {{-- Sound toggle --}}
+    <div class="vp-toolbar-right">
         <button @click="toggleSound()"
-                :class="soundEnabled ? 'vp-sound-btn is-on' : 'vp-sound-btn'"
-                :title="soundEnabled ? 'Silenciar notificaciones' : 'Activar notificaciones de sonido'">
-            <svg x-show="!soundEnabled" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
+                :class="soundEnabled ? 'vp-sound-btn is-on' : 'vp-sound-btn'">
+            <svg x-show="!soundEnabled" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
             </svg>
-            <svg x-show="soundEnabled" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6v12m-3-9.659A8 8 0 014 12a8 8 0 015 7.659M3 12h1"/>
+            <svg x-show="soundEnabled" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6v12M9 9.341A4 4 0 004.929 12 4 4 0 009 14.659"/>
             </svg>
-            <span x-text="soundEnabled ? 'Sonido ON' : 'Sonido OFF'" style="font-weight:600"></span>
+            <span x-text="soundEnabled ? 'Sonido ON' : 'Sonido OFF'"></span>
         </button>
         <audio id="vp-ding" preload="auto" style="display:none">
             <source src="/ding.wav" type="audio/wav">
         </audio>
-        <div class="vp-count-badge">
-            <span class="vp-dot"></span>
-            {{ $visitors->count() }} {{ $visitors->count() === 1 ? 'visitante' : 'visitantes' }} ahora
-        </div>
     </div>
 </div>
 
-{{-- ── Visitor cards ── --}}
-@if($visitors->isEmpty())
-<div class="vp-empty">
-    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="40" height="40"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-    <h3>Nadie en el sitio ahora</h3>
-    <p>Cuando un visitante abra una página con el widget aparecerá aquí automáticamente.</p>
-</div>
-@else
-<div class="vp-grid">
-@foreach($visitors as $visitor)
-@php
-    $status        = $visitor->status;
-    $tabHidden     = !$visitor->tab_visible;
-    $displayStatus = $tabHidden ? 'hidden' : $status;
-    $palette       = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1','#8b5cf6','#14b8a6'];
-    $avatarColor   = $palette[abs(crc32($visitor->visitor_key)) % count($palette)];
-    $pages         = $visitor->pages_visited ?? [];
-    $prevPages     = array_slice($pages, 0, -1);
-    $timeOnSite    = $visitor->time_on_site;
-    $timeLabel     = $timeOnSite < 60 ? $timeOnSite.'s' : floor($timeOnSite/60).'m '.($timeOnSite%60).'s';
-@endphp
-<div class="vp-card vp-card--{{ $displayStatus }}"
-     wire:key="visitor-{{ $visitor->id }}"
-     data-visitor-id="{{ $visitor->id }}">
+{{-- ── Visitor list ── --}}
+<div style="background:var(--nx-surface);">
+    <table class="vp-list">
+        <thead class="vp-list-head">
+            <tr>
+                <th>Visitante</th>
+                <th>Estado</th>
+                <th>Página actual</th>
+                <th>Ubicación</th>
+                <th>Tiempo</th>
+                <th>Págs</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
 
-    {{-- Top row: avatar + info + status --}}
-    <div class="vp-card__top">
-        <div class="vp-card__av" style="background:{{ $avatarColor }}">
-            {{ strtoupper(substr($visitor->friendly_name, 0, 1)) }}
-        </div>
-        <div class="vp-card__meta">
-            <div class="vp-card__name">
-                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px" title="{{ $visitor->friendly_name }}">{{ $visitor->friendly_name }}</span>
-                <span class="vp-new-badge">Nuevo</span>
-                @if($visitor->session_id)
-                <span class="vp-pill vp-pill--chat">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="8" height="8"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                    Chat
-                </span>
-                @endif
-            </div>
-            <div class="vp-card__sub">
-                <span class="vp-pill vp-pill--{{ $displayStatus }}">
-                    <span style="width:4px;height:4px;border-radius:50%;background:{{ $displayStatus==='active'?'#22c55e':($displayStatus==='idle'?'#f59e0b':'#94a3b8') }}"></span>
-                    @if($displayStatus==='active') En línea @elseif($displayStatus==='idle') Inactivo @else Pestaña oculta @endif
-                </span>
-                @if($visitor->country)
-                <span style="font-size:10.5px">{{ $visitor->country }}{{ $visitor->city ? ', '.$visitor->city : '' }}</span>
-                @endif
-            </div>
-        </div>
-    </div>
+        {{-- Skeleton rows shown while polling --}}
+        <template x-if="loading && {{ $visitors->count() }} === 0">
+            <template x-for="i in 3" :key="i">
+                <tr class="vp-skeleton-row">
+                    <td><div style="display:flex;align-items:center;gap:9px"><div class="sk sk-av"></div><div class="sk sk-text" style="width:110px"></div></div></td>
+                    <td><div class="sk sk-pill" style="width:60px"></div></td>
+                    <td><div class="sk sk-text" style="width:160px"></div></td>
+                    <td><div class="sk sk-text" style="width:80px"></div></td>
+                    <td><div class="sk sk-text" style="width:36px"></div></td>
+                    <td><div class="sk sk-text" style="width:20px"></div></td>
+                    <td></td>
+                </tr>
+            </template>
+        </template>
 
-    {{-- Current page --}}
-    @if($visitor->current_url)
-    <div class="vp-history">
-        <div class="vp-history-row vp-history-row--now">
-            <span class="vp-hdot vp-hdot--live"></span>
-            <div style="flex:1;min-width:0">
-                <div style="font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px">
+        @if($visitors->isEmpty())
+        <tr>
+            <td colspan="7">
+                <div class="vp-empty">
+                    <div class="vp-empty-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22" style="opacity:.4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </div>
+                    <h3>Nadie en el sitio ahora</h3>
+                    <p>Cuando un visitante abra una página con el widget aparecerá aquí.</p>
+                </div>
+            </td>
+        </tr>
+        @else
+        @foreach($visitors as $visitor)
+        @php
+            $status        = $visitor->status;
+            $tabHidden     = !$visitor->tab_visible;
+            $displayStatus = $tabHidden ? 'hidden' : $status;
+            $palette       = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1','#8b5cf6','#14b8a6'];
+            $avatarColor   = $palette[abs(crc32($visitor->visitor_key)) % count($palette)];
+            $pages         = $visitor->pages_visited ?? [];
+            $timeOnSite    = $visitor->time_on_site;
+            $timeLabel     = $timeOnSite < 60 ? $timeOnSite.'s' : floor($timeOnSite/60).'m '.($timeOnSite%60).'s';
+            $initials      = '#'.substr($visitor->friendly_name, -3); // last 3 of ID
+        @endphp
+        <tr class="vp-row"
+            wire:key="visitor-{{ $visitor->id }}"
+            data-visitor-id="{{ $visitor->id }}">
+
+            {{-- Identity --}}
+            <td>
+                <div class="vp-id-cell">
+                    <div class="vp-avatar" style="background:{{ $avatarColor }}">
+                        {{ strtoupper(substr($visitor->visitor_key, -2)) }}
+                    </div>
+                    <div>
+                        <div style="display:flex;align-items:center;gap:5px">
+                            <span class="vp-visitor-name">{{ $visitor->friendly_name }}</span>
+                            <span class="vp-new-badge">Nuevo</span>
+                        </div>
+                        @if($visitor->browser)
+                        <div style="font-size:10px;color:var(--nx-muted);margin-top:1px">{{ $visitor->browser }}</div>
+                        @endif
+                    </div>
+                </div>
+            </td>
+
+            {{-- Status --}}
+            <td>
+                <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
+                    <span class="vp-status vp-status--{{ $displayStatus }}">
+                        <span class="vp-status-dot"></span>
+                        @if($displayStatus==='active') En línea
+                        @elseif($displayStatus==='idle') Inactivo
+                        @else Tab oculta @endif
+                    </span>
+                    @if($visitor->session_id)
+                    <span class="vp-chat-pill">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="8" height="8"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                        Chat activo
+                    </span>
+                    @endif
+                </div>
+            </td>
+
+            {{-- Current page --}}
+            <td class="vp-page-cell">
+                @if($visitor->current_url)
+                <div class="vp-page-title" title="{{ $visitor->page_title ?: $visitor->current_url }}">
                     {{ $visitor->page_title ?: parse_url($visitor->current_url, PHP_URL_PATH) }}
                 </div>
-            </div>
-            <span style="font-size:9px;color:#22c55e;font-weight:700;flex-shrink:0;margin-left:6px">AHORA</span>
-        </div>
-        @foreach(array_slice(array_reverse($prevPages), 0, 3) as $pg)
-        <div class="vp-history-row">
-            <span class="vp-hdot"></span>
-            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px">{{ $pg['title'] ?: $pg['url'] }}</span>
-            <span style="color:#cbd5e1;font-size:9.5px;flex-shrink:0;margin-left:6px">{{ \Carbon\Carbon::parse($pg['at'])->diffForHumans(null, true, true) }}</span>
-        </div>
+                <div class="vp-page-url" title="{{ $visitor->current_url }}">
+                    {{ parse_url($visitor->current_url, PHP_URL_HOST) }}{{ parse_url($visitor->current_url, PHP_URL_PATH) }}
+                </div>
+                @else
+                <span style="font-size:11px;color:var(--nx-muted)">—</span>
+                @endif
+            </td>
+
+            {{-- Location --}}
+            <td>
+                <span class="vp-location">
+                    @if($visitor->country)
+                        {{ $visitor->country }}{{ $visitor->city ? ', '.$visitor->city : '' }}
+                    @else
+                        <span style="color:var(--nx-muted)">—</span>
+                    @endif
+                </span>
+            </td>
+
+            {{-- Time on site --}}
+            <td>
+                <span class="vp-time-cell">{{ $timeLabel }}</span>
+            </td>
+
+            {{-- Pages visited --}}
+            <td>
+                <span class="vp-pages-count">{{ count($pages) }}</span>
+            </td>
+
+            {{-- Actions --}}
+            <td>
+                <div class="vp-actions">
+                    @if(!$visitor->session_id)
+                    <button class="vp-btn vp-btn--chat"
+                            wire:click="openProactiveModal('{{ $visitor->visitor_key }}', '{{ $visitor->friendly_name }}')">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="10" height="10"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                        Iniciar chat
+                    </button>
+                    @else
+                    <a href="{{ route('filament.admin.pages.live-inbox') }}" class="vp-btn vp-btn--goto">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="10" height="10"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                        Ver chat
+                    </a>
+                    @endif
+                    @if($visitor->ip)
+                    <button class="vp-btn vp-btn--ban"
+                            wire:click="openBanModal('{{ $visitor->ip }}')">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="10" height="10"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                    </button>
+                    @endif
+                </div>
+            </td>
+        </tr>
         @endforeach
-    </div>
-    @endif
+        @endif
 
-    {{-- Stats --}}
-    <div class="vp-stats">
-        <div class="vp-stat">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <strong>{{ $timeLabel }}</strong>
-        </div>
-        <div class="vp-stat">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <strong>{{ count($pages) }}</strong> <span>págs</span>
-        </div>
-        @if($visitor->browser)
-        <div class="vp-stat">{{ $visitor->browser }}</div>
-        @endif
-    </div>
-
-    {{-- Actions --}}
-    <div class="vp-card__actions">
-        @if(!$visitor->session_id)
-        <button class="vp-btn vp-btn--chat"
-                wire:click="openProactiveModal('{{ $visitor->visitor_key }}', '{{ $visitor->friendly_name }}')">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-            Iniciar chat
-        </button>
-        @else
-        <a href="{{ route('filament.admin.pages.live-inbox') }}" class="vp-btn vp-btn--goto">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-            Ver chat
-        </a>
-        @endif
-        @if($visitor->ip)
-        <button class="vp-btn vp-btn--ban"
-                wire:click="openBanModal('{{ $visitor->ip }}')">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-            Banear IP
-        </button>
-        @endif
-    </div>
+        </tbody>
+    </table>
 </div>
-@endforeach
-</div>
-@endif
 
 {{-- ── Banned IPs ── --}}
 @if($banned->isNotEmpty())
-<div>
-    <div class="vp-section-title">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+<div style="margin-top:24px;background:var(--nx-surface);border:1px solid var(--nx-border);border-radius:10px;overflow:hidden;">
+    <div class="vp-section-label">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
         IPs Bloqueadas ({{ $banned->count() }})
     </div>
-    <div class="vp-banned-list">
-        @foreach($banned as $ban)
-        <div class="vp-banned-row">
-            <span style="font-family:ui-monospace,monospace;font-size:12px;font-weight:700;color:#dc2626">{{ $ban->ip }}</span>
-            @if($ban->reason)<span style="color:#64748b;font-size:12px">— {{ $ban->reason }}</span>@endif
-            <span style="color:#94a3b8;font-size:11px">{{ $ban->created_at->format('d/m/Y') }}</span>
-            <button class="vp-btn--unban" wire:click="unbanIp({{ $ban->id }})" wire:confirm="¿Desbloquear esta IP?">Desbloquear</button>
-        </div>
-        @endforeach
+    @foreach($banned as $ban)
+    <div class="vp-banned-row">
+        <span style="font-family:ui-monospace,monospace;font-size:12px;font-weight:700;color:#dc2626">{{ $ban->ip }}</span>
+        @if($ban->reason)<span style="color:#64748b;font-size:12px">— {{ $ban->reason }}</span>@endif
+        <span style="color:#94a3b8;font-size:11px">{{ $ban->created_at->format('d/m/Y') }}</span>
+        <button class="vp-btn--unban" wire:click="unbanIp({{ $ban->id }})" wire:confirm="¿Desbloquear esta IP?">Desbloquear</button>
     </div>
+    @endforeach
 </div>
 @endif
 

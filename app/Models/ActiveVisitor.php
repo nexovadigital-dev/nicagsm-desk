@@ -33,12 +33,11 @@ class ActiveVisitor extends Model
         return $this->belongsTo(Organization::class);
     }
 
-    /** Friendly deterministic name from visitor_key, e.g. "Azul-4291" */
+    /** Friendly deterministic name from visitor_key, e.g. "Visitante#483921" */
     public function getFriendlyNameAttribute(): string
     {
-        static $colors = ['Azul','Verde','Rojo','Dorado','Coral','Lima','Jade','Turquesa','Índigo','Ámbar','Gris','Rosa','Teal','Bronce','Oliva'];
         $hash = abs(crc32($this->visitor_key));
-        return $colors[$hash % count($colors)] . '-' . ($hash % 9000 + 1000);
+        return 'Visitante#' . str_pad(($hash % 900000 + 100000), 6, '0', STR_PAD_LEFT);
     }
 
     /** Status: active | idle | hidden */
