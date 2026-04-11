@@ -82,7 +82,50 @@ x-init="
 
 </div>
 
-<div x-data="" @nexova-new-message.window="$wire.$refresh()" class="nx-inbox">
+<div x-data="{
+    soundEnabled: localStorage.getItem('nx_inbox_sound') !== 'false',
+    prevTicketCount: {{ $this->tickets()->count() }},
+    audioCtx: null,
+
+    toggleSound() {
+        this.soundEnabled = !this.soundEnabled;
+        localStorage.setItem('nx_inbox_sound', this.soundEnabled ? 'true' : 'false');
+    },
+
+    getAudioCtx() {
+        if (!this.audioCtx) {
+            try { this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+        }
+        return this.audioCtx;
+    },
+
+    playNewTicket() {
+        if (!this.soundEnabled) return;
+        const ctx = this.getAudioCtx();
+        if (!ctx) return;
+        // Dos tonos suaves tipo 'pop' — amigable, no molesto
+        [880, 1100].forEach((freq, i) => {
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.connect(g); g.connect(ctx.destination);
+            o.type = 'sine'; o.frequency.value = freq;
+            const t = ctx.currentTime + i * 0.12;
+            g.gain.setValueAtTime(0, t);
+            g.gain.linearRampToValueAtTime(0.12, t + 0.04);
+            g.gain.linearRampToValueAtTime(0, t + 0.22);
+            o.start(t); o.stop(t + 0.25);
+        });
+    },
+
+    checkNewTickets(currentCount) {
+        if (currentCount > this.prevTicketCount) {
+            this.playNewTicket();
+        }
+        this.prevTicketCount = currentCount;
+    }
+}"
+@nexova-new-message.window="$wire.$refresh().then(() => { const el = document.querySelector('[data-inbox-count]'); checkNewTickets(el ? parseInt(el.dataset.inboxCount) : 0); })"
+class="nx-inbox">
 
     {{-- ═══════════════════════════
          SIDEBAR — Lista de tickets
@@ -90,11 +133,26 @@ x-init="
     <aside class="nx-sidebar">
 
         @php $liveTickets = $this->tickets(); $activeCount = $liveTickets->count(); @endphp
-        <div class="nx-sidebar__header">
+        <div class="nx-sidebar__header" data-inbox-count="{{ $activeCount }}">
             <span class="nx-sidebar__title">Conversaciones</span>
-            @if($activeCount > 0)
-                <span style="font-size:11px;font-weight:700;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;padding:2px 8px;border-radius:99px">{{ $activeCount }}</span>
-            @endif
+            <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+                @if($activeCount > 0)
+                    <span style="font-size:11px;font-weight:700;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;padding:2px 8px;border-radius:99px">{{ $activeCount }}</span>
+                @endif
+                {{-- Toggle sonido nuevo visitante --}}
+                <button @click="toggleSound()" :title="soundEnabled ? 'Silenciar notificaciones' : 'Activar notificaciones de sonido'"
+                    style="width:28px;height:28px;border-radius:7px;border:1px solid var(--nx-bd,#e2e8f0);background:var(--nx-bg,#fff);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s"
+                    :style="soundEnabled ? 'border-color:var(--nx-accent,#22c55e);color:var(--nx-accent,#22c55e)' : 'color:#9ca3af'">
+                    <svg x-show="soundEnabled" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                    </svg>
+                    <svg x-show="!soundEnabled" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                        <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+                    </svg>
+                </button>
+            </div>
         </div>
 
         <div class="nx-sidebar__tabs">
