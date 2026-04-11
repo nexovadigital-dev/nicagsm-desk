@@ -43,11 +43,15 @@ class VisitorsPage extends Page
 
     public function getTitle(): string|Htmlable { return ''; }
 
+    // Timestamp updated on every poll so Livewire detects a state change and re-renders
+    public int $pollTick = 0;
+
     public function notifyCount(): void
     {
         $visitors = $this->scopeToOrg(ActiveVisitor::query())
             ->where('last_ping_at', '>=', now()->subSeconds(90))
             ->pluck('id');
+        $this->pollTick++;   // triggers Livewire re-render → activeVisitors computed prop re-runs
         $this->dispatch('visitor-count-updated', count: $visitors->count(), ids: $visitors->values()->all());
     }
 
