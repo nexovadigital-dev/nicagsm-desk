@@ -79,10 +79,20 @@ class NexovaAiService
             return $greetingReply;
         }
 
-        // ── Intentar responder desde la KB primero (solo si NO hay store_context) ──
-        // Si hay store_context (WooCommerce), la IA es quien debe procesar la info.
-        $ragContext = $this->buildRagContext($ticket->organization_id);
+        // ── Intentar responder desde FAQ del widget (prioridad máxima) ──────────
         $hasStoreCtx = ! empty($ticket->store_context);
+        if (! $hasStoreCtx) {
+            $faqAnswer = $this->tryFaqAnswer($ticket);
+            if ($faqAnswer !== null) {
+                sleep(random_int(1, 2));
+                $org?->incrementBotMessageCount();
+                Log::info("[NexovaBot] Respondido desde FAQ del widget — ticket #{$ticket->id}");
+                return $faqAnswer;
+            }
+        }
+
+        // ── Intentar responder desde la KB (solo si NO hay store_context) ───────
+        $ragContext = $this->buildRagContext($ticket->organization_id);
         $kbAnswer = null;
         if ($ragContext && ! $hasStoreCtx) {
             $kbAnswer = $this->tryKbDirectAnswer($ticket, $ragContext);
@@ -390,6 +400,102 @@ class NexovaAiService
 
         $botName = $org?->name ? "el asistente de {$org->name}" : 'tu asistente virtual';
         return "Hola, soy {$botName}. ¿En qué puedo ayudarte?";
+    }
+
+    // =========================================================================
+    // FAQ — Respuesta directa desde preguntas frecuentes del widget
+    // =========================================================================
+
+    /**
+     * Busca en los faq_items del widget asociado al ticket.
+     * Primero hace match exacto normalizado, luego match por palabras clave.
+     * Retorna la respuesta si hay coincidencia suficiente, null si no.
+     */
+    private function tryFaqAnswer(Ticket $ticket): ?string
+    {
+        if (! $ticket->widget_id) return null;
+
+        $widget = \App\Models\ChatWidget::find($ticket->widget_id);
+        $faqs   = $widget?->faq_items ?? [];
+        if (empty($faqs)) return null;
+
+        $lastMsg = $ticket->messages()
+            ->where('sender_type', 'user')
+            ->orderByDesc('created_at')
+            ->value('content');
+
+        if (! $lastMsg || strlen($lastMsg) < 2) return null;
+
+        $normalize = fn (string $s): string => mb_strtolower(
+            trim(preg_replace('/[^a-záéíóúüñ\s]/u', '', $s))
+        );
+
+        $msgNorm = $normalize($lastMsg);
+
+        // 1. Match exacto (o muy cercano) de la pregunta completa
+        foreach ($faqs as $faq) {
+            if (empty($faq['question']) || empty($faq['answer'])) continue;
+            if ($normalize($faq['question']) === $msgNorm) {
+                return $this->stripMarkdown($faq['answer']);
+            }
+        }
+
+        // 2. Match por palabras clave
+        $stopwords = ['como', 'cual', 'cuál', 'que', 'qué', 'para', 'por', 'con', 'una',
+                      'uno', 'los', 'las', 'del', 'hay', 'tiene', 'puedo', 'puede',
+                      'quiero', 'necesito', 'favor', 'hola', 'gracias', 'son', 'estan',
+                      'está', 'esta', 'donde', 'cuales', 'cuáles'];
+
+        $msgWords = array_filter(
+            explode(' ', preg_replace('/[^a-záéíóúüñ\s]/u', '', $msgNorm)),
+            fn ($w) => mb_strlen($w) > 2 && ! in_array($w, $stopwords)
+        );
+
+        if (empty($msgWords)) return null;
+
+        $bestScore = 0;
+        $bestFaq   = null;
+
+        foreach ($faqs as $faq) {
+            if (empty($faq['question']) || empty($faq['answer'])) continue;
+
+            $qNorm  = $normalize($faq['question']);
+            $qWords = array_filter(
+                explode(' ', preg_replace('/[^a-záéíóúüñ\s]/u', '', $qNorm)),
+                fn ($w) => mb_strlen($w) > 2 && ! in_array($w, $stopwords)
+            );
+
+            if (empty($qWords)) continue;
+
+            // % de palabras del mensaje que aparecen en la pregunta FAQ
+            $hits = 0;
+            foreach ($msgWords as $w) {
+                if (str_contains($qNorm, $w)) $hits++;
+            }
+            $scoreA = $hits / count($msgWords);
+
+            // % de palabras de la pregunta FAQ que aparecen en el mensaje
+            $hits2 = 0;
+            foreach ($qWords as $w) {
+                if (str_contains($msgNorm, $w)) $hits2++;
+            }
+            $scoreB = $hits2 / count($qWords);
+
+            // Media ponderada: el mensaje cubriendo la FAQ importa más
+            $score = ($scoreA * 0.5) + ($scoreB * 0.5);
+
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $bestFaq   = $faq;
+            }
+        }
+
+        // Umbral 0.4 — suficiente para preguntas cortas tipo "métodos de pago"
+        if ($bestFaq && $bestScore >= 0.4) {
+            return $this->stripMarkdown($bestFaq['answer']);
+        }
+
+        return null;
     }
 
     // =========================================================================
