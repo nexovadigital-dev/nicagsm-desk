@@ -523,7 +523,19 @@ class="nx-inbox">
                             @endif
                         @else
                             {{-- Bot avatar — LEFT --}}
-                            <div class="nx-msg__avatar" style="background:#64748b">N</div>
+                            @php
+                                $rawBotAvatar = $ticket->widget?->bot_avatar ?? null;
+                                $botAvatarUrl = $rawBotAvatar
+                                    ? (str_starts_with($rawBotAvatar, 'http') ? $rawBotAvatar : \Illuminate\Support\Facades\Storage::disk('public')->url(ltrim(str_replace('/storage/', '', $rawBotAvatar), '/')))
+                                    : null;
+                            @endphp
+                            @if($botAvatarUrl)
+                                <div class="nx-msg__avatar" style="padding:0;overflow:hidden">
+                                    <img src="{{ $botAvatarUrl }}" alt="Bot" style="width:100%;height:100%;object-fit:cover;border-radius:50%">
+                                </div>
+                            @else
+                                <div class="nx-msg__avatar" style="background:#64748b">N</div>
+                            @endif
                         @endif
 
                         <div class="nx-msg__content">

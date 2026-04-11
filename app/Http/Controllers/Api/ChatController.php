@@ -69,6 +69,7 @@ class ChatController extends Controller
             'show_on'                 => $cfg->show_on ?? 'both',
             'default_screen'          => $cfg->default_screen ?? 'home',
             'faq_enabled'             => $cfg->faq_enabled ?? false,
+            'faq_quick_reply'         => $cfg->faq_quick_reply ?? true,
             'faq_items'               => $cfg->faq_items ?? [],
             'social_channels'         => $cfg->social_channels ?? [],
             'is_online'               => $isOnline,
@@ -77,11 +78,15 @@ class ChatController extends Controller
             'button_icon'             => $cfg->button_icon       ?? 'chat',
             'button_text'             => $cfg->button_text       ?? '',
             'button_text_color'       => $cfg->button_text_color ?? '#ffffff',
-            'button_image'            => $cfg->button_image,
+            'button_image'            => $cfg->button_image
+                ? (str_starts_with($cfg->button_image, 'http') ? $cfg->button_image : \Illuminate\Support\Facades\Storage::disk('public')->url(ltrim(str_replace('/storage/', '', $cfg->button_image), '/')))
+                : null,
             'pre_chat_enabled'        => $cfg->pre_chat_enabled ?? false,
             'pre_chat_fields'         => $cfg->pre_chat_fields ?? [],
             'bot_enabled'             => $cfg->bot_enabled ?? true,
-            'bot_avatar'              => $cfg->bot_avatar ?? null,
+            'bot_avatar'              => $cfg->bot_avatar
+                ? (str_starts_with($cfg->bot_avatar, 'http') ? $cfg->bot_avatar : \Illuminate\Support\Facades\Storage::disk('public')->url(ltrim(str_replace('/storage/', '', $cfg->bot_avatar), '/')))
+                : null,
         ]);
     }
 
