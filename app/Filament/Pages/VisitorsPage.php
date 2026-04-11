@@ -18,9 +18,9 @@ class VisitorsPage extends Page
     protected string $view = 'filament.pages.visitors-page';
     protected Width|string|null $maxContentWidth = 'full';
 
-    protected static ?string $navigationLabel = 'Visitantes en Vivo';
+    protected static ?string $navigationLabel = 'Visitantes';
     protected static string|\UnitEnum|null $navigationGroup = 'Conversaciones';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 30;
 
     public static function getNavigationIcon(): string|\BackedEnum|Htmlable|null
     {

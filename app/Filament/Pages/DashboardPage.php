@@ -21,8 +21,8 @@ class DashboardPage extends Page
     protected Width|string|null $maxContentWidth = 'full';
 
     protected static ?string $navigationLabel = 'Dashboard';
-    protected static string|\UnitEnum|null $navigationGroup = 'Conversaciones';
-    protected static ?int    $navigationSort  = 2;
+    protected static string|\UnitEnum|null $navigationGroup = null;
+    protected static ?int    $navigationSort  = 1;
 
     public static function getNavigationIcon(): string|\BackedEnum|Htmlable|null
     {

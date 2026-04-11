@@ -28,7 +28,7 @@ class TicketsPage extends Page
 
     protected static ?string $navigationLabel = 'Tickets';
     protected static string|\UnitEnum|null $navigationGroup = 'Conversaciones';
-    protected static ?int    $navigationSort  = 3;
+    protected static ?int    $navigationSort  = 20;
 
     public static function getNavigationIcon(): string|\BackedEnum|Htmlable|null
     {

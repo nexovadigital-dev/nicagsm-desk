@@ -35,9 +35,9 @@ class LiveInbox extends Page
     protected Width|string|null $maxContentWidth = 'full';
 
     // Propiedades que SÍ coinciden con el padre (?string / ?int) — sin conflicto
-    protected static ?string $navigationLabel = 'Bandeja en Vivo';
+    protected static ?string $navigationLabel = 'Mensajes';
     protected static string|\UnitEnum|null $navigationGroup = 'Conversaciones';
-    protected static ?int    $navigationSort  = 1;
+    protected static ?int    $navigationSort  = 10;
 
     public static function getNavigationIcon(): string|\BackedEnum|Htmlable|null
     {
