@@ -227,11 +227,12 @@ $visitorIds = $visitors->pluck('id')->values()->all();
         }
      }"
      x-init="
+        const _vp = $data;
         Livewire.on('visitor-count-updated', (data) => {
-            onVisitorUpdate(data[0]?.ids ?? []);
+            _vp.onVisitorUpdate(data[0]?.ids ?? []);
         });
         document.addEventListener('livewire:updated', () => {
-            newIds.forEach(id => {
+            _vp.newIds.forEach(id => {
                 const card = document.querySelector('[data-visitor-id=\'' + id + '\']');
                 if (card && !card.classList.contains('vp-card--new')) {
                     card.classList.add('vp-card--new');
