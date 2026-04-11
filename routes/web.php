@@ -84,6 +84,58 @@ Route::get('/widget.js', function () {
     ]);
 });
 
+// ── Panel API — endpoints internos para el agente (requieren auth web) ───────
+Route::middleware('auth')->prefix('api/panel')->group(function () {
+
+    // Llamadas entrantes (tickets human sin agente asignado, últimos 15 min)
+    Route::get('/incoming-agent-calls', function () {
+        $user = auth()->user();
+        $query = \App\Models\Ticket::where('status', 'human')
+            ->whereNull('assigned_agent')
+            ->whereNotNull('agent_called_at')
+            ->where('agent_called_at', '>=', now()->subMinutes(15))
+            ->where('organization_id', $user->organization_id)
+            ->orderBy('agent_called_at')
+            ->get(['id', 'client_name', 'agent_called_at']);
+        return response()->json(['calls' => $query]);
+    });
+
+    // Aceptar ticket — assignToMe vía API
+    Route::post('/assign-ticket/{id}', function (int $id) {
+        $user   = auth()->user();
+        $ticket = \App\Models\Ticket::where('id', $id)
+            ->where('organization_id', $user->organization_id)
+            ->first();
+        if (! $ticket || $ticket->status === 'closed') {
+            return response()->json(['error' => 'No encontrado'], 404);
+        }
+        $agentName = $user->name ?? 'Agente';
+        $ticket->update(['status' => 'human', 'assigned_agent' => $agentName, 'agent_called_at' => null]);
+        \App\Models\Message::create([
+            'ticket_id'   => $ticket->id,
+            'sender_type' => 'system',
+            'content'     => 'Agente se unió a la conversación.',
+        ]);
+        $inboxUrl = route('filament.admin.pages.live-inbox') . '?ticket=' . $id;
+        return response()->json(['ok' => true, 'inbox_url' => $inboxUrl]);
+    });
+
+    // Rechazar ticket — bot retoma
+    Route::post('/reject-ticket/{id}', function (int $id) {
+        $user   = auth()->user();
+        $ticket = \App\Models\Ticket::where('id', $id)
+            ->where('organization_id', $user->organization_id)
+            ->first();
+        if (! $ticket) {
+            return response()->json(['error' => 'No encontrado'], 404);
+        }
+        $ticket->update(['status' => 'bot', 'assigned_agent' => null, 'agent_called_at' => null]);
+        \App\Models\Message::create(['ticket_id' => $ticket->id, 'sender_type' => 'system', 'content' => 'Agente no disponible.']);
+        \App\Models\Message::create(['ticket_id' => $ticket->id, 'sender_type' => 'bot', 'content' => 'En este momento no hay agentes disponibles. Puedo seguir ayudándote. ¿En qué más puedo asistirte?']);
+        return response()->json(['ok' => true]);
+    });
+});
+
 // ── WP Plugin connect (OAuth-like popup) ─────────────────────────────────────
 Route::get('/connect',           [WpConnectController::class, 'show'])->name('wp-connect.show');
 Route::post('/connect/authorize',[WpConnectController::class, 'authorize'])->name('wp-connect.authorize');

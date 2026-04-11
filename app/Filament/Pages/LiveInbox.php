@@ -82,6 +82,11 @@ class LiveInbox extends Page
             ? Storage::url($user->avatar_path)
             : null;
         $this->syncIncomingCalls();
+
+        // Abrir ticket directo si viene de la alerta global (?ticket=ID)
+        if ($ticketId = request()->integer('ticket')) {
+            $this->selectTicket($ticketId);
+        }
     }
 
     public function hydrate(): void
@@ -414,14 +419,50 @@ class LiveInbox extends Page
         $ticket->update([
             'status'         => 'human',
             'assigned_agent' => $agentName,
+            'agent_called_at' => null, // limpiar la alerta de llamada entrante
         ]);
 
-        // Mensaje de sistema visible para el usuario en el widget
+        // Notificar al visitante en el widget
         Message::create([
             'ticket_id'   => $ticket->id,
             'sender_type' => 'system',
-            'content'     => "👤 {$agentName} se ha unido a la conversación y te atenderá ahora.",
+            'content'     => "Agente se unió a la conversación.",
         ]);
+
+        $this->dispatch('nexova-toast', type: 'success', message: "Tomaste el chat de {$ticket->client_name}");
+    }
+
+    /**
+     * Rechaza la solicitud de agente — el bot retoma el flujo configurado.
+     * Notifica al visitante con un mensaje amigable.
+     */
+    public function rejectAgentRequest(): void
+    {
+        if (! $this->selectedTicketId) return;
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
+        if (! $ticket) return;
+
+        $ticket->update([
+            'status'          => 'bot',
+            'assigned_agent'  => null,
+            'agent_called_at' => null,
+        ]);
+
+        // El widget interpreta este mensaje y muestra texto humanizado
+        Message::create([
+            'ticket_id'   => $ticket->id,
+            'sender_type' => 'system',
+            'content'     => 'Agente no disponible.',
+        ]);
+
+        // El bot toma el relevo con un mensaje explicativo
+        Message::create([
+            'ticket_id'   => $ticket->id,
+            'sender_type' => 'bot',
+            'content'     => 'En este momento no hay agentes disponibles para atenderte. Puedo seguir ayudándote o puedes intentarlo más tarde. ¿En qué más puedo ayudarte?',
+        ]);
+
+        $this->dispatch('nexova-toast', type: 'warning', message: 'Solicitud rechazada — bot retoma el chat');
     }
 
     public function handBackToBot(): void
@@ -429,7 +470,27 @@ class LiveInbox extends Page
         if (! $this->selectedTicketId) return;
         $ticket = $this->findOrgTicket($this->selectedTicketId);
         if (! $ticket) return;
-        $ticket->update(['status' => 'bot', 'assigned_agent' => null]);
+
+        $agentName = $ticket->assigned_agent ?? 'El agente';
+
+        $ticket->update([
+            'status'          => 'bot',
+            'assigned_agent'  => null,
+            'agent_called_at' => null,
+        ]);
+
+        // Notificar al visitante
+        Message::create([
+            'ticket_id'   => $ticket->id,
+            'sender_type' => 'system',
+            'content'     => 'Agente abandonó la conversación.',
+        ]);
+
+        Message::create([
+            'ticket_id'   => $ticket->id,
+            'sender_type' => 'bot',
+            'content'     => 'El agente ha finalizado la sesión. Estoy aquí para seguir ayudándote. ¿En qué puedo asistirte?',
+        ]);
     }
 
     public function closeTicket(): void

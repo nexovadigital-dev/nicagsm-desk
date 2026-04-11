@@ -508,6 +508,147 @@ document.addEventListener('alpine:init', () => {
     });
 })();
 </script>
+
+<!-- ── Alerta global de solicitud de agente (aparece en cualquier página del panel) ── -->
+<div id="nx-agent-alert"
+     style="display:none;position:fixed;bottom:24px;right:24px;z-index:9999;
+            background:#fff;border:1px solid #e2e8f0;border-radius:14px;
+            box-shadow:0 8px 32px rgba(0,0,0,.14);padding:16px 18px;
+            min-width:300px;max-width:340px;
+            animation:nxToastIn .25s cubic-bezier(.16,1,.3,1) forwards">
+    <div style="display:flex;align-items:flex-start;gap:12px">
+        <div style="width:36px;height:36px;border-radius:10px;background:#fef3c7;
+                    display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" width="18" height="18">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-5-5.917V4a1 1 0 10-2 0v1.083A6 6 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+        </div>
+        <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;color:#111827" id="nx-agent-alert-name">Visitante solicita agente</div>
+            <div style="font-size:11.5px;color:#6b7280;margin-top:2px">Haz clic en Aceptar para tomar el chat</div>
+        </div>
+        <button onclick="nxAgentAlertDismiss()" style="background:none;border:none;cursor:pointer;color:#9ca3af;padding:0;line-height:1;font-size:16px">✕</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+        <button id="nx-agent-alert-accept"
+                style="flex:1;background:#22c55e;color:#fff;border:none;border-radius:8px;
+                       padding:8px 0;font-size:12.5px;font-weight:600;cursor:pointer">
+            ✓ Aceptar chat
+        </button>
+        <button id="nx-agent-alert-reject"
+                style="flex:1;background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;border-radius:8px;
+                       padding:8px 0;font-size:12.5px;font-weight:600;cursor:pointer">
+            ✕ Rechazar
+        </button>
+    </div>
+</div>
+
+<script>
+(function() {
+    var alertEl     = document.getElementById('nx-agent-alert');
+    var alertName   = document.getElementById('nx-agent-alert-name');
+    var btnAccept   = document.getElementById('nx-agent-alert-accept');
+    var btnReject   = document.getElementById('nx-agent-alert-reject');
+    var currentTicketId = null;
+    var pollTimer   = null;
+    var dismissed   = {};
+
+    function show(ticketId, clientName) {
+        if (dismissed[ticketId]) return;
+        currentTicketId = ticketId;
+        alertName.textContent = (clientName || 'Visitante') + ' solicita un agente';
+        alertEl.style.display = 'block';
+        playAlertSound();
+    }
+
+    function hide() {
+        alertEl.style.display = 'none';
+        currentTicketId = null;
+    }
+
+    window.nxAgentAlertDismiss = function() {
+        if (currentTicketId) dismissed[currentTicketId] = true;
+        hide();
+    };
+
+    var audioCtx = null;
+    function playAlertSound() {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            [880, 1100].forEach(function(freq, i) {
+                var o = audioCtx.createOscillator();
+                var g = audioCtx.createGain();
+                o.connect(g); g.connect(audioCtx.destination);
+                o.type = 'sine'; o.frequency.value = freq;
+                var t = audioCtx.currentTime + i * 0.15;
+                g.gain.setValueAtTime(0, t);
+                g.gain.linearRampToValueAtTime(0.15, t + 0.05);
+                g.gain.linearRampToValueAtTime(0, t + 0.3);
+                o.start(t); o.stop(t + 0.35);
+            });
+        } catch(e) {}
+    }
+
+    function poll() {
+        fetch('/api/panel/incoming-agent-calls', { headers: { Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '' } })
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+                if (!data || !data.calls || data.calls.length === 0) { hide(); return; }
+                var first = data.calls[0];
+                if (currentTicketId !== first.id || alertEl.style.display === 'none') {
+                    show(first.id, first.client_name);
+                }
+            })
+            .catch(function(){});
+    }
+
+    // Botón Aceptar — llama a assignToMe vía API interna
+    btnAccept.addEventListener('click', function() {
+        if (!currentTicketId) return;
+        var id = currentTicketId;
+        fetch('/api/panel/assign-ticket/' + id, {
+            method: 'POST',
+            headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '' }
+        }).then(function(r) {
+            return r.json();
+        }).then(function(d) {
+            hide();
+            dismissed[id] = true;
+            // Navegar al live inbox con ese ticket
+            if (d.inbox_url) window.location.href = d.inbox_url;
+        }).catch(function(){});
+    });
+
+    // Botón Rechazar — devuelve al bot
+    btnReject.addEventListener('click', function() {
+        if (!currentTicketId) return;
+        var id = currentTicketId;
+        fetch('/api/panel/reject-ticket/' + id, {
+            method: 'POST',
+            headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '' }
+        }).then(function() {
+            dismissed[id] = true;
+            hide();
+        }).catch(function(){});
+    });
+
+    // Iniciar polling cada 8 segundos
+    function start() {
+        if (pollTimer) return;
+        poll();
+        pollTimer = setInterval(poll, 8000);
+    }
+
+    // Arrancar cuando el usuario esté autenticado en el panel
+    if (document.cookie.indexOf('laravel_session') !== -1 || document.cookie.indexOf('XSRF-TOKEN') !== -1) {
+        start();
+    }
+    // También arrancar tras navegaciones SPA
+    document.addEventListener('livewire:navigated', function() {
+        if (!pollTimer) start();
+    });
+})();
+</script>
 HTML
             )
             ->renderHook(

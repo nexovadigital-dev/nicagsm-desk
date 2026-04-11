@@ -50,25 +50,35 @@ x-init="
 
 @if($hasIncomingCall)
 <div x-show="ringing && !dismissed"
-     style="display:flex;align-items:center;gap:14px;background:#fef3c7;border:1px solid #fcd34d;border-radius:12px;padding:14px 18px;margin-bottom:16px;animation:nx-ring-alert .5s ease infinite alternate">
-    <div style="width:42px;height:42px;border-radius:50%;background:#f59e0b22;display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:nx-ring-alert .5s ease infinite alternate">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.8" width="22" height="22">
+     style="display:flex;align-items:center;gap:12px;background:#fef3c7;border:1px solid #fcd34d;border-radius:12px;padding:12px 16px;margin-bottom:16px;animation:nx-ring-alert .5s ease infinite alternate">
+    <div style="width:38px;height:38px;border-radius:50%;background:#f59e0b22;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.8" width="20" height="20">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
         </svg>
     </div>
     <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:700;color:#92400e">
+        <div style="font-size:13px;font-weight:700;color:#92400e">
             {{ $incomingCalls->count() }} usuario(s) esperando un agente
         </div>
-        <div style="font-size:12px;color:#b45309;margin-top:2px">
-            @foreach($incomingCalls->take(3) as $call)
-                <span>{{ $call->client_name ?: 'Visitante' }} ({{ $call->agent_called_at?->diffForHumans() }})</span>{{ !$loop->last ? ' · ' : '' }}
+        <div style="font-size:11.5px;color:#b45309;margin-top:1px">
+            @foreach($incomingCalls->take(2) as $call)
+                <span>{{ $call->client_name ?: 'Visitante' }}</span>{{ !$loop->last ? ' · ' : '' }}
             @endforeach
         </div>
     </div>
+    {{-- Acción rápida: ir al primer ticket que solicita agente --}}
+    @if($incomingCalls->first())
+        <button wire:click="selectTicket({{ $incomingCalls->first()->id }})" @click="dismiss()"
+                style="background:var(--nx-accent,#22c55e);color:#fff;border:none;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12">
+                <path d="M5 13l4 4L19 7"/>
+            </svg>
+            Ver
+        </button>
+    @endif
     <button @click="dismiss()"
-            style="background:none;border:1px solid #fcd34d;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;color:#92400e;cursor:pointer;white-space:nowrap">
-        Entendido
+            style="background:none;border:1px solid #fcd34d;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;color:#92400e;cursor:pointer;white-space:nowrap">
+        ✕
     </button>
 </div>
 @endif
@@ -321,21 +331,50 @@ class="nx-inbox">
                 </div>
                 <div class="nx-chat__actions">
                     @if ($ticket->status === 'bot')
+                        {{-- Bot manejando — opción de tomar el chat --}}
                         <button wire:click="assignToMe" class="nx-btn nx-btn--assign">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                             </svg>
-                            Asignar a mí
+                            Tomar chat
                         </button>
                     @endif
-                    @if ($ticket->status === 'human')
+
+                    @if ($ticket->status === 'human' && ! $ticket->assigned_agent)
+                        {{-- Visitante solicitó agente — pendiente de aceptar o rechazar --}}
+                        <span style="font-size:11px;font-weight:600;color:#d97706;display:flex;align-items:center;gap:4px;animation:nx-ring-alert .8s ease infinite alternate">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-5-5.917V4a1 1 0 10-2 0v1.083A6 6 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                            </svg>
+                            Solicita agente
+                        </span>
+                        <button wire:click="assignToMe" class="nx-btn nx-btn--assign">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Aceptar
+                        </button>
+                        <button wire:click="rejectAgentRequest"
+                                wire:confirm="¿Rechazar la solicitud? El bot retomará el chat."
+                                class="nx-btn nx-btn--ghost" style="color:#dc2626;border-color:#fca5a5">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            Rechazar
+                        </button>
+                    @endif
+
+                    @if ($ticket->status === 'human' && $ticket->assigned_agent)
+                        {{-- Agente asignado y activo --}}
                         <span class="nx-agent-tag">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                             </svg>
-                            {{ $ticket->assigned_agent ?? 'Agente' }}
+                            {{ $ticket->assigned_agent }}
                         </span>
-                        <button wire:click="handBackToBot" class="nx-btn nx-btn--ghost">
+                        <button wire:click="handBackToBot"
+                                wire:confirm="¿Devolver al bot? El asistente retomará la conversación."
+                                class="nx-btn nx-btn--ghost">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                             </svg>
