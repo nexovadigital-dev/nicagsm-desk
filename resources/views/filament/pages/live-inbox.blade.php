@@ -1098,8 +1098,8 @@ x-init="
 
 /* ─── SIDEBAR ─── */
 .nx-sidebar {
-    width: 272px;
-    min-width: 272px;
+    width: 280px;
+    min-width: 280px;
     display: flex;
     flex-direction: column;
     background: var(--nx-surface);
@@ -1111,7 +1111,7 @@ x-init="
     align-items: center;
     justify-content: space-between;
     padding: 0 16px;
-    height: 56px;          /* mismo alto que el topbar de Filament */
+    height: 56px;
     flex-shrink: 0;
     border-bottom: 1px solid var(--nx-border);
     background: var(--nx-surface);
@@ -1122,10 +1122,12 @@ x-init="
     border-bottom: 1px solid var(--nx-border);
     background: var(--nx-surface);
     flex-shrink: 0;
+    padding: 0 8px;
+    gap: 2px;
 }
 .nx-tab {
     flex: 1;
-    padding: 9px 4px;
+    padding: 10px 8px;
     font-size: 12px;
     font-weight: 500;
     color: var(--nx-muted);
@@ -1139,6 +1141,7 @@ x-init="
     justify-content: center;
     gap: 6px;
     font-family: var(--nx-font);
+    letter-spacing: -.01em;
 }
 .nx-tab:hover { color: var(--nx-text); }
 .nx-tab--active {
@@ -1146,12 +1149,13 @@ x-init="
     border-bottom-color: var(--nx-accent);
     font-weight: 600;
 }
+/* Tab count — usa el accent color del sistema */
 .nx-tab-count {
     font-size: 10px;
     font-weight: 700;
-    background: rgba(59,130,246,.1);
-    color: #2563eb;
-    border: 1px solid rgba(59,130,246,.25);
+    background: var(--nx-accent-bg);
+    color: var(--nx-accent);
+    border: 1px solid var(--nx-accent-bd);
     padding: 1px 5px;
     border-radius: 99px;
 }
@@ -1161,9 +1165,9 @@ x-init="
     align-items: center;
     gap: 8px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--nx-text);
-    letter-spacing: -.01em;
+    letter-spacing: -.02em;
 }
 
 .nx-status-dot {
@@ -1192,7 +1196,7 @@ x-init="
 .nx-ticket-list {
     flex: 1;
     overflow-y: auto;
-    padding: 6px 6px;
+    padding: 6px 8px;
     scrollbar-width: thin;
     scrollbar-color: var(--nx-border) transparent;
 }
@@ -1202,38 +1206,44 @@ x-init="
     align-items: flex-start;
     gap: 10px;
     width: 100%;
-    padding: 9px 10px;
-    border-radius: 8px;
+    padding: 10px 10px;
+    border-radius: 9px;
     border: 1px solid transparent;
     background: none;
     cursor: pointer;
     text-align: left;
-    transition: background .1s, border-color .1s;
-    margin-bottom: 1px;
+    transition: background .12s, border-color .12s;
+    margin-bottom: 2px;
     color: inherit;
 }
-.nx-ticket:hover { background: var(--nx-surface-2); }
+.nx-ticket:hover {
+    background: var(--nx-surface-2);
+    border-color: var(--nx-border);
+}
+/* Active — usa el accent del sistema (verde) */
 .nx-ticket--active {
-    background: rgba(59,130,246,.07);
-    border-color: rgba(59,130,246,.25);
+    background: var(--nx-accent-bg);
+    border-color: var(--nx-accent-bd);
 }
 :is(html.dark, [data-theme="dark"]) .nx-ticket--active {
-    background: rgba(59,130,246,.12);
-    border-color: rgba(59,130,246,.3);
+    background: rgba(34,197,94,.1);
+    border-color: rgba(34,197,94,.25);
 }
 
 .nx-ticket__body { flex: 1; min-width: 0; }
 .nx-ticket__top  {
     display: flex; justify-content: space-between;
-    align-items: baseline; gap: 4px; margin-bottom: 3px;
+    align-items: baseline; gap: 4px; margin-bottom: 2px;
 }
 .nx-ticket__name {
-    font-size: 13px; font-weight: 500;
+    font-size: 13px; font-weight: 600;
     color: var(--nx-text);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    letter-spacing: -.01em;
 }
 .nx-ticket__time {
     font-size: 10px; color: var(--nx-muted); white-space: nowrap; flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
 }
 .nx-ticket__bottom {
     display: flex; align-items: center;
@@ -1242,20 +1252,21 @@ x-init="
 .nx-ticket__preview {
     font-size: 11.5px; color: var(--nx-muted);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;
+    opacity: .85;
 }
 
-/* Pills */
+/* Pills — status badges con identidad visual clara */
 .nx-pill {
-    font-size: 9px; font-weight: 700; letter-spacing: .05em;
-    padding: 2px 6px; border-radius: 99px;
+    font-size: 9.5px; font-weight: 700; letter-spacing: .04em;
+    padding: 2px 7px; border-radius: 99px;
     flex-shrink: 0; text-transform: uppercase;
 }
-.nx-pill--bot    { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
-.nx-pill--human  { background: rgba(59,130,246,.08); color: #2563eb; border: 1px solid rgba(59,130,246,.2); }
-.nx-pill--closed { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; }
+.nx-pill--bot    { background: var(--nx-surface-2); color: var(--nx-muted); border: 1px solid var(--nx-border); }
+.nx-pill--human  { background: var(--nx-accent-bg); color: var(--nx-accent-h); border: 1px solid var(--nx-accent-bd); }
+.nx-pill--closed { background: var(--nx-surface-2); color: var(--nx-muted); border: 1px solid var(--nx-border); opacity: .7; }
 
-:is(html.dark, [data-theme="dark"]) .nx-pill--bot   { color: #94a3b8; }
-:is(html.dark, [data-theme="dark"]) .nx-pill--human { color: #93c5fd; }
+:is(html.dark, [data-theme="dark"]) .nx-pill--bot   { color: var(--nx-muted); }
+:is(html.dark, [data-theme="dark"]) .nx-pill--human { color: var(--nx-accent); }
 
 /* Empty state (sidebar) */
 .nx-empty-state {
@@ -1267,11 +1278,12 @@ x-init="
 
 /* ─── AVATARS ─── */
 .nx-avatar {
-    width: 32px; height: 32px; border-radius: 50%;
+    width: 32px; height: 32px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
     font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0;
+    letter-spacing: -.02em;
 }
-.nx-avatar--lg { width: 36px; height: 36px; font-size: 14px; }
+.nx-avatar--lg { width: 36px; height: 36px; font-size: 14px; border-radius: 11px; }
 
 /* ─── CHAT PANEL ─── */
 .nx-chat { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--nx-bg); }
@@ -1280,8 +1292,8 @@ x-init="
     display: flex;
     flex-direction: column;
     gap: 0;
-    padding: 10px 16px;
-    min-height: 56px;     /* alinear con el header del sidebar */
+    padding: 0 16px;
+    min-height: 56px;
     justify-content: center;
     border-bottom: 1px solid var(--nx-border);
     background: var(--nx-surface);
@@ -1290,14 +1302,15 @@ x-init="
 .nx-chat__header-top {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     min-width: 0;
+    padding: 10px 0 6px;
 }
 .nx-chat__info { flex: 1; min-width: 0; }
 .nx-chat__info strong {
-    display: block; font-size: 13.5px; font-weight: 600; color: var(--nx-text);
+    display: block; font-size: 14px; font-weight: 700; color: var(--nx-text);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    margin-bottom: 2px;
+    margin-bottom: 1px; letter-spacing: -.02em;
 }
 .nx-chat__info span {
     font-size: 11px; color: var(--nx-muted); display: block;
@@ -1306,7 +1319,7 @@ x-init="
 }
 .nx-chat__actions {
     display: flex; gap: 6px; align-items: center;
-    padding-top: 8px; flex-wrap: wrap;
+    padding-bottom: 8px; flex-wrap: wrap;
 }
 
 .nx-status-label { font-size: 11px; font-weight: 500; }
@@ -1319,17 +1332,17 @@ x-init="
 /* ─── MENSAJES ─── */
 .nx-messages {
     flex: 1; overflow-y: auto;
-    padding: 16px 20px 12px;
-    display: flex; flex-direction: column; gap: 6px;
+    padding: 20px 20px 16px;
+    display: flex; flex-direction: column; gap: 4px;
     scrollbar-width: thin;
     scrollbar-color: var(--nx-border) transparent;
 }
-/* Agrupar mensajes del mismo sender con menos gap */
+/* Agrupación de mensajes por sender */
 .nx-msg + .nx-msg { margin-top: 2px; }
 .nx-msg--user + .nx-msg--bot,
 .nx-msg--bot + .nx-msg--user,
 .nx-msg--agent + .nx-msg--user,
-.nx-msg--user + .nx-msg--agent { margin-top: 10px; }
+.nx-msg--user + .nx-msg--agent { margin-top: 12px; }
 
 .nx-messages__empty {
     flex: 1; display: flex; align-items: center; justify-content: center;
@@ -1365,10 +1378,10 @@ x-init="
 .nx-msg { display: flex; align-items: flex-end; gap: 8px; }
 
 .nx-msg__avatar {
-    width: 26px; height: 26px; border-radius: 50%;
+    width: 26px; height: 26px; border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
     font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
-    margin-bottom: 2px;
+    margin-bottom: 2px; letter-spacing: -.01em;
 }
 
 .nx-msg__content {
@@ -1392,46 +1405,44 @@ x-init="
 }
 
 .nx-bubble {
-    padding: 9px 14px;
-    border-radius: 18px;
-    font-size: 13.5px; line-height: 1.55;
+    padding: 9px 13px;
+    border-radius: 16px;
+    font-size: 13.5px; line-height: 1.58;
     white-space: normal;
     word-break: break-word;
     overflow-wrap: break-word;
     box-sizing: border-box;
     max-width: 100%;
 }
-/* Burbujas — modo claro */
-/* Visitor: neutral gray, left tail */
+/* Visitor: neutral, left tail */
 .nx-msg--user  .nx-bubble {
-    background: #f1f5f9;
-    color: #1e293b;
-    border: 1px solid #e2e8f0;
-    border-bottom-left-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    background: var(--nx-surface-2);
+    color: var(--nx-text);
+    border: 1px solid var(--nx-border);
+    border-bottom-left-radius: 3px;
 }
-/* Bot: subtle surface, left tail */
+/* Bot: white surface, left tail */
 .nx-msg--bot   .nx-bubble {
     background: var(--nx-surface);
     color: var(--nx-text);
     border: 1px solid var(--nx-border);
-    border-bottom-left-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    border-bottom-left-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
 }
-/* Agent: dark slate, right tail */
+/* Agent: usa accent del sistema, right tail */
 .nx-msg--agent .nx-bubble {
-    background: #1e293b;
-    color: #f8fafc;
+    background: var(--nx-accent);
+    color: #fff;
     border: none;
-    border-radius: 18px;
-    border-bottom-right-radius: 4px;
-    box-shadow: 0 1px 4px rgba(0,0,0,.18);
+    border-radius: 16px;
+    border-bottom-right-radius: 3px;
+    box-shadow: 0 1px 4px rgba(34,197,94,.3);
 }
 
 /* Burbujas — modo oscuro */
-:is(html.dark, [data-theme="dark"]) .nx-msg--user  .nx-bubble { background: #1e293b; color: #e2e8f0; border-color: #334155; }
-:is(html.dark, [data-theme="dark"]) .nx-msg--bot   .nx-bubble { background: var(--nx-surface-2); border-color: var(--nx-border); }
-:is(html.dark, [data-theme="dark"]) .nx-msg--agent .nx-bubble { background: #334155; color: #f1f5f9; }
+:is(html.dark, [data-theme="dark"]) .nx-msg--user  .nx-bubble { background: var(--nx-surface-2); color: var(--nx-text); border-color: var(--nx-border); }
+:is(html.dark, [data-theme="dark"]) .nx-msg--bot   .nx-bubble { background: var(--nx-surface); border-color: var(--nx-border); }
+:is(html.dark, [data-theme="dark"]) .nx-msg--agent .nx-bubble { background: var(--nx-accent-h); box-shadow: 0 1px 4px rgba(34,197,94,.2); }
 
 .nx-msg__time { display: block; font-size: 10px; color: var(--nx-muted); padding: 2px 4px 0; }
 .nx-msg--agent .nx-msg__time { text-align: right; }
@@ -1557,7 +1568,7 @@ x-init="
 
 /* ─── COMPOSITOR ─── */
 .nx-composer {
-    padding: 12px 18px;
+    padding: 12px 16px;
     border-top: 1px solid var(--nx-border);
     background: var(--nx-surface);
     flex-shrink: 0;
@@ -1582,15 +1593,18 @@ x-init="
     background: var(--nx-bg);
     color: var(--nx-text);
     border: 1px solid var(--nx-border);
-    border-radius: 10px;
-    padding: 8px 12px;
+    border-radius: 12px;
+    padding: 9px 13px;
     font-size: 13px;
     font-family: var(--nx-font);
     line-height: 1.5; resize: none; outline: none;
-    min-height: 38px; max-height: 120px;
-    transition: border-color .15s;
+    min-height: 40px; max-height: 120px;
+    transition: border-color .15s, box-shadow .15s;
 }
-.nx-composer__input:focus { border-color: var(--nx-accent); }
+.nx-composer__input:focus {
+    border-color: var(--nx-accent);
+    box-shadow: 0 0 0 3px var(--nx-accent-bg);
+}
 .nx-composer__input::placeholder { color: var(--nx-muted); }
 .nx-composer__footer { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; }
 .nx-composer__hint { font-size: 10px; color: var(--nx-muted); }
@@ -1671,12 +1685,12 @@ x-init="
 }
 .nx-canned-item:hover,
 .nx-canned-item--active {
-    background: rgba(59,130,246,.07);
+    background: var(--nx-accent-bg);
 }
 .nx-canned-shortcut {
     font-size: 12px;
     font-weight: 700;
-    color: #2563eb;
+    color: var(--nx-accent-h);
     font-family: monospace;
     flex-shrink: 0;
     min-width: 80px;
@@ -1708,22 +1722,24 @@ x-init="
 /* ─── BOTONES ─── */
 .nx-btn {
     display: inline-flex; align-items: center; gap: 5px;
-    padding: 6px 11px; border-radius: 7px;
+    padding: 6px 12px; border-radius: 8px;
     font-size: 12px; font-weight: 500;
     border: 1px solid transparent;
     cursor: pointer;
-    transition: background .1s, color .1s;
+    transition: background .12s, color .12s, border-color .12s;
     font-family: var(--nx-font);
     line-height: 1;
+    letter-spacing: -.01em;
 }
 
+/* Primary usa el verde accent */
 .nx-btn--primary {
-    background: #1e293b; color: #f8fafc; border-color: #1e293b;
-    padding: 8px 12px; border-radius: 9px;
+    background: var(--nx-accent); color: #fff;
+    border-color: var(--nx-accent);
+    padding: 8px 14px; border-radius: 9px;
+    font-weight: 600;
 }
-.nx-btn--primary:hover { background: #0f172a; border-color: #0f172a; }
-:is(html.dark, [data-theme="dark"]) .nx-btn--primary { background: #f1f5f9; color: #0f172a; border-color: #f1f5f9; }
-:is(html.dark, [data-theme="dark"]) .nx-btn--primary:hover { background: #e2e8f0; border-color: #e2e8f0; }
+.nx-btn--primary:hover { background: var(--nx-accent-h); border-color: var(--nx-accent-h); }
 
 .nx-btn--ghost {
     background: transparent;
@@ -1736,30 +1752,31 @@ x-init="
     background: transparent; color: #dc2626;
     border-color: rgba(220,38,38,.2);
 }
-.nx-btn--danger:hover { background: rgba(220,38,38,.06); }
+.nx-btn--danger:hover { background: rgba(220,38,38,.07); border-color: rgba(220,38,38,.35); }
 :is(html.dark, [data-theme="dark"]) .nx-btn--danger { color: #f87171; }
 
+/* Assign — usa accent del sistema */
 .nx-btn--assign {
-    background: rgba(59,130,246,.08);
-    color: #2563eb;
-    border-color: rgba(59,130,246,.2);
+    background: var(--nx-accent-bg);
+    color: var(--nx-accent-h);
+    border-color: var(--nx-accent-bd);
+    font-weight: 600;
 }
-.nx-btn--assign:hover { background: rgba(59,130,246,.14); }
-:is(html.dark, [data-theme="dark"]) .nx-btn--assign { color: #93c5fd; }
+.nx-btn--assign:hover { background: rgba(34,197,94,.14); }
+:is(html.dark, [data-theme="dark"]) .nx-btn--assign { color: var(--nx-accent); }
 
 .nx-agent-tag {
     display: inline-flex; align-items: center; gap: 5px;
-    font-size: 11px; font-weight: 500; color: #475569;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    font-size: 11px; font-weight: 500; color: var(--nx-muted);
+    background: var(--nx-surface-2);
+    border: 1px solid var(--nx-border);
     padding: 4px 10px; border-radius: 99px;
 }
-:is(html.dark, [data-theme="dark"]) .nx-agent-tag { color: #94a3b8; }
 
 /* ─── PANEL DERECHO — Detalle del visitante ─── */
 .nx-detail {
-    width: 230px;
-    min-width: 230px;
+    width: 240px;
+    min-width: 240px;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
@@ -1792,7 +1809,7 @@ x-init="
 .nx-detail__edit-btn:hover { background: var(--nx-surface-2); color: var(--nx-text); }
 
 .nx-detail__section {
-    padding: 14px 14px 10px;
+    padding: 14px 16px 12px;
     border-bottom: 1px solid var(--nx-border);
 }
 .nx-detail__section:last-child { border-bottom: none; }
@@ -1802,28 +1819,28 @@ x-init="
     font-weight: 700;
     color: var(--nx-muted);
     text-transform: uppercase;
-    letter-spacing: .07em;
+    letter-spacing: .08em;
     margin-bottom: 10px;
+    opacity: .7;
 }
 
 .nx-detail__row {
     display: flex;
     flex-direction: column;
-    gap: 1px;
-    margin-bottom: 8px;
+    gap: 2px;
+    margin-bottom: 10px;
 }
 .nx-detail__key {
-    font-size: 10px;
+    font-size: 10.5px;
     color: var(--nx-muted);
     font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: .04em;
 }
 .nx-detail__val {
-    font-size: 12px;
+    font-size: 12.5px;
     color: var(--nx-text);
     font-weight: 400;
     word-break: break-all;
+    line-height: 1.4;
 }
 .nx-detail__val--mono { font-family: ui-monospace, monospace; font-size: 11px; }
 
