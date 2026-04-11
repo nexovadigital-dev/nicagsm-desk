@@ -52,6 +52,7 @@ class AgentProfile extends Page
     public string  $orgWebsite      = '';
     public string  $orgSupportEmail = '';
     public string  $orgSupportName  = '';
+    public string  $orgTimezone     = 'America/Managua';
 
     // ── Cambio de contraseña ──
     public string $currentPassword    = '';
@@ -82,6 +83,7 @@ class AgentProfile extends Page
             $this->orgWebsite      = $org->website        ?? '';
             $this->orgSupportEmail = $org->support_email  ?? '';
             $this->orgSupportName  = $org->support_name   ?? '';
+            $this->orgTimezone     = $org->timezone        ?? 'America/Managua';
         }
     }
 
@@ -185,11 +187,17 @@ class AgentProfile extends Page
             return;
         }
 
+        $tz = trim($this->orgTimezone);
+        if (! $tz || ! in_array($tz, \DateTimeZone::listIdentifiers(), true)) {
+            $tz = 'America/Managua';
+        }
+
         Organization::where('id', $user->organization_id)->update([
             'name'          => $name,
             'website'       => trim($this->orgWebsite)      ?: null,
             'support_email' => trim($this->orgSupportEmail) ?: null,
             'support_name'  => trim($this->orgSupportName)  ?: null,
+            'timezone'      => $tz,
         ]);
 
         $this->dispatch('nexova-toast', type: 'success', message: 'Organización actualizada');

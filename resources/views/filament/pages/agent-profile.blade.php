@@ -335,6 +335,51 @@
             </div>
         </div>
 
+        {{-- Zona horaria --}}
+        <div class="ap-section">
+            <div class="ap-section-info">
+                <div class="ap-section-title">Zona horaria</div>
+                <div class="ap-section-desc">Afecta las fechas y horas de chats, tickets y visitantes en todo el panel.</div>
+            </div>
+            <div class="ap-section-body">
+                @php
+                    $tzGroups = [];
+                    foreach (\DateTimeZone::listIdentifiers() as $tz) {
+                        $parts = explode('/', $tz, 2);
+                        $group = $parts[0];
+                        $tzGroups[$group][] = $tz;
+                    }
+                    // Pinned regions first
+                    $priority = ['America', 'Europe', 'Asia', 'Africa', 'Pacific', 'Australia'];
+                    $sorted = [];
+                    foreach ($priority as $p) { if (isset($tzGroups[$p])) $sorted[$p] = $tzGroups[$p]; }
+                    foreach ($tzGroups as $g => $list) { if (! isset($sorted[$g])) $sorted[$g] = $list; }
+                @endphp
+                <div class="ap-field" style="max-width:380px">
+                    <label class="ap-label">Zona horaria de la organización</label>
+                    <select wire:model="orgTimezone" class="ap-input" style="cursor:pointer">
+                        @foreach($sorted as $group => $zones)
+                        <optgroup label="{{ $group }}">
+                            @foreach($zones as $tz)
+                            <option value="{{ $tz }}" @selected($orgTimezone === $tz)>
+                                {{ str_replace(['_', '/'], [' ', ' / '], $tz) }}
+                                (UTC{{ (new \DateTime('now', new \DateTimeZone($tz)))->format('P') }})
+                            </option>
+                            @endforeach
+                        </optgroup>
+                        @endforeach
+                    </select>
+                    <p style="font-size:11.5px;color:var(--nx-muted);margin-top:6px">
+                        Hora actual en tu zona:
+                        <strong>{{ \Carbon\Carbon::now($orgTimezone ?: 'America/Managua')->format('d/m/Y H:i') }}</strong>
+                    </p>
+                </div>
+                <div class="ap-actions">
+                    <button class="ap-btn ap-btn-primary" wire:click="saveOrg" wire:loading.attr="disabled">Guardar zona horaria</button>
+                </div>
+            </div>
+        </div>
+
     </div>
     @endif
 

@@ -75,6 +75,7 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
                 TwoFactorAuthentication::class,
+                \App\Http\Middleware\SetOrganizationTimezone::class,
             ])
             ->renderHook(
                 PanelsRenderHook::PAGE_START,

@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 class Organization extends Model
 {
     protected $fillable = [
-        'name', 'slug', 'website', 'support_email', 'support_name',
+        'name', 'slug', 'website', 'support_email', 'support_name', 'timezone',
         'domain', 'domain_verified', 'domain_verify_token',
         'ai_groq_key', 'ai_groq_key_2', 'ai_groq_key_3', 'ai_gemini_key', 'ai_use_own_keys', 'telegram_bot_token',
         'max_messages_per_session', 'max_bot_sessions_per_day',
