@@ -17,7 +17,7 @@ class ChangelogPage extends Page
 
     protected static ?string $navigationLabel = 'Novedades';
     protected static string|\UnitEnum|null $navigationGroup = null;
-    protected static ?int    $navigationSort  = 99;
+    protected static ?int    $navigationSort  = 999;
 
     public static function getNavigationIcon(): string|\BackedEnum|Htmlable|null
     {

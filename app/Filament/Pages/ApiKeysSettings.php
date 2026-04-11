@@ -16,9 +16,9 @@ class ApiKeysSettings extends Page
     protected string $view = 'filament.pages.api-keys-settings';
     protected Width|string|null $maxContentWidth = 'full';
 
-    protected static ?string $navigationLabel = 'Acceso por API';
-    protected static string|\UnitEnum|null $navigationGroup = 'Desarrolladores';
-    protected static ?int    $navigationSort  = 10;
+    protected static ?string $navigationLabel = 'Inteligencia Artificial';
+    protected static string|\UnitEnum|null $navigationGroup = 'Inteligencia';
+    protected static ?int    $navigationSort  = 20;
 
     public static function getNavigationIcon(): string|\BackedEnum|Htmlable|null
     {

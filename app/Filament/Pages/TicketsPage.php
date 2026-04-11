@@ -30,6 +30,7 @@ class TicketsPage extends Page
     protected static string|\UnitEnum|null $navigationGroup = 'Conversaciones';
     protected static ?int    $navigationSort  = 20;
 
+
     public static function getNavigationIcon(): string|\BackedEnum|Htmlable|null
     {
         return 'heroicon-o-ticket';

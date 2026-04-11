@@ -54,7 +54,6 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Agentes')->icon('heroicon-o-users')->collapsible(false),
                 NavigationGroup::make('Canales')->icon('heroicon-o-signal')->collapsible(false),
                 NavigationGroup::make('Correo y Notificaciones')->icon('heroicon-o-envelope')->collapsible(false),
-                NavigationGroup::make('Desarrolladores')->icon('heroicon-o-code-bracket')->collapsible(false),
                 NavigationGroup::make('Cuenta')->icon('heroicon-o-user-circle')->collapsible(false),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
