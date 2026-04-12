@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 declare(strict_types=1);
 
@@ -103,6 +103,13 @@ class NexovaAiService
             $org?->incrementBotMessageCount();
             Log::info("[NexovaBot] Respondido desde KB local — ticket #{$ticket->id}");
             return $kbAnswer;
+        }
+
+
+        // --- IA deshabilitada en el widget (ai_enabled = false) ---
+        if ($widget && $widget->ai_enabled === false) {
+            Log::info("[NexovaBot] IA deshabilitada en widget - escalando ticket #{$ticket->id}");
+            return 'No tengo informacion sobre eso. Te pongo en contacto con un agente.' . self::ESCALATE_FLAG;
         }
 
         // ── Plan Free: IA bloqueada, solo KB ───────────────────────────────────

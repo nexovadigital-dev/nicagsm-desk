@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Models;
 
@@ -20,6 +20,7 @@ class ChatWidget extends Model
         'pre_chat_enabled', 'pre_chat_fields',
         'button_style', 'button_icon', 'button_text', 'button_text_color', 'button_image',
         'agent_call_timeout', 'agent_no_response', 'bot_enabled', 'bot_avatar', 'bot_system_prompt',
+        'ai_enabled', 'faq_direct',
     ];
 
     protected $casts = [
@@ -36,6 +37,8 @@ class ChatWidget extends Model
         'pre_chat_enabled'        => 'boolean',
         'pre_chat_fields'  => 'array',
         'bot_enabled'      => 'boolean',
+        'ai_enabled'       => 'boolean',
+        'faq_direct'       => 'boolean',
     ];
 
     protected static function booted(): void
@@ -62,10 +65,10 @@ class ChatWidget extends Model
         return [
             'mon' => ['enabled' => true,  'from' => '09:00', 'to' => '18:00', 'label' => 'Lunes'],
             'tue' => ['enabled' => true,  'from' => '09:00', 'to' => '18:00', 'label' => 'Martes'],
-            'wed' => ['enabled' => true,  'from' => '09:00', 'to' => '18:00', 'label' => 'Miércoles'],
+            'wed' => ['enabled' => true,  'from' => '09:00', 'to' => '18:00', 'label' => 'Miercoles'],
             'thu' => ['enabled' => true,  'from' => '09:00', 'to' => '18:00', 'label' => 'Jueves'],
             'fri' => ['enabled' => true,  'from' => '09:00', 'to' => '18:00', 'label' => 'Viernes'],
-            'sat' => ['enabled' => false, 'from' => '09:00', 'to' => '14:00', 'label' => 'Sábado'],
+            'sat' => ['enabled' => false, 'from' => '09:00', 'to' => '14:00', 'label' => 'Sabado'],
             'sun' => ['enabled' => false, 'from' => '09:00', 'to' => '14:00', 'label' => 'Domingo'],
         ];
     }

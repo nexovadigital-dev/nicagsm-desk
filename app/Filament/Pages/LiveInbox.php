@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 declare(strict_types=1);
 
@@ -34,7 +34,7 @@ class LiveInbox extends Page
     // Ancho completo: mismo tipo que BasePage::$maxContentWidth (Width|string|null)
     protected Width|string|null $maxContentWidth = 'full';
 
-    // Propiedades que SÍ coinciden con el padre (?string / ?int) — sin conflicto
+    // Propiedades que SÃ coinciden con el padre (?string / ?int) â€” sin conflicto
     protected static ?string $navigationLabel = 'Mensajes';
     protected static string|\UnitEnum|null $navigationGroup = 'Conversaciones';
     protected static ?int    $navigationSort  = 10;
@@ -250,7 +250,7 @@ class LiveInbox extends Page
             : null;
     }
 
-    /** Lookup a ticket scoped to the current org — prevents cross-org data access. */
+    /** Lookup a ticket scoped to the current org â€” prevents cross-org data access. */
     private function findOrgTicket(int $id): ?Ticket
     {
         $orgId = $this->orgId();
@@ -288,7 +288,7 @@ class LiveInbox extends Page
         }
     }
 
-    /** Guarda prioridad, categoría y notas internas. */
+    /** Guarda prioridad, categorÃ­a y notas internas. */
     public function saveTicketMeta(): void
     {
         if (! $this->selectedTicketId) return;
@@ -344,7 +344,7 @@ class LiveInbox extends Page
         $this->replyAttachment = null;
     }
 
-    /** Nota interna — solo visible para agentes, nunca llega al visitante */
+    /** Nota interna â€” solo visible para agentes, nunca llega al visitante */
     public function sendNote(): void
     {
         $content = trim($this->replyContent);
@@ -391,7 +391,7 @@ class LiveInbox extends Page
         $this->dispatch('nexova-toast', type: 'success', message: 'IP desbaneada: ' . $ticket->visitor_ip);
     }
 
-    /** ¿Está baneada la IP del ticket seleccionado? */
+    /** Â¿EstÃ¡ baneada la IP del ticket seleccionado? */
     public function isVisitorBanned(): bool
     {
         if (! $this->selectedTicketId) return false;
@@ -404,8 +404,8 @@ class LiveInbox extends Page
     }
 
     /**
-     * El agente toma la conversación manualmente ("Asignar a mí").
-     * Cambia status → human, guarda su nombre y avisa al usuario con un mensaje de sistema.
+     * El agente toma la conversaciÃ³n manualmente ("Asignar a mÃ­").
+     * Cambia status â†’ human, guarda su nombre y avisa al usuario con un mensaje de sistema.
      */
     public function assignToMe(): void
     {
@@ -426,14 +426,14 @@ class LiveInbox extends Page
         Message::create([
             'ticket_id'   => $ticket->id,
             'sender_type' => 'system',
-            'content'     => "Agente se unió a la conversación.",
+            'content'     => "Agente se uniÃ³ a la conversaciÃ³n.",
         ]);
 
         $this->dispatch('nexova-toast', type: 'success', message: "Tomaste el chat de {$ticket->client_name}");
     }
 
     /**
-     * Rechaza la solicitud de agente — el bot retoma el flujo configurado.
+     * Rechaza la solicitud de agente â€” el bot retoma el flujo configurado.
      * Notifica al visitante con un mensaje amigable.
      */
     public function rejectAgentRequest(): void
@@ -446,7 +446,7 @@ class LiveInbox extends Page
         $noResponse = $ticket->widget?->agent_no_response ?? 'bot';
 
         $ticket->update([
-            'status'          => 'bot', // siempre vuelve a bot — el widget decide la UX
+            'status'          => 'bot', // siempre vuelve a bot â€” el widget decide la UX
             'assigned_agent'  => null,
             'agent_called_at' => null,
         ]);
@@ -458,13 +458,13 @@ class LiveInbox extends Page
             'content'     => 'Agente no disponible.',
         ]);
 
-        // Solo añadir mensaje del bot si el flujo es "volver al bot"
-        // Si es "ticket", el widget mostrará el formulario y no necesita msg del bot
+        // Solo aÃ±adir mensaje del bot si el flujo es "volver al bot"
+        // Si es "ticket", el widget mostrarÃ¡ el formulario y no necesita msg del bot
         if ($noResponse !== 'ticket') {
             Message::create([
                 'ticket_id'   => $ticket->id,
                 'sender_type' => 'bot',
-                'content'     => 'En este momento no hay agentes disponibles. Puedo seguir ayudándote. ¿En qué más puedo asistirte?',
+                'content'     => 'En este momento no hay agentes disponibles. Puedo seguir ayudÃ¡ndote. Â¿En quÃ© mÃ¡s puedo asistirte?',
             ]);
         }
 
@@ -489,13 +489,13 @@ class LiveInbox extends Page
         Message::create([
             'ticket_id'   => $ticket->id,
             'sender_type' => 'system',
-            'content'     => 'Agente abandonó la conversación.',
+            'content'     => 'Agente abandonÃ³ la conversaciÃ³n.',
         ]);
 
         Message::create([
             'ticket_id'   => $ticket->id,
             'sender_type' => 'bot',
-            'content'     => 'El agente ha finalizado la sesión. Estoy aquí para seguir ayudándote. ¿En qué puedo asistirte?',
+            'content'     => 'El agente ha finalizado la sesiÃ³n. Estoy aquÃ­ para seguir ayudÃ¡ndote. Â¿En quÃ© puedo asistirte?',
         ]);
     }
 
@@ -515,15 +515,15 @@ class LiveInbox extends Page
             $mailerName = OrgMailer::mailerNameFor($org);
             $mailable   = new TicketClosedMail($fresh);
             $mailerName
-                ? Mail::mailer($mailerName)->to($ticket->client_email)->queue($mailable)
-                : Mail::to($ticket->client_email)->queue($mailable);
+                ? Mail::mailer($mailerName)->to($ticket->client_email)->send($mailable)
+                : Mail::to($ticket->client_email)->send($mailable);
         }
 
         $this->selectedTicketId = null;
     }
 
     // -------------------------------------------------------------------------
-    // Visitor — Edit modal
+    // Visitor â€” Edit modal
     // -------------------------------------------------------------------------
 
     public function openVisitorModal(): void
@@ -560,18 +560,18 @@ class LiveInbox extends Page
                 ->first();
 
             if ($existing) {
-                // Potential duplicate — ask the agent
-                $this->duplicateContact   = ['id' => $existing->id, 'name' => $existing->name ?? '—', 'email' => $existing->email];
+                // Potential duplicate â€” ask the agent
+                $this->duplicateContact   = ['id' => $existing->id, 'name' => $existing->name ?? 'â€”', 'email' => $existing->email];
                 $this->pendingSaveData    = $pending;
                 $this->showVisitorModal   = false;
                 $this->showDuplicateModal = true;
                 return;
             }
 
-            // No conflict — find or create contact and link
+            // No conflict â€” find or create contact and link
             $this->applyContactSave($ticket, $pending, createNew: false);
         } else {
-            // No email → just update ticket fields, no contact
+            // No email â†’ just update ticket fields, no contact
             $ticket->update(array_filter(['client_name' => $name, 'client_phone' => $phone]));
         }
 
@@ -641,7 +641,7 @@ class LiveInbox extends Page
             // Force-create ignoring any email unique constraint by nulling the link
             $contact = new Contact([
                 'organization_id' => $orgId,
-                'email'           => null, // avoid unique clash — agent decided it's different
+                'email'           => null, // avoid unique clash â€” agent decided it's different
                 'name'            => $name,
                 'phone'           => $phone,
                 'source'          => 'manual',
@@ -680,7 +680,7 @@ class LiveInbox extends Page
     }
 
     // -------------------------------------------------------------------------
-    // Support Ticket — Modal
+    // Support Ticket â€” Modal
     // -------------------------------------------------------------------------
 
     public function openTicketModal(): void
@@ -721,14 +721,14 @@ class LiveInbox extends Page
 
             if ($existing) {
                 // Pause and ask agent to resolve duplicate before opening ticket
-                $this->duplicateContact   = ['id' => $existing->id, 'name' => $existing->name ?? '—', 'email' => $existing->email];
+                $this->duplicateContact   = ['id' => $existing->id, 'name' => $existing->name ?? 'â€”', 'email' => $existing->email];
                 $this->pendingSaveData    = $pending;
                 $this->showTicketModal    = false;
                 $this->showDuplicateModal = true;
                 return;
             }
 
-            // No conflict — create or find contact and link
+            // No conflict â€” create or find contact and link
             $this->applyContactSave($ticket, $pending, createNew: false);
         }
 
@@ -757,14 +757,14 @@ class LiveInbox extends Page
             $mailerName = OrgMailer::mailerNameFor($org);
             $mailable   = new SupportTicketMail($fresh);
             $mailerName
-                ? Mail::mailer($mailerName)->to($email)->queue($mailable)
-                : Mail::to($email)->queue($mailable);
+                ? Mail::mailer($mailerName)->to($email)->send($mailable)
+                : Mail::to($email)->send($mailable);
         }
 
         Message::create([
             'ticket_id'   => $ticket->id,
             'sender_type' => 'system',
-            'content'     => "🎫 Ticket de soporte {$number} abierto — el cliente recibirá confirmación por correo.",
+            'content'     => "ðŸŽ« Ticket de soporte {$number} abierto â€” el cliente recibirÃ¡ confirmaciÃ³n por correo.",
         ]);
 
         $this->showTicketModal      = false;
@@ -772,3 +772,4 @@ class LiveInbox extends Page
         $this->ticketEmailForTicket = '';
     }
 }
+

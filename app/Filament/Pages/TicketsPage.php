@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 declare(strict_types=1);
 
@@ -38,7 +38,7 @@ class TicketsPage extends Page
 
     public function getTitle(): string|Htmlable { return ''; }
 
-    // ── Filters ──────────────────────────────────────────────────────────────
+    // â”€â”€ Filters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public string  $search            = '';
     public string  $filterStatus      = 'all';
     public string  $filterPriority    = 'all';
@@ -46,7 +46,7 @@ class TicketsPage extends Page
     public string  $filterDepartment  = 'all';
     public int     $perPage           = 20;
 
-    // ── New ticket modal ──────────────────────────────────────────────────────
+    // â”€â”€ New ticket modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public bool   $showNewModal      = false;
     public string $newContactMode    = 'existing'; // 'existing' | 'new'
     public string $newContactSearch  = '';
@@ -57,7 +57,7 @@ class TicketsPage extends Page
     public string $newSubject        = '';
     public string $newMessage        = '';
 
-    // ── Ticket list query ─────────────────────────────────────────────────────
+    // â”€â”€ Ticket list query â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public function getTicketsProperty()
     {
         return $this->scopeToOrg(
@@ -112,7 +112,7 @@ class TicketsPage extends Page
             ->get();
     }
 
-    // ── New ticket actions ────────────────────────────────────────────────────
+    // â”€â”€ New ticket actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public function openNewModal(): void
     {
         $this->reset(['newContactMode','newContactSearch','newContactId','newClientName',
@@ -189,14 +189,14 @@ class TicketsPage extends Page
             $mailerName = OrgMailer::mailerNameFor($org);
             $mailable   = new SupportTicketMail($ticket);
             $mailerName
-                ? Mail::mailer($mailerName)->to($email)->queue($mailable)
-                : Mail::to($email)->queue($mailable);
+                ? Mail::mailer($mailerName)->to($email)->send($mailable)
+                : Mail::to($email)->send($mailable);
         }
 
         $this->showNewModal = false;
     }
 
-    // ── Ticket actions ────────────────────────────────────────────────────────
+    // â”€â”€ Ticket actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public function closeTicket(int $id): void
     {
         $ticket = Ticket::find($id);
@@ -211,8 +211,8 @@ class TicketsPage extends Page
             $mailerName = OrgMailer::mailerNameFor($org);
             $mailable   = new TicketClosedMail($fresh);
             $mailerName
-                ? Mail::mailer($mailerName)->to($ticket->client_email)->queue($mailable)
-                : Mail::to($ticket->client_email)->queue($mailable);
+                ? Mail::mailer($mailerName)->to($ticket->client_email)->send($mailable)
+                : Mail::to($ticket->client_email)->send($mailable);
         }
     }
 
@@ -234,3 +234,4 @@ class TicketsPage extends Page
             ->update(['department_id' => $val]);
     }
 }
+

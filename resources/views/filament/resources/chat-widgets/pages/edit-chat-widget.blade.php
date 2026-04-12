@@ -212,6 +212,47 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                     Mensajes bot: {{ $botMsgUsed }} / {{ $botMsgLimit === 0 ? '∞' : number_format($botMsgLimit) }}
                 </span>
             </div>
+
+        {{-- Telegram bot conectado (read-only) --}}
+        @if($telegramBotUsername)
+        <div style="margin-top:10px;padding:11px 14px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:9px;display:flex;align-items:center;gap:10px">
+            <svg viewBox="0 0 24 24" fill="#2563eb" width="16" height="16"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg>
+            <div>
+                <div style="font-size:12.5px;font-weight:600;color:#1e3a8a">Bot Telegram conectado</div>
+                <div style="font-size:11.5px;color:#3b82f6">{{ $telegramBotName }} &mdash; <a href="https://t.me/{{ ltrim($telegramBotUsername,'@') }}" target="_blank" style="color:#3b82f6;text-decoration:underline">{{ $telegramBotUsername }}</a></div>
+            </div>
+        </div>
+        @endif
+
+        {{-- Toggle IA --}}
+        <div style="margin-top:14px;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+                <div>
+                    <div style="font-size:13px;font-weight:600;color:#111827">Inteligencia Artificial (IA)</div>
+                    <div style="font-size:11.5px;color:var(--c-sub);margin-top:3px;line-height:1.5">
+                        @if($aiEnabled)
+                            <span style="color:#059669;font-weight:500">&#x2705; Activada</span> &mdash; El bot usa IA como ultimo recurso si FAQ y KB no responden.
+                        @else
+                            <span style="color:#dc2626;font-weight:500">&#x1F6AB; Desactivada</span> &mdash; El bot solo responde con FAQ y base de conocimiento. Si no encuentra respuesta, escala a un agente.
+                        @endif
+                    </div>
+                </div>
+                <div x-data="{ on: @entangle('aiEnabled') }"
+                     @click="on = !on; $wire.set('aiEnabled', on)"
+                     :style="on ? 'background:#22c55e' : 'background:#d1d5db'"
+                     style="width:40px;height:22px;border-radius:11px;transition:background .2s;position:relative;cursor:pointer;flex-shrink:0;margin-top:2px">
+                    <div :style="on ? 'left:20px' : 'left:2px'"
+                         style="position:absolute;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></div>
+                </div>
+            </div>
+            <div style="margin-top:10px;padding:9px 12px;background:{{ $aiEnabled ? 'rgba(5,150,105,.07)' : 'rgba(239,68,68,.06)' }};border:1px solid {{ $aiEnabled ? 'rgba(5,150,105,.2)' : 'rgba(239,68,68,.15)' }};border-radius:7px;font-size:11px;color:{{ $aiEnabled ? '#065f46' : '#7f1d1d' }}">
+                @if($aiEnabled)
+                    &#x1F4DA; <strong>Flujo:</strong> Botones FAQ &rarr; Respuesta FAQ exacta &rarr; Base de conocimiento &rarr; <span style="font-weight:600">IA Generativa</span>
+                @else
+                    &#x1F4DA; <strong>Flujo:</strong> Botones FAQ &rarr; Respuesta FAQ exacta &rarr; Base de conocimiento &rarr; <span style="font-weight:600">Escalar a agente</span>
+                @endif
+            </div>
+        </div>
         </div>
 
         {{-- Widget name (internal) --}}

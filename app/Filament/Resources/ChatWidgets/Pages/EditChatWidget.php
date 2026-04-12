@@ -28,6 +28,9 @@ class EditChatWidget extends Page
     public string $name           = '';
     public string $botName        = 'Nexova IA';
     public bool   $botEnabled     = true;
+    public bool   $aiEnabled      = true;
+    public string $telegramBotUsername = "";
+    public string $telegramBotName     = "";
     public string $botAvatar      = '';
     public string $botSystemPrompt = '';
     public $botAvatarFile         = null;
@@ -84,6 +87,20 @@ class EditChatWidget extends Page
         $this->name                = $w->name;
         $this->botName             = $w->bot_name;
         $this->botEnabled          = (bool) ($w->bot_enabled ?? true);
+        $this->aiEnabled           = (bool) ($w->ai_enabled ?? true);
+        // Load Telegram bot info
+        $org = $w->organization;
+        if ($org?->telegram_bot_token) {
+            try {
+                $token = decrypt($org->telegram_bot_token);
+                $resp = Http::timeout(4)->get("https://api.telegram.org/bot{\}/getMe");
+                if ($resp->successful() && $resp->json("ok")) {
+                    $bot = $resp->json("result");
+                    $this->telegramBotUsername = "@" . ($bot["username"] ?? "");
+                    $this->telegramBotName = $bot["first_name"] ?? "";
+                }
+            } catch (\Throwable) {}
+        }
         $this->botAvatar           = $w->bot_avatar ?? '';
         $this->botSystemPrompt     = $w->bot_system_prompt ?? '';
         $this->welcomeMessage      = $w->welcome_message;
@@ -176,6 +193,21 @@ class EditChatWidget extends Page
             'name'                    => $this->name,
             'bot_name'                => $this->botName,
             'bot_enabled'             => $this->botEnabled,
+        $this->aiEnabled           = (bool) ($w->ai_enabled ?? true);
+        // Load Telegram bot info
+        $org = $w->organization;
+        if ($org?->telegram_bot_token) {
+            try {
+                $token = decrypt($org->telegram_bot_token);
+                $resp = Http::timeout(4)->get("https://api.telegram.org/bot{\}/getMe");
+                if ($resp->successful() && $resp->json("ok")) {
+                    $bot = $resp->json("result");
+                    $this->telegramBotUsername = "@" . ($bot["username"] ?? "");
+                    $this->telegramBotName = $bot["first_name"] ?? "";
+                }
+            } catch (\Throwable) {}
+        }
+            'ai_enabled'              => \->aiEnabled,
             'bot_avatar'              => $this->botAvatar ?: null,
             'bot_system_prompt'       => trim($this->botSystemPrompt) ?: null,
             'welcome_message'         => $this->welcomeMessage,
