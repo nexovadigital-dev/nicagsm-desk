@@ -66,17 +66,31 @@
             <p>Dirección desde la que tus clientes recibirán los emails de tickets y notificaciones.</p>
         </div>
         <div>
-            @if($enabled && $fromAddress)
-                <div class="sm-notice sm-notice-success">
-                    <strong>SMTP configurado</strong><br>
-                    Los emails se enviarán desde <code>{{ $fromAddress }}</code> usando tu servidor SMTP.
-                </div>
+            @if($enabled)
+                @if($smtpReady)
+                    <div class="sm-notice sm-notice-success">
+                        <strong>SMTP configurado</strong><br>
+                        Los emails se enviarán desde <code>{{ $fromAddress }}</code> usando tu servidor SMTP.
+                    </div>
+                @else
+                    <div class="sm-notice" style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);color:#92400e">
+                        <strong>SMTP incompleto</strong><br>
+                        Has activado "Usar mi SMTP", pero faltan campos requeridos (Host, Usuario, Remitente) abajo.
+                    </div>
+                @endif
             @else
-                <div class="sm-notice" style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);color:#92400e">
-                    <strong>SMTP no configurado</strong><br>
-                    Sin SMTP activo, el envío de emails (restablecimiento de contraseña, notificaciones de tickets) no funcionará.<br><br>
-                    Configura tu servidor SMTP abajo y actívalo para habilitar el envío de correos.
-                </div>
+                @if(config('mail.mailers.smtp.host'))
+                    <div class="sm-notice" style="background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);color:#1d4ed8">
+                        <strong>SMTP del sistema</strong><br>
+                        Se utilizará el servidor de correo por defecto de la plataforma.
+                    </div>
+                @else
+                    <div class="sm-notice" style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);color:#92400e">
+                        <strong>SMTP no configurado</strong><br>
+                        Sin SMTP activo, el envío de emails (restablecimiento de contraseña, notificaciones de tickets) no funcionará.<br><br>
+                        Configura tu servidor SMTP abajo y actívalo para habilitar el envío de correos.
+                    </div>
+                @endif
             @endif
         </div>
     </div>
@@ -98,9 +112,9 @@
                     <span class="sm-slider"></span>
                 </label>
             </div>
-            @if($notificationsEnabled && ! $smtpReady)
+            @if($notificationsEnabled && $enabled && ! $smtpReady)
                 <div class="sm-notice" style="margin-top:10px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);color:#b91c1c">
-                    Las notificaciones están activadas pero el SMTP no está configurado — los emails no se enviarán.
+                    Las notificaciones están activadas pero la configuración de tu SMTP está incompleta — los emails no se enviarán.
                 </div>
             @endif
         </div>
