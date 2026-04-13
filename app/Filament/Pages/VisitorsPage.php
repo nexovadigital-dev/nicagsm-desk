@@ -10,6 +10,7 @@ use App\Models\BannedIp;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\Support\Htmlable;
+use Livewire\Attributes\Computed;
 
 class VisitorsPage extends Page
 {
@@ -67,7 +68,8 @@ class VisitorsPage extends Page
     public string $banReason    = '';
 
     // ── Data ─────────────────────────────────────────────────────────────────
-    public function getActiveVisitorsProperty()
+    #[Computed]
+    public function activeVisitors()
     {
         return $this->scopeToOrg(ActiveVisitor::query())
             ->where('last_ping_at', '>=', now()->subSeconds(90))
@@ -75,7 +77,8 @@ class VisitorsPage extends Page
             ->get();
     }
 
-    public function getBannedIpsProperty()
+    #[Computed]
+    public function bannedIps()
     {
         return $this->scopeToOrg(BannedIp::query())
             ->orderByDesc('created_at')

@@ -200,7 +200,8 @@ window._vp_times = @json($visitorTimes);
             const _vp = this;
 
             Livewire.on('visitor-count-updated', (data) => {
-                const ids = data[0]?.ids ?? [];
+                const payload = Array.isArray(data) ? data[0] : data;
+                const ids = payload?.ids ?? [];
                 const incoming = ids.filter(id => !_vp.knownIds.has(id));
                 if (incoming.length > 0) {
                     _vp.playDing();
