@@ -100,15 +100,35 @@ class TelegramWebhookController extends Controller
             return response()->json(['ok' => true]);
         }
 
-        if ($ticket->status === 'bot') {
-            // ── Interceptar: usuario responde al llamado de agente ─────────────────────
-            if (self::isAgentRequest($text)) {
-                $botMsg = self::handleAgentCall($ticket, $org, $chatId, $keyboard);
-                return response()->json(['ok' => true]);
-            }
+        if ($ticket->status === 'human') {
+            // Ticket atendido por agente humano — no activar bot.
+            // Si el agente ya está asignado, el mensaje se guardó arriba y
+            // el agente lo verá en el Live Inbox. Silencio del bot es correcto.
+            // Si nadie lo ha tomado aún, recordar que espere.
+            if (! $ticket->assigned_agent) {
+                // Solo recordar cada 3 mensajes para no ser molesto
+                $userMsgCount = Message::where('ticket_id', $ticket->id)
+                    ->where('sender_type', 'user')
+                    ->where('created_at', '>=', $ticket->agent_called_at ?? now()->subMinutes(10))
+                    ->count();
 
-            ProcessBotReply::dispatch($ticket);
+                if ($userMsgCount <= 1 || $userMsgCount % 3 === 0) {
+                    $reminder = 'Tu mensaje fue recibido. Un agente se conectará contigo en breve. Gracias por tu paciencia.';
+                    Message::create(['ticket_id' => $ticket->id, 'sender_type' => 'bot', 'content' => $reminder]);
+                    self::sendMessage($org, $chatId, $reminder, $keyboard);
+                }
+            }
+            return response()->json(['ok' => true]);
         }
+
+        // ── status === 'bot' ──────────────────────────────────────────────────
+        // Interceptar: usuario solicita agente humano
+        if (self::isAgentRequest($text)) {
+            self::handleAgentCall($ticket, $org, $chatId, $keyboard);
+            return response()->json(['ok' => true]);
+        }
+
+        ProcessBotReply::dispatch($ticket);
 
         return response()->json(['ok' => true]);
     }
@@ -250,7 +270,10 @@ class TelegramWebhookController extends Controller
         }
 
         try {
-            Http::timeout(10)->post("https://api.telegram.org/bot{$token}/sendMessage", $payload);
+            $response = Http::timeout(10)->post("https://api.telegram.org/bot{$token}/sendMessage", $payload);
+            if (! $response->successful()) {
+                Log::warning("Telegram sendMessage HTTP {$response->status()}: " . $response->body());
+            }
         } catch (\Exception $e) {
             Log::error("Telegram sendMessage error: {$e->getMessage()}");
         }

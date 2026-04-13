@@ -439,7 +439,7 @@ class LiveInbox extends Page
     {
         if (! $this->selectedTicketId) return;
 
-        $ticket    = Ticket::find($this->selectedTicketId);
+        $ticket    = Ticket::with('organization')->find($this->selectedTicketId);
         $agentName = Filament::auth()->user()?->name ?? 'Agente';
 
         if (! $ticket || $ticket->status === 'closed') return;
@@ -458,11 +458,15 @@ class LiveInbox extends Page
 
         // Avisar al usuario en Telegram
         if ($ticket->platform === 'telegram' && $ticket->telegram_id) {
-            TelegramWebhookController::sendMessage(
-                $ticket->organization,
-                $ticket->telegram_id,
-                "{$agentName} se unio a la conversacion y te respondera en breve."
-            );
+            try {
+                TelegramWebhookController::sendMessage(
+                    $ticket->organization,
+                    $ticket->telegram_id,
+                    "✅ {$agentName} se unio a la conversacion y te respondera en breve."
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error("[AssignToMe] Error enviando mensaje Telegram: {$e->getMessage()}");
+            }
         }
 
         $this->dispatch('nexova-toast', type: 'success', message: "Tomaste el chat de {$ticket->client_name}");
