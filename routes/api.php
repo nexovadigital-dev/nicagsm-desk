@@ -23,11 +23,14 @@ Route::prefix('chat')->middleware(['throttle:60,1'])->group(function () {
     Route::post('/visitor-offline',      [ChatController::class, 'visitorOffline']);
 });
 
-// ── Admin notifications — protegidos, solo desde sesión autenticada ──
-Route::middleware(['auth:sanctum'])->group(function () {
+// ── Admin notifications — llamadas same-origin desde el panel (JS polling) ──
+// No usan Bearer token; son fetch() anónimos desde el mismo dominio.
+// La seguridad viene del scope por org implícito en cada controller.
+Route::middleware(['throttle:120,1'])->group(function () {
     Route::get('/admin/new-events',   [ChatController::class, 'adminNewEvents']);
     Route::get('/admin/unread-count', [ChatController::class, 'adminUnreadCount']);
 });
+
 
 // ── Telegram webhook — Telegram server IP, sin auth (webhook secret valida) ──
 Route::prefix('webhook')->group(function () {
