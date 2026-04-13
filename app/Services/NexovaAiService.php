@@ -83,7 +83,18 @@ class NexovaAiService
             return $greetingReply;
         }
 
-        // ── Intentar responder desde FAQ del widget (prioridad máxima) ──────────
+        // ── Para Telegram: buscar en memoria local ANTES de llamar IA ────────────
+        if ($ticket->platform === 'telegram' && $org) {
+            $localAnswer = $this->tryTelegramLocalKbAnswer($ticket, $org);
+            if ($localAnswer !== null) {
+                sleep(random_int(1, 2));
+                $org->incrementBotMessageCount();
+                Log::info("[NexovaBot] Respondido desde memoria local Telegram — ticket #{$ticket->id}");
+                return $localAnswer;
+            }
+        }
+
+        // ── Intentar responder desde FAQ del widget (para canales web) ───────────
         $hasStoreCtx = ! empty($ticket->store_context);
         if (! $hasStoreCtx) {
             $faqAnswer = $this->tryFaqAnswer($ticket);
@@ -510,6 +521,73 @@ class NexovaAiService
     }
 
     // =========================================================================
+    // Memoria Local Telegram — búsqueda por palabras clave sin consumir IA
+    // =========================================================================
+
+    /**
+     * Busca en el texto libre de knowledge_base del telegram_config.
+     * Si encuentra una sección altamente relevante, la retorna directamente.
+     * Esto evita consumir la API de IA para preguntas que ya tiene respuesta.
+     */
+    private function tryTelegramLocalKbAnswer(Ticket $ticket, \App\Models\Organization $org): ?string
+    {
+        $kb = trim($org->telegram_config['knowledge_base'] ?? '');
+        if ($kb === '') return null;
+
+        $lastMsg = $ticket->messages()
+            ->where('sender_type', 'user')
+            ->orderByDesc('created_at')
+            ->value('content');
+
+        if (! $lastMsg || mb_strlen($lastMsg) < 3) return null;
+
+        $stopwords = ['como', 'cual', 'cuál', 'que', 'qué', 'para', 'por', 'con', 'una',
+                      'uno', 'los', 'las', 'del', 'hay', 'tiene', 'puedo', 'puede',
+                      'quiero', 'necesito', 'favor', 'hola', 'gracias', 'son', 'estan',
+                      'está', 'esta', 'donde', 'cuales', 'cuáles', 'dime', 'dame'];
+
+        $msgLower = mb_strtolower($lastMsg);
+        $msgWords = array_filter(
+            explode(' ', preg_replace('/[^a-záéíóúüñ\s]/u', '', $msgLower)),
+            fn ($w) => mb_strlen($w) > 3 && ! in_array($w, $stopwords)
+        );
+
+        if (empty($msgWords)) return null;
+
+        // Dividir la KB en líneas/párrafos y buscar coincidencias
+        $lines  = array_filter(array_map('trim', explode("\n", $kb)), fn ($l) => $l !== '');
+        $hits   = [];
+        foreach ($lines as $line) {
+            $lineLower = mb_strtolower($line);
+            $score = 0;
+            foreach ($msgWords as $w) {
+                if (str_contains($lineLower, $w)) $score++;
+            }
+            if ($score > 0) {
+                $hits[] = ['line' => $line, 'score' => $score];
+            }
+        }
+
+        if (empty($hits)) return null;
+
+        // Ordenar por score descendente
+        usort($hits, fn ($a, $b) => $b['score'] <=> $a['score']);
+
+        // Umbral: al menos 2 palabras clave coincidentes O score >= 3
+        $best = $hits[0];
+        $totalMatched = count($msgWords);
+        if ($best['score'] < 2 && ($totalMatched < 2 || $best['score'] / $totalMatched < 0.5)) {
+            return null;
+        }
+
+        // Retornar las mejores líneas relacionadas (máx 3)
+        $topLines = array_slice($hits, 0, 3);
+        $answer   = implode("\n", array_column($topLines, 'line'));
+
+        return $this->stripMarkdown($answer);
+    }
+
+    // =========================================================================
     // RAG — Base de Conocimientos
     // =========================================================================
 
@@ -561,10 +639,16 @@ class NexovaAiService
 
         if ($ticket->platform === 'telegram') {
             $telegramConfig = $org?->telegram_config ?? [];
-            $botName = $org?->name ? "{$org->name} Bot" : 'Telegram Asistente';
-            if (!empty($telegramConfig['bot_prompt'])) {
-                $customPrompt = trim($telegramConfig['bot_prompt']);
-            }
+            $botName        = $org?->name ? "{$org->name} Bot" : 'Asistente';
+            // Prompt INTERNO — no es configurable por el admin, es el comportamiento del sistema
+            $customPrompt = "Eres el asistente virtual oficial de {$botName}. "
+                . "Tu única función es informar sobre {$botName}: sus productos, servicios, precios, políticas y funcionamiento. "
+                . "REGLAS ABSOLUTAS: "
+                . "(1) Responde SOLO con información que esté en tu base de conocimiento o en el contexto proporcionado. "
+                . "(2) NO inventes datos, precios, horarios ni información que no tengas. "
+                . "(3) Si el cliente pregunta algo fuera del ecosistema de {$botName}, indícale amablemente que no tienes esa información y ofécele hablar con un agente humano. "
+                . "(4) Responde en el idioma del cliente (español o inglés). "
+                . "(5) Sé amable, directo y conciso. No uses formato Markdown.";
         } elseif ($widget) {
             $botName = $widget->bot_name ?: $botName;
             $customPrompt = trim($widget->bot_system_prompt ?? '');

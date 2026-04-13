@@ -36,7 +36,7 @@ class ChannelsSettings extends Page
 
     // ── Telegram Configs ──────────────────────────────────────────────────
     public bool $telegramAiEnabled = false;
-    public string $telegramBotPrompt = '';
+    public string $telegramBotUsername = '';  // @handle del bot conectado
     public string $telegramKnowledgeBase = '';
     public array $telegramFaqItems = [];
     public bool $telegramUseStoreContext = false;
@@ -54,13 +54,13 @@ class ChannelsSettings extends Page
         if ($orgId) {
             $org = Organization::find($orgId);
             if ($org && $org->telegram_bot_token) {
-                // Don't prefill token for security — just show connected status
                 $this->telegramStatus = 'ok';
-                $this->telegramBotInfo = 'Bot configurado';
+                $username = $org->telegram_config['bot_username'] ?? '';
+                $this->telegramBotUsername = $username;
+                $this->telegramBotInfo     = $username ? '@' . $username : 'Bot conectado';
             }
             if ($org && $org->telegram_config) {
                 $this->telegramAiEnabled       = $org->telegram_config['ai_enabled'] ?? false;
-                $this->telegramBotPrompt       = $org->telegram_config['bot_prompt'] ?? '';
                 $this->telegramKnowledgeBase   = $org->telegram_config['knowledge_base'] ?? '';
                 $this->telegramFaqItems        = $org->telegram_config['faq_items'] ?? [];
                 $this->telegramUseStoreContext = $org->telegram_config['use_store_context'] ?? false;
@@ -85,9 +85,14 @@ class ChannelsSettings extends Page
             return !empty(trim($item['question'] ?? '')) && !empty(trim($item['answer'] ?? ''));
         }));
 
+        // Preserve bot_username when saving config
+        $orgId2  = $orgId;
+        $orgData = Organization::find($orgId2);
+        $existingConfig = $orgData?->telegram_config ?? [];
+
         $config = [
+            'bot_username'      => $existingConfig['bot_username'] ?? $this->telegramBotUsername,
             'ai_enabled'        => $this->telegramAiEnabled,
-            'bot_prompt'        => trim($this->telegramBotPrompt),
             'knowledge_base'    => trim($this->telegramKnowledgeBase),
             'faq_items'         => $cleanFaqs,
             'use_store_context' => $this->telegramUseStoreContext && $this->wpPluginConnected,
@@ -138,32 +143,40 @@ class ChannelsSettings extends Page
                 $this->msgType = 'error';
                 return;
             }
-            $bot = $testResp->json('result');
-            $this->telegramBotInfo = '@' . ($bot['username'] ?? 'bot');
+            $bot                   = $testResp->json('result');
+            $username              = $bot['username'] ?? 'bot';
+            $this->telegramBotUsername = $username;
+            $this->telegramBotInfo     = '@' . $username;
         } catch (\Throwable $e) {
-            $this->msg     = 'Error de conexión al verificar el token.';
+            $this->msg     = 'No pudimos conectar con Telegram. Revisa tu conexión e intenta de nuevo.';
             $this->msgType = 'error';
             return;
         }
 
+        // Guardar token + username en config
+        $existingCfg = Organization::find($orgId)?->telegram_config ?? [];
+        $existingCfg['bot_username'] = $this->telegramBotUsername;
+
         Organization::where('id', $orgId)->update([
             'telegram_bot_token' => encrypt($token),
+            'telegram_config'    => $existingCfg,
         ]);
 
         // Auto-registrar webhook
-        $webhookUrl = url("/api/webhook/telegram/{$orgId}");
+        $webhookUrl    = url("/api/webhook/telegram/{$orgId}");
+        $webhookOk     = false;
         try {
-            Http::timeout(10)->post("https://api.telegram.org/bot{$token}/setWebhook", [
-                'url' => $webhookUrl,
-            ]);
-        } catch (\Throwable) {
-            // No bloqueamos si falla el webhook — el usuario puede reintentarlo
-        }
+            $wh = Http::timeout(10)->post("https://api.telegram.org/bot{$token}/setWebhook", ['url' => $webhookUrl]);
+            $webhookOk = $wh->successful() && $wh->json('ok');
+        } catch (\Throwable) {}
 
-        $this->telegramStatus  = 'ok';
-        $this->telegramToken   = '';
-        $this->dispatch('nexova-toast', type: 'success', message: "Bot @{$this->telegramBotInfo} conectado y webhook registrado");
-        $this->msg     = "Bot {$this->telegramBotInfo} guardado. Webhook registrado automáticamente en: {$webhookUrl}";
+        $this->telegramStatus = 'ok';
+        $this->telegramToken  = '';
+        $successMsg = $webhookOk
+            ? "✅ @{$this->telegramBotUsername} conectado correctamente. Los mensajes de tus usuarios ya llegarán al panel."
+            : "✅ @{$this->telegramBotUsername} guardado. La conexión automática falló — usa el botón \"Reconectar\" si los mensajes no llegan.";
+        $this->dispatch('nexova-toast', type: 'success', message: $successMsg);
+        $this->msg     = $successMsg;
         $this->msgType = 'success';
     }
 
@@ -233,16 +246,15 @@ class ChannelsSettings extends Page
                 ]);
 
             if ($response->successful() && $response->json('ok')) {
-                $this->msg     = 'Webhook registrado: ' . $webhookUrl;
+                $this->msg     = '✅ ¡Conexión actualizada! Los mensajes de Telegram ya están apuntando a este panel.';
                 $this->msgType = 'success';
-                $this->dispatch('nexova-toast', type: 'success', message: 'Webhook de Telegram registrado');
+                $this->dispatch('nexova-toast', type: 'success', message: '¡Bot reconectado exitosamente!');
             } else {
-                $description   = $response->json('description') ?? 'Error desconocido';
-                $this->msg     = 'No se pudo registrar el webhook: ' . $description;
+                $this->msg     = 'No pudimos actualizar la conexión del bot. Intenta de nuevo en unos momentos.';
                 $this->msgType = 'error';
             }
         } catch (\Throwable $e) {
-            $this->msg     = 'Error al registrar webhook: ' . $e->getMessage();
+            $this->msg     = 'Error de red al intentar reconectar. Verifica tu conexión e intenta de nuevo.';
             $this->msgType = 'error';
         }
     }

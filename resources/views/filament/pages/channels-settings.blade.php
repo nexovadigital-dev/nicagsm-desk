@@ -154,10 +154,12 @@
                     {{-- Bot info --}}
                     <div style="flex:1;min-width:0">
                         @if($telegramStatus === 'ok')
-                            <div style="font-size:15px;font-weight:700;color:var(--c-text,#111)">Bot de Telegram</div>
+                            <div style="font-size:15px;font-weight:700;color:var(--c-text,#111)">
+                                {{ $telegramBotUsername ? '@' . $telegramBotUsername : 'Bot de Telegram' }}
+                            </div>
                             <div style="font-size:12.5px;color:#2CA5E0;font-weight:600;margin-top:3px;display:flex;align-items:center;gap:4px">
                                 <svg viewBox="0 0 24 24" fill="currentColor" width="11" height="11"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
-                                {{ $telegramBotInfo }}
+                                Conectado a Telegram
                             </div>
                         @else
                             <div style="font-size:15px;font-weight:700;color:var(--c-sub,#6b7280)">Sin bot conectado</div>
@@ -194,22 +196,22 @@
                     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
                         <button class="ch-btn ch-btn-outline" wire:click="testTelegram" wire:loading.attr="disabled">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                            Probar
+                            Verificar
                         </button>
                         <button class="ch-btn ch-btn-primary" wire:click="saveTelegramToken" wire:loading.attr="disabled">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             Guardar y conectar
                         </button>
                         @if($telegramStatus === 'ok')
-                        <button class="ch-btn ch-btn-outline" wire:click="registerWebhook" wire:loading.attr="disabled" title="Volver a registrar el webhook si cambiaste de dominio">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.1-1.1m2.657-9.435a4 4 0 015.656 5.656l-4 4a4 4 0 01-5.656 0l-1.1-1.1"/></svg>
-                            Re-registrar webhook
+                        <button class="ch-btn ch-btn-outline" wire:click="registerWebhook" wire:loading.attr="disabled" title="Rea sincronizar si cambiaste de dominio o servidor">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            Reconectar
                         </button>
                         <button class="ch-btn" style="margin-left:auto;background:transparent;color:#dc2626;border-color:rgba(220,38,38,.25)"
                             wire:click="disconnectTelegram"
                             wire:confirm="¿Desconectar el bot? Los mensajes de Telegram dejarán de recibirse.">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                            Desconectar
+                            Desconectar bot
                         </button>
                         @endif
                     </div>
@@ -286,15 +288,6 @@
                             style="{{ !$wpPluginConnected ? 'opacity:.4;cursor:not-allowed' : '' }}">
                             <div class="nx-toggle__thumb"></div>
                         </div>
-                    </div>
-
-                    {{-- Prompt del asistente --}}
-                    <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--c-border,#e3e6ea)">
-                        <label class="ch-label" style="display:block;margin-bottom:6px">Prompt del asistente</label>
-                        <textarea class="ch-input" wire:model="telegramBotPrompt" rows="3"
-                            placeholder="Ej: Eres el asistente oficial de {empresa}. Tu rol es responder solo sobre nuestros productos, servicios y políticas. No inventes información que no tengas..."
-                            style="font-family:inherit;font-size:13px;resize:vertical"></textarea>
-                        <div style="font-size:11px;color:var(--c-sub,#9ca3af);margin-top:4px">Define la personalidad y límites del bot. Este texto es <strong>interno</strong> — el usuario nunca lo ve.</div>
                     </div>
 
                     {{-- Base de conocimiento del bot --}}
