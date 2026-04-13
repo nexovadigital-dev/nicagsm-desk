@@ -36,6 +36,7 @@ class TelegramWebhookController extends Controller
         $chatId   = $message['chat']['id'];
         $fromUser = $message['from'] ?? [];
         $name     = trim(($fromUser['first_name'] ?? '') . ' ' . ($fromUser['last_name'] ?? '')) ?: 'Usuario Telegram';
+        $username = $fromUser['username'] ?? null;
         $keyboard = self::buildFaqKeyboard($org);
 
         // ── Ignorar multimedia entrante (fotos, stickers, docs, voz) ────────────
@@ -66,11 +67,14 @@ class TelegramWebhookController extends Controller
             $ticket = Ticket::create([
                 'organization_id'   => $orgId,
                 'telegram_id'       => (string) $chatId,
+                'telegram_username' => $username,
                 'platform'          => 'telegram',
                 'status'            => 'bot',
                 'client_name'       => $name,
                 'conversation_name' => $name . ' (Telegram)',
             ]);
+        } elseif ($ticket->telegram_username !== $username) {
+            $ticket->update(['telegram_username' => $username]);
         }
 
         Message::create([

@@ -231,8 +231,9 @@ class="nx-inbox" wire:poll.3s>
                     <button wire:click="selectAllTickets" class="nx-bulk-bar__btn nx-bulk-bar__btn--ghost" title="Seleccionar todas" style="padding:4px 8px">Todas</button>
                     <button wire:click="deleteSelectedTickets"
                             wire:confirm="¿Eliminar {{ $selCount }} {{ $selCount === 1 ? 'conversación' : 'conversaciones' }}? Esta acción es permanente."
-                            class="nx-bulk-bar__btn nx-bulk-bar__btn--danger" title="Eliminar" style="padding:4px 8px">
+                            class="nx-bulk-bar__btn nx-bulk-bar__btn--danger" title="Eliminar" style="padding:4px 10px">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        Eliminar
                     </button>
                     <button wire:click="clearTicketSelection" class="nx-bulk-bar__cancel" title="Cancelar" style="width:24px;height:24px">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -338,7 +339,7 @@ class="nx-inbox" wire:poll.3s>
                         <span>
                             #{{ $ticket->id }}
                             @if($ticket->platform === 'telegram' && $ticket->telegram_id)
-                                &middot; Chat ID: {{ $ticket->telegram_id }}
+                                &middot; {{ $ticket->telegram_username ? '@' . $ticket->telegram_username : 'Chat ID: ' . $ticket->telegram_id }}
                             @endif
                             &middot; {{ $ticket->created_at->translatedFormat('d M, H:i') }}
                             @if($ticket->status === 'human')
@@ -983,6 +984,18 @@ class="nx-inbox" wire:poll.3s>
                 <span class="nx-detail__key">Nombre</span>
                 <span class="nx-detail__val">{{ $ticket->client_name }}</span>
             </div>
+            @if($ticket->platform === 'telegram')
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">Telegram</span>
+                <span class="nx-detail__val">
+                    {{ $ticket->telegram_username ? '@' . $ticket->telegram_username : 'Username oculto' }}
+                </span>
+            </div>
+            <div class="nx-detail__row">
+                <span class="nx-detail__key">Chat ID</span>
+                <span class="nx-detail__val nx-detail__val--mono">{{ $ticket->telegram_id }}</span>
+            </div>
+            @endif
             @if($ticket->client_email)
             <div class="nx-detail__row">
                 <span class="nx-detail__key">Email</span>

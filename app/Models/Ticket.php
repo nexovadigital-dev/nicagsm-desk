@@ -20,6 +20,7 @@ class Ticket extends Model
         'conversation_name',
         'whatsapp_number',
         'telegram_id',
+        'telegram_username',
         'platform',
         'status',
         'client_name',
