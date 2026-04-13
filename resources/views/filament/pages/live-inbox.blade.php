@@ -1,7 +1,10 @@
 <x-filament-panels::page>
 
 {{-- ══ Alerta de llamada a agente ══ --}}
-@php $incomingCalls = $this->incomingAgentCalls(); @endphp
+@php 
+    $incomingCalls = $this->incomingAgentCalls(); 
+    \Carbon\Carbon::setLocale('es');
+@endphp
 
 <div x-data="{
     ringing: $wire.entangle('hasIncomingCall'),
@@ -49,18 +52,18 @@ x-init="
 ">
 
 @if($hasIncomingCall)
-<div x-show="ringing && !dismissed"
-     style="display:flex;align-items:center;gap:12px;background:#fef3c7;border:1px solid #fcd34d;border-radius:12px;padding:12px 16px;margin-bottom:16px;animation:nx-ring-alert .5s ease infinite alternate">
-    <div style="width:38px;height:38px;border-radius:50%;background:#f59e0b22;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.8" width="20" height="20">
+<div x-show="ringing && !dismissed" x-transition.opacity.duration.300ms
+     style="position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; align-items:center; gap:12px; background:#fef3c7; border:1px solid #fcd34d; border-radius:16px; padding:10px 16px; box-shadow:0 10px 25px rgba(245,158,11,0.25); animation:nx-ring-pulse 2s ease infinite alternate">
+    <div style="width:34px;height:34px;border-radius:50%;background:#f59e0b22;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" width="18" height="18">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
         </svg>
     </div>
-    <div style="flex:1;min-width:0">
+    <div style="flex:1;min-width:0;line-height:1.2">
         <div style="font-size:13px;font-weight:700;color:#92400e">
-            {{ $incomingCalls->count() }} usuario(s) esperando un agente
+            {{ $incomingCalls->count() }} usuario(s) esperando
         </div>
-        <div style="font-size:11.5px;color:#b45309;margin-top:1px">
+        <div style="font-size:11.5px;color:#b45309;margin-top:2px">
             @foreach($incomingCalls->take(2) as $call)
                 <span>{{ $call->client_name ?: 'Visitante' }}</span>{{ !$loop->last ? ' · ' : '' }}
             @endforeach
@@ -69,24 +72,22 @@ x-init="
     {{-- Acción rápida: ir al primer ticket que solicita agente --}}
     @if($incomingCalls->first())
         <button wire:click="selectTicket({{ $incomingCalls->first()->id }})" @click="dismiss()"
-                style="background:var(--nx-accent,#22c55e);color:#fff;border:none;border-radius:7px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12">
-                <path d="M5 13l4 4L19 7"/>
-            </svg>
-            Ver
+                style="background:var(--nx-accent,#22c55e);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px;box-shadow:0 2px 8px rgba(34,197,94,0.3)">
+            Atender
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
     @endif
     <button @click="dismiss()"
-            style="background:none;border:1px solid #fcd34d;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;color:#92400e;cursor:pointer;white-space:nowrap">
+            style="background:none;border:none;padding:6px;font-size:16px;color:#92400e;opacity:.6;cursor:pointer">
         ✕
     </button>
 </div>
 @endif
 
 <style>
-@keyframes nx-ring-alert {
-    from { box-shadow: 0 0 0 0 rgba(245,158,11,.3); }
-    to   { box-shadow: 0 0 0 8px rgba(245,158,11,0); }
+@keyframes nx-ring-pulse {
+    from { box-shadow: 0 0 0 0 rgba(245,158,11,.4); transform: translateX(-50%) translateY(0); }
+    to   { box-shadow: 0 0 0 8px rgba(245,158,11,0); transform: translateX(-50%) translateY(-2px); }
 }
 </style>
 
@@ -135,7 +136,7 @@ x-init="
     }
 }"
 @nexova-new-message.window="$wire.$refresh().then(() => { const el = document.querySelector('[data-inbox-count]'); checkNewTickets(el ? parseInt(el.dataset.inboxCount) : 0); })"
-class="nx-inbox">
+class="nx-inbox" wire:poll.3s>
 
     {{-- ═══════════════════════════
          SIDEBAR — Lista de tickets
@@ -220,22 +221,21 @@ class="nx-inbox">
             @php $selCount = count($selectedTicketIds); @endphp
             @if($selCount > 0)
             <div class="nx-bulk-bar">
-                <div class="nx-bulk-bar__info">
+                <div class="nx-bulk-bar__info" style="gap:6px">
                     <div class="nx-bulk-bar__check">
                         <svg fill="none" stroke="#fff" viewBox="0 0 24 24" width="13" height="13" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                     </div>
-                    <span class="nx-bulk-bar__count">{{ $selCount }} {{ $selCount === 1 ? 'seleccionada' : 'seleccionadas' }}</span>
+                    <span class="nx-bulk-bar__count">{{ $selCount }} <span style="font-weight:400; opacity:.7">(sel)</span></span>
                 </div>
                 <div class="nx-bulk-bar__actions">
-                    <button wire:click="selectAllTickets" class="nx-bulk-bar__btn nx-bulk-bar__btn--ghost">Seleccionar todas</button>
+                    <button wire:click="selectAllTickets" class="nx-bulk-bar__btn nx-bulk-bar__btn--ghost" title="Seleccionar todas" style="padding:4px 8px">Todas</button>
                     <button wire:click="deleteSelectedTickets"
                             wire:confirm="¿Eliminar {{ $selCount }} {{ $selCount === 1 ? 'conversación' : 'conversaciones' }}? Esta acción es permanente."
-                            class="nx-bulk-bar__btn nx-bulk-bar__btn--danger">
+                            class="nx-bulk-bar__btn nx-bulk-bar__btn--danger" title="Eliminar" style="padding:4px 8px">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        Eliminar
                     </button>
-                    <button wire:click="clearTicketSelection" class="nx-bulk-bar__cancel" title="Cancelar">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <button wire:click="clearTicketSelection" class="nx-bulk-bar__cancel" title="Cancelar" style="width:24px;height:24px">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
             </div>
@@ -262,14 +262,13 @@ class="nx-inbox">
                     <div class="nx-avatar-wrap"
                          wire:click.stop="toggleTicketSelection({{ $ticket->id }})"
                          title="{{ $isSelected ? 'Deseleccionar' : 'Seleccionar' }}">
-                        <div class="nx-avatar" style="background:{{ $color }}"
-                             :style="(hov || {{ $isSelected ? 'true' : 'false' }}) ? 'opacity:0;transform:scale(.85)' : 'opacity:1;transform:scale(1)'">
-                            {{ strtoupper(substr($ticket->client_name, 0, 1)) }}
+                        <div class="nx-avatar" style="background:{{ $color }}; opacity:1; transform:scale(1);">
+                            {{ strtoupper(substr($ticket->client_name ?? 'V', 0, 1)) }}
                         </div>
                         <div class="nx-avatar-cb {{ $isSelected ? 'nx-avatar-cb--on' : '' }}"
                              :style="(hov || {{ $isSelected ? 'true' : 'false' }}) ? 'opacity:1;transform:scale(1)' : 'opacity:0;transform:scale(.85)'">
                             @if($isSelected)
-                            <svg fill="none" stroke="#fff" viewBox="0 0 24 24" width="14" height="14" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            <svg fill="none" stroke="#fff" viewBox="0 0 24 24" width="12" height="12" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                             @endif
                         </div>
                     </div>
@@ -338,7 +337,10 @@ class="nx-inbox">
                         <strong>{{ $ticket->conversation_name ?? $ticket->client_name }}</strong>
                         <span>
                             #{{ $ticket->id }}
-                            &middot; {{ $ticket->created_at->format('d M, H:i') }}
+                            @if($ticket->platform === 'telegram' && $ticket->telegram_id)
+                                &middot; Chat ID: {{ $ticket->telegram_id }}
+                            @endif
+                            &middot; {{ $ticket->created_at->translatedFormat('d M, H:i') }}
                             @if($ticket->status === 'human')
                                 &middot; <span class="nx-status-label nx-status-label--human">Agente activo</span>
                             @elseif($ticket->status === 'closed')
@@ -601,7 +603,12 @@ class="nx-inbox">
 @php $attUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($msg->attachment_path); @endphp
 @if(str_starts_with($msg->attachment_type ?? '', 'image/'))<a href="{{ $attUrl }}" target="_blank" style="display:block;margin-bottom:{{ $msg->content ? '6px' : '0' }}"><img src="{{ $attUrl }}" alt="{{ $msg->attachment_name }}" style="max-width:220px;max-height:180px;border-radius:8px;display:block;object-fit:cover"></a>@else<a href="{{ $attUrl }}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 10px;background:rgba(255,255,255,.1);border-radius:6px;text-decoration:none;color:inherit;margin-bottom:{{ $msg->content ? '5px' : '0' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline stroke-linecap="round" stroke-linejoin="round" stroke-width="2" points="14 2 14 8 20 8"/></svg>{{ $msg->attachment_name ?? 'Archivo' }}</a>@endif
 @endif
-{!! nl2br(e(trim($msg->content))) !!}</div>
+@endif
+@php
+    $fmtContent = e(trim($msg->content));
+    $fmtContent = preg_replace('/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/', '<a href="$2" target="_blank" style="color:var(--nx-accent);text-decoration:underline">$1</a>', $fmtContent);
+@endphp
+{!! nl2br($fmtContent) !!}</div>
                             <time class="nx-msg__time">
                                 @if($msg->sender_type === 'agent') Agente &middot;
                                 @elseif($msg->sender_type === 'bot') Nexova IA &middot;
@@ -958,12 +965,14 @@ class="nx-inbox">
         {{-- Header del panel derecho --}}
         <div class="nx-detail__panel-header">
             <span>Detalles</span>
+            @if($ticket->platform !== 'telegram')
             <button wire:click="openVisitorModal" class="nx-detail__edit-btn" title="Editar datos del visitante">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
                 Editar
             </button>
+            @endif
         </div>
 
         {{-- Info del cliente --}}
@@ -1097,12 +1106,13 @@ class="nx-inbox">
             </div>
             <div class="nx-detail__row">
                 <span class="nx-detail__key">Inicio</span>
-                <span class="nx-detail__val">{{ $ticket->created_at->format('d M, H:i') }}</span>
+                <span class="nx-detail__val">{{ $ticket->created_at->translatedFormat('d M, H:i') }}</span>
             </div>
         </div>
 
         {{-- Gestión del ticket (prioridad, categoría, departamento, notas) --}}
         @php $availableDepts = $this->availableDepartments; @endphp
+        @if($ticket->platform !== 'telegram')
         @if($ticket->status !== 'closed')
         <div class="nx-detail__section">
             <div class="nx-detail__heading">Gestión</div>
@@ -1248,6 +1258,7 @@ class="nx-inbox">
             </div>
             @endif
         </div>
+        @endif
         @endif
 
     </aside>
@@ -1449,16 +1460,16 @@ class="nx-inbox">
     margin: 0 !important;  /* cancel any margin from .nx-avatar base class */
 }
 .nx-avatar-cb {
-    position: absolute; inset: 0; width: 36px; height: 36px;
-    border-radius: 50%; border: 2px solid #d1d5db;
-    background: var(--nx-surface, #fff);
+    position: absolute; bottom: -2px; right: -2px; width: 14px; height: 14px;
+    border-radius: 4px; border: 2px solid var(--nx-surface, #fff);
+    background: #d1d5db;
     display: flex; align-items: center; justify-content: center;
     transition: opacity .18s ease, transform .18s ease, border-color .15s, background .15s;
     /* Hidden by default — Alpine shows it on hover / selected */
     opacity: 0;
     transform: scale(.85);
 }
-.nx-avatar-cb--on { border-color: #ef4444; background: #ef4444; }
+.nx-avatar-cb--on { border-color: var(--nx-surface, #fff); background: #ef4444; }
 
 /* ── Bulk action bar ── */
 .nx-bulk-bar {

@@ -397,6 +397,9 @@ class NexovaAiService
         $lines[] = 'Cuando el cliente pregunte por productos, precios o disponibilidad, usa la información de arriba.';
         $lines[] = 'Si el cliente pregunta por un producto que no aparece en el catálogo, dile que puede verlo en la tienda o hablar con un agente.';
         $lines[] = 'MUY IMPORTANTE SOBRE PRECIOS: Si el precio es 0.00, NO digas que es gratis. Significa que es un servicio variable (ej: depende de la duración o modelo). Dile al cliente que el precio depende de la variación elegida y provéele obligatoriamente el enlace con formato Markdown [Ver Opciones](url).';
+        
+        $urls = !empty($ctx['store_url']) ? $ctx['store_url'] : 'la página web';
+        $lines[] = "REGLA EXTREMA DE SATURACIÓN: Si hay muchos productos similares o la lista es muy redundante, NO enumeres todos. Menciona solo 2 o 3 opciones destacadas e indícale al cliente que para encontrar el correcto debe ir a la tienda, usando SIEMPRE el formato Markdown: [Visitar Tienda]({$urls}).";
 
         return implode("\n", $lines);
     }
@@ -710,6 +713,7 @@ class NexovaAiService
         $lines[] = 'Cuando el cliente pregunte por productos, precios, páginas o servicios, usa SOLO la información de arriba.';
         $lines[] = 'Si el precio muestra variaciones (ej: "3 meses: $X | 6 meses: $Y"), indícale las opciones al cliente.';
         $lines[] = 'Si hay una URL relevante para el cliente, SIEMPRE inclúyela en formato Markdown [texto](url) para generar un botón.';
+        $lines[] = 'REGLA EXTREMA DE SATURACIÓN: Si detectas que hay demasiados resultados o productos muy redundantes, menciona solo 1 o 2 opciones clave y explícale al cliente que encontrará el servicio adecuado navegando en la tienda. Añade un botón con Markdown para invitarle a la tienda.';
 
         return implode("\n", $lines);
     }
@@ -891,7 +895,8 @@ class NexovaAiService
         $text = preg_replace('/```[\w]*\n?(.*?)```/su', '$1', $text);
 
         // Links: [texto](url) → texto
-        $text = preg_replace('/\[([^\]]+)\]\([^\)]+\)/', '$1', $text);
+        // ATENCION MANTENER ENLACES! NO QUITAR, se usan para generar botones (Telegram inline / Web ui)
+        // $text = preg_replace('/\[([^\]]+)\]\([^\)]+\)/', '$1', $text);
 
         // Viñetas markdown: - item o * item al inicio de línea
         $text = preg_replace('/^[\*\-]\s+/mu', '• ', $text);
