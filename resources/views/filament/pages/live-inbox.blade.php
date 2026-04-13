@@ -215,9 +215,36 @@ class="nx-inbox">
         </div>
 
         <nav class="nx-ticket-list">
+
+            {{-- ═══ BARRA DE ACCIÓN — aparece cuando hay conversaciones seleccionadas ═══ --}}
+            @php $selCount = count($selectedTicketIds); @endphp
+            @if($selCount > 0)
+            <div class="nx-bulk-bar">
+                <div class="nx-bulk-bar__info">
+                    <div class="nx-bulk-bar__check">
+                        <svg fill="none" stroke="#fff" viewBox="0 0 24 24" width="13" height="13" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <span class="nx-bulk-bar__count">{{ $selCount }} {{ $selCount === 1 ? 'seleccionada' : 'seleccionadas' }}</span>
+                </div>
+                <div class="nx-bulk-bar__actions">
+                    <button wire:click="selectAllTickets" class="nx-bulk-bar__btn nx-bulk-bar__btn--ghost">Seleccionar todas</button>
+                    <button wire:click="deleteSelectedTickets"
+                            wire:confirm="¿Eliminar {{ $selCount }} {{ $selCount === 1 ? 'conversación' : 'conversaciones' }}? Esta acción es permanente."
+                            class="nx-bulk-bar__btn nx-bulk-bar__btn--danger">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        Eliminar
+                    </button>
+                    <button wire:click="clearTicketSelection" class="nx-bulk-bar__cancel" title="Cancelar">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+            @endif
+
             @forelse ($liveTickets as $ticket)
                 @php
                     $active     = $selectedTicketId === $ticket->id;
+                    $isSelected = in_array($ticket->id, $selectedTicketIds);
                     $lastMsg    = $ticket->messages->first();
                     $preview    = $lastMsg ? \Illuminate\Support\Str::limit($lastMsg->content, 55) : 'Sin mensajes aún';
                     $palette    = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1'];
@@ -225,19 +252,34 @@ class="nx-inbox">
                     $ticketDept = $ticket->department;
                 @endphp
 
-                <button wire:click="selectTicket({{ $ticket->id }})"
-                        wire:key="ticket-{{ $ticket->id }}"
-                        class="nx-ticket {{ $active ? 'nx-ticket--active' : '' }}">
+                {{-- Tarjeta de conversación — hover sobre avatar → checkbox --}}
+                <div wire:key="ticket-{{ $ticket->id }}"
+                     class="nx-ticket {{ $active && !$isSelected ? 'nx-ticket--active' : '' }} {{ $isSelected ? 'nx-ticket--selected' : '' }}"
+                     x-data="{ hov: false }"
+                     @mouseenter="hov = true" @mouseleave="hov = false">
 
-                    <div class="nx-avatar" style="background:{{ $color }}">
-                        {{ strtoupper(substr($ticket->client_name, 0, 1)) }}
+                    {{-- Avatar / Checkbox area --}}
+                    <div class="nx-avatar-wrap"
+                         wire:click.stop="toggleTicketSelection({{ $ticket->id }})"
+                         title="{{ $isSelected ? 'Deseleccionar' : 'Seleccionar' }}">
+                        <div class="nx-avatar" style="background:{{ $color }}"
+                             :style="(hov || {{ $isSelected ? 'true' : 'false' }}) ? 'opacity:0;transform:scale(.85)' : 'opacity:1;transform:scale(1)'">
+                            {{ strtoupper(substr($ticket->client_name, 0, 1)) }}
+                        </div>
+                        <div class="nx-avatar-cb {{ $isSelected ? 'nx-avatar-cb--on' : '' }}"
+                             :style="(hov || {{ $isSelected ? 'true' : 'false' }}) ? 'opacity:1;transform:scale(1)' : 'opacity:0;transform:scale(.85)'">
+                            @if($isSelected)
+                            <svg fill="none" stroke="#fff" viewBox="0 0 24 24" width="14" height="14" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            @endif
+                        </div>
                     </div>
 
-                    <div class="nx-ticket__body">
+                    {{-- Body: abre ticket o toggle selección si hay seleccionadas --}}
+                    <div class="nx-ticket__body"
+                         wire:click="selectTicket({{ $ticket->id }})"
+                         style="flex:1;min-width:0;cursor:pointer">
                         <div class="nx-ticket__top">
-                            <span class="nx-ticket__name">
-                                {{ $ticket->conversation_name ?? $ticket->client_name }}
-                            </span>
+                            <span class="nx-ticket__name">{{ $ticket->conversation_name ?? $ticket->client_name }}</span>
                             <span class="nx-ticket__time">{{ $ticket->updated_at->diffForHumans(null, true, true) }}</span>
                         </div>
                         <div class="nx-ticket__bottom">
@@ -256,7 +298,7 @@ class="nx-inbox">
                         </div>
                         @endif
                     </div>
-                </button>
+                </div>
             @empty
                 <div class="nx-empty-state">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="28" height="28">
@@ -266,7 +308,7 @@ class="nx-inbox">
                     @if($search)
                         <p>Sin resultados para "{{ Str::limit($search, 20) }}"</p>
                     @else
-                        <p>Sin conversaciones activas</p>
+                        <p>{{ $inboxView === 'history' ? 'Sin conversaciones en el historial' : 'Sin conversaciones activas' }}</p>
                     @endif
                 </div>
             @endforelse
@@ -404,22 +446,6 @@ class="nx-inbox">
                             Cerrar
                         </button>
                     @endif
-                    {{-- Botón de modo selección --}}
-                    <button wire:click="toggleSelectionMode"
-                            class="nx-btn nx-btn--ghost nx-btn--select {{ $selectionMode ? 'nx-btn--select--active' : '' }}"
-                            title="{{ $selectionMode ? 'Cancelar selección' : 'Seleccionar mensajes' }}">
-                        @if($selectionMode)
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                            Cancelar
-                        @else
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            Seleccionar
-                        @endif
-                    </button>
                 </div>
             </header>
 
@@ -496,32 +522,8 @@ class="nx-inbox">
                     </div>
                 </template>
 
-                {{-- ── Barra de acción bulk (modo selección) ──────────────────────── --}}
-                @if($selectionMode)
-                <div class="nx-selection-bar"
-                     style="display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--nx-accent-bg);border:1px solid var(--nx-accent-bd);border-radius:10px;margin-bottom:8px;flex-shrink:0;animation:nx-fadein .15s ease">
-                    <svg fill="none" stroke="var(--nx-accent)" viewBox="0 0 24 24" width="15" height="15">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span style="font-size:12.5px;font-weight:600;color:var(--nx-accent);flex:1">
-                        {{ count($selectedMessageIds) }} mensaje(s) seleccionado(s)
-                    </span>
-                    @if(count($selectedMessageIds) > 0)
-                    <button wire:click="deleteSelectedMessages"
-                            wire:confirm="¿Eliminar {{ count($selectedMessageIds) }} mensaje(s) seleccionado(s)? Esta acción no se puede deshacer."
-                            style="display:flex;align-items:center;gap:5px;padding:5px 12px;background:#dc2626;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                        </svg>
-                        Eliminar seleccionados
-                    </button>
-                    @endif
-                    <button wire:click="toggleSelectionMode"
-                            style="padding:5px 10px;background:none;border:1px solid var(--nx-border);border-radius:7px;font-size:12px;color:var(--nx-muted);cursor:pointer;font-family:inherit">
-                        Cancelar
-                    </button>
-                </div>
-                @endif
+
+
 
                 @forelse ($allMsgs as $msg)
                     @php
@@ -1483,6 +1485,79 @@ class="nx-inbox">
     background: rgba(34,197,94,.1);
     border-color: rgba(34,197,94,.25);
 }
+.nx-ticket--selected {
+    background: rgba(239,68,68,.06);
+    border-color: rgba(239,68,68,.25);
+}
+.nx-ticket--selected:hover {
+    background: rgba(239,68,68,.1);
+}
+
+/* ── Avatar / Checkbox overlay (WhatsApp-style) ── */
+.nx-avatar-wrap {
+    position: relative; width: 36px; height: 36px;
+    flex-shrink: 0; cursor: pointer;
+}
+.nx-avatar-wrap .nx-avatar {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    transition: opacity .18s ease, transform .18s ease;
+}
+.nx-avatar-cb {
+    position: absolute; inset: 0; width: 36px; height: 36px;
+    border-radius: 50%; border: 2px solid #d1d5db;
+    background: var(--nx-surface, #fff);
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity .18s ease, transform .18s ease, border-color .15s, background .15s;
+}
+.nx-avatar-cb--on { border-color: #ef4444; background: #ef4444; }
+
+/* ── Bulk action bar ── */
+.nx-bulk-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; padding: 9px 12px;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-bottom: 1px solid rgba(239,68,68,.25);
+    animation: nx-bulk-slide .2s ease;
+}
+@keyframes nx-bulk-slide {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.nx-bulk-bar__info { display: flex; align-items: center; gap: 8px; }
+.nx-bulk-bar__check {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #ef4444;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.nx-bulk-bar__count { font-size: 12px; font-weight: 600; color: #f1f5f9; white-space: nowrap; }
+.nx-bulk-bar__actions { display: flex; align-items: center; gap: 6px; }
+.nx-bulk-bar__btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 11px; border-radius: 8px; border: none;
+    font-size: 11.5px; font-weight: 600; cursor: pointer;
+    font-family: inherit; transition: all .15s; white-space: nowrap;
+}
+.nx-bulk-bar__btn--ghost {
+    background: rgba(255,255,255,.08); color: #94a3b8;
+    border: 1px solid rgba(255,255,255,.12);
+}
+.nx-bulk-bar__btn--ghost:hover { background: rgba(255,255,255,.14); color: #e2e8f0; }
+.nx-bulk-bar__btn--danger {
+    background: #ef4444; color: #fff;
+    box-shadow: 0 2px 10px rgba(239,68,68,.35);
+}
+.nx-bulk-bar__btn--danger:hover {
+    background: #dc2626;
+    box-shadow: 0 3px 14px rgba(239,68,68,.5);
+    transform: translateY(-1px);
+}
+.nx-bulk-bar__cancel {
+    width: 28px; height: 28px; border-radius: 50%; border: none;
+    background: rgba(255,255,255,.08); color: #94a3b8;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .15s; flex-shrink: 0;
+}
+.nx-bulk-bar__cancel:hover { background: rgba(255,255,255,.18); color: #f1f5f9; }
 
 .nx-ticket__body { flex: 1; min-width: 0; }
 .nx-ticket__top  {

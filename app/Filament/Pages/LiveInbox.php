@@ -148,9 +148,8 @@ class LiveInbox extends Page
     public array $duplicateContact   = [];   // {id, name, email} of existing contact found
     public array $pendingSaveData    = [];   // data waiting for resolution
 
-    // ── Selección y eliminación de mensajes ───────────────────────────────────
-    public bool  $selectionMode      = false;
-    public array $selectedMessageIds = [];
+    // ── Selección y eliminación de conversaciones (bulk) ──────────────────────
+    public array $selectedTicketIds = [];
 
     // -------------------------------------------------------------------------
     // Datos
@@ -248,8 +247,9 @@ class LiveInbox extends Page
 
     public function switchView(string $view): void
     {
-        $this->inboxView        = $view;
-        $this->selectedTicketId = null;
+        $this->inboxView         = $view;
+        $this->selectedTicketId  = null;
+        $this->selectedTicketIds = [];
     }
 
     public function selectedTicket(): ?Ticket
@@ -284,11 +284,14 @@ class LiveInbox extends Page
 
     public function selectTicket(int $id): void
     {
-        $this->selectedTicketId  = $id;
-        $this->replyContent      = '';
-        // Reset selection mode when switching tickets
-        $this->selectionMode     = false;
-        $this->selectedMessageIds = [];
+        // Si hay conversaciones seleccionadas, el click en el body hace toggle
+        if (count($this->selectedTicketIds) > 0) {
+            $this->toggleTicketSelection($id);
+            return;
+        }
+
+        $this->selectedTicketId = $id;
+        $this->replyContent     = '';
 
         // Cargar valores actuales del ticket en los controles
         $t = $this->findOrgTicket($id);
@@ -300,86 +303,73 @@ class LiveInbox extends Page
         }
     }
 
-    // ── Modo selección ────────────────────────────────────────────────────────
+    // ── Selección y eliminación de conversaciones ─────────────────────────────
 
-    /** Activa / desactiva el modo selección y limpia la selección. */
-    public function toggleSelectionMode(): void
+    public function toggleTicketSelection(int $ticketId): void
     {
-        $this->selectionMode      = ! $this->selectionMode;
-        $this->selectedMessageIds = [];
-    }
-
-    /** Agrega o quita un mensaje de la selección. */
-    public function toggleMessageSelection(int $messageId): void
-    {
-        if (in_array($messageId, $this->selectedMessageIds)) {
-            $this->selectedMessageIds = array_values(
-                array_filter($this->selectedMessageIds, fn ($id) => $id !== $messageId)
+        if (in_array($ticketId, $this->selectedTicketIds)) {
+            $this->selectedTicketIds = array_values(
+                array_filter($this->selectedTicketIds, fn ($id) => $id !== $ticketId)
             );
         } else {
-            $this->selectedMessageIds[] = $messageId;
+            $this->selectedTicketIds[] = $ticketId;
         }
     }
 
-    // ── Eliminar mensajes (soft-delete) ───────────────────────────────────────
-
-    /**
-     * Elimina un mensaje individual.
-     * Valida que el mensaje pertenezca al ticket activo y a la org del admin.
-     */
-    public function deleteMessage(int $messageId): void
+    public function selectAllTickets(): void
     {
-        if (! $this->selectedTicketId) return;
-        if (! $this->isOrgAdmin() && ! $this->canManageMessages()) return;
-
-        $ticket = $this->findOrgTicket($this->selectedTicketId);
-        if (! $ticket) return;
-
-        $message = Message::where('ticket_id', $ticket->id)
-            ->find($messageId);
-
-        if (! $message) return;
-
-        $message->delete(); // soft-delete — sets deleted_at
-
-        // Refrescar updated_at del ticket para actualizar preview en sidebar
-        $ticket->touch();
+        $this->selectedTicketIds = $this->tickets()->pluck('id')->map(fn ($id) => (int) $id)->toArray();
     }
 
-    /**
-     * Elimina todos los mensajes seleccionados (bulk).
-     * Una sola query — eficiente incluso con listas grandes.
-     */
-    public function deleteSelectedMessages(): void
+    public function clearTicketSelection(): void
     {
-        if (! $this->selectedTicketId || empty($this->selectedMessageIds)) return;
-        if (! $this->isOrgAdmin() && ! $this->canManageMessages()) return;
+        $this->selectedTicketIds = [];
+    }
 
-        $ticket = $this->findOrgTicket($this->selectedTicketId);
+    /** Hard delete de una conversación (cascade mensajes + tags). */
+    public function deleteTicket(int $ticketId): void
+    {
+        $ticket = $this->findOrgTicket($ticketId);
         if (! $ticket) return;
 
-        // Validate all IDs belong to this ticket (security: prevent cross-ticket injection)
-        $validIds = Message::where('ticket_id', $ticket->id)
-            ->whereIn('id', $this->selectedMessageIds)
+        $ticket->messages()->delete();
+        $ticket->tags()->detach();
+        $ticket->delete();
+
+        if ($this->selectedTicketId === $ticketId) {
+            $this->selectedTicketId = null;
+        }
+
+        $this->selectedTicketIds = array_values(
+            array_filter($this->selectedTicketIds, fn ($id) => $id !== $ticketId)
+        );
+    }
+
+    /** Hard delete de todas las conversaciones seleccionadas. */
+    public function deleteSelectedTickets(): void
+    {
+        if (empty($this->selectedTicketIds)) return;
+
+        $orgId = $this->orgId();
+
+        $validIds = Ticket::when($orgId, fn ($q) => $q->where('organization_id', $orgId))
+            ->whereIn('id', array_map('intval', $this->selectedTicketIds))
             ->pluck('id')
             ->toArray();
 
         if (empty($validIds)) return;
 
-        Message::whereIn('id', $validIds)->delete(); // bulk soft-delete
+        Message::whereIn('ticket_id', $validIds)->delete();
+        Ticket::whereIn('id', $validIds)->each(function ($t) {
+            $t->tags()->detach();
+        });
+        Ticket::whereIn('id', $validIds)->delete();
 
-        $ticket->touch();
+        if (in_array($this->selectedTicketId, $validIds)) {
+            $this->selectedTicketId = null;
+        }
 
-        // Exit selection mode after bulk delete
-        $this->selectionMode      = false;
-        $this->selectedMessageIds = [];
-    }
-
-    /** Check if current user can manage (delete) messages — org admins always can. */
-    private function canManageMessages(): bool
-    {
-        $perms = auth()->user()?->permissions ?? [];
-        return ! empty($perms['manage_messages']);
+        $this->selectedTicketIds = [];
     }
 
     /** Guarda prioridad, categorÃ­a y notas internas. */
