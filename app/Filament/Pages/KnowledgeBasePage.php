@@ -31,10 +31,11 @@ class KnowledgeBasePage extends Page
     public function getTitle(): string|Htmlable { return ''; }
 
     // ── Estado de listas ──
-    public string  $search        = '';
-    public string  $filterSource  = 'all';   // all | manual | scrape | external
-    public bool    $filterActive  = true;
-    public string  $filterChannel = 'all';   // all | global | <widget_id>
+    public ?int    $selectedWidgetId = null;   // null = todos / pantalla inicial
+    public bool    $channelSelected  = false;  // true = un canal fue elegido
+    public string  $search           = '';
+    public string  $filterSource     = 'all';
+    public bool    $filterActive     = false;  // off por default para ver todo
 
     // Form: create/edit
     public bool    $showForm      = false;
@@ -43,16 +44,37 @@ class KnowledgeBasePage extends Page
     public string  $formContent   = '';
     public string  $formSource    = 'manual';
     public bool    $formActive    = true;
-    public ?int    $formWidgetId  = null;    // null = global
+    public ?int    $formWidgetId  = null;
 
-    public ?string $msg          = null;
-    public string  $msgType      = 'success';
-    public bool    $isScraping   = false;
+    public ?string $msg     = null;
+    public string  $msgType = 'success';
+    public bool    $isScraping = false;
+
+    /** Selecciona un canal (widget o null=global) y muestra sus artículos. */
+    public function selectChannel(?int $widgetId): void
+    {
+        $this->selectedWidgetId = $widgetId;
+        $this->channelSelected  = true;
+        $this->search           = '';
+        $this->filterSource     = 'all';
+        $this->msg              = null;
+    }
+
+    /** Vuelve a la pantalla de selección de canal. */
+    public function backToChannels(): void
+    {
+        $this->channelSelected  = false;
+        $this->selectedWidgetId = null;
+        $this->showForm         = false;
+        $this->msg              = null;
+    }
 
     public function getEntriesProperty()
     {
+        if (! $this->channelSelected) return collect();
+
         $q = trim($this->search);
-        return $this->scopeToOrg(KnowledgeBase::query())
+        $query = $this->scopeToOrg(KnowledgeBase::query())
             ->when($q, fn ($query) =>
                 $query->where('title',   'like', "%{$q}%")
                       ->orWhere('content', 'like', "%{$q}%")
@@ -63,27 +85,39 @@ class KnowledgeBasePage extends Page
             ->when($this->filterActive, fn ($query) =>
                 $query->where('is_active', true)
             )
-            ->when($this->filterChannel === 'global', fn ($q2) =>
-                $q2->whereNull('widget_id')
-            )
-            ->when(
-                $this->filterChannel !== 'all' && $this->filterChannel !== 'global',
-                fn ($q2) => $q2->where('widget_id', (int) $this->filterChannel)
-            )
             ->with('widget:id,name')
-            ->orderBy('updated_at', 'desc')
-            ->get();
+            ->orderBy('updated_at', 'desc');
+
+        if ($this->selectedWidgetId === null) {
+            // Canal "Global": solo artículos sin widget asignado
+            $query->whereNull('widget_id');
+        } else {
+            // Canal específico: artículos asignados a ESE widget
+            $query->where('widget_id', $this->selectedWidgetId);
+        }
+
+        return $query->get();
     }
 
-    /** Devuelve los widgets disponibles para la org (para el selector de canal). */
+    /** Devuelve los widgets disponibles para la org con conteo de artículos. */
     public function getWidgetsProperty()
     {
         $orgId = $this->orgId();
         return ChatWidget::query()
             ->where('organization_id', $orgId)
             ->where('is_active', true)
+            ->withCount(['knowledgeBases as articles_count' => fn ($q) => $q->where('is_active', true)])
             ->orderBy('name')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'type']);
+    }
+
+    /** Conteo de artículos globales (sin widget). */
+    public function getGlobalArticlesCountProperty(): int
+    {
+        return $this->scopeToOrg(KnowledgeBase::query())
+            ->whereNull('widget_id')
+            ->where('is_active', true)
+            ->count();
     }
 
     public function openCreate(): void
@@ -93,7 +127,7 @@ class KnowledgeBasePage extends Page
         $this->formContent  = '';
         $this->formSource   = 'manual';
         $this->formActive   = true;
-        $this->formWidgetId = null;
+        $this->formWidgetId = $this->selectedWidgetId;  // precarga el canal activo
         $this->showForm     = true;
         $this->msg          = null;
     }

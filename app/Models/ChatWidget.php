@@ -60,6 +60,11 @@ class ChatWidget extends Model
         return $this->belongsTo(Organization::class);
     }
 
+    public function knowledgeBases(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(KnowledgeBase::class, 'widget_id');
+    }
+
     public function defaultWorkingHours(): array
     {
         return [
