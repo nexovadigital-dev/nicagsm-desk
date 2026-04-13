@@ -97,10 +97,12 @@ class LiveInbox extends Page
 
     private function syncIncomingCalls(): void
     {
+        $orgId = $this->orgId();
         $count = Ticket::where('status', 'human')
             ->whereNotNull('agent_called_at')
-            ->where('agent_called_at', '>=', now()->subMinutes(15))
+            ->where('agent_called_at', '>=', now()->subMinutes(10))
             ->whereDoesntHave('messages', fn ($q) => $q->where('sender_type', 'agent'))
+            ->when($orgId, fn ($q) => $q->where('organization_id', $orgId))
             ->count();
         $this->hasIncomingCall   = $count > 0;
         $this->incomingCallCount = $count;
@@ -108,10 +110,12 @@ class LiveInbox extends Page
 
     public function incomingAgentCalls(): Collection
     {
+        $orgId = $this->orgId();
         return Ticket::where('status', 'human')
             ->whereNotNull('agent_called_at')
-            ->where('agent_called_at', '>=', now()->subMinutes(15))
+            ->where('agent_called_at', '>=', now()->subMinutes(10))
             ->whereDoesntHave('messages', fn ($q) => $q->where('sender_type', 'agent'))
+            ->when($orgId, fn ($q) => $q->where('organization_id', $orgId))
             ->with('widget')
             ->get();
     }

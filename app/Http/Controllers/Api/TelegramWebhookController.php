@@ -9,6 +9,7 @@ use App\Models\Organization;
 use App\Models\Ticket;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -100,10 +101,71 @@ class TelegramWebhookController extends Controller
         }
 
         if ($ticket->status === 'bot') {
+            // ── Interceptar: usuario responde al llamado de agente ─────────────────────
+            if (self::isAgentRequest($text)) {
+                $botMsg = self::handleAgentCall($ticket, $org, $chatId, $keyboard);
+                return response()->json(['ok' => true]);
+            }
+
             ProcessBotReply::dispatch($ticket);
         }
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Detecta si el texto es una solicitud de agente humano.
+     */
+    private static function isAgentRequest(string $text): bool
+    {
+        $normalized = mb_strtolower(trim($text));
+        $keywords = ['agente', 'agent', 'si', 'sí', 'yes', 'humano', 'persona', 'hablar con alguien',
+                     'quiero un agente', 'soporte directo', 'ayuda humana', 'habélame con un agente'];
+        foreach ($keywords as $kw) {
+            if ($normalized === $kw || str_starts_with($normalized, $kw . ' ') || str_ends_with($normalized, ' ' . $kw)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Maneja la solicitud de llamado al agente:
+     *  - Si ya hay un llamado activo (<10 min, ticket no tomado): recuerda esperar
+     *  - Si vencó (>10 min) o no hay llamado: registra nuevo llamado y notifica
+     */
+    private static function handleAgentCall(Ticket $ticket, Organization $org, string|int $chatId, ?array $keyboard): void
+    {
+        $now         = Carbon::now();
+        $lastCall    = $ticket->agent_called_at
+                        ? Carbon::parse($ticket->agent_called_at)
+                        : null;
+        $callActive  = $lastCall && $now->diffInMinutes($lastCall, true) < 10;
+
+        if ($callActive) {
+            // Ya hay un llamado activo pendiente
+            $minutesLeft = max(1, 10 - (int) $now->diffInMinutes($lastCall, true));
+            $botMsg = "Ya se envió una notificación al equipo. Un agente te atenderá en breve. Si nadie responde en {$minutesLeft} minuto(s) puedes intentarlo de nuevo.";
+            Message::create(['ticket_id' => $ticket->id, 'sender_type' => 'bot', 'content' => $botMsg]);
+            self::sendMessage($org, $chatId, $botMsg, $keyboard);
+            return;
+        }
+
+        // ── Nuevo llamado: registrar y cambiar estado para que aparezca en Live Inbox ──
+        $ticket->update([
+            'agent_called_at' => $now,
+            'status'          => 'human',   // aparece en la alerta del panel
+        ]);
+
+        // Mensaje de confirmación al usuario
+        $botMsg = "✅ Enviamos una notificación al equipo de soporte. Un agente humano se conectará contigo en breve. Mientras esperamos el bot continuará respondiendo tus preguntas generales.";
+        Message::create(['ticket_id' => $ticket->id, 'sender_type' => 'bot', 'content' => $botMsg]);
+        self::sendMessage($org, $chatId, $botMsg, $keyboard);
+
+        // Señal interna visible en el historial del chat
+        Message::create(['ticket_id' => $ticket->id, 'sender_type' => 'system', 'content' => '__AGENT_CALLED__']);
+
+        Log::info("[AgentCall] Ticket #{$ticket->id}: usuario solicitó agente humano vía Telegram.");
     }
 
     /**
