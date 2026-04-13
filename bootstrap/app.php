@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Confiar en proxies (Cloudflare) para que HTTPS funcione correctamente
         $middleware->trustProxies(at: '*');
 
+        $middleware->validateCsrfTokens(except: [
+            'livewire*',
+        ]);
+
         // CORS para que el widget React pueda llamar a la API desde otros dominios
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
