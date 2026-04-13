@@ -1,22 +1,35 @@
 <IfModule mod_headers.c>
-    # Remove any server-level CSP (Hostinger sets one that blocks eval)
-    # then set our own that allows Alpine.js + Filament to work
+    # ── Content Security Policy ──────────────────────────────────────────────
+    # Hostinger puede inyectar su propio CSP — lo limpiamos y ponemos el nuestro
     Header always unset Content-Security-Policy
     Header always unset Content-Security-Policy-Report-Only
-    Header always set Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; connect-src *; frame-ancestors 'self';"
+    # unsafe-inline/eval son requeridos por Alpine.js + Filament + Livewire
+    Header always set Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; connect-src *; frame-ancestors 'self'; base-uri 'self'; form-action 'self' https:;"
 
-    # Widget.js — always serve fresh (no caching for the main entry point)
+    # ── Security headers esenciales ──────────────────────────────────────────
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+
+    # ── HSTS — fuerza HTTPS por 1 año ────────────────────────────────────────
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+    # ── Ocultar información del servidor ─────────────────────────────────────
+    Header always unset X-Powered-By
+    Header always set Server "Web"
+
+    # ── Cache: widget.js siempre fresco, assets hasheados con cache agresivo ─
     <FilesMatch "^widget\.js$">
         Header always set Cache-Control "no-cache, no-store, must-revalidate"
         Header always set Pragma "no-cache"
         Header always set Expires "0"
     </FilesMatch>
-
-    # Vite build assets (hashed) — cache aggressively, hash busts on deploy
     <FilesMatch "\.[0-9a-f]{8,}\.(js|css)$">
         Header always set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
 </IfModule>
+
 
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>

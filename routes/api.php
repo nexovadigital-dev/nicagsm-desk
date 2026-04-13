@@ -5,8 +5,8 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\TelegramWebhookController;
 use App\Http\Controllers\Api\WpApiController;
 
-// ── Chat widget (web) ──
-Route::prefix('chat')->group(function () {
+// ── Chat widget (web) — rate limited: 60 req/min por IP ──
+Route::prefix('chat')->middleware(['throttle:60,1'])->group(function () {
     Route::get('/config',                [ChatController::class, 'widgetConfig']);
     Route::post('/start',                [ChatController::class, 'startSession']);
     Route::post('/send',                 [ChatController::class, 'sendMessage']);
@@ -23,11 +23,13 @@ Route::prefix('chat')->group(function () {
     Route::post('/visitor-offline',      [ChatController::class, 'visitorOffline']);
 });
 
-// ── Admin notifications ──
-Route::get('/admin/new-events',   [ChatController::class, 'adminNewEvents']);
-Route::get('/admin/unread-count', [ChatController::class, 'adminUnreadCount']);
+// ── Admin notifications — protegidos, solo desde sesión autenticada ──
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/admin/new-events',   [ChatController::class, 'adminNewEvents']);
+    Route::get('/admin/unread-count', [ChatController::class, 'adminUnreadCount']);
+});
 
-// ── Telegram webhook ──
+// ── Telegram webhook — Telegram server IP, sin auth (webhook secret valida) ──
 Route::prefix('webhook')->group(function () {
     Route::post('/telegram/{orgId}', [TelegramWebhookController::class, 'handle'])
         ->where('orgId', '[0-9]+');

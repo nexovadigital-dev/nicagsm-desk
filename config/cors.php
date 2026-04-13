@@ -7,27 +7,35 @@ return [
     | Cross-Origin Resource Sharing (CORS) Configuration
     |--------------------------------------------------------------------------
     |
-    | Here you may configure your settings for cross-origin resource sharing
-    | or "CORS". This determines what cross-origin operations may execute
-    | in web browsers. You are free to adjust these settings as needed.
-    |
-    | To learn more: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+    | IMPORTANTE: El widget se embebe en sitios de terceros, por lo que
+    | 'allowed_origins' DEBE permanecer en '*' — es inevitable por diseño.
+    | Lo que sí restringimos son los métodos y headers para reducir la superficie.
     |
     */
 
     'paths' => ['api/*', 'sanctum/csrf-cookie', 'widget.js', 'build/*'],
 
-    'allowed_methods' => ['*'],
+    // Solo los métodos que realmente usa la API pública del widget
+    'allowed_methods' => ['GET', 'POST', 'OPTIONS'],
 
+    // Abierto — necesario para el widget embebido en sitios de clientes
     'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+    // Solo los headers que realmente necesita el widget
+    'allowed_headers' => [
+        'Content-Type',
+        'Accept',
+        'Authorization',
+        'X-XSRF-TOKEN',
+        'X-Requested-With',
+    ],
 
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    // Cachea el preflight 1 hora — reduce requests OPTIONS innecesarios
+    'max_age' => 3600,
 
     'supports_credentials' => false,
 
