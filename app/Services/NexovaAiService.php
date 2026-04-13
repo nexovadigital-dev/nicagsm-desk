@@ -8,7 +8,9 @@ use App\Models\ApiSetting;
 use App\Models\KnowledgeBase;
 use App\Models\Message;
 use App\Models\Ticket;
+use App\Models\WpPluginToken;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -589,8 +591,112 @@ class NexovaAiService
     }
 
     // =========================================================================
+    // WP Store Catalog — fetched via plugin /catalog endpoint (no WC credentials)
+    // =========================================================================
+
+    /**
+     * Obtiene el catálogo de la tienda conectada llamando al endpoint REST del
+     * plugin de WordPress (autenticado con el token almacenado).
+     * Cachea el resultado 60 minutos para no sobrecargar el WP en cada mensaje.
+     */
+    private function fetchStoreCatalogContext(int $orgId): string
+    {
+        return Cache::remember("nexova_wp_catalog_{$orgId}", 3600, function () use ($orgId) {
+            $wpToken = WpPluginToken::where('organization_id', $orgId)->first();
+            if (! $wpToken || empty($wpToken->site_url) || empty($wpToken->token)) {
+                return '';
+            }
+
+            $url = rtrim($wpToken->site_url, '/') . '/wp-json/nexova-desk/v1/catalog';
+
+            try {
+                $response = Http::timeout(15)
+                    ->withToken($wpToken->token)
+                    ->get($url);
+
+                if (! $response->successful()) {
+                    Log::warning("[NexovaBot] WP Catalog fetch failed ({$response->status()}) for org #{$orgId}");
+                    return '';
+                }
+
+                $data = $response->json();
+                return $this->buildWpCatalogBlock($data);
+            } catch (\Exception $e) {
+                Log::warning("[NexovaBot] WP Catalog fetch error for org #{$orgId}: {$e->getMessage()}");
+                return '';
+            }
+        });
+    }
+
+    /**
+     * Convierte la respuesta del endpoint /catalog del plugin WP en un bloque
+     * de texto para inyectar en el system prompt de la IA.
+     */
+    private function buildWpCatalogBlock(array $data): string
+    {
+        if (empty($data)) return '';
+
+        $storeName = $data['store_name'] ?? 'la tienda';
+        $currency  = $data['currency'] ?? '';
+        $lines     = ["=== CATÁLOGO DE {$storeName} (usa esto para responder sobre productos, páginas y servicios) ==="];
+
+        // Métodos de pago
+        if (! empty($data['payment_methods']) && is_array($data['payment_methods'])) {
+            $methods = implode(', ', array_column($data['payment_methods'], 'title'));
+            $lines[] = "Métodos de pago aceptados: {$methods}";
+        }
+
+        // Productos
+        if (! empty($data['products'])) {
+            $lines[] = '';
+            $lines[] = '--- PRODUCTOS Y SERVICIOS ---';
+            foreach ($data['products'] as $p) {
+                $entry = "• {$p['name']}";
+                if (! empty($p['price']))       $entry .= " — {$p['price']}" . ($currency ? " {$currency}" : '');
+                if (! empty($p['stock']))       $entry .= " | {$p['stock']}";
+                if (! empty($p['categories'])) $entry .= " | Cat: {$p['categories']}";
+                if (! empty($p['description'])) $entry .= "\n  {$p['description']}";
+                if (! empty($p['url']))         $entry .= "\n  URL: [Ver / Ordenar]({$p['url']})";
+                $lines[] = $entry;
+            }
+        }
+
+        // Páginas
+        if (! empty($data['pages'])) {
+            $lines[] = '';
+            $lines[] = '--- PÁGINAS DEL SITIO ---';
+            foreach ($data['pages'] as $pg) {
+                $entry = "• {$pg['title']}";
+                if (! empty($pg['excerpt']))  $entry .= " — {$pg['excerpt']}";
+                if (! empty($pg['url']))      $entry .= "\n  URL: [{$pg['title']}]({$pg['url']})";
+                $lines[] = $entry;
+            }
+        }
+
+        // Posts
+        if (! empty($data['posts'])) {
+            $lines[] = '';
+            $lines[] = '--- ARTÍCULOS / BLOG ---';
+            foreach ($data['posts'] as $post) {
+                $entry = "• {$post['title']}";
+                if (! empty($post['excerpt'])) $entry .= " — {$post['excerpt']}";
+                if (! empty($post['url']))     $entry .= "\n  URL: [{$post['title']}]({$post['url']})";
+                $lines[] = $entry;
+            }
+        }
+
+        $lines[] = '';
+        $lines[] = 'Cuando el cliente pregunte por productos, precios, páginas o servicios, usa SOLO la información de arriba.';
+        $lines[] = 'Si el precio muestra variaciones (ej: "3 meses: $X | 6 meses: $Y"), indícale las opciones al cliente.';
+        $lines[] = 'Si hay una URL relevante para el cliente, SIEMPRE inclúyela en formato Markdown [texto](url) para generar un botón.';
+
+        return implode("\n", $lines);
+    }
+
+    // =========================================================================
     // RAG — Base de Conocimientos
     // =========================================================================
+
 
     /**
      * Trae todos los artículos activos y los concatena como contexto de sistema.
@@ -698,6 +804,15 @@ class NexovaAiService
             $telegramKb = trim($org?->telegram_config['knowledge_base'] ?? '');
             if ($telegramKb !== '') {
                 $systemPrompt .= "\n\n=== BASE DE CONOCIMIENTO DE LA ORGANIZACIÓN (usa SOLO esta información para responder sobre la empresa) ===\n\n{$telegramKb}\n\n(Si el cliente pregunta algo que no está en esta base de conocimiento and no hay contexto de tienda, indica amablemente que no tienes esa información y ofrece conectar con un agente.)";
+            }
+
+            // ── Catálogo WooCommerce via plugin (sin credenciales extra) ──────────
+            $useStoreCtx = $org?->telegram_config['use_store_context'] ?? false;
+            if ($useStoreCtx && $org) {
+                $catalogCtx = $this->fetchStoreCatalogContext($org->id);
+                if ($catalogCtx !== '') {
+                    $systemPrompt .= "\n\n" . $catalogCtx;
+                }
             }
         }
 
