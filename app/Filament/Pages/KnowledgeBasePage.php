@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Filament\Concerns\ScopedToOrganization;
+use App\Models\ChatWidget;
 use App\Models\KnowledgeBase;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
@@ -29,18 +30,20 @@ class KnowledgeBasePage extends Page
 
     public function getTitle(): string|Htmlable { return ''; }
 
-    // ── State ──
-    public string  $search       = '';
-    public string  $filterSource = 'all';  // all | manual | scrape | external
-    public bool    $filterActive = true;
+    // ── Estado de listas ──
+    public string  $search        = '';
+    public string  $filterSource  = 'all';   // all | manual | scrape | external
+    public bool    $filterActive  = true;
+    public string  $filterChannel = 'all';   // all | global | <widget_id>
 
     // Form: create/edit
-    public bool    $showForm     = false;
-    public ?int    $editingId    = null;
-    public string  $formTitle    = '';
-    public string  $formContent  = '';
-    public string  $formSource   = 'manual';
-    public bool    $formActive   = true;
+    public bool    $showForm      = false;
+    public ?int    $editingId     = null;
+    public string  $formTitle     = '';
+    public string  $formContent   = '';
+    public string  $formSource    = 'manual';
+    public bool    $formActive    = true;
+    public ?int    $formWidgetId  = null;    // null = global
 
     public ?string $msg          = null;
     public string  $msgType      = 'success';
@@ -60,8 +63,27 @@ class KnowledgeBasePage extends Page
             ->when($this->filterActive, fn ($query) =>
                 $query->where('is_active', true)
             )
+            ->when($this->filterChannel === 'global', fn ($q2) =>
+                $q2->whereNull('widget_id')
+            )
+            ->when(
+                $this->filterChannel !== 'all' && $this->filterChannel !== 'global',
+                fn ($q2) => $q2->where('widget_id', (int) $this->filterChannel)
+            )
+            ->with('widget:id,name')
             ->orderBy('updated_at', 'desc')
             ->get();
+    }
+
+    /** Devuelve los widgets disponibles para la org (para el selector de canal). */
+    public function getWidgetsProperty()
+    {
+        $orgId = $this->orgId();
+        return ChatWidget::query()
+            ->where('organization_id', $orgId)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
     }
 
     public function openCreate(): void
@@ -71,6 +93,7 @@ class KnowledgeBasePage extends Page
         $this->formContent  = '';
         $this->formSource   = 'manual';
         $this->formActive   = true;
+        $this->formWidgetId = null;
         $this->showForm     = true;
         $this->msg          = null;
     }
@@ -79,13 +102,14 @@ class KnowledgeBasePage extends Page
     {
         $item = KnowledgeBase::find($id);
         if (!$item) return;
-        $this->editingId   = $id;
-        $this->formTitle   = $item->title;
-        $this->formContent = $item->content;
-        $this->formSource  = $item->source ?? 'manual';
-        $this->formActive  = $item->is_active;
-        $this->showForm    = true;
-        $this->msg         = null;
+        $this->editingId    = $id;
+        $this->formTitle    = $item->title;
+        $this->formContent  = $item->content;
+        $this->formSource   = $item->source ?? 'manual';
+        $this->formActive   = $item->is_active;
+        $this->formWidgetId = $item->widget_id;
+        $this->showForm     = true;
+        $this->msg          = null;
     }
 
     public function save(): void
@@ -117,6 +141,7 @@ class KnowledgeBasePage extends Page
                 'source'       => 'scrape',
                 'reference_id' => $content, // store the URL
                 'is_active'    => $this->formActive,
+                'widget_id'    => $this->formWidgetId ?: null,
             ];
         } else {
             if (!$title || !$content) {
@@ -129,6 +154,7 @@ class KnowledgeBasePage extends Page
                 'content'   => $content,
                 'source'    => $this->formSource,
                 'is_active' => $this->formActive,
+                'widget_id' => $this->formWidgetId ?: null,
             ];
         }
 
@@ -214,9 +240,10 @@ class KnowledgeBasePage extends Page
 
     public function cancelForm(): void
     {
-        $this->showForm  = false;
-        $this->editingId = null;
-        $this->msg       = null;
+        $this->showForm    = false;
+        $this->editingId   = null;
+        $this->formWidgetId = null;
+        $this->msg         = null;
     }
 
     public function getStatsProperty(): array

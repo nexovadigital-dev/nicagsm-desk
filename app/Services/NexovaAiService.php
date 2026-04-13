@@ -109,10 +109,11 @@ class NexovaAiService
         }
 
         // ── Intentar responder desde la KB (solo si NO hay store_context) ───────
-        $ragContext = $this->buildRagContext($ticket->organization_id);
+        $widgetId   = $ticket->widget_id ?: null;
+        $ragContext  = $this->buildRagContext($ticket->organization_id, $widgetId);
         $kbAnswer = null;
         if ($ragContext && ! $hasStoreCtx) {
-            $kbAnswer = $this->tryKbDirectAnswer($ticket, $ragContext);
+            $kbAnswer = $this->tryKbDirectAnswer($ticket, $ragContext, $widgetId);
         }
         if ($kbAnswer !== null) {
             // Small delay for KB/FAQ answers — avoids feeling robotic/instant
@@ -229,7 +230,7 @@ class NexovaAiService
      * Returns a string if a confident direct answer is found, null otherwise.
      * This saves API tokens when the KB has an exact match.
      */
-    private function tryKbDirectAnswer(Ticket $ticket, string $ragContext): ?string
+    private function tryKbDirectAnswer(Ticket $ticket, string $ragContext, ?int $widgetId = null): ?string
     {
         // Get the last user message
         $lastMsg = $ticket->messages()
@@ -239,10 +240,16 @@ class NexovaAiService
 
         if (! $lastMsg || strlen($lastMsg) < 3) return null;
 
-        // Simple keyword matching: load active KB articles
+        // Artículos del widget específico + artículos globales (widget_id IS NULL)
         $articles = KnowledgeBase::query()
             ->where('is_active', true)
             ->when($ticket->organization_id, fn ($q) => $q->where('organization_id', $ticket->organization_id))
+            ->where(function ($q) use ($widgetId) {
+                $q->whereNull('widget_id');
+                if ($widgetId) {
+                    $q->orWhere('widget_id', $widgetId);
+                }
+            })
             ->get(['title', 'content', 'source']);
 
         if ($articles->isEmpty()) return null;
@@ -703,11 +710,17 @@ class NexovaAiService
      * RAG básico: inyección total. Para colecciones grandes se puede añadir
      * búsqueda por embeddings más adelante.
      */
-    private function buildRagContext(?int $orgId = null): string
+    private function buildRagContext(?int $orgId = null, ?int $widgetId = null): string
     {
         $articles = KnowledgeBase::query()
             ->where('is_active', true)
             ->when($orgId, fn ($q) => $q->where('organization_id', $orgId))
+            ->where(function ($q) use ($widgetId) {
+                $q->whereNull('widget_id');   // artículos globales siempre
+                if ($widgetId) {
+                    $q->orWhere('widget_id', $widgetId); // + los del widget específico
+                }
+            })
             ->get(['title', 'content', 'source', 'reference_id']);
 
         if ($articles->isEmpty()) {

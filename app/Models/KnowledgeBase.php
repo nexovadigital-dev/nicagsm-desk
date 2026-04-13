@@ -11,12 +11,18 @@ class KnowledgeBase extends Model
 
     protected $fillable = [
         'organization_id',
+        'widget_id',
         'title',
         'content',
         'source',
         'reference_id',
         'is_active',
     ];
+
+    public function widget(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(ChatWidget::class, 'widget_id');
+    }
 
     protected $casts = [
         'is_active' => 'boolean',

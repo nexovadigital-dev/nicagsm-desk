@@ -176,6 +176,17 @@
             <button type="button" class="kb-filter-btn {{ $filterSource === 'external' ? 'active' : '' }}" wire:click="$set('filterSource','external')">Externos</button>
         </div>
 
+        {{-- Filtro por canal/widget --}}
+        @if($this->widgets->count() > 0)
+        <div class="kb-filter-group">
+            <button type="button" class="kb-filter-btn {{ $filterChannel === 'all'    ? 'active' : '' }}" wire:click="$set('filterChannel','all')">Todos los canales</button>
+            <button type="button" class="kb-filter-btn {{ $filterChannel === 'global' ? 'active' : '' }}" wire:click="$set('filterChannel','global')">Global</button>
+            @foreach($this->widgets as $w)
+            <button type="button" class="kb-filter-btn {{ $filterChannel === (string)$w->id ? 'active' : '' }}" wire:click="$set('filterChannel','{{ $w->id }}')">{{ $w->name }}</button>
+            @endforeach
+        </div>
+        @endif
+
         <label class="kb-toggle-active">
             <label class="kb-toggle">
                 <input type="checkbox" wire:model.live="filterActive">
@@ -229,6 +240,11 @@
                     <span class="kb-badge {{ $item->is_active ? 'kb-badge-active' : 'kb-badge-inactive' }}">
                         {{ $item->is_active ? 'Activo' : 'Inactivo' }}
                     </span>
+                    @if($item->widget_id && $item->widget)
+                    <span class="kb-badge" style="background:rgba(99,102,241,.1);color:#6366f1">{{ $item->widget->name }}</span>
+                    @else
+                    <span class="kb-badge" style="background:#f0fdf4;color:#15803d">Global</span>
+                    @endif
                     <span class="kb-item-date">{{ $item->updated_at->diffForHumans() }}</span>
                 </div>
             </div>
@@ -319,6 +335,20 @@
                 </label>
             </div>
         </div>
+
+        {{-- Selector de canal/widget --}}
+        @if($this->widgets->count() > 0)
+        <div class="kb-form-field" style="margin-top:14px">
+            <label class="kb-form-label">Canal asignado</label>
+            <select class="kb-form-select" wire:model="formWidgetId">
+                <option value="">— Global (todos los canales) —</option>
+                @foreach($this->widgets as $w)
+                <option value="{{ $w->id }}">{{ $w->name }}</option>
+                @endforeach
+            </select>
+            <small style="font-size:11px;color:var(--c-sub,#9ca3af);margin-top:4px;display:block">Global = disponible en todos los canales. Elige un canal para que este artículo sea exclusivo de ese bot o widget.</small>
+        </div>
+        @endif
 
         @if($msg)
             <div class="kb-alert kb-alert-{{ $msgType }}">{{ $msg }}</div>
