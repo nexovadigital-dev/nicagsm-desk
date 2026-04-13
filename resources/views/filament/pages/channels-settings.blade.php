@@ -198,13 +198,13 @@
                         </button>
                         <button class="ch-btn ch-btn-primary" wire:click="saveTelegramToken" wire:loading.attr="disabled">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            Guardar token
-                        </button>
-                        <button class="ch-btn ch-btn-outline" wire:click="registerWebhook" wire:loading.attr="disabled">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.1-1.1m2.657-9.435a4 4 0 015.656 5.656l-4 4a4 4 0 01-5.656 0l-1.1-1.1"/></svg>
-                            Registrar webhook
+                            Guardar y conectar
                         </button>
                         @if($telegramStatus === 'ok')
+                        <button class="ch-btn ch-btn-outline" wire:click="registerWebhook" wire:loading.attr="disabled" title="Volver a registrar el webhook si cambiaste de dominio">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.1-1.1m2.657-9.435a4 4 0 015.656 5.656l-4 4a4 4 0 01-5.656 0l-1.1-1.1"/></svg>
+                            Re-registrar webhook
+                        </button>
                         <button class="ch-btn" style="margin-left:auto;background:transparent;color:#dc2626;border-color:rgba(220,38,38,.25)"
                             wire:click="disconnectTelegram"
                             wire:confirm="¿Desconectar el bot? Los mensajes de Telegram dejarán de recibirse.">
@@ -224,8 +224,8 @@
                     <div style="font-size:10px;font-weight:700;color:var(--c-sub,#9ca3af);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Cómo conectar</div>
                     <div class="ch-steps">
                         <div class="ch-step"><div class="ch-step-num">1</div><div>En Telegram busca <strong>@BotFather</strong>, escribe <code>/newbot</code> y copia el token.</div></div>
-                        <div class="ch-step"><div class="ch-step-num">2</div><div>Pega el token, haz clic en <strong>Probar</strong> y luego <strong>Guardar token</strong>.</div></div>
-                        <div class="ch-step"><div class="ch-step-num">3</div><div>Haz clic en <strong>Registrar webhook</strong> — apuntará el bot a <code>{{ $this->getWebhookUrl() }}</code>.</div></div>
+                        <div class="ch-step"><div class="ch-step-num">2</div><div>Pega el token y haz clic en <strong>Guardar y conectar</strong> — verifica el bot y registra el webhook automáticamente.</div></div>
+                        <div class="ch-step"><div class="ch-step-num">3</div><div>Configura la <strong>base de conocimiento</strong> y el <strong>prompt</strong> del bot. ¡Listo!</div></div>
                     </div>
                 </div>
             </div>
@@ -260,29 +260,72 @@
 
                     <div class="nx-toggle-row">
                         <div style="flex:1;padding-right:24px">
-                            <div class="nx-toggle__label">Contexto de tienda (WooCommerce)</div>
-                            <div class="nx-toggle__desc">El bot podrá responder sobre catálogo, precios y métodos de pago del plugin.</div>
+                            <div class="nx-toggle__label">
+                                Contexto de tienda (WooCommerce)
+                                @if($wpPluginConnected)
+                                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:#059669;background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.2);padding:2px 8px;border-radius:99px;margin-left:8px">
+                                        <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block"></span>
+                                        Plugin conectado
+                                    </span>
+                                @else
+                                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:#9ca3af;background:var(--c-bg,#f5f6f8);border:1px solid var(--c-border,#e3e6ea);padding:2px 8px;border-radius:99px;margin-left:8px">
+                                        Sin plugin
+                                    </span>
+                                @endif
+                            </div>
+                            <div class="nx-toggle__desc">
+                                @if($wpPluginConnected)
+                                    El bot podrá responder sobre catálogo, precios y métodos de pago del plugin WooCommerce.
+                                @else
+                                    Conecta el plugin de WordPress para habilitar esta opción. Ve a <strong>Configuración &rarr; API Keys</strong>.
+                                @endif
+                            </div>
                         </div>
-                        <div class="nx-toggle__track {{ $telegramUseStoreContext ? 'on' : '' }}" wire:click="$toggle('telegramUseStoreContext')">
+                        <div class="nx-toggle__track {{ ($telegramUseStoreContext && $wpPluginConnected) ? 'on' : '' }} {{ !$wpPluginConnected ? 'nx-toggle--disabled' : '' }}"
+                            @if($wpPluginConnected) wire:click="$toggle('telegramUseStoreContext')" @endif
+                            style="{{ !$wpPluginConnected ? 'opacity:.4;cursor:not-allowed' : '' }}">
                             <div class="nx-toggle__thumb"></div>
                         </div>
                     </div>
 
-                    {{-- Prompt --}}
+                    {{-- Prompt del asistente --}}
                     <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--c-border,#e3e6ea)">
                         <label class="ch-label" style="display:block;margin-bottom:6px">Prompt del asistente</label>
                         <textarea class="ch-input" wire:model="telegramBotPrompt" rows="3"
-                            placeholder="Ej: Eres un asistente amigable de la empresa. Nunca inventes precios..."
+                            placeholder="Ej: Eres el asistente oficial de {empresa}. Tu rol es responder solo sobre nuestros productos, servicios y políticas. No inventes información que no tengas..."
                             style="font-family:inherit;font-size:13px;resize:vertical"></textarea>
-                        <div style="font-size:11px;color:var(--c-sub,#9ca3af);margin-top:4px">Instrucciones exclusivas para el canal Telegram. Se combinan con la base de conocimiento global.</div>
+                        <div style="font-size:11px;color:var(--c-sub,#9ca3af);margin-top:4px">Define la personalidad y límites del bot. Este texto es <strong>interno</strong> — el usuario nunca lo ve.</div>
                     </div>
 
-                    {{-- FAQ --}}
+                    {{-- Base de conocimiento del bot --}}
+                    <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--c-border,#e3e6ea)">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
+                            <label class="ch-label">Base de conocimiento del bot</label>
+                            <span style="font-size:10px;font-weight:600;color:#6366f1;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);padding:2px 8px;border-radius:99px">Memoria local</span>
+                        </div>
+                        <textarea class="ch-input" wire:model="telegramKnowledgeBase" rows="7"
+                            placeholder="Escribe aquí toda la información relevante sobre tu organización que el bot debe conocer:
+
+Horario de atención: Lunes a Viernes 8am - 6pm
+Dirección: Calle Ejemplo 123, Ciudad
+Servicios: Servicio A, Servicio B, Servicio C
+Precios: Consultar por el canal oficial
+Política de devolución: 30 días con recibo de compra
+Contacto: soporte@empresa.com | +504 9999-9999
+
+Puedes incluir emojis 👍, precios 💰, horarios ⏰ y cualquier detalle relevante."
+                            style="font-family:inherit;font-size:12.5px;resize:vertical;line-height:1.6"></textarea>
+                        <div style="font-size:11px;color:var(--c-sub,#9ca3af);margin-top:4px">Esta información se inyecta directamente en el contexto del bot. Mientras más detallada, mejores respuestas. Acepta emojis 🎉</div>
+                    </div>
+
+                    {{-- FAQ / Botones rápidos --}}
                     <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--c-border,#e3e6ea)">
                         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
                             <div>
                                 <label class="ch-label">Botones rápidos (FAQ)</label>
-                                <div style="font-size:11.5px;color:var(--c-sub,#6b7280);margin-top:3px;line-height:1.5">Aparecen como teclado en Telegram. La respuesta se envía sin consumir tokens de IA.</div>
+                                <div style="font-size:11.5px;color:var(--c-sub,#6b7280);margin-top:3px;line-height:1.5">
+                                    Aparecen como teclado en Telegram. El bot responde la respuesta exacta sin consumir IA. Admiten emojis 👌
+                                </div>
                             </div>
                             @if(count($telegramFaqItems) < 6)
                             <button class="ch-btn ch-btn-outline" wire:click="addTelegramFaq" style="padding:5px 10px;font-size:11px;flex-shrink:0;margin-left:12px">
@@ -298,9 +341,11 @@
                                     <div style="width:22px;height:22px;border-radius:6px;background:var(--c-border,#e3e6ea);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--c-sub,#6b7280);flex-shrink:0;margin-top:3px">{{ $idx+1 }}</div>
                                     <div style="flex:1;display:flex;flex-direction:column;gap:7px">
                                         <input type="text" class="ch-input" wire:model="telegramFaqItems.{{ $idx }}.question"
-                                            placeholder="Texto del botón (Ej: Métodos de Pago)" style="font-family:inherit;font-size:12.5px">
+                                            placeholder="💬 Texto del botón (Ej: 💰 Precios)"
+                                            style="font-family:inherit;font-size:12.5px"
+                                            inputmode="text">
                                         <textarea class="ch-input" wire:model="telegramFaqItems.{{ $idx }}.answer"
-                                            rows="2" placeholder="Respuesta exacta que dará el bot..."
+                                            rows="2" placeholder="Respuesta exacta del bot (puede incluir emojis 😊, saltos de línea y todo el detalle necesario)..."
                                             style="font-family:inherit;font-size:12.5px;resize:vertical"></textarea>
                                     </div>
                                     <button type="button" wire:click="removeTelegramFaq({{ $idx }})"

@@ -561,7 +561,7 @@ class NexovaAiService
 
         if ($ticket->platform === 'telegram') {
             $telegramConfig = $org?->telegram_config ?? [];
-            $botName = 'Telegram Asistente';
+            $botName = $org?->name ? "{$org->name} Bot" : 'Telegram Asistente';
             if (!empty($telegramConfig['bot_prompt'])) {
                 $customPrompt = trim($telegramConfig['bot_prompt']);
             }
@@ -604,6 +604,14 @@ class NexovaAiService
                 $systemPrompt .= "\n\n**IDENTIDAD DEL CLIENTE:** El cliente está identificado como cliente registrado de la tienda (WooCommerce). Puedes referirte a él por su nombre si lo tienes disponible.";
             } else {
                 $systemPrompt .= "\n\n**IDENTIDAD DEL CLIENTE:** El visitante NO ha iniciado sesión en la tienda. Si pregunta por sus pedidos, historial de compras, estado de envío, cuenta o cualquier información personal de su perfil de cliente, responde explicando que necesitas verificar su identidad y añade el marcador exacto __WOO_VERIFY__ al FINAL de tu respuesta (sin espacios antes ni después). No inventes información de pedidos. Para preguntas generales sobre productos, precios o la tienda, responde con normalidad sin usar el marcador.";
+            }
+        }
+
+        // Base de conocimiento local del bot Telegram
+        if ($ticket->platform === 'telegram') {
+            $telegramKb = trim($org?->telegram_config['knowledge_base'] ?? '');
+            if ($telegramKb !== '') {
+                $systemPrompt .= "\n\n=== BASE DE CONOCIMIENTO DE LA ORGANIZACIÓN (usa SOLO esta información para responder sobre la empresa) ===\n\n{$telegramKb}\n\n(Si el cliente pregunta algo que no está en esta base de conocimiento and no hay contexto de tienda, indica amablemente que no tienes esa información y ofrece conectar con un agente.)";
             }
         }
 

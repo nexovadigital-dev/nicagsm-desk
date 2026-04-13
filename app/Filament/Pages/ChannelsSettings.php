@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Concerns\ScopedToOrganization;
 use App\Models\Organization;
+use App\Models\WpPluginToken;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\Support\Htmlable;
@@ -36,8 +37,12 @@ class ChannelsSettings extends Page
     // ── Telegram Configs ──────────────────────────────────────────────────
     public bool $telegramAiEnabled = false;
     public string $telegramBotPrompt = '';
+    public string $telegramKnowledgeBase = '';
     public array $telegramFaqItems = [];
     public bool $telegramUseStoreContext = false;
+
+    // ── Estado del plugin WP ──────────────────────────────────────────────
+    public bool $wpPluginConnected = false;
 
     // ── Inline feedback ───────────────────────────────────────────────────
     public string $msg     = '';
@@ -54,12 +59,16 @@ class ChannelsSettings extends Page
                 $this->telegramBotInfo = 'Bot configurado';
             }
             if ($org && $org->telegram_config) {
-                $this->telegramAiEnabled = $org->telegram_config['ai_enabled'] ?? false;
-                $this->telegramBotPrompt = $org->telegram_config['bot_prompt'] ?? '';
-                $this->telegramFaqItems  = $org->telegram_config['faq_items'] ?? [];
+                $this->telegramAiEnabled       = $org->telegram_config['ai_enabled'] ?? false;
+                $this->telegramBotPrompt       = $org->telegram_config['bot_prompt'] ?? '';
+                $this->telegramKnowledgeBase   = $org->telegram_config['knowledge_base'] ?? '';
+                $this->telegramFaqItems        = $org->telegram_config['faq_items'] ?? [];
                 $this->telegramUseStoreContext = $org->telegram_config['use_store_context'] ?? false;
             }
-            
+
+            // Verificar si hay plugin WP conectado a esta org
+            $this->wpPluginConnected = WpPluginToken::where('organization_id', $orgId)->exists();
+
             // Ensure at least one empty FAQ item for UI if empty
             if (empty($this->telegramFaqItems)) {
                 $this->telegramFaqItems = [['question' => '', 'answer' => '']];
@@ -79,8 +88,9 @@ class ChannelsSettings extends Page
         $config = [
             'ai_enabled'        => $this->telegramAiEnabled,
             'bot_prompt'        => trim($this->telegramBotPrompt),
+            'knowledge_base'    => trim($this->telegramKnowledgeBase),
             'faq_items'         => $cleanFaqs,
-            'use_store_context' => $this->telegramUseStoreContext,
+            'use_store_context' => $this->telegramUseStoreContext && $this->wpPluginConnected,
         ];
 
         Organization::where('id', $orgId)->update([
@@ -112,21 +122,48 @@ class ChannelsSettings extends Page
     public function saveTelegramToken(): void
     {
         $orgId = $this->orgId();
-        if (! $orgId || ! trim($this->telegramToken)) {
+        $token = trim($this->telegramToken);
+
+        if (! $orgId || ! $token) {
             $this->msg     = 'Ingresa el token antes de guardar.';
             $this->msgType = 'error';
             return;
         }
 
+        // Verificar token antes de guardar
+        try {
+            $testResp = Http::timeout(8)->get("https://api.telegram.org/bot{$token}/getMe");
+            if (! $testResp->successful() || ! $testResp->json('ok')) {
+                $this->msg     = 'Token inválido. Verifica que sea correcto.';
+                $this->msgType = 'error';
+                return;
+            }
+            $bot = $testResp->json('result');
+            $this->telegramBotInfo = '@' . ($bot['username'] ?? 'bot');
+        } catch (\Throwable $e) {
+            $this->msg     = 'Error de conexión al verificar el token.';
+            $this->msgType = 'error';
+            return;
+        }
+
         Organization::where('id', $orgId)->update([
-            'telegram_bot_token' => encrypt(trim($this->telegramToken)),
+            'telegram_bot_token' => encrypt($token),
         ]);
 
-        $this->telegramStatus = 'ok';
-        $this->telegramBotInfo = 'Bot configurado';
-        $this->telegramToken = '';
-        $this->dispatch('nexova-toast', type: 'success', message: 'Token de Telegram guardado');
-        $this->msg     = 'Token guardado correctamente.';
+        // Auto-registrar webhook
+        $webhookUrl = url("/api/webhook/telegram/{$orgId}");
+        try {
+            Http::timeout(10)->post("https://api.telegram.org/bot{$token}/setWebhook", [
+                'url' => $webhookUrl,
+            ]);
+        } catch (\Throwable) {
+            // No bloqueamos si falla el webhook — el usuario puede reintentarlo
+        }
+
+        $this->telegramStatus  = 'ok';
+        $this->telegramToken   = '';
+        $this->dispatch('nexova-toast', type: 'success', message: "Bot @{$this->telegramBotInfo} conectado y webhook registrado");
+        $this->msg     = "Bot {$this->telegramBotInfo} guardado. Webhook registrado automáticamente en: {$webhookUrl}";
         $this->msgType = 'success';
     }
 
