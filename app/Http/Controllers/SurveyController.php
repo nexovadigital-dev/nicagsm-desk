@@ -21,7 +21,9 @@ class SurveyController extends Controller
             $preRating = 0;
         }
 
-        return view('survey.index', compact('ticket', 'preRating'));
+        $org = $ticket->organization;
+
+        return view('survey.index', compact('ticket', 'preRating', 'org'));
     }
 
     public function submit(string $token, Request $request)
