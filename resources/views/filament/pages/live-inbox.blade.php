@@ -417,6 +417,8 @@ class="nx-inbox" wire:poll.3s>
                             </svg>
                             {{ $ticket->assigned_agent }}
                         </span>
+                        {{-- Pasar al bot: NO para tickets de soporte ni Telegram --}}
+                        @if(! $ticket->is_support_ticket && $ticket->platform !== 'telegram')
                         <button wire:click="handBackToBot"
                                 wire:confirm="¿Devolver al bot? El asistente retomará la conversación."
                                 class="nx-btn nx-btn--ghost">
@@ -425,6 +427,7 @@ class="nx-inbox" wire:poll.3s>
                             </svg>
                             Pasar al bot
                         </button>
+                        @endif
                     @endif
                     @if ($ticket->status !== 'closed' && ! $ticket->is_support_ticket && $ticket->platform !== 'telegram')
                         <button wire:click="openTicketModal" class="nx-btn nx-btn--ticket">
@@ -700,9 +703,26 @@ class="nx-inbox" wire:poll.3s>
                         }
                     }">
                     @if ($ticket->status === 'bot')
-                        <div class="nx-composer__notice">
-                            El bot está respondiendo. Al enviar un mensaje tomarás el control de la conversación.
-                        </div>
+                        @if ($ticket->platform === 'telegram')
+                            {{-- TELEGRAM + BOT: bloquear compositor — el agente debe tomar el chat primero --}}
+                            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:18px 20px;background:var(--nx-bg2,rgba(128,128,128,.05));border-top:1px solid var(--nx-bd,rgba(128,128,128,.15));text-align:center">
+                                <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#64748b">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                    El bot está atendiendo esta conversación
+                                </div>
+                                <p style="font-size:12px;color:#94a3b8;margin:0">Asigna el chat para poder responder como agente.</p>
+                                <button wire:click="assignToMe"
+                                        style="display:inline-flex;align-items:center;gap:6px;background:var(--nx-accent,#22c55e);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(34,197,94,.25)">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                    Tomar el chat
+                                </button>
+                            </div>
+                        @else
+                            {{-- Chat web + bot: aviso suave, se puede enviar para tomar el control --}}
+                            <div class="nx-composer__notice">
+                                El bot está respondiendo. Al enviar un mensaje tomarás el control de la conversación.
+                            </div>
+                        @endif
                     @endif
 
                     {{-- Canned response picker --}}

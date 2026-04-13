@@ -395,6 +395,12 @@ class LiveInbox extends Page
         $ticket = $this->findOrgTicket($this->selectedTicketId);
         if (! $ticket || $ticket->status === 'closed') return;
 
+        // Bloquear envío en Telegram mientras el bot está activo — debe asignarse primero
+        if ($ticket->platform === 'telegram' && $ticket->status === 'bot') {
+            $this->dispatch('nexova-toast', type: 'warning', message: 'Asigna el chat antes de responder en Telegram.');
+            return;
+        }
+
         if ($ticket->status === 'bot') {
             $ticket->update(['status' => 'human']);
         }
