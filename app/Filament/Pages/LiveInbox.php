@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Http\Controllers\Api\TelegramWebhookController;
 use App\Filament\Concerns\ScopedToOrganization;
 use App\Mail\SupportTicketMail;
 use App\Mail\TicketClosedMail;
@@ -336,6 +337,15 @@ class LiveInbox extends Page
             'attachment_type' => $attachmentType,
         ]);
 
+        // Reenviar al usuario en Telegram si el ticket viene de ese canal
+        if ($ticket->platform === 'telegram' && $ticket->telegram_id && $content) {
+            TelegramWebhookController::sendMessage(
+                $ticket->organization,
+                $ticket->telegram_id,
+                $content
+            );
+        }
+
         $this->replyContent = '';
     }
 
@@ -422,12 +432,20 @@ class LiveInbox extends Page
             'agent_called_at' => null, // limpiar la alerta de llamada entrante
         ]);
 
-        // Notificar al visitante en el widget
         Message::create([
             'ticket_id'   => $ticket->id,
             'sender_type' => 'system',
-            'content'     => "Agente se uniÃ³ a la conversaciÃ³n.",
+            'content'     => "{$agentName} se unio a la conversacion.",
         ]);
+
+        // Avisar al usuario en Telegram
+        if ($ticket->platform === 'telegram' && $ticket->telegram_id) {
+            TelegramWebhookController::sendMessage(
+                $ticket->organization,
+                $ticket->telegram_id,
+                "{$agentName} se unio a la conversacion y te respondera en breve."
+            );
+        }
 
         $this->dispatch('nexova-toast', type: 'success', message: "Tomaste el chat de {$ticket->client_name}");
     }
@@ -489,14 +507,22 @@ class LiveInbox extends Page
         Message::create([
             'ticket_id'   => $ticket->id,
             'sender_type' => 'system',
-            'content'     => 'Agente abandonÃ³ la conversaciÃ³n.',
+            'content'     => 'Agente abandono la conversacion.',
         ]);
 
         Message::create([
             'ticket_id'   => $ticket->id,
             'sender_type' => 'bot',
-            'content'     => 'El agente ha finalizado la sesiÃ³n. Estoy aquÃ­ para seguir ayudÃ¡ndote. Â¿En quÃ© puedo asistirte?',
+            'content'     => 'El agente finalizo la sesion. El asistente continuara atendiendote.',
         ]);
+
+        if ($ticket->platform === 'telegram' && $ticket->telegram_id) {
+            TelegramWebhookController::sendMessage(
+                $ticket->organization,
+                $ticket->telegram_id,
+                'El agente finalizo la sesion. El asistente automatico continuara atendiendote.'
+            );
+        }
     }
 
     public function closeTicket(): void
