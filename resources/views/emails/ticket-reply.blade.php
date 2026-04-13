@@ -8,7 +8,7 @@
     $accentColor = $org->accent_color ?? '#7c3aed';
     $orgName     = $org->name ?? 'Soporte';
     $tz          = $org->timezone ?? 'America/Managua';
-    $sentAt      = \Carbon\Carbon::parse($message->created_at)->setTimezone($tz)->format('d/m/Y H:i');
+    $sentAt      = \Carbon\Carbon::parse($ticketMessage->created_at)->setTimezone($tz)->format('d/m/Y H:i');
 @endphp
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f4f7; margin: 0; padding: 0; }
@@ -33,9 +33,9 @@
   </div>
   <div class="body">
     <p class="greeting">Hola {{ $ticket->client_name ?? 'Usuario' }},</p>
-    <div class="msg-box">{{ $message->content }}</div>
+    <div class="msg-box">{{ $ticketMessage->content }}</div>
     <p class="meta">
-      {{ $message->sender_type === 'bot' ? 'Respuesta automática' : 'Respondido por un agente' }}
+      {{ $ticketMessage->sender_type === 'bot' ? 'Respuesta automática' : 'Respondido por un agente' }}
       · {{ $sentAt }}
     </p>
     <div class="reply-hint">

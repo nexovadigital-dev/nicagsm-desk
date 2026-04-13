@@ -21,7 +21,7 @@ class TicketReplyMail extends Mailable
 
     public function __construct(
         public Ticket  $ticket,
-        public Message $message,
+        public Message $ticketMessage,   // NO usar $message — reservado por Blade/Swift
     ) {
         $this->org = $ticket->organization ?? new Organization();
     }
@@ -41,7 +41,7 @@ class TicketReplyMail extends Mailable
     {
         return new Content(
             view: 'emails.ticket-reply',
-            with: ['ticket' => $this->ticket, 'message' => $this->message, 'org' => $this->org],
+            with: ['ticket' => $this->ticket, 'ticketMessage' => $this->ticketMessage, 'org' => $this->org],
         );
     }
 }
