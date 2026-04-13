@@ -711,9 +711,9 @@ class ChatController extends Controller
             return response()->json(['banned' => true, 'message' => 'Tu acceso a este chat ha sido restringido.']);
         }
 
-        // Purge stale visitors (no ping in 90 seconds)
+        // Purge stale visitors (no ping in 35 seconds)
         ActiveVisitor::where('organization_id', $orgId)
-            ->where('last_ping_at', '<', now()->subSeconds(90))
+            ->where('last_ping_at', '<', now()->subSeconds(35))
             ->delete();
 
         $existing   = ActiveVisitor::where('organization_id', $orgId)

@@ -247,7 +247,16 @@ window._vp_times = @json($visitorTimes);
             const el = document.getElementById('vp-ding');
             if (!el) return;
             el.currentTime = 0;
-            el.play().catch(() => {});
+            const playPromise = el.play();
+            if (playPromise !== undefined) {
+                playPromise.catch((e) => {
+                    if (e.name === 'NotAllowedError' || e.name === 'NotSupportedError') {
+                        console.warn('El navegador bloqueó el sonido automático.', e);
+                        // Mostrar alerta visual si no suena
+                        alert('¡Nuevo visitante! El navegador silenció el aviso. Haz click en la página para permitir sonidos.');
+                    }
+                });
+            }
         },
 
         startTimers() {
