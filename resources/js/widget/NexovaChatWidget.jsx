@@ -1655,14 +1655,16 @@ export default function NexovaChatWidget() {
     const [attachmentError, setAttachmentError] = useState(null);
     const sessionUploadCount = useRef(0); // tracks uploads in current session
 
-    const messagesEndRef  = useRef(null);
+    const messagesEndRef   = useRef(null);
+    const messagesBoxRef   = useRef(null);   // ref to the scroll container
     const pollRef         = useRef(null);
+    const userScrolledUpRef = useRef(false); // true when user has scrolled up
     const typingSinceRef      = useRef(null);
-    const typingTimeoutRef    = useRef(null); // safety timeout to clear typing indicator
-    const botMsgCountAtSend   = useRef(0); // # non-user msgs when user hit send
+    const typingTimeoutRef    = useRef(null);
+    const botMsgCountAtSend   = useRef(0);
     const textareaRef     = useRef(null);
     const fileInputRef    = useRef(null);
-    const lastBotMsgIdRef = useRef(null); // último ID de msg de bot/agente que ya sonó
+    const lastBotMsgIdRef = useRef(null);
 
     const accentColor    = cfg?.accent_color    || '#7c3aed';
     const botName        = cfg?.bot_name         || 'Nexova IA';
@@ -1878,10 +1880,22 @@ export default function NexovaChatWidget() {
         .catch(() => {});
     }, []);
 
-    // ── Auto-scroll ──────────────────────────────────────────────────────────
+    // ── Smart auto-scroll ────────────────────────────────────────────────────
+    // Only scroll to bottom if user is already near the bottom (within 80px)
+    // This prevents interrupting reading of previous messages.
+    const scrollToBottom = useCallback((force = false) => {
+        const box = messagesBoxRef.current;
+        if (!box) return;
+        const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+        if (force || atBottom) {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            userScrolledUpRef.current = false;
+        }
+    }, []);
+
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, isTyping]);
+        scrollToBottom();
+    }, [messages, isTyping, scrollToBottom]);
 
     // ── Polling ──────────────────────────────────────────────────────────────
     const fetchMessages = useCallback(async () => {
@@ -1917,7 +1931,23 @@ export default function NexovaChatWidget() {
                     setBubbleClosed(false); // re-show bubble with new message
                 }
             }
-            setMessages(newMsgs);
+            // ── Merge messages to avoid full re-render flicker ────────────────
+            // Replace optimistic (tmp-*) messages with confirmed ones;
+            // avoid full array replacement which causes React to re-render all items.
+            setMessages(prev => {
+                const serverIds  = new Set(newMsgs.map(m => String(m.id)));
+                // Keep optimistic messages not yet confirmed by the server
+                const stillPending = prev.filter(
+                    m => String(m.id).startsWith('tmp-') && !serverIds.has(String(m.id))
+                );
+                // Merge: server messages + any still-pending optimistic messages
+                const merged = [...newMsgs, ...stillPending];
+                // Avoid state update if nothing actually changed (same ids + content)
+                const prevIds = prev.map(m => m.id + (m.content || '')).join('|');
+                const nextIds = merged.map(m => m.id + (m.content || '')).join('|');
+                if (prevIds === nextIds) return prev; // bail out — no re-render
+                return merged;
+            });
 
             // Limpiar typing cuando llega respuesta del bot
             if (typingSinceRef.current !== null) {
@@ -2227,6 +2257,8 @@ export default function NexovaChatWidget() {
             attachment_name: file?.name,
         };
         setMessages(prev2 => [...prev2, tmpMsg]);
+        // Force scroll when user sends — they expect to see the response
+        setTimeout(() => scrollToBottom(true), 30);
 
         try {
             if (file) {
@@ -2636,7 +2668,15 @@ export default function NexovaChatWidget() {
                     {screen === 'chat' && !callingAgent && (
                         <>
                             {/* Mensajes */}
-                            <div style={{ flex: 1, overflowY: 'auto', padding: '16px',
+                            <div
+                                ref={messagesBoxRef}
+                                onScroll={() => {
+                                    const box = messagesBoxRef.current;
+                                    if (!box) return;
+                                    userScrolledUpRef.current =
+                                        box.scrollHeight - box.scrollTop - box.clientHeight > 80;
+                                }}
+                                style={{ flex: 1, overflowY: 'auto', padding: '16px',
                                 display: 'flex', flexDirection: 'column', gap: 12, background: '#f8fafc' }}>
 
                                 {messages.length === 0 && !error && (

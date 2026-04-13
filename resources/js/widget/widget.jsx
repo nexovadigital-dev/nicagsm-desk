@@ -1,4 +1,3 @@
-import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import NexovaChatWidget from './NexovaChatWidget';
 
@@ -6,6 +5,9 @@ import NexovaChatWidget from './NexovaChatWidget';
  * Monta el widget en el DOM.
  * Busca #nexova-chat-root; si no existe, lo crea y lo anexa a <body>.
  * Configurable vía: window.NexovaChatConfig = { apiUrl: 'https://...' }
+ *
+ * NOTE: StrictMode is intentionally omitted in production to prevent
+ * double-invocation of effects that causes visible flicker in the chat.
  */
 const mount = () => {
     let container = document.getElementById('nexova-chat-root');
@@ -16,11 +18,7 @@ const mount = () => {
         document.body.appendChild(container);
     }
 
-    createRoot(container).render(
-        <StrictMode>
-            <NexovaChatWidget />
-        </StrictMode>
-    );
+    createRoot(container).render(<NexovaChatWidget />);
 };
 
 if (document.readyState === 'loading') {
