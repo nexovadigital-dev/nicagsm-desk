@@ -20,6 +20,8 @@
   .greeting { font-size: 15px; color: #111; margin-bottom: 16px; }
   .msg-box { background: #f8f7ff; border-left: 3px solid {{ $accentColor }}; padding: 14px 16px; border-radius: 0 8px 8px 0; font-size: 14px; color: #374151; line-height: 1.6; }
   .meta { font-size: 12px; color: #9ca3af; margin-top: 6px; }
+  .reply-hint { margin-top: 20px; padding: 12px 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 13px; color: #166534; }
+  .ticket-ref { font-size: 11px; color: #9ca3af; margin-top: 12px; }
   .footer { padding: 16px 32px; background: #f9f9fb; border-top: 1px solid #e5e7eb; font-size: 11px; color: #9ca3af; text-align: center; }
 </style>
 </head>
@@ -27,7 +29,7 @@
 <div class="wrap">
   <div class="header">
     <h1>{{ $orgName }}</h1>
-    <p>Tienes una nueva respuesta a tu consulta</p>
+    <p>Tienes una nueva respuesta en tu consulta · {{ $ticket->ticket_number }}</p>
   </div>
   <div class="body">
     <p class="greeting">Hola {{ $ticket->client_name ?? 'Usuario' }},</p>
@@ -36,6 +38,10 @@
       {{ $message->sender_type === 'bot' ? 'Respuesta automática' : 'Respondido por un agente' }}
       · {{ $sentAt }}
     </p>
+    <div class="reply-hint">
+      💬 <strong>¿Tienes alguna duda?</strong> Puedes responder directamente a este correo y tu respuesta se añadirá automáticamente a tu consulta.
+    </div>
+    <p class="ticket-ref">Referencia: {{ $ticket->ticket_number }} · {{ $ticket->ticket_subject }}</p>
   </div>
   <div class="footer">
     {{ $orgName }} · Este email fue enviado porque tienes una consulta activa.

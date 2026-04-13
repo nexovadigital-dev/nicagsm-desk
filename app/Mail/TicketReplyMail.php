@@ -33,7 +33,7 @@ class TicketReplyMail extends Mailable
         return new Envelope(
             from:    new Address($fromAddr, $fromName),
             replyTo: [new Address($fromAddr, $fromName)],
-            subject: "Respuesta a tu consulta — {$fromName}",
+            subject: "[{$this->ticket->ticket_number}] Respuesta a tu consulta — {$fromName}",
         );
     }
 

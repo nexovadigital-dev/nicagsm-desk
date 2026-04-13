@@ -411,7 +411,7 @@ class LiveInbox extends Page
             $this->replyAttachment = null;
         }
 
-        Message::create([
+        $message = Message::create([
             'ticket_id'       => $ticket->id,
             'sender_type'     => 'agent',
             'content'         => $content,
@@ -419,6 +419,29 @@ class LiveInbox extends Page
             'attachment_name' => $attachmentName,
             'attachment_type' => $attachmentType,
         ]);
+
+        // ── Notificar al cliente por email (solo tickets de soporte) ────────
+        if (
+            $ticket->is_support_ticket &&
+            $ticket->client_email &&
+            $content &&
+            OrgMailer::notificationsEnabled($ticket->organization)
+        ) {
+            $fresh = $ticket->fresh(['organization']);
+            $org   = $fresh?->organization;
+
+            if ($org) {
+                try {
+                    $mailerName = OrgMailer::mailerNameFor($org);
+                    $mailable   = new \App\Mail\TicketReplyMail($fresh, $message);
+                    $mailerName
+                        ? Mail::mailer($mailerName)->to($ticket->client_email)->send($mailable)
+                        : Mail::to($ticket->client_email)->send($mailable);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('[LiveInbox] Error enviando TicketReplyMail: ' . $e->getMessage());
+                }
+            }
+        }
 
         // ── Enviar al canal Telegram ────────────────────────────────────────
         if ($ticket->platform === 'telegram' && $ticket->telegram_id) {

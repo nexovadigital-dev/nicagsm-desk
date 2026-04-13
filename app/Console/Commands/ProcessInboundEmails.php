@@ -112,7 +112,7 @@ class ProcessInboundEmails extends Command
         // ── Create the message ────────────────────────────────────────────────
         Message::create([
             'ticket_id'   => $ticket->id,
-            'sender_type' => 'visitor',
+            'sender_type' => 'user',   // 'user' = cliente — coincide con el renderizado del chat
             'content'     => trim($body),
         ]);
 
