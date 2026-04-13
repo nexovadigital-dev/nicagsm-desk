@@ -45,8 +45,14 @@ class NexovaAiService
         $org = $ticket->organization_id ? $ticket->organization : null;
         $widget = $ticket->widget_id ? \App\Models\ChatWidget::find($ticket->widget_id) : null;
 
-        // ── Verificar si el bot IA está habilitado en este widget ─────────────
-        if ($widget && ! $widget->bot_enabled) {
+        // ── Verificar si el bot IA está habilitado en este canal o widget ──────
+        if ($ticket->platform === 'telegram' && $org) {
+            $telegramConfig = $org->telegram_config ?? [];
+            if (empty($telegramConfig['ai_enabled'])) {
+                Log::info("[NexovaBot] IA deshabilitada en Telegram — ticket #{$ticket->id}");
+                return 'El asistente automático está desactivado en este canal. Un agente te atenderá pronto.' . self::ESCALATE_FLAG;
+            }
+        } elseif ($widget && ! $widget->bot_enabled) {
             Log::info("[NexovaBot] Bot deshabilitado en widget #{$ticket->widget_id} — ticket #{$ticket->id}");
             return 'El asistente automático está desactivado. Un agente te atenderá pronto.' . self::ESCALATE_FLAG;
         }
@@ -550,8 +556,19 @@ class NexovaAiService
 
         // Widget y nombre del bot — el nombre lo define el admin en el widget
         $widget  = $ticket->widget_id ? \App\Models\ChatWidget::find($ticket->widget_id) : null;
-        $botName = $widget?->bot_name ?: ($org?->name ? "{$org->name} IA" : 'Asistente IA');
-        $customPrompt = trim($widget?->bot_system_prompt ?? '');
+        $botName = ($org?->name ? "{$org->name} IA" : 'Asistente IA');
+        $customPrompt = '';
+
+        if ($ticket->platform === 'telegram') {
+            $telegramConfig = $org?->telegram_config ?? [];
+            $botName = 'Telegram Asistente';
+            if (!empty($telegramConfig['bot_prompt'])) {
+                $customPrompt = trim($telegramConfig['bot_prompt']);
+            }
+        } elseif ($widget) {
+            $botName = $widget->bot_name ?: $botName;
+            $customPrompt = trim($widget->bot_system_prompt ?? '');
+        }
 
         // Instrucción de formato que aplica SIEMPRE (custom prompt o no)
         $formatRule = " IMPORTANTE: Responde SIEMPRE en texto plano sin formato Markdown. No uses **, *, #, __, backticks ni ningún símbolo de formato. No uses emojis salvo que el usuario los use primero. Las listas deben ir con guiones simples o numeradas con punto.";

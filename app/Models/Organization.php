@@ -13,7 +13,7 @@ class Organization extends Model
     protected $fillable = [
         'name', 'slug', 'website', 'support_email', 'support_name', 'timezone',
         'domain', 'domain_verified', 'domain_verify_token',
-        'ai_groq_key', 'ai_groq_key_2', 'ai_groq_key_3', 'ai_gemini_key', 'ai_use_own_keys', 'telegram_bot_token',
+        'ai_groq_key', 'ai_groq_key_2', 'ai_groq_key_3', 'ai_gemini_key', 'ai_use_own_keys', 'telegram_bot_token', 'telegram_config',
         'max_messages_per_session', 'max_bot_sessions_per_day',
         'bot_sessions_today', 'bot_messages_this_month', 'bot_messages_month_reset', 'usage_date',
         'plan', 'trial_ends_at', 'is_active', 'is_partner', 'partner_token', 'accent_color', 'logo_path',
@@ -24,6 +24,7 @@ class Organization extends Model
         'is_partner'              => 'boolean',
         'domain_verified'         => 'boolean',
         'ai_use_own_keys'         => 'boolean',
+        'telegram_config'         => 'array',
         'trial_ends_at'           => 'datetime',
         'usage_date'              => 'date',
         'max_messages_per_session'  => 'integer',

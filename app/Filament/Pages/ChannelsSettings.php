@@ -33,6 +33,12 @@ class ChannelsSettings extends Page
     public string $telegramStatus  = '';   // 'ok' | 'error' | ''
     public string $telegramBotInfo = '';
 
+    // ── Telegram Configs ──────────────────────────────────────────────────
+    public bool $telegramAiEnabled = false;
+    public string $telegramBotPrompt = '';
+    public array $telegramFaqItems = [];
+    public bool $telegramUseStoreContext = false;
+
     // ── Inline feedback ───────────────────────────────────────────────────
     public string $msg     = '';
     public string $msgType = 'success';
@@ -47,7 +53,60 @@ class ChannelsSettings extends Page
                 $this->telegramStatus = 'ok';
                 $this->telegramBotInfo = 'Bot configurado';
             }
+            if ($org && $org->telegram_config) {
+                $this->telegramAiEnabled = $org->telegram_config['ai_enabled'] ?? false;
+                $this->telegramBotPrompt = $org->telegram_config['bot_prompt'] ?? '';
+                $this->telegramFaqItems  = $org->telegram_config['faq_items'] ?? [];
+                $this->telegramUseStoreContext = $org->telegram_config['use_store_context'] ?? false;
+            }
+            
+            // Ensure at least one empty FAQ item for UI if empty
+            if (empty($this->telegramFaqItems)) {
+                $this->telegramFaqItems = [['question' => '', 'answer' => '']];
+            }
         }
+    }
+
+    public function saveTelegramConfig(): void
+    {
+        $orgId = $this->orgId();
+        if (! $orgId) return;
+
+        $cleanFaqs = array_values(array_filter($this->telegramFaqItems, function ($item) {
+            return !empty(trim($item['question'] ?? '')) && !empty(trim($item['answer'] ?? ''));
+        }));
+
+        $config = [
+            'ai_enabled'        => $this->telegramAiEnabled,
+            'bot_prompt'        => trim($this->telegramBotPrompt),
+            'faq_items'         => $cleanFaqs,
+            'use_store_context' => $this->telegramUseStoreContext,
+        ];
+
+        Organization::where('id', $orgId)->update([
+            'telegram_config' => $config,
+        ]);
+
+        if (empty($cleanFaqs)) {
+            $this->telegramFaqItems = [['question' => '', 'answer' => '']];
+        } else {
+            $this->telegramFaqItems = $cleanFaqs;
+        }
+
+        $this->dispatch('nexova-toast', type: 'success', message: 'Configuraciones de Telegram guardadas correctamente');
+        $this->msg     = 'Configuración avanzada de Telegram guardada.';
+        $this->msgType = 'success';
+    }
+
+    public function addTelegramFaq(): void
+    {
+        $this->telegramFaqItems[] = ['question' => '', 'answer' => ''];
+    }
+
+    public function removeTelegramFaq(int $index): void
+    {
+        unset($this->telegramFaqItems[$index]);
+        $this->telegramFaqItems = array_values($this->telegramFaqItems);
     }
 
     public function saveTelegramToken(): void

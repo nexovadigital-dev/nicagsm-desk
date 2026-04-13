@@ -36,8 +36,10 @@ class TelegramWebhookController extends Controller
         $fromUser = $message['from'];
         $name     = trim(($fromUser['first_name'] ?? '') . ' ' . ($fromUser['last_name'] ?? '')) ?: 'Usuario Telegram';
 
+        $keyboard = self::buildFaqKeyboard($org);
+
         if (str_starts_with($text, '/start')) {
-            self::sendMessage($org, $chatId, "Hola {$name}, soy el asistente de {$org->name}. ¿En qué puedo ayudarte?");
+            self::sendMessage($org, $chatId, "Hola {$name}, soy el asistente de {$org->name}. ¿En qué puedo ayudarte?", $keyboard);
             return response()->json(['ok' => true]);
         }
 
@@ -63,6 +65,27 @@ class TelegramWebhookController extends Controller
             'content'     => $text,
         ]);
 
+        // Intercepción de FAQ inmediata
+        $faqAnswer = null;
+        $faqs = $org->telegram_config['faq_items'] ?? [];
+        foreach ($faqs as $faq) {
+            if (trim(mb_strtolower($faq['question'])) === trim(mb_strtolower($text))) {
+                $faqAnswer = $faq['answer'];
+                break;
+            }
+        }
+
+        if ($faqAnswer) {
+            // Guardar constancia de la respuesta del bot en la BD para que el admin la vea
+            Message::create([
+                'ticket_id'   => $ticket->id,
+                'sender_type' => 'bot',
+                'content'     => $faqAnswer,
+            ]);
+            self::sendMessage($org, $chatId, $faqAnswer, $keyboard);
+            return response()->json(['ok' => true]);
+        }
+
         if ($ticket->status === 'bot') {
             ProcessBotReply::dispatch($ticket);
         }
@@ -71,10 +94,36 @@ class TelegramWebhookController extends Controller
     }
 
     /**
-     * Envía un mensaje via Telegram usando el token de la org.
-     * Llamado desde ProcessBotReply cuando platform='telegram'.
+     * Construye un ReplyKeyboardMarkup a partir del FAQ configurado para Telegram.
      */
-    public static function sendMessage(Organization|int $org, string|int $chatId, string $text): void
+    private static function buildFaqKeyboard(Organization $org): ?array
+    {
+        $faqs = $org->telegram_config['faq_items'] ?? [];
+        if (empty($faqs)) return null;
+
+        $keyboard = [];
+        $row = [];
+        foreach ($faqs as $faq) {
+            $row[] = ['text' => $faq['question']];
+            if (count($row) === 2) { // 2 botones por fila
+                $keyboard[] = $row;
+                $row = [];
+            }
+        }
+        if (!empty($row)) $keyboard[] = $row;
+
+        return [
+            'keyboard' => $keyboard,
+            'resize_keyboard' => true,
+            'is_persistent' => false,
+            'one_time_keyboard' => false,
+        ];
+    }
+
+    /**
+     * Envía un mensaje via Telegram usando el token de la org.
+     */
+    public static function sendMessage(Organization|int $org, string|int $chatId, string $text, ?array $replyMarkup = null): void
     {
         if (is_int($org)) {
             $org = Organization::find($org);
@@ -92,27 +141,40 @@ class TelegramWebhookController extends Controller
             return;
         }
 
+        $payload = [
+            'chat_id'    => $chatId,
+            'text'       => self::stripMarkdown($text), // Nos aseguramos de limpiar markdown
+            'parse_mode' => 'HTML',
+        ];
+
+        if ($replyMarkup) {
+            $payload['reply_markup'] = $replyMarkup;
+        }
+
         try {
-            Http::timeout(10)->post("https://api.telegram.org/bot{$token}/sendMessage", [
-                'chat_id'    => $chatId,
-                'text'       => $text,
-                'parse_mode' => 'HTML',
-            ]);
+            Http::timeout(10)->post("https://api.telegram.org/bot{$token}/sendMessage", $payload);
         } catch (\Exception $e) {
             Log::error("Telegram sendMessage error: {$e->getMessage()}");
         }
     }
 
     /**
-     * Compatibilidad: llamada estática con solo chatId y texto (para código legacy).
-     * Busca la org del ticket para obtener el token correcto.
+     * Elimina el markdown de la respuesta de la IA antes de enviarlo a Telegram,
+     * dado que parse_mode = HTML no tolera asteriscos o backticks crudos.
      */
+    private static function stripMarkdown(string $text): string
+    {
+        $text = preg_replace('/\*{1,3}(.+?)\*{1,3}/u', '<b>$1</b>', $text); // Negritas a HTML
+        $text = preg_replace('/_{1,3}(.+?)_{1,3}/u', '<i>$1</i>', $text); // Cursivas a HTML
+        $text = preg_replace('/^#{1,6}\s+/mu', '', $text); // Quitar Headers
+        return trim($text);
+    }
+
     public static function sendTelegramMessage(string|int $chatId, string $text, ?int $orgId = null): void
     {
         if ($orgId) {
             $org = Organization::find($orgId);
         } else {
-            // Fallback: buscar ticket activo con este chatId
             $ticket = Ticket::where('telegram_id', (string) $chatId)
                 ->whereIn('status', ['bot', 'human'])
                 ->latest()
@@ -120,11 +182,10 @@ class TelegramWebhookController extends Controller
             $org = $ticket?->organization;
         }
 
-        if (! $org) {
-            Log::warning("Telegram sendTelegramMessage: no se encontró org para chatId {$chatId}");
-            return;
-        }
+        if (! $org) return;
 
-        self::sendMessage($org, $chatId, $text);
+        // Intentar agregar el teclado del FAQ incluso en respuestas misceláneas
+        $keyboard = self::buildFaqKeyboard($org);
+        self::sendMessage($org, $chatId, $text, $keyboard);
     }
 }

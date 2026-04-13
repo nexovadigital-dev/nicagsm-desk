@@ -689,6 +689,12 @@ class LiveInbox extends Page
         $t = $this->findOrgTicket($this->selectedTicketId);
         if (! $t) return;
 
+        // Telegram tickets are always user-initiated — no email ticket creation allowed
+        if ($t->platform === 'telegram') {
+            $this->dispatch('nexova-toast', type: 'warning', message: 'Los tickets de Telegram no pueden convertirse en tickets de soporte por correo.');
+            return;
+        }
+
         $this->ticketEmailForTicket = $t->client_email ?? '';
         $this->ticketSubject        = '';
         $this->showTicketModal      = true;
@@ -701,6 +707,13 @@ class LiveInbox extends Page
 
         $ticket = $this->findOrgTicket($this->selectedTicketId);
         if (! $ticket) return;
+
+        // Guard: Telegram tickets cannot be converted to email support tickets
+        if ($ticket->platform === 'telegram') {
+            $this->showTicketModal = false;
+            $this->dispatch('nexova-toast', type: 'warning', message: 'No se puede crear un ticket de soporte para conversaciones de Telegram.');
+            return;
+        }
 
         $email = trim($this->ticketEmailForTicket) ?: $ticket->client_email;
 

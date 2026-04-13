@@ -381,7 +381,7 @@ class="nx-inbox">
                             Pasar al bot
                         </button>
                     @endif
-                    @if ($ticket->status !== 'closed' && ! $ticket->is_support_ticket)
+                    @if ($ticket->status !== 'closed' && ! $ticket->is_support_ticket && $ticket->platform !== 'telegram')
                         <button wire:click="openTicketModal" class="nx-btn nx-btn--ticket">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
@@ -390,6 +390,12 @@ class="nx-inbox">
                         </button>
                     @elseif($ticket->is_support_ticket)
                         <span class="nx-ticket-badge-tag">#{{ $ticket->ticket_number }}</span>
+                    @elseif($ticket->platform === 'telegram' && $ticket->status !== 'closed')
+                        {{-- Telegram: no se crea ticket de soporte por email --}}
+                        <span style="font-size:11px;color:#64748b;display:flex;align-items:center;gap:4px">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" d="M12 20l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 12l9-5-9-5-9 5 9 5z"/></svg>
+                            Telegram
+                        </span>
                     @endif
                     @if ($ticket->status !== 'closed')
                         <button wire:click="closeTicket"

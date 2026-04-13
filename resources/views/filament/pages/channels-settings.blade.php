@@ -164,10 +164,84 @@
                     <div>Haz clic en <strong>Registrar webhook</strong> — apuntará el bot a <code>{{ $this->getWebhookUrl() }}</code>.</div>
                 </div>
             </div>
+            </div>
             @if($msg)
                 <div class="ch-alert ch-alert-{{ $msgType }}" style="margin-top:14px">{{ $msg }}</div>
             @endif
         </div>
+
+        @if($telegramStatus === 'ok')
+        <div class="ch-panel" style="margin-top: 16px;">
+            <div style="margin-bottom: 20px;">
+                <h3 style="font-size: 14px; font-weight: 700; color: var(--c-text,#111); margin: 0 0 4px;">Configuración de Asistente IA</h3>
+                <p style="font-size: 12.5px; color: var(--c-sub,#6b7280); line-height: 1.5; margin: 0;">Gestiona cómo el bot procesa y responde a los mensajes de Telegram de forma automática utilizando Inteligencia Artificial.</p>
+            </div>
+
+            {{-- Toggle Asistente IA --}}
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--c-border,#e3e6ea);">
+                <div>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--c-text,#111);">Activar Asistente IA</div>
+                    <div style="font-size: 12px; color: var(--c-sub,#6b7280); margin-top: 2px;">Si se desactiva, los mensajes solo llegarán a los agentes (rutina silenciosa).</div>
+                </div>
+                <label style="position: relative; display: inline-flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" wire:model="telegramAiEnabled" class="peer" style="appearance: none; position: absolute; width: 0; height: 0;">
+                    <div style="width: 36px; height: 20px; background: var(--c-border,#e3e6ea); border-radius: 99px; transition: .2s;" class="peer-checked:bg-green-600"></div>
+                    <div style="position: absolute; left: 2px; top: 2px; background: white; border-radius: 50%; width: 16px; height: 16px; transition: .2s; box-shadow: 0 1px 2px rgba(0,0,0,.15);" class="peer-checked:translate-x-[16px]"></div>
+                </label>
+            </div>
+
+            {{-- Prompt del Bot --}}
+            <div class="ch-field" style="margin-bottom: 20px;">
+                <label class="ch-label">Prompt Principal (Personalidad y Reglas)</label>
+                <textarea class="ch-input" wire:model="telegramBotPrompt" rows="3" placeholder="Ej: Eres un asistente virtual amigable de la empresa. Nunca inventes precios..." style="font-family: inherit; font-size: 13px; resize: vertical;"></textarea>
+                <div style="font-size: 11px; color: var(--c-sub,#6b7280); margin-top: 4px;">Instrucciones internas para el LLM exclusivas para el canal Telegram.</div>
+            </div>
+
+            {{-- Toggle WooCommerce Store Context --}}
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+                <div>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--c-text,#111);">Compartir Contexto de Tienda (WooCommerce)</div>
+                    <div style="font-size: 12px; color: var(--c-sub,#6b7280); margin-top: 2px;">Permitir al bot de Telegram responder consultas sobre catálogo, precios y métodos de pago extraídos del plugin.</div>
+                </div>
+                <label style="position: relative; display: inline-flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" wire:model="telegramUseStoreContext" class="peer" style="appearance: none; position: absolute; width: 0; height: 0;">
+                    <div style="width: 36px; height: 20px; background: var(--c-border,#e3e6ea); border-radius: 99px; transition: .2s;" class="peer-checked:bg-blue-600"></div>
+                    <div style="position: absolute; left: 2px; top: 2px; background: white; border-radius: 50%; width: 16px; height: 16px; transition: .2s; box-shadow: 0 1px 2px rgba(0,0,0,.15);" class="peer-checked:translate-x-[16px]"></div>
+                </label>
+            </div>
+
+            {{-- FAQ Buttons --}}
+            <div style="padding-top: 16px; border-top: 1px solid var(--c-border,#e3e6ea);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <label class="ch-label">Botones Rápidos (FAQ en Telegram) - Max 6</label>
+                    @if(count($telegramFaqItems) < 6)
+                    <button class="ch-btn ch-btn-outline" wire:click="addTelegramFaq" style="padding: 4px 8px; font-size: 11px;">+ Añadir Botón</button>
+                    @endif
+                </div>
+                <p style="font-size: 11px; color: var(--c-sub,#6b7280); margin: 0 0 12px;">Estos botones aparecerán en la pantalla principal del chat del usuario en Telegram. Al presionarlos, el bot responderá instantáneamente la respuesta exacta configurada aquí sin gastar tokens de IA.</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+                    @foreach($telegramFaqItems as $idx => $faq)
+                        <div style="display: flex; gap: 10px; align-items: flex-start; background: var(--c-bg,#f5f6f8); padding: 12px; border-radius: 8px; border: 1px solid var(--c-border,#e3e6ea);">
+                            <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+                                <input type="text" class="ch-input" wire:model="telegramFaqItems.{{ $idx }}.question" placeholder="Texto del botón (Ej: Métodos de Pago)">
+                                <textarea class="ch-input" wire:model="telegramFaqItems.{{ $idx }}.answer" rows="2" placeholder="Respuesta exacta que dará el bot..." style="font-family: inherit; resize: vertical;"></textarea>
+                            </div>
+                            <button type="button" wire:click="removeTelegramFaq({{ $idx }})" style="background: none; border: none; cursor: pointer; color: #ef4444; padding: 4px;" title="Eliminar FAQ">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                <button class="ch-btn ch-btn-primary" wire:click="saveTelegramConfig" wire:loading.attr="disabled">
+                    Guardar Configuración IA
+                </button>
+            </div>
+        </div>
+        @endif
     </div>
 
     {{-- ── WhatsApp ── --}}
