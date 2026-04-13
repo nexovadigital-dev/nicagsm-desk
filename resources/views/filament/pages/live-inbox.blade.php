@@ -604,7 +604,6 @@ class="nx-inbox" wire:poll.3s>
 @php $attUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($msg->attachment_path); @endphp
 @if(str_starts_with($msg->attachment_type ?? '', 'image/'))<a href="{{ $attUrl }}" target="_blank" style="display:block;margin-bottom:{{ $msg->content ? '6px' : '0' }}"><img src="{{ $attUrl }}" alt="{{ $msg->attachment_name }}" style="max-width:220px;max-height:180px;border-radius:8px;display:block;object-fit:cover"></a>@else<a href="{{ $attUrl }}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 10px;background:rgba(255,255,255,.1);border-radius:6px;text-decoration:none;color:inherit;margin-bottom:{{ $msg->content ? '5px' : '0' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline stroke-linecap="round" stroke-linejoin="round" stroke-width="2" points="14 2 14 8 20 8"/></svg>{{ $msg->attachment_name ?? 'Archivo' }}</a>@endif
 @endif
-@endif
 @php
     $fmtContent = e(trim($msg->content));
     $fmtContent = preg_replace('/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/', '<a href="$2" target="_blank" style="color:var(--nx-accent);text-decoration:underline">$1</a>', $fmtContent);
