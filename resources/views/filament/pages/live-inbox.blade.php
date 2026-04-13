@@ -552,45 +552,16 @@ class="nx-inbox">
                             </svg>
                             <span>{{ $msg->content }}</span>
                             <time style="font-size:10px;color:#92400e;opacity:.6;margin-left:auto;white-space:nowrap">{{ $msg->created_at->format('H:i') }}</time>
-                            {{-- Kebab delete for notes --}}
-                            @if($this->isOrgAdmin())
-                            <button wire:click="deleteMessage({{ $msg->id }})"
-                                    wire:confirm="¿Eliminar esta nota?"
-                                    class="nx-msg__delete-btn"
-                                    title="Eliminar nota">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                            </button>
-                            @endif
                         </div>
                         @continue
                     @endif
 
-                    {{-- ── Wrapper con hover + checkbox + kebab menu ──────────────── --}}
-                    @php $isSelected = in_array($msg->id, $selectedMessageIds); @endphp
-                    <div class="nx-msg-wrap {{ $isSelected ? 'nx-msg-wrap--selected' : '' }}"
+                    {{-- Mensaje normal --}}
+                    <div class="nx-msg-wrap"
                          wire:key="msg-{{ $msg->id }}"
                          x-data="{ hovered: false }"
                          @mouseenter="hovered = true"
                          @mouseleave="hovered = false">
-
-                        {{-- Checkbox (selección) --}}
-                        @if($selectionMode)
-                        <button wire:click="toggleMessageSelection({{ $msg->id }})"
-                                class="nx-msg__check {{ $isSelected ? 'nx-msg__check--on' : '' }}"
-                                title="{{ $isSelected ? 'Deseleccionar' : 'Seleccionar' }}">
-                            @if($isSelected)
-                                <svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14">
-                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            @else
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14">
-                                    <circle cx="12" cy="12" r="9" stroke-width="1.5"/>
-                                </svg>
-                            @endif
-                        </button>
-                        @endif
 
                     <div class="nx-msg {{ $isUser ? 'nx-msg--user' : 'nx-msg--' . $msg->sender_type }}">
 
@@ -600,7 +571,7 @@ class="nx-inbox">
                                 {{ strtoupper(substr($ticket->client_name ?? 'V', 0, 1)) }}
                             </div>
                         @elseif ($msg->sender_type === 'agent')
-                            {{-- Agent avatar — RIGHT (via flex-direction:row-reverse in CSS) --}}
+                            {{-- Agent avatar — RIGHT --}}
                             @if($currentAgentAvatar)
                                 <div class="nx-msg__avatar" style="padding:0;overflow:hidden">
                                     <img src="{{ $currentAgentAvatar }}" alt="A" style="width:100%;height:100%;object-fit:cover;border-radius:50%">
@@ -639,32 +610,6 @@ class="nx-inbox">
                             </time>
                         </div>
 
-                        {{-- Menú kebab (⋮) — visible en hover, oculto en modo selección --}}
-                        @if($this->isOrgAdmin() && !$selectionMode)
-                        <div class="nx-msg__kebab" x-show="hovered" x-cloak
-                             style="position:relative" @click.stop>
-                            <button class="nx-msg__kebab-btn"
-                                    @click.stop="$el.nextElementSibling.classList.toggle('open')"
-                                    title="Opciones">
-                                <svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14">
-                                    <circle cx="12" cy="5" r="1.5"/>
-                                    <circle cx="12" cy="12" r="1.5"/>
-                                    <circle cx="12" cy="19" r="1.5"/>
-                                </svg>
-                            </button>
-                            <div class="nx-msg__kebab-menu" @click.outside="$el.classList.remove('open')">
-                                <button wire:click="deleteMessage({{ $msg->id }})"
-                                        wire:confirm="¿Eliminar este mensaje?"
-                                        @click="$el.closest('.nx-msg__kebab-menu').classList.remove('open')"
-                                        class="nx-msg__kebab-item nx-msg__kebab-item--danger">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                    Eliminar mensaje
-                                </button>
-                            </div>
-                        </div>
-                        @endif
                     </div>{{-- end .nx-msg --}}
                     </div>{{-- end .nx-msg-wrap --}}
                 @empty
@@ -1501,6 +1446,7 @@ class="nx-inbox">
 .nx-avatar-wrap .nx-avatar {
     position: absolute; inset: 0; width: 100%; height: 100%;
     transition: opacity .18s ease, transform .18s ease;
+    margin: 0 !important;  /* cancel any margin from .nx-avatar base class */
 }
 .nx-avatar-cb {
     position: absolute; inset: 0; width: 36px; height: 36px;
@@ -1508,6 +1454,9 @@ class="nx-inbox">
     background: var(--nx-surface, #fff);
     display: flex; align-items: center; justify-content: center;
     transition: opacity .18s ease, transform .18s ease, border-color .15s, background .15s;
+    /* Hidden by default — Alpine shows it on hover / selected */
+    opacity: 0;
+    transform: scale(.85);
 }
 .nx-avatar-cb--on { border-color: #ef4444; background: #ef4444; }
 
