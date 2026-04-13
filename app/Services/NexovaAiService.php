@@ -85,13 +85,28 @@ class NexovaAiService
             return $greetingReply;
         }
 
-        // ── Para Telegram: buscar en memoria local ANTES de llamar IA ────────────
+        // ── Para Telegram: buscar en KB Global estructurada (widget_id IS NULL) ─────
+        // Telegram usa los artículos "Global" de la Base de Conocimiento,
+        // igual que los widgets usan su KB específica + la global.
         if ($ticket->platform === 'telegram' && $org) {
+            // 1. KB Global estructurada (artículos con widget_id = NULL)
+            $globalRagContext = $this->buildRagContext($ticket->organization_id, null);
+            if ($globalRagContext) {
+                $kbAnswerTelegram = $this->tryKbDirectAnswer($ticket, $globalRagContext, null);
+                if ($kbAnswerTelegram !== null) {
+                    sleep(random_int(1, 2));
+                    $org->incrementBotMessageCount();
+                    Log::info("[NexovaBot] Respondido desde KB Global (Telegram) — ticket #{$ticket->id}");
+                    return $kbAnswerTelegram;
+                }
+            }
+
+            // 2. Fallback: texto libre en telegram_config (retrocompatibilidad)
             $localAnswer = $this->tryTelegramLocalKbAnswer($ticket, $org);
             if ($localAnswer !== null) {
                 sleep(random_int(1, 2));
                 $org->incrementBotMessageCount();
-                Log::info("[NexovaBot] Respondido desde memoria local Telegram — ticket #{$ticket->id}");
+                Log::info("[NexovaBot] Respondido desde memoria texto Telegram (legacy) — ticket #{$ticket->id}");
                 return $localAnswer;
             }
         }
@@ -109,14 +124,13 @@ class NexovaAiService
         }
 
         // ── Intentar responder desde la KB (solo si NO hay store_context) ───────
-        $widgetId   = $ticket->widget_id ?: null;
-        $ragContext  = $this->buildRagContext($ticket->organization_id, $widgetId);
-        $kbAnswer = null;
+        $widgetId  = $ticket->widget_id ?: null;
+        $ragContext = $this->buildRagContext($ticket->organization_id, $widgetId);
+        $kbAnswer  = null;
         if ($ragContext && ! $hasStoreCtx) {
             $kbAnswer = $this->tryKbDirectAnswer($ticket, $ragContext, $widgetId);
         }
         if ($kbAnswer !== null) {
-            // Small delay for KB/FAQ answers — avoids feeling robotic/instant
             sleep(random_int(1, 2));
             $org?->incrementBotMessageCount();
             Log::info("[NexovaBot] Respondido desde KB local — ticket #{$ticket->id}");
