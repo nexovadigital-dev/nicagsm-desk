@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Message;
+use App\Models\Organization;
 use App\Models\Ticket;
 use App\Services\OrgMailer;
 use Illuminate\Bus\Queueable;
@@ -16,14 +17,18 @@ class TicketReplyMail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public Organization $org;
+
     public function __construct(
         public Ticket  $ticket,
         public Message $message,
-    ) {}
+    ) {
+        $this->org = $ticket->organization ?? new Organization();
+    }
 
     public function envelope(): Envelope
     {
-        [$fromAddr, $fromName] = OrgMailer::fromFor($this->ticket->organization);
+        [$fromAddr, $fromName] = OrgMailer::fromFor($this->org);
 
         return new Envelope(
             from:    new Address($fromAddr, $fromName),
@@ -34,6 +39,9 @@ class TicketReplyMail extends Mailable
 
     public function content(): Content
     {
-        return new Content(view: 'emails.ticket-reply');
+        return new Content(
+            view: 'emails.ticket-reply',
+            with: ['ticket' => $this->ticket, 'message' => $this->message, 'org' => $this->org],
+        );
     }
 }

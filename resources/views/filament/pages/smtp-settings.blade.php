@@ -220,6 +220,133 @@
             @endif
         </div>
     </div>
+</div>
+
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{--  SECCIÓN IMAP — Recepción de respuestas de clientes por email            --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+<div class="sm-wrap" style="margin-top:0;padding-top:0;border-top:2px solid var(--c-border,#e3e6ea)">
+
+    <h2 style="font-size:18px;font-weight:700;color:var(--c-text,#111827);margin-bottom:4px;letter-spacing:-.02em;padding-top:32px">
+        Buzón de entrada (IMAP)
+    </h2>
+    <p style="font-size:13px;color:var(--c-sub,#6b7280);margin-bottom:28px">
+        Configura el acceso IMAP a tu cuenta de correo para que las respuestas de tus clientes
+        a los emails de tickets se añadan automáticamente al hilo de conversación.
+    </p>
+
+    {{-- ── Cómo funciona ── --}}
+    <div class="sm-section" style="border-top:none;padding-top:0">
+        <div class="sm-section-label">
+            <h3>¿Cómo funciona?</h3>
+            <p>El sistema revisa tu bandeja de entrada cada minuto buscando nuevas respuestas.</p>
+        </div>
+        <div>
+            <div class="sm-notice sm-notice-info">
+                <strong>Flujo automático:</strong><br>
+                1. El cliente responde al email del ticket<br>
+                2. El sistema detecta el número de ticket en el asunto (<code>TKT-00001</code>)<br>
+                3. El mensaje se añade al hilo en el panel<br>
+                4. Si el ticket estaba cerrado, se reabre automáticamente<br><br>
+                <strong>Requisito SMTP:</strong> usa la <strong>misma cuenta</strong> de email tanto para
+                enviar (SMTP) como para recibir (IMAP). Por ejemplo: <code>soporte@tudominio.com</code>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Activar IMAP ── --}}
+    <div class="sm-section">
+        <div class="sm-section-label">
+            <h3>Activar recepción</h3>
+            <p>Habilita el polling IMAP para procesar las respuestas de los clientes.</p>
+        </div>
+        <div>
+            <div class="sm-toggle-row">
+                <div>
+                    <div class="sm-toggle-label">Recibir respuestas por email</div>
+                    <div class="sm-toggle-sub">Las respuestas de clientes se añaden al ticket automáticamente</div>
+                </div>
+                <label class="sm-toggle">
+                    <input type="checkbox" wire:model.live="imapEnabled">
+                    <span class="sm-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Configuración IMAP ── --}}
+    <div class="sm-section">
+        <div class="sm-section-label">
+            <h3>Servidor IMAP</h3>
+            <p>Datos de conexión IMAP de tu proveedor de hosting (cPanel, Hostinger, etc.).</p>
+        </div>
+        <div>
+            @if($imapEnabled)
+            <div class="sm-grid">
+                <div class="sm-field" style="grid-column:1/-1">
+                    <label class="sm-label">Host IMAP</label>
+                    <input type="text" class="sm-input" wire:model="imapHost"
+                           placeholder="mail.tudominio.com  ó  imap.gmail.com">
+                </div>
+                <div class="sm-field">
+                    <label class="sm-label">Puerto</label>
+                    <input type="number" class="sm-input" wire:model="imapPort" placeholder="993">
+                </div>
+                <div class="sm-field">
+                    <label class="sm-label">Cifrado</label>
+                    <select class="sm-select" wire:model="imapEncryption">
+                        <option value="ssl">SSL (puerto 993, recomendado)</option>
+                        <option value="tls">TLS (puerto 143)</option>
+                        <option value="none">Sin cifrado</option>
+                    </select>
+                </div>
+                <div class="sm-field">
+                    <label class="sm-label">Usuario IMAP</label>
+                    <input type="text" class="sm-input" wire:model="imapUsername"
+                           placeholder="soporte@tudominio.com" autocomplete="off">
+                </div>
+                <div class="sm-field">
+                    <label class="sm-label">Contraseña IMAP</label>
+                    <input type="password" class="sm-input" wire:model="imapPassword"
+                           placeholder="••••••••" autocomplete="new-password">
+                </div>
+                <div class="sm-field" style="grid-column:1/-1">
+                    <label class="sm-label">Carpeta / Buzón</label>
+                    <input type="text" class="sm-input" wire:model="imapFolder"
+                           placeholder="INBOX">
+                    <span style="font-size:11px;color:var(--c-sub,#6b7280);margin-top:4px">
+                        Normalmente <code>INBOX</code>. En Gmail con alias puede ser otra carpeta.
+                    </span>
+                </div>
+            </div>
+            @else
+            <div class="sm-notice" style="background:rgba(100,116,139,.07);border:1px solid rgba(100,116,139,.2);color:var(--c-sub,#6b7280)">
+                Activa la recepción IMAP para ver la configuración.
+            </div>
+            @endif
+
+            <div class="sm-actions">
+                <button class="sm-btn sm-btn-primary" wire:click="saveImap" wire:loading.attr="disabled">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Guardar IMAP
+                </button>
+                @if($imapEnabled && !empty($imapHost))
+                <button class="sm-btn sm-btn-ghost" wire:click="testImap" wire:loading.attr="disabled">
+                    <svg wire:loading wire:target="testImap" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12" style="animation:spin 1s linear infinite">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <svg wire:loading.remove wire:target="testImap" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span wire:loading.remove wire:target="testImap">Probar conexión</span>
+                    <span wire:loading wire:target="testImap">Conectando…</span>
+                </button>
+                @endif
+            </div>
+        </div>
+    </div>
 
 </div>
 </x-filament-panels::page>

@@ -30,7 +30,7 @@ class SmtpSettings extends Page
 
     public function getTitle(): string|Htmlable { return ''; }
 
-    // ── Fields ────────────────────────────────────────────────────────────
+    // ── SMTP (envío) ─────────────────────────────────────────────────────────
     public bool   $notificationsEnabled = false;
     public bool   $enabled              = false;
 
@@ -45,7 +45,16 @@ class SmtpSettings extends Page
     public string $testEmail    = '';
     public string $genericEmail = '';
 
-    // ──────────────────────────────────────────────────────────────────────
+    // ── IMAP (recepción) ─────────────────────────────────────────────────────
+    public bool   $imapEnabled    = false;
+    public string $imapHost       = '';
+    public int    $imapPort       = 993;
+    public string $imapEncryption = 'ssl';
+    public string $imapUsername   = '';
+    public string $imapPassword   = '';
+    public string $imapFolder     = 'INBOX';
+
+    // ─────────────────────────────────────────────────────────────────────────
 
     public function mount(): void
     {
@@ -54,9 +63,10 @@ class SmtpSettings extends Page
             return;
         }
 
-        $s = SmtpSetting::forOrg($orgId);
+        $s   = SmtpSetting::forOrg($orgId);
         $org = auth()->user()->organization;
 
+        // SMTP
         $this->notificationsEnabled = (bool) $s->notifications_enabled;
         $this->enabled              = (bool) $s->enabled;
         $this->host                 = $s->host         ?? '';
@@ -67,14 +77,21 @@ class SmtpSettings extends Page
         $this->fromName             = $s->from_name     ?? ($org?->support_name ?: $org?->name ?? '');
         $this->testEmail            = auth()->user()?->email ?? '';
         $this->genericEmail         = $org ? OrgMailer::genericEmail($org) : '';
+
+        // IMAP
+        $this->imapEnabled    = (bool) ($s->imap_enabled  ?? false);
+        $this->imapHost       = $s->imap_host       ?? '';
+        $this->imapPort       = (int) ($s->imap_port ?? 993);
+        $this->imapEncryption = $s->imap_encryption  ?? 'ssl';
+        $this->imapUsername   = $s->imap_username    ?? '';
+        $this->imapFolder     = $s->imap_folder      ?? 'INBOX';
     }
 
+    // ── Guardar SMTP ─────────────────────────────────────────────────────────
     public function save(): void
     {
         $orgId = $this->orgId();
-        if (! $orgId) {
-            return;
-        }
+        if (! $orgId) return;
 
         $s = SmtpSetting::forOrg($orgId);
 
@@ -97,6 +114,72 @@ class SmtpSettings extends Page
         $this->dispatch('nexova-toast', type: 'success', message: 'Configuración SMTP guardada');
     }
 
+    // ── Guardar IMAP ─────────────────────────────────────────────────────────
+    public function saveImap(): void
+    {
+        $orgId = $this->orgId();
+        if (! $orgId) return;
+
+        $s = SmtpSetting::forOrg($orgId);
+
+        $s->update([
+            'imap_enabled'    => $this->imapEnabled,
+            'imap_host'       => trim($this->imapHost),
+            'imap_port'       => (int) $this->imapPort ?: 993,
+            'imap_encryption' => $this->imapEncryption,
+            'imap_username'   => trim($this->imapUsername),
+            'imap_folder'     => trim($this->imapFolder) ?: 'INBOX',
+        ]);
+
+        if (! empty($this->imapPassword)) {
+            $s->update(['imap_password' => trim($this->imapPassword)]);
+            $this->imapPassword = '';
+        }
+
+        $this->dispatch('nexova-toast', type: 'success', message: 'Configuración IMAP guardada');
+    }
+
+    // ── Probar conexión IMAP ─────────────────────────────────────────────────
+    public function testImap(): void
+    {
+        if (! function_exists('imap_open')) {
+            $this->dispatch('nexova-toast', type: 'error', message: 'La extensión PHP IMAP no está instalada en el servidor.');
+            return;
+        }
+
+        $orgId = $this->orgId();
+        if (! $orgId) return;
+
+        $s = SmtpSetting::forOrg($orgId);
+
+        if (empty($s->imap_host) || empty($s->imap_username) || empty($s->imap_password)) {
+            $this->dispatch('nexova-toast', type: 'error', message: 'Completa y guarda la configuración IMAP antes de probar.');
+            return;
+        }
+
+        $enc = match ($s->imap_encryption) {
+            'ssl'  => '/ssl',
+            'tls'  => '/tls',
+            'none' => '/novalidate-cert',
+            default => '/ssl',
+        };
+        $port   = $s->imap_port ?: 993;
+        $folder = $s->imap_folder ?: 'INBOX';
+        $dsn    = "{{$s->imap_host}:{$port}/imap{$enc}}{$folder}";
+
+        $conn = @imap_open($dsn, $s->imap_username, $s->imap_password, 0, 1);
+
+        if ($conn) {
+            $count = imap_num_msg($conn);
+            imap_close($conn);
+            $this->dispatch('nexova-toast', type: 'success', message: "Conexión IMAP exitosa. {$count} mensaje(s) en {$folder}.");
+        } else {
+            $err = imap_last_error() ?: 'Error desconocido';
+            $this->dispatch('nexova-toast', type: 'error', message: "Error IMAP: {$err}");
+        }
+    }
+
+    // ── Probar SMTP ──────────────────────────────────────────────────────────
     public function sendTest(): void
     {
         $to = trim($this->testEmail);
@@ -106,14 +189,11 @@ class SmtpSettings extends Page
         }
 
         $orgId = $this->orgId();
-        if (! $orgId) {
-            return;
-        }
+        if (! $orgId) return;
 
         $org  = auth()->user()->organization;
         $smtp = SmtpSetting::forOrg($orgId);
 
-        // Bloquear si SMTP propio está activado pero incompleto
         if ($smtp->enabled) {
             if (empty($smtp->host) || empty($smtp->username) || empty($smtp->from_address)) {
                 $this->dispatch('nexova-toast', type: 'error', message: 'Completa y guarda la configuración SMTP antes de hacer una prueba.');

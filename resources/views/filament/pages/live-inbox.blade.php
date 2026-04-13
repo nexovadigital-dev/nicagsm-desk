@@ -135,7 +135,7 @@ x-init="
         this.prevTicketCount = currentCount;
     }
 }"
-@nexova-new-message.window="$wire.$refresh().then(() => { const el = document.querySelector('[data-inbox-count]'); checkNewTickets(el ? parseInt(el.dataset.inboxCount) : 0); })"
+@nexova-new-message.window="$wire.$refresh().then(() => { const el = document.querySelector('[data-inbox-count]'); if (typeof $data !== 'undefined' && $data.checkNewTickets) $data.checkNewTickets(el ? parseInt(el.dataset.inboxCount) : 0); })"
 class="nx-inbox" wire:poll.3s>
 
     {{-- ═══════════════════════════

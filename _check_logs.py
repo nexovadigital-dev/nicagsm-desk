@@ -14,16 +14,14 @@ def run(cmd):
     if out: print(out)
     if err: print('[ERR]', err)
 
-print('==> git pull...')
-run(f'cd {base} && git pull origin main 2>&1')
+print('=== PHP VERSION ===')
+run('php -v')
 
-print('==> optimize:clear...')
-run(f'cd {base} && php artisan config:clear 2>&1')
-run(f'cd {base} && php artisan route:clear 2>&1')
-run(f'cd {base} && php artisan view:clear 2>&1')
-run(f'cd {base} && php artisan cache:clear 2>&1')
-run(f'cd {base} && php artisan config:cache 2>&1')
-run(f'cd {base} && php artisan route:cache 2>&1')
+print('\n=== LAST 150 LINES LARAVEL LOG ===')
+run(f'tail -n 150 {base}/storage/logs/laravel.log')
+
+print('\n=== GIT LOG (last 5) ===')
+run(f'cd {base} && git log --oneline -5')
 
 c.close()
-print('DEPLOY DONE')
+print('\nDONE')

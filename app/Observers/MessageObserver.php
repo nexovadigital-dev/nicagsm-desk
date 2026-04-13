@@ -31,10 +31,11 @@ class MessageObserver
             $mailerName = OrgMailer::mailerNameFor($org);
             $mailable   = new TicketReplyMail($ticket, $message);
 
+            // Use ->send() (synchronous) — no queue worker required on shared hosting
             if ($mailerName) {
-                Mail::mailer($mailerName)->to($ticket->client_email)->queue($mailable);
+                Mail::mailer($mailerName)->to($ticket->client_email)->send($mailable);
             } else {
-                Mail::to($ticket->client_email)->queue($mailable);
+                Mail::to($ticket->client_email)->send($mailable);
             }
         } catch (\Throwable $e) {
             Log::error("TicketReplyMail failed for ticket #{$ticket->id}: {$e->getMessage()}");

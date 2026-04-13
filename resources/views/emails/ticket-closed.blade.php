@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ticket #{{ $ticket->ticket_number }} resuelto</title>
+@php
+    $accentColor = $org->accent_color ?? '#7c3aed';
+    $orgName     = $org->name ?? 'Soporte';
+    $tz          = $org->timezone ?? 'America/Managua';
+    $closedAt    = \Carbon\Carbon::now($tz)->format('d/m/Y H:i');
+@endphp
 <style>
   body { margin:0;padding:0;background:#f5f6f8;font-family:'Inter',-apple-system,sans-serif;color:#1f2937; }
   .wrap { max-width:580px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08); }
@@ -23,7 +29,6 @@
   .survey-link { display:inline-block;background:#111827;color:#f8fafc;text-decoration:none;border-radius:8px;padding:11px 28px;font-size:14px;font-weight:600;letter-spacing:.01em; }
   .survey-link:hover { background:#0f172a; }
   .footer { padding:16px 32px;background:#f9fafb;border-top:1px solid #f3f4f6;font-size:11px;color:#9ca3af;text-align:center; }
-  .resolved-icon { width:44px;height:44px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:12px; }
 </style>
 </head>
 <body>
@@ -49,7 +54,7 @@
 
     <div class="field">
       <label>Fecha de cierre</label>
-      <p>{{ now()->format('d/m/Y H:i') }}</p>
+      <p>{{ $closedAt }}</p>
     </div>
 
     <div class="divider"></div>
@@ -62,7 +67,7 @@
       <div class="stars">
         @for($i = 1; $i <= 5; $i++)
           <a href="{{ url('/survey/' . $ticket->ticket_reply_token . '?rating=' . $i) }}"
-             class="star-btn" title="{{ $i }} estrella{{ $i > 1 ? 's' : '' }}">{{ $i <= 3 ? '⭐' : '⭐' }}</a>
+             class="star-btn" title="{{ $i }} estrella{{ $i > 1 ? 's' : '' }}">⭐</a>
         @endfor
       </div>
 
@@ -73,7 +78,7 @@
     </div>
   </div>
   <div class="footer">
-    Ticket {{ $ticket->ticket_number }} · Si tienes más dudas, abre un nuevo ticket · Nexova Desk
+    Ticket {{ $ticket->ticket_number }} · {{ $orgName }} · Si tienes más dudas, abre un nuevo ticket
   </div>
 </div>
 </body>

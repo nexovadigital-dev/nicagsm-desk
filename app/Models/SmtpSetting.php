@@ -10,16 +10,22 @@ class SmtpSetting extends Model
 {
     protected $fillable = [
         'organization_id',
+        // ── SMTP (envío) ──────────────────────────────────────────
         'host', 'port', 'encryption', 'username', 'password',
         'from_address', 'from_name',
         'notifications_enabled',
         'enabled',
+        // ── IMAP (recepción — respuestas de clientes por email) ───
+        'imap_enabled', 'imap_host', 'imap_port',
+        'imap_encryption', 'imap_username', 'imap_password', 'imap_folder',
     ];
 
     protected $casts = [
         'notifications_enabled' => 'boolean',
         'enabled'               => 'boolean',
         'port'                  => 'integer',
+        'imap_enabled'          => 'boolean',
+        'imap_port'             => 'integer',
     ];
 
     protected $hidden = ['password'];

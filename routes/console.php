@@ -8,8 +8,9 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Revisar respuestas de email a tickets cada 5 minutos
-Schedule::command('nexova:check-email-replies')->everyFiveMinutes();
+// Procesar respuestas de email entrantes (IMAP) — inyecta mensajes de clientes a tickets
+Schedule::command('tickets:process-inbound')->everyMinute()->withoutOverlapping();
+
 
 // Sincronizar sistema externo cada hora
 Schedule::command('nexova:sync-external')->hourly();

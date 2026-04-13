@@ -4,14 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ticket #{{ $ticket->ticket_number }}</title>
+@php
+    $accentColor = $org->accent_color ?? '#7c3aed';
+    $orgName     = $org->name ?? 'Soporte';
+    $tz          = $org->timezone ?? 'America/Managua';
+    $openedAt    = $ticket->ticket_opened_at
+        ? \Carbon\Carbon::parse($ticket->ticket_opened_at)->setTimezone($tz)->format('d/m/Y H:i')
+        : \Carbon\Carbon::now($tz)->format('d/m/Y H:i');
+@endphp
 <style>
   body { margin: 0; padding: 0; background: #f5f6f8; font-family: 'Inter', -apple-system, sans-serif; color: #1f2937; }
   .wrap { max-width: 580px; margin: 32px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
-  .header { background: #7c3aed; padding: 28px 32px; }
+  .header { background: {{ $accentColor }}; padding: 28px 32px; }
   .header h1 { color: #fff; margin: 0; font-size: 20px; font-weight: 700; }
   .header p { color: rgba(255,255,255,.8); margin: 6px 0 0; font-size: 13px; }
   .body { padding: 28px 32px; }
-  .ticket-badge { display: inline-block; background: #f3f0ff; color: #7c3aed; border: 1px solid #ddd6fe; border-radius: 99px; padding: 4px 14px; font-size: 12px; font-weight: 700; margin-bottom: 16px; }
+  .ticket-badge { display: inline-block; background: #f3f0ff; color: {{ $accentColor }}; border: 1px solid #ddd6fe; border-radius: 99px; padding: 4px 14px; font-size: 12px; font-weight: 700; margin-bottom: 16px; }
   .field { margin-bottom: 14px; }
   .field label { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: 4px; }
   .field p { font-size: 14px; color: #111827; margin: 0; }
@@ -49,7 +57,7 @@
 
     <div class="field">
       <label>Fecha de apertura</label>
-      <p>{{ $ticket->ticket_opened_at?->format('d/m/Y H:i') ?? now()->format('d/m/Y H:i') }}</p>
+      <p>{{ $openedAt }}</p>
     </div>
 
     <div class="divider"></div>
@@ -60,7 +68,7 @@
     </div>
   </div>
   <div class="footer">
-    Ticket {{ $ticket->ticket_number }} · Nexova Chat · Este es un correo automático
+    Ticket {{ $ticket->ticket_number }} · {{ $orgName }} · Este es un correo automático
   </div>
 </div>
 </body>
