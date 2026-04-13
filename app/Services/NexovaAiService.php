@@ -373,6 +373,7 @@ class NexovaAiService
         $lines[] = '';
         $lines[] = 'Cuando el cliente pregunte por productos, precios o disponibilidad, usa la información de arriba.';
         $lines[] = 'Si el cliente pregunta por un producto que no aparece en el catálogo, dile que puede verlo en la tienda o hablar con un agente.';
+        $lines[] = 'MUY IMPORTANTE SOBRE PRECIOS: Si el precio es 0.00, NO digas que es gratis. Significa que es un servicio variable (ej: depende de la duración o modelo). Dile al cliente que el precio depende de la variación elegida y provéele obligatoriamente el enlace con formato Markdown [Ver Opciones](url).';
 
         return implode("\n", $lines);
     }
@@ -648,7 +649,8 @@ class NexovaAiService
                 . "(2) NO inventes datos, precios, horarios ni información que no tengas. "
                 . "(3) Si el cliente pregunta algo fuera del ecosistema de {$botName}, indícale amablemente que no tienes esa información y ofécele hablar con un agente humano. "
                 . "(4) Responde en el idioma del cliente (español o inglés). "
-                . "(5) Sé amable, directo y conciso. No uses formato Markdown.";
+                . "(5) Sé amable, directo y conciso. No uses formato Markdown, EXCEPTO para enlaces. "
+                . "(6) MUY IMPORTANTE: Cuando proporciones un enlace a un producto o servicio, SIEMPRE usa el formato Markdown exacto [Nombre del Producto](https://url). No pongas la URL suelta en el texto. Esto es para crear botones interactivos.";
         } elseif ($widget) {
             $botName = $widget->bot_name ?: $botName;
             $customPrompt = trim($widget->bot_system_prompt ?? '');

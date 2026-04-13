@@ -154,13 +154,36 @@ class TelegramWebhookController extends Controller
             return;
         }
 
+        // Detectar links en formato Markdown: [Texto](URL) y convertirlos a botones Inline
+        $inlineKeyboard = [];
+        if (preg_match_all('/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/', $text, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                // Agregar botón en una nueva fila
+                $inlineKeyboard[] = [
+                    ['text' => $match[1], 'url' => $match[2]]
+                ];
+                // Limpiar el enlace markdown puro del texto, o reemplazarlo por el texto solo
+                // Reemplazamos "[Texto](url)" por "Texto" para que no quede raro en el texto principal
+                $text = str_replace($match[0], '<b>' . $match[1] . '</b>', $text);
+            }
+        }
+
         $payload = [
             'chat_id'    => $chatId,
-            'text'       => self::stripMarkdown($text), // Nos aseguramos de limpiar markdown
+            'text'       => self::stripMarkdown($text), // Limpiar markdown restante (negritas, etc)
             'parse_mode' => 'HTML',
         ];
 
-        if ($replyMarkup) {
+        // Si hay botones generados, añadimos el inline keyboard
+        if (!empty($inlineKeyboard)) {
+            // Si ya existía un replyMarkup (ej: FAQ keyboard), Telegram no permite enviar ambos en el mismo payload directamente a veces,
+            // pero el "reply_markup" de la API soporta inline_keyboard vs keyboard.
+            // Para Inline buttons, el formato es ['inline_keyboard' => $inlineKeyboard]
+            $payload['reply_markup'] = ['inline_keyboard' => $inlineKeyboard];
+            
+            // Nota: Si teníamos un teclado tradicional de FAQ ($replyMarkup), se anulará para ESSTE mensaje y mostrará los botones de enlace. 
+            // Esto está bien porque los enlaces son prioritarios como Action Buttons.
+        } elseif ($replyMarkup) {
             $payload['reply_markup'] = $replyMarkup;
         }
 
