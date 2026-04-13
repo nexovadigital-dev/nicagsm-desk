@@ -337,13 +337,27 @@ class LiveInbox extends Page
             'attachment_type' => $attachmentType,
         ]);
 
-        // Reenviar al usuario en Telegram si el ticket viene de ese canal
-        if ($ticket->platform === 'telegram' && $ticket->telegram_id && $content) {
-            TelegramWebhookController::sendMessage(
-                $ticket->organization,
-                $ticket->telegram_id,
-                $content
-            );
+        // ── Enviar al canal Telegram ────────────────────────────────────────
+        if ($ticket->platform === 'telegram' && $ticket->telegram_id) {
+            $isImage = $attachmentPath && $attachmentType
+                && in_array($attachmentType, ['image/jpeg','image/png','image/gif','image/webp']);
+
+            if ($isImage) {
+                // Imagen: enviar como foto con el texto como caption
+                TelegramWebhookController::sendPhoto(
+                    $ticket->organization,
+                    $ticket->telegram_id,
+                    $attachmentPath,
+                    $content ?: null
+                );
+            } elseif ($content) {
+                // Solo texto
+                TelegramWebhookController::sendMessage(
+                    $ticket->organization,
+                    $ticket->telegram_id,
+                    $content
+                );
+            }
         }
 
         $this->replyContent = '';
@@ -531,6 +545,17 @@ class LiveInbox extends Page
 
         $ticket = $this->findOrgTicket($this->selectedTicketId);
         if (! $ticket || $ticket->status === 'closed') return;
+
+        // Notificar en Telegram ANTES de cerrar
+        if ($ticket->platform === 'telegram' && $ticket->telegram_id) {
+            $agentName = $ticket->assigned_agent ?? 'El agente';
+            TelegramWebhookController::sendMessage(
+                $ticket->organization,
+                $ticket->telegram_id,
+                "{$agentName} ha cerrado esta conversacion. Si necesitas ayuda nuevamente, " .
+                "puedes escribirnos cuando quieras. Estamos para servirte."
+            );
+        }
 
         $ticket->update(['status' => 'closed']);
 

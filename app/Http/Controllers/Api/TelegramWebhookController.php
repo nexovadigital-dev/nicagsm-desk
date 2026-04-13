@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class TelegramWebhookController extends Controller
 {
@@ -27,19 +28,31 @@ class TelegramWebhookController extends Controller
 
         $update  = $request->all();
         $message = $update['message'] ?? $update['edited_message'] ?? null;
-        if (! $message || ! isset($message['text'])) {
+        if (! $message) {
             return response()->json(['ok' => true]);
         }
 
         $chatId   = $message['chat']['id'];
-        $text     = trim($message['text']);
-        $fromUser = $message['from'];
+        $fromUser = $message['from'] ?? [];
         $name     = trim(($fromUser['first_name'] ?? '') . ' ' . ($fromUser['last_name'] ?? '')) ?: 'Usuario Telegram';
-
         $keyboard = self::buildFaqKeyboard($org);
 
+        // ── Ignorar multimedia entrante (fotos, stickers, docs, voz) ────────────
+        if (isset($message['photo']) || isset($message['sticker']) || isset($message['document']) || isset($message['voice']) || isset($message['video'])) {
+            self::sendMessage($org, $chatId,
+                'Por ahora solo proceso mensajes de texto. Escribe tu consulta o selecciona una opcion del menu.'
+            , $keyboard);
+            return response()->json(['ok' => true]);
+        }
+
+        if (! isset($message['text'])) {
+            return response()->json(['ok' => true]);
+        }
+
+        $text = trim($message['text']);
+
         if (str_starts_with($text, '/start')) {
-            self::sendMessage($org, $chatId, "Hola {$name}, soy el asistente de {$org->name}. ¿En qué puedo ayudarte?", $keyboard);
+            self::sendMessage($org, $chatId, "Hola {$name}, soy el asistente de {$org->name}. En que puedo ayudarte?", $keyboard);
             return response()->json(['ok' => true]);
         }
 
@@ -187,5 +200,46 @@ class TelegramWebhookController extends Controller
         // Intentar agregar el teclado del FAQ incluso en respuestas misceláneas
         $keyboard = self::buildFaqKeyboard($org);
         self::sendMessage($org, $chatId, $text, $keyboard);
+    }
+    /**
+     * Envía una imagen/foto al usuario de Telegram.
+     * Se usa cuando el agente adjunta una imagen desde el panel.
+     */
+    public static function sendPhoto(
+        Organization|int $org,
+        string|int $chatId,
+        string $attachmentPath,
+        ?string $caption = null
+    ): void {
+        if (is_int($org)) {
+            $org = Organization::find($org);
+        }
+
+        if (! $org || ! $org->telegram_bot_token) return;
+
+        try {
+            $token = decrypt($org->telegram_bot_token);
+        } catch (\Throwable) {
+            Log::error("Telegram sendPhoto: error desencriptando token org #{$org->id}");
+            return;
+        }
+
+        // Construir URL publica de la imagen
+        $photoUrl = url(Storage::url($attachmentPath));
+
+        $payload = [
+            'chat_id' => $chatId,
+            'photo'   => $photoUrl,
+        ];
+
+        if ($caption) {
+            $payload['caption'] = mb_substr($caption, 0, 1024); // limite Telegram
+        }
+
+        try {
+            Http::timeout(30)->post("https://api.telegram.org/bot{$token}/sendPhoto", $payload);
+        } catch (\Exception $e) {
+            Log::error("Telegram sendPhoto error: {$e->getMessage()}");
+        }
     }
 }
