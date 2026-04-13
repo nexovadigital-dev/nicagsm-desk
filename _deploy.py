@@ -17,6 +17,9 @@ def run(cmd):
 print('==> git pull...')
 run(f'cd {base} && git pull origin main 2>&1')
 
+print('==> migrate...')
+run(f'cd {base} && php artisan migrate --force 2>&1')
+
 print('==> optimize:clear...')
 run(f'cd {base} && php artisan config:clear 2>&1')
 run(f'cd {base} && php artisan route:clear 2>&1')

@@ -279,7 +279,7 @@ class="nx-inbox" wire:poll.3s>
                          wire:click="selectTicket({{ $ticket->id }})"
                          style="flex:1;min-width:0;cursor:pointer">
                         <div class="nx-ticket__top">
-                            <span class="nx-ticket__name">{{ $ticket->conversation_name ?? $ticket->client_name }}</span>
+                            <span class="nx-ticket__name">{{ $ticket->conversation_name ?? $ticket->client_name }}@if($ticket->is_support_ticket) <span style="font-weight:400;opacity:.6;font-size:.9em">(Ticket)</span>@elseif($ticket->platform === 'telegram') <span style="font-weight:400;opacity:.6;font-size:.9em">(Telegram)</span>@endif</span>
                             <span class="nx-ticket__time">{{ $ticket->updated_at->diffForHumans(null, true, true) }}</span>
                         </div>
                         <div class="nx-ticket__bottom">
