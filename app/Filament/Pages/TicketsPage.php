@@ -134,16 +134,16 @@ class TicketsPage extends Page
 
     public function createTicket(): void
     {
-        $subject = trim($this->newSubject);
+        $subject = trim($this->newSubject ?? '');
         if (! $subject) return;
 
         $user  = Filament::auth()->user();
-        $orgId = $user?->organization_id;
+        $orgId = $user && $user->organization_id ? (int) $user->organization_id : null;
 
         // Resolve name / email from selected contact or new form
-        $name  = trim($this->newClientName)  ?: null;
-        $email = trim($this->newClientEmail) ?: null;
-        $phone = trim($this->newClientPhone) ?: null;
+        $name  = trim($this->newClientName ?? '')  ?: null;
+        $email = trim($this->newClientEmail ?? '') ?: null;
+        $phone = trim($this->newClientPhone ?? '') ?: null;
 
         // Contact linking
         $contactId = $this->newContactId;
@@ -154,7 +154,7 @@ class TicketsPage extends Page
 
         // Generate ticket number
         $seq    = Ticket::where('is_support_ticket', true)->count() + 1;
-        $number = 'TKT-' . str_pad($seq, 5, '0', STR_PAD_LEFT);
+        $number = 'TKT-' . str_pad((string) $seq, 5, '0', STR_PAD_LEFT);
         $token  = Str::random(32);
 
         $ticket = Ticket::create([
@@ -174,7 +174,7 @@ class TicketsPage extends Page
         ]);
 
         // Optional opening message from agent
-        $body = trim($this->newMessage);
+        $body = trim($this->newMessage ?? '');
         if ($body) {
             Message::create([
                 'ticket_id'   => $ticket->id,
