@@ -43,14 +43,12 @@ class NexovaAiService
     public function generateReply(Ticket $ticket): string
     {
         $org = $ticket->organization_id ? $ticket->organization : null;
+        $widget = $ticket->widget_id ? \App\Models\ChatWidget::find($ticket->widget_id) : null;
 
         // ── Verificar si el bot IA está habilitado en este widget ─────────────
-        if ($ticket->widget_id) {
-            $widget = \App\Models\ChatWidget::find($ticket->widget_id);
-            if ($widget && ! $widget->bot_enabled) {
-                Log::info("[NexovaBot] Bot deshabilitado en widget #{$ticket->widget_id} — ticket #{$ticket->id}");
-                return 'El asistente automático está desactivado. Un agente te atenderá pronto.' . self::ESCALATE_FLAG;
-            }
+        if ($widget && ! $widget->bot_enabled) {
+            Log::info("[NexovaBot] Bot deshabilitado en widget #{$ticket->widget_id} — ticket #{$ticket->id}");
+            return 'El asistente automático está desactivado. Un agente te atenderá pronto.' . self::ESCALATE_FLAG;
         }
 
         // ── Límite de mensajes por sesión ──────────────────────────────────────
