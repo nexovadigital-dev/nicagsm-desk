@@ -160,7 +160,7 @@ class TicketsPage extends Page
         $ticket = Ticket::create([
             'organization_id'    => $orgId,
             'contact_id'         => $contactId,
-            'platform'           => 'email',
+            'platform'           => 'web',
             'status'             => 'human',
             'assigned_agent'     => $user?->name,
             'client_name'        => $name  ?? 'Cliente',
@@ -185,12 +185,20 @@ class TicketsPage extends Page
 
         // Send opening email to client
         if ($email) {
-            $org        = $ticket->organization;
-            $mailerName = OrgMailer::mailerNameFor($org);
-            $mailable   = new SupportTicketMail($ticket);
-            $mailerName
-                ? Mail::mailer($mailerName)->to($email)->send($mailable)
-                : Mail::to($email)->send($mailable);
+            $ticket->loadMissing('organization');
+            $org = $ticket->organization;
+
+            if ($org) {
+                try {
+                    $mailerName = OrgMailer::mailerNameFor($org);
+                    $mailable   = new SupportTicketMail($ticket);
+                    $mailerName
+                        ? Mail::mailer($mailerName)->to($email)->send($mailable)
+                        : Mail::to($email)->send($mailable);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('[TicketsPage] Error enviando email de ticket: ' . $e->getMessage());
+                }
+            }
         }
 
         $this->showNewModal = false;
@@ -206,13 +214,20 @@ class TicketsPage extends Page
 
         // Send closed notification + survey link if ticket has email
         if ($ticket->is_support_ticket && $ticket->client_email && $ticket->ticket_reply_token) {
-            $fresh      = $ticket->fresh();
-            $org        = $fresh->organization;
-            $mailerName = OrgMailer::mailerNameFor($org);
-            $mailable   = new TicketClosedMail($fresh);
-            $mailerName
-                ? Mail::mailer($mailerName)->to($ticket->client_email)->send($mailable)
-                : Mail::to($ticket->client_email)->send($mailable);
+            $fresh = $ticket->fresh(['organization']);
+            $org   = $fresh?->organization;
+
+            if ($org) {
+                try {
+                    $mailerName = OrgMailer::mailerNameFor($org);
+                    $mailable   = new TicketClosedMail($fresh);
+                    $mailerName
+                        ? Mail::mailer($mailerName)->to($ticket->client_email)->send($mailable)
+                        : Mail::to($ticket->client_email)->send($mailable);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('[TicketsPage] Error enviando TicketClosedMail: ' . $e->getMessage());
+                }
+            }
         }
     }
 

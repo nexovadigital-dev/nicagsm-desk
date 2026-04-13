@@ -648,13 +648,20 @@ class LiveInbox extends Page
 
         // Send closed notification + survey link
         if ($ticket->is_support_ticket && $ticket->client_email && $ticket->ticket_reply_token) {
-            $fresh      = $ticket->fresh();
-            $org        = $fresh->organization;
-            $mailerName = OrgMailer::mailerNameFor($org);
-            $mailable   = new TicketClosedMail($fresh);
-            $mailerName
-                ? Mail::mailer($mailerName)->to($ticket->client_email)->send($mailable)
-                : Mail::to($ticket->client_email)->send($mailable);
+            $fresh = $ticket->fresh(['organization']);
+            $org   = $fresh?->organization;
+
+            if ($org) {
+                try {
+                    $mailerName = OrgMailer::mailerNameFor($org);
+                    $mailable   = new TicketClosedMail($fresh);
+                    $mailerName
+                        ? Mail::mailer($mailerName)->to($ticket->client_email)->send($mailable)
+                        : Mail::to($ticket->client_email)->send($mailable);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('[LiveInbox] Error enviando TicketClosedMail: ' . $e->getMessage());
+                }
+            }
         }
 
         $this->selectedTicketId = null;
@@ -903,13 +910,20 @@ class LiveInbox extends Page
         ]);
 
         if ($email) {
-            $fresh      = $ticket->fresh();
-            $org        = $fresh->organization;
-            $mailerName = OrgMailer::mailerNameFor($org);
-            $mailable   = new SupportTicketMail($fresh);
-            $mailerName
-                ? Mail::mailer($mailerName)->to($email)->send($mailable)
-                : Mail::to($email)->send($mailable);
+            $fresh = $ticket->fresh(['organization']);
+            $org   = $fresh?->organization;
+
+            if ($org) {
+                try {
+                    $mailerName = OrgMailer::mailerNameFor($org);
+                    $mailable   = new SupportTicketMail($fresh);
+                    $mailerName
+                        ? Mail::mailer($mailerName)->to($email)->send($mailable)
+                        : Mail::to($email)->send($mailable);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('[LiveInbox] Error enviando SupportTicketMail: ' . $e->getMessage());
+                }
+            }
         }
 
         Message::create([
