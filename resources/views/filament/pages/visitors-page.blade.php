@@ -142,6 +142,10 @@ $visitorTimes = $visitors->pluck('first_seen_at', 'id')->map(fn($dt) => $dt?->ti
 .sk-text { height:11px; border-radius:4px; display:inline-block; }
 .sk-pill { height:18px; border-radius:99px; display:inline-block; }
 
+/* ── Logotipos ── */
+.vp-icon-svg { width:13px; height:13px; vertical-align:text-bottom; margin-right:4px; }
+.vp-flag-icon { font-size:14px; margin-right:4px; vertical-align:middle; line-height:1 }
+
 /* ── Empty ── */
 .vp-empty { text-align:center; padding:64px 24px; color:var(--nx-muted); }
 .vp-empty-icon { margin:0 auto 14px; display:flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:12px; background:var(--nx-surf2); }
@@ -273,7 +277,7 @@ window._vp_times = @json($visitorTimes);
                     const h = Math.floor(secs / 3600);
                     const m = Math.floor((secs % 3600) / 60);
                     const s = secs % 60;
-                    el.textContent = (h > 0 ? String(h).padStart(2,'0') + ':' : '') +
+                    el.textContent = String(h).padStart(2,'0') + ':' +
                         String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
                 });
             }
@@ -380,6 +384,30 @@ window._vp_times = @json($visitorTimes);
         }
 
         $firstSeenTs = $visitor->first_seen_at?->timestamp ?? 0;
+
+        // Browsers & OS SVGs
+        $browserIcons = [
+            'Chrome'  => '<svg class="vp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><line x1="21.17" y1="8" x2="12" y2="8"></line><line x1="3.95" y1="6.06" x2="8.54" y2="14"></line><line x1="10.88" y1="21.94" x2="15.46" y2="14"></line></svg>',
+            'Firefox' => '<svg class="vp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.52 19c.64-2.2 1.84-3 3.22-3h4.62c1.46 0 2.76 1.34 2.76 2.87V19.4c0 .32-.26.6-.58.6H5.43c-.47 0-.74-.53-.47-.9l.56-.7zM12 22v-3M9 22v-3M15 22v-3"/><path d="M11.96 4C7.57 4 4 7.58 4 12c0 2.22.92 4.23 2.4 5.67"/><path d="M19.78 6.5C18.66 4.98 16.96 4 15 4c-3.1 0-5.7 2.3-6 5.3-.06.6.43 1.1 1.03 1.1h0c.47 0 .88-.34.98-.8.36-1.74 1.9-3.05 3.75-3.05 1.5 0 2.84.9 3.51 2.21l.3.61c.4 1.25-.09 2.65-1.2 3.25l-.76.42A3.08 3.08 0 0 0 15 15.6v0c0 1.66 1.35 3.02 3.02 3.04a7.96 7.96 0 0 0 3.71-1.85 7.98 7.98 0 0 0 .5-13Z"/></svg>',
+            'Safari'  => '<svg class="vp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>',
+            'Edge'    => '<svg class="vp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V7a5 5 0 0 1 10 0v4"/><path d="M12 11h8v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V11Z"/><path d="M12 11v11"/></svg>',
+        ];
+
+        $osIcons = [
+            'Windows' => '<svg class="vp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>',
+            'macOS'   => '<svg class="vp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 1.44S8.22 5 6 5a5.2 5.2 0 0 0-5 5.23c0 4.22 3 12.22 6 12.22 1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/></svg>',
+            'iOS'     => '<svg class="vp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>',
+            'Android' => '<svg class="vp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12h.01M16 12h.01M5 16h14a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2ZM5 8v-.5a7 7 0 0 1 14 0V8"/></svg>',
+            'Linux'   => '<svg class="vp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2A4 4 0 0 0 8 6v4a8 8 0 0 0 8 0V6a4 4 0 0 0-4-4Z"/><path d="M16 10s0 2.5-4 2.5S8 10 8 10"/><path d="M5 21a3 3 0 0 1-2-1.5S2 16 8 16c2 0 2.5 1.5 2.5 1.5"/></svg>',
+        ];
+
+        // Maps English names from IP API to flags
+        $flags = ['Colombia'=>'🇨🇴','Mexico'=>'🇲🇽','Argentina'=>'🇦🇷','Peru'=>'🇵🇪','Chile'=>'🇨🇱','Venezuela'=>'🇻🇪','Ecuador'=>'🇪🇨',
+                  'Bolivia'=>'🇧🇴','Paraguay'=>'🇵🇾','Uruguay'=>'🇺🇾','Spain'=>'🇪🇸','United States'=>'🇺🇸','Costa Rica'=>'🇨🇷',
+                  'Panama'=>'🇵🇦','Nicaragua'=>'🇳🇮','Honduras'=>'🇭🇳','El Salvador'=>'🇸🇻','Guatemala'=>'🇬🇹','Cuba'=>'🇨🇺',
+                  'Dominican Republic'=>'🇩🇴','Puerto Rico'=>'🇵🇷','Brazil'=>'🇧🇷','Canada'=>'🇨🇦','United Kingdom'=>'🇬🇧'];
+        $countryEmoji = $visitor->country ? ($flags[$visitor->country] ?? '🌎') : '🌎';
+
     @endphp
     <tr wire:key="v-{{ $visitor->id }}" data-vid="{{ $visitor->id }}">
 
@@ -434,15 +462,14 @@ window._vp_times = @json($visitorTimes);
         {{-- Dispositivo --}}
         <td>
             <div class="vp-device-icon">
-                @if($isMobile)
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12" style="color:var(--nx-muted)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                @else
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12" style="color:var(--nx-muted)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                @endif
+                {!! $browserIcons[$browserLabel] ?? '<svg class="vp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>' !!}
                 <span class="vp-device" style="font-weight:400">{{ $browserLabel ?? '—' }}</span>
             </div>
             @if($osLabel)
-            <div class="vp-device-sub">{{ $osLabel }}</div>
+            <div class="vp-device-sub" style="display:flex;align-items:center;gap:3px;margin-top:3px">
+                {!! $osIcons[$osLabel] ?? '<svg class="vp-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px;height:10px"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>' !!}
+                {{ $osLabel }}
+            </div>
             @endif
         </td>
 
@@ -465,18 +492,20 @@ window._vp_times = @json($visitorTimes);
 
         {{-- Ubicación --}}
         <td>
-            <span class="vp-location">
+            <span class="vp-location" style="display:flex;align-items:center;">
                 @if($visitor->country)
+                    <span class="vp-flag-icon">{{ $countryEmoji }}</span>
                     {{ $visitor->country }}{{ $visitor->city ? ', '.$visitor->city : '' }}
                 @else
-                    <span style="color:var(--nx-muted)">—</span>
+                    <span class="vp-flag-icon">🌎</span>
+                    <span style="color:var(--nx-muted)">Desconocido</span>
                 @endif
             </span>
         </td>
 
         {{-- Tiempo HH:MM:SS contador en vivo --}}
         <td>
-            <span class="vp-timer" data-timer="{{ $firstSeenTs }}">00:00</span>
+            <span class="vp-timer" data-timer="{{ $firstSeenTs }}">00:00:00</span>
         </td>
 
         {{-- Acciones --}}
