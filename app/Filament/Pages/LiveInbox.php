@@ -148,6 +148,10 @@ class LiveInbox extends Page
     public array $duplicateContact   = [];   // {id, name, email} of existing contact found
     public array $pendingSaveData    = [];   // data waiting for resolution
 
+    // ── Selección y eliminación de mensajes ───────────────────────────────────
+    public bool  $selectionMode      = false;
+    public array $selectedMessageIds = [];
+
     // -------------------------------------------------------------------------
     // Datos
     // -------------------------------------------------------------------------
@@ -280,8 +284,11 @@ class LiveInbox extends Page
 
     public function selectTicket(int $id): void
     {
-        $this->selectedTicketId = $id;
-        $this->replyContent     = '';
+        $this->selectedTicketId  = $id;
+        $this->replyContent      = '';
+        // Reset selection mode when switching tickets
+        $this->selectionMode     = false;
+        $this->selectedMessageIds = [];
 
         // Cargar valores actuales del ticket en los controles
         $t = $this->findOrgTicket($id);
@@ -291,6 +298,88 @@ class LiveInbox extends Page
             $this->internalNotes      = $t->internal_notes ?? '';
             $this->ticketDepartmentId = $t->department_id;
         }
+    }
+
+    // ── Modo selección ────────────────────────────────────────────────────────
+
+    /** Activa / desactiva el modo selección y limpia la selección. */
+    public function toggleSelectionMode(): void
+    {
+        $this->selectionMode      = ! $this->selectionMode;
+        $this->selectedMessageIds = [];
+    }
+
+    /** Agrega o quita un mensaje de la selección. */
+    public function toggleMessageSelection(int $messageId): void
+    {
+        if (in_array($messageId, $this->selectedMessageIds)) {
+            $this->selectedMessageIds = array_values(
+                array_filter($this->selectedMessageIds, fn ($id) => $id !== $messageId)
+            );
+        } else {
+            $this->selectedMessageIds[] = $messageId;
+        }
+    }
+
+    // ── Eliminar mensajes (soft-delete) ───────────────────────────────────────
+
+    /**
+     * Elimina un mensaje individual.
+     * Valida que el mensaje pertenezca al ticket activo y a la org del admin.
+     */
+    public function deleteMessage(int $messageId): void
+    {
+        if (! $this->selectedTicketId) return;
+        if (! $this->isOrgAdmin() && ! $this->canManageMessages()) return;
+
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
+        if (! $ticket) return;
+
+        $message = Message::where('ticket_id', $ticket->id)
+            ->find($messageId);
+
+        if (! $message) return;
+
+        $message->delete(); // soft-delete — sets deleted_at
+
+        // Refrescar updated_at del ticket para actualizar preview en sidebar
+        $ticket->touch();
+    }
+
+    /**
+     * Elimina todos los mensajes seleccionados (bulk).
+     * Una sola query — eficiente incluso con listas grandes.
+     */
+    public function deleteSelectedMessages(): void
+    {
+        if (! $this->selectedTicketId || empty($this->selectedMessageIds)) return;
+        if (! $this->isOrgAdmin() && ! $this->canManageMessages()) return;
+
+        $ticket = $this->findOrgTicket($this->selectedTicketId);
+        if (! $ticket) return;
+
+        // Validate all IDs belong to this ticket (security: prevent cross-ticket injection)
+        $validIds = Message::where('ticket_id', $ticket->id)
+            ->whereIn('id', $this->selectedMessageIds)
+            ->pluck('id')
+            ->toArray();
+
+        if (empty($validIds)) return;
+
+        Message::whereIn('id', $validIds)->delete(); // bulk soft-delete
+
+        $ticket->touch();
+
+        // Exit selection mode after bulk delete
+        $this->selectionMode      = false;
+        $this->selectedMessageIds = [];
+    }
+
+    /** Check if current user can manage (delete) messages — org admins always can. */
+    private function canManageMessages(): bool
+    {
+        $perms = auth()->user()?->permissions ?? [];
+        return ! empty($perms['manage_messages']);
     }
 
     /** Guarda prioridad, categorÃ­a y notas internas. */

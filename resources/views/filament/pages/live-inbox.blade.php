@@ -404,6 +404,22 @@ class="nx-inbox">
                             Cerrar
                         </button>
                     @endif
+                    {{-- Botón de modo selección --}}
+                    <button wire:click="toggleSelectionMode"
+                            class="nx-btn nx-btn--ghost nx-btn--select {{ $selectionMode ? 'nx-btn--select--active' : '' }}"
+                            title="{{ $selectionMode ? 'Cancelar selección' : 'Seleccionar mensajes' }}">
+                        @if($selectionMode)
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            Cancelar
+                        @else
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Seleccionar
+                        @endif
+                    </button>
                 </div>
             </header>
 
@@ -480,6 +496,33 @@ class="nx-inbox">
                     </div>
                 </template>
 
+                {{-- ── Barra de acción bulk (modo selección) ──────────────────────── --}}
+                @if($selectionMode)
+                <div class="nx-selection-bar"
+                     style="display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--nx-accent-bg);border:1px solid var(--nx-accent-bd);border-radius:10px;margin-bottom:8px;flex-shrink:0;animation:nx-fadein .15s ease">
+                    <svg fill="none" stroke="var(--nx-accent)" viewBox="0 0 24 24" width="15" height="15">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span style="font-size:12.5px;font-weight:600;color:var(--nx-accent);flex:1">
+                        {{ count($selectedMessageIds) }} mensaje(s) seleccionado(s)
+                    </span>
+                    @if(count($selectedMessageIds) > 0)
+                    <button wire:click="deleteSelectedMessages"
+                            wire:confirm="¿Eliminar {{ count($selectedMessageIds) }} mensaje(s) seleccionado(s)? Esta acción no se puede deshacer."
+                            style="display:flex;align-items:center;gap:5px;padding:5px 12px;background:#dc2626;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Eliminar seleccionados
+                    </button>
+                    @endif
+                    <button wire:click="toggleSelectionMode"
+                            style="padding:5px 10px;background:none;border:1px solid var(--nx-border);border-radius:7px;font-size:12px;color:var(--nx-muted);cursor:pointer;font-family:inherit">
+                        Cancelar
+                    </button>
+                </div>
+                @endif
+
                 @forelse ($allMsgs as $msg)
                     @php
                         $isUser = $msg->sender_type === 'user';
@@ -507,11 +550,47 @@ class="nx-inbox">
                             </svg>
                             <span>{{ $msg->content }}</span>
                             <time style="font-size:10px;color:#92400e;opacity:.6;margin-left:auto;white-space:nowrap">{{ $msg->created_at->format('H:i') }}</time>
+                            {{-- Kebab delete for notes --}}
+                            @if($this->isOrgAdmin())
+                            <button wire:click="deleteMessage({{ $msg->id }})"
+                                    wire:confirm="¿Eliminar esta nota?"
+                                    class="nx-msg__delete-btn"
+                                    title="Eliminar nota">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                            @endif
                         </div>
                         @continue
                     @endif
 
-                    <div class="nx-msg {{ $isUser ? 'nx-msg--user' : 'nx-msg--' . $msg->sender_type }}" wire:key="msg-{{ $msg->id }}">
+                    {{-- ── Wrapper con hover + checkbox + kebab menu ──────────────── --}}
+                    @php $isSelected = in_array($msg->id, $selectedMessageIds); @endphp
+                    <div class="nx-msg-wrap {{ $isSelected ? 'nx-msg-wrap--selected' : '' }}"
+                         wire:key="msg-{{ $msg->id }}"
+                         x-data="{ hovered: false }"
+                         @mouseenter="hovered = true"
+                         @mouseleave="hovered = false">
+
+                        {{-- Checkbox (selección) --}}
+                        @if($selectionMode)
+                        <button wire:click="toggleMessageSelection({{ $msg->id }})"
+                                class="nx-msg__check {{ $isSelected ? 'nx-msg__check--on' : '' }}"
+                                title="{{ $isSelected ? 'Deseleccionar' : 'Seleccionar' }}">
+                            @if($isSelected)
+                                <svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            @else
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14">
+                                    <circle cx="12" cy="12" r="9" stroke-width="1.5"/>
+                                </svg>
+                            @endif
+                        </button>
+                        @endif
+
+                    <div class="nx-msg {{ $isUser ? 'nx-msg--user' : 'nx-msg--' . $msg->sender_type }}">
 
                         @if ($isUser)
                             {{-- Visitor avatar — LEFT --}}
@@ -557,7 +636,35 @@ class="nx-inbox">
                                 {{ $msg->created_at->format('H:i') }}
                             </time>
                         </div>
-                    </div>
+
+                        {{-- Menú kebab (⋮) — visible en hover, oculto en modo selección --}}
+                        @if($this->isOrgAdmin() && !$selectionMode)
+                        <div class="nx-msg__kebab" x-show="hovered" x-cloak
+                             style="position:relative" @click.stop>
+                            <button class="nx-msg__kebab-btn"
+                                    @click.stop="$el.nextElementSibling.classList.toggle('open')"
+                                    title="Opciones">
+                                <svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14">
+                                    <circle cx="12" cy="5" r="1.5"/>
+                                    <circle cx="12" cy="12" r="1.5"/>
+                                    <circle cx="12" cy="19" r="1.5"/>
+                                </svg>
+                            </button>
+                            <div class="nx-msg__kebab-menu" @click.outside="$el.classList.remove('open')">
+                                <button wire:click="deleteMessage({{ $msg->id }})"
+                                        wire:confirm="¿Eliminar este mensaje?"
+                                        @click="$el.closest('.nx-msg__kebab-menu').classList.remove('open')"
+                                        class="nx-msg__kebab-item nx-msg__kebab-item--danger">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    Eliminar mensaje
+                                </button>
+                            </div>
+                        </div>
+                        @endif
+                    </div>{{-- end .nx-msg --}}
+                    </div>{{-- end .nx-msg-wrap --}}
                 @empty
                     <div class="nx-messages__empty">
                         <p>Aún no hay mensajes en esta conversación.</p>
@@ -1490,6 +1597,107 @@ class="nx-inbox">
 .nx-msg--bot + .nx-msg--user,
 .nx-msg--agent + .nx-msg--user,
 .nx-msg--user + .nx-msg--agent { margin-top: 12px; }
+
+/* ─── WRAPPER CON HOVER ─── */
+.nx-msg-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 10px;
+    transition: background .12s;
+    padding: 2px 4px;
+    margin: 0 -4px;
+}
+.nx-msg-wrap:hover { background: rgba(0,0,0,.03); }
+:is(html.dark, [data-theme="dark"]) .nx-msg-wrap:hover { background: rgba(255,255,255,.04); }
+.nx-msg-wrap--selected {
+    background: var(--nx-accent-bg) !important;
+    outline: 1px solid var(--nx-accent-bd);
+    border-radius: 10px;
+}
+.nx-msg-wrap .nx-msg { flex: 1; min-width: 0; }
+
+/* ─── CHECKBOX DE SELECCIÓN ─── */
+.nx-msg__check {
+    flex-shrink: 0;
+    width: 24px; height: 24px;
+    border: none; background: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    color: var(--nx-muted);
+    transition: color .12s, background .12s;
+    padding: 0;
+}
+.nx-msg__check:hover { background: var(--nx-surface-2); color: var(--nx-accent); }
+.nx-msg__check--on { color: var(--nx-accent); }
+
+/* ─── KEBAB MENU (⋮) ─── */
+.nx-msg__kebab {
+    flex-shrink: 0;
+}
+.nx-msg__kebab-btn {
+    width: 26px; height: 26px;
+    border: none; background: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+    color: var(--nx-muted);
+    transition: background .1s, color .1s;
+    padding: 0;
+}
+.nx-msg__kebab-btn:hover { background: var(--nx-surface-2); color: var(--nx-text); }
+.nx-msg__kebab-menu {
+    display: none;
+    position: absolute;
+    right: 0; top: calc(100% + 4px); z-index: 80;
+    background: var(--nx-surface);
+    border: 1px solid var(--nx-border);
+    border-radius: 9px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.12);
+    min-width: 160px;
+    overflow: hidden;
+    animation: nx-fadein .1s ease;
+}
+.nx-msg__kebab-menu.open { display: block; }
+.nx-msg__kebab-item {
+    width: 100%; padding: 8px 12px;
+    background: none; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12.5px; font-family: var(--nx-font);
+    color: var(--nx-text); text-align: left;
+    transition: background .1s;
+}
+.nx-msg__kebab-item:hover { background: var(--nx-surface-2); }
+.nx-msg__kebab-item--danger { color: #dc2626; }
+.nx-msg__kebab-item--danger:hover { background: #fef2f2; }
+:is(html.dark, [data-theme="dark"]) .nx-msg__kebab-item--danger:hover { background: rgba(220,38,38,.12); }
+
+/* ─── BOTÓN ELIMINAR NOTA ─── */
+.nx-msg__delete-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 3px; border-radius: 5px;
+    color: #dc2626; opacity: 0; transition: opacity .15s;
+    display: flex; align-items: center;
+}
+.nx-msg--note:hover .nx-msg__delete-btn { opacity: .7; }
+.nx-msg__delete-btn:hover { opacity: 1 !important; }
+
+/* ─── BOTÓN SELECT EN HEADER ─── */
+.nx-btn--select {
+    font-size: 11.5px;
+    color: var(--nx-muted);
+    border-color: var(--nx-border);
+}
+.nx-btn--select--active {
+    color: var(--nx-accent);
+    border-color: var(--nx-accent-bd);
+    background: var(--nx-accent-bg);
+}
+
+/* ─── ANIMACIÓN FADE-IN ─── */
+@keyframes nx-fadein {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
 
 .nx-messages__empty {
     flex: 1; display: flex; align-items: center; justify-content: center;
