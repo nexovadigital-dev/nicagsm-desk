@@ -1,589 +1,409 @@
-﻿<x-filament-panels::page>
+<x-filament-panels::page>
 <style>
 .fi-page-header, .fi-breadcrumbs { display: none !important; }
 
-/* â”€â”€â”€ Wrapper â”€â”€â”€ */
+/* ─── Wrapper ─── */
 .ap-wrap { padding: 32px 36px 64px; max-width: 1040px; }
 
-/* â”€â”€â”€ Page title â”€â”€â”€ */
-.ap-title { font-size: 22px; font-weight: 700; color: var(--c-text,#111827); margin-bottom: 20px; }
+/* ─── Page title ─── */
+.ap-title { font-size: 22px; font-weight: 800; color: var(--c-text,#111); letter-spacing: -.03em; margin-bottom: 6px; }
+.ap-subtitle { font-size: 13px; color: var(--c-sub,#6b7280); margin-bottom: 28px; }
 
-/* â”€â”€â”€ Tabs scrollable â”€â”€â”€ */
-.ap-tabs-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 32px; scrollbar-width: none; }
-.ap-tabs-scroll::-webkit-scrollbar { display: none; }
-.ap-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--c-border,#e3e6ea); min-width: max-content; }
-.ap-tab {
-    padding: 8px 16px 10px; font-size: 13px; font-weight: 500;
-    color: var(--c-sub,#6b7280); background: none; border: none;
-    border-bottom: 2px solid transparent; margin-bottom: -1px;
-    cursor: pointer; font-family: inherit; white-space: nowrap;
-    transition: color .12s, border-color .12s;
-}
-.ap-tab:hover { color: var(--c-text,#111827); }
-.ap-tab.active { color: var(--c-text,#111827); font-weight: 600; border-bottom-color: #22c55e; }
+/* ─── Tabs ─── */
+.ap-tabs { display: flex; gap: 2px; border-bottom: 1.5px solid var(--c-border,#e3e6ea); margin-bottom: 32px; overflow-x: auto; padding-bottom: 0; }
+.ap-tab { padding: 9px 18px; font-size: 13px; font-weight: 500; color: var(--c-sub,#6b7280); border: none; background: none; cursor: pointer; border-bottom: 2.5px solid transparent; margin-bottom: -1.5px; white-space: nowrap; transition: color .15s, border-color .15s; border-radius: 0; }
+.ap-tab:hover { color: var(--c-text,#111); }
+.ap-tab.active { color: var(--c-primary,#16a34a); border-bottom-color: var(--c-primary,#16a34a); font-weight: 700; }
 
-/* â”€â”€â”€ Section row â”€â”€â”€ */
-.ap-section {
-    display: grid; grid-template-columns: 240px 1fr; gap: 32px;
-    padding: 28px 0; border-top: 1px solid var(--c-border,#e3e6ea);
-}
-.ap-section:first-child, .ap-section.no-top { border-top: none; padding-top: 0; }
-@media (max-width: 720px) { .ap-section { grid-template-columns: 1fr; gap: 16px; } }
-.ap-section-title { font-size: 14px; font-weight: 600; color: var(--c-text,#111827); margin-bottom: 6px; }
-.ap-section-desc { font-size: 12.5px; color: var(--c-sub,#6b7280); line-height: 1.6; }
+/* ─── Section rows ─── */
+.ap-section { display: grid; grid-template-columns: 200px 1fr; gap: 32px 48px; padding: 32px 0; border-top: 1px solid var(--c-border,#e3e6ea); align-items: start; }
+.ap-section.no-top { border-top: none; padding-top: 0; }
+.ap-section-title { font-size: 14px; font-weight: 700; color: var(--c-text,#111); margin-bottom: 4px; }
+.ap-section-desc { font-size: 12px; color: var(--c-sub,#6b7280); line-height: 1.55; }
 
-/* â”€â”€â”€ Form fields â”€â”€â”€ */
-.ap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.ap-grid.single { grid-template-columns: 1fr; }
-@media (max-width: 560px) { .ap-grid { grid-template-columns: 1fr; } }
+/* ─── Form fields ─── */
+.ap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .ap-field { display: flex; flex-direction: column; gap: 5px; }
-.ap-label { font-size: 11.5px; font-weight: 500; color: var(--c-sub,#6b7280); }
-.ap-input, .ap-select {
-    background: var(--c-surface,#fff); border: 1px solid var(--c-border,#e3e6ea);
-    border-radius: 7px; color: var(--c-text,#111); font-size: 13px;
-    padding: 8px 12px; outline: none; width: 100%; font-family: inherit;
-    transition: border-color .12s; box-sizing: border-box;
-}
-.ap-input:focus, .ap-select:focus { border-color: #16a34a; }
-.ap-input::placeholder { color: var(--c-sub); opacity: .5; }
+.ap-label { font-size: 12px; font-weight: 600; color: var(--c-text,#111); }
+.ap-input { border: 1.5px solid var(--c-border,#e3e6ea); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--c-text,#111); background: var(--c-surface,#fff); transition: border-color .15s; width: 100%; }
+.ap-input:focus { outline: none; border-color: var(--c-primary,#16a34a); }
+select.ap-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 32px; }
 
-/* â”€â”€â”€ Toggle â”€â”€â”€ */
-.ap-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.ap-toggle { position: relative; display: inline-block; width: 38px; height: 21px; flex-shrink: 0; }
+/* ─── Actions ─── */
+.ap-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; align-items: center; }
+.ap-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 600; cursor: pointer; border: none; transition: all .15s; }
+.ap-btn-primary { background: var(--c-primary,#16a34a); color: #fff; }
+.ap-btn-primary:hover { opacity: .88; }
+.ap-btn-ghost { background: var(--c-bg,#f5f6f8); color: var(--c-text,#111); border: 1.5px solid var(--c-border,#e3e6ea); }
+.ap-btn-ghost:hover { background: var(--c-border,#e3e6ea); }
+.ap-btn-danger { background: #fee2e2; color: #dc2626; }
+.ap-btn-danger:hover { background: #fecaca; }
+
+/* ─── Toggle ─── */
+.ap-toggle { position: relative; display: inline-block; width: 38px; height: 22px; flex-shrink: 0; }
 .ap-toggle input { opacity: 0; width: 0; height: 0; }
-.ap-slider { position: absolute; cursor: pointer; inset: 0; background: var(--c-border,#e3e6ea); border-radius: 99px; transition: background .2s; }
-.ap-slider:before { content:''; position: absolute; height: 15px; width: 15px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: transform .2s; }
-.ap-toggle input:checked + .ap-slider { background: #22c55e; }
-.ap-toggle input:checked + .ap-slider:before { transform: translateX(17px); }
-.ap-toggle-label { font-size: 13px; font-weight: 500; color: var(--c-text,#111); }
+.ap-slider { position: absolute; inset: 0; background: #d1d5db; border-radius: 99px; transition: .2s; cursor: pointer; }
+.ap-slider:before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+input:checked + .ap-slider { background: var(--c-primary,#16a34a); }
+input:checked + .ap-slider:before { transform: translateX(16px); }
+.ap-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
+.ap-toggle-label { font-size: 13px; font-weight: 600; color: var(--c-text,#111); }
 .ap-toggle-sub { font-size: 11.5px; color: var(--c-sub,#6b7280); margin-top: 2px; }
 
-/* â”€â”€â”€ Availability â”€â”€â”€ */
-.ap-status-row { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
-.ap-status-opt {
-    display: flex; align-items: center; gap: 9px; padding: 8px 12px;
-    border-left: 2px solid transparent; border-top: none; border-right: none; border-bottom: none;
-    background: transparent; cursor: pointer; font-family: inherit;
-    transition: background .12s, border-color .12s; width: 100%; text-align: left; border-radius: 0 6px 6px 0;
-}
-.ap-status-opt:hover { background: var(--c-bg,#f5f6f8); }
-.ap-status-opt.active-online  { border-left-color: #22c55e; background: var(--c-bg,#f5f6f8); }
-.ap-status-opt.active-busy    { border-left-color: #f59e0b; background: var(--c-bg,#f5f6f8); }
-.ap-status-opt.active-offline { border-left-color: #9ca3af; background: var(--c-bg,#f5f6f8); }
-.ap-status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.ap-status-dot.online  { background: #22c55e; }
-.ap-status-dot.busy    { background: #f59e0b; }
-.ap-status-dot.offline { background: #9ca3af; }
-.ap-status-text { font-size: 13px; font-weight: 500; color: var(--c-sub,#6b7280); flex: 1; transition: color .12s; }
-.ap-status-opt.active-online .ap-status-text,
-.ap-status-opt.active-busy .ap-status-text,
-.ap-status-opt.active-offline .ap-status-text { color: var(--c-text,#111827); font-weight: 600; }
+/* ─── Notices ─── */
+.ap-notice { padding: 12px 14px; border-radius: 8px; font-size: 12.5px; line-height: 1.55; }
+.ap-notice-info { background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e40af; }
+.ap-notice-success { background: #f0fdf4; border-left: 3px solid #16a34a; color: #166534; }
+.ap-notice-warn { background: #fffbeb; border-left: 3px solid #f59e0b; color: #92400e; }
+.ap-notice-error { background: #fef2f2; border-left: 3px solid #dc2626; color: #991b1b; }
 
-/* â”€â”€â”€ Buttons â”€â”€â”€ */
-.ap-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
-.ap-btn {
-    display: inline-flex; align-items: center; gap: 5px; padding: 8px 18px;
-    border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer;
-    transition: background .1s; border: 1px solid transparent; font-family: inherit; line-height: 1;
-}
-.ap-btn-primary { background: #1e293b; color: #f8fafc; }
-.ap-btn-primary:hover { background: #0f172a; }
-.ap-btn-primary:disabled { opacity:.5; cursor:default; }
-.ap-btn-danger  { background: rgba(239,68,68,.08); color: #ef4444; border-color: rgba(239,68,68,.2); }
-.ap-btn-danger:hover { background: rgba(239,68,68,.14); }
-.ap-btn-ghost   { background: transparent; color: var(--c-sub,#6b7280); border-color: var(--c-border,#e3e6ea); }
-.ap-btn-ghost:hover { background: var(--c-surf2,#f0f2f5); }
-.ap-btn-success { background: rgba(34,197,94,.08); color: #16a34a; border-color: rgba(34,197,94,.2); }
+/* ─── Avatar upload ─── */
+.ap-avatar-zone { width: 80px; height: 80px; border-radius: 50%; border: 2px dashed var(--c-border,#e3e6ea); display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; position: relative; background: var(--c-bg,#f5f6f8); }
+.ap-avatar-zone img { width: 100%; height: 100%; object-fit: cover; }
+.ap-avatar-zone:hover { border-color: var(--c-primary,#16a34a); }
 
-/* â”€â”€â”€ Avatar â”€â”€â”€ */
-.ap-avatar-zone { display: flex; align-items: center; gap: 16px; }
-.ap-avatar-circle {
-    width: 64px; height: 64px; border-radius: 12px; background: #1e293b;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; font-weight: 700; color: #fff;
-    flex-shrink: 0; overflow: hidden; cursor: pointer; position: relative;
-}
-.ap-avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
-.ap-avatar-overlay {
-    position: absolute; inset: 0; background: rgba(0,0,0,.45);
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0; transition: opacity .15s; border-radius: 12px;
-}
-.ap-avatar-circle:hover .ap-avatar-overlay { opacity: 1; }
-@keyframes ap-spin { to { transform: rotate(360deg); } }
-.ap-avatar-loading {
-    position: absolute; inset: 0; border-radius: 12px;
-    background: rgba(10,10,20,.62); z-index: 2;
-    display: flex; align-items: center; justify-content: center;
-}
-.ap-avatar-loading__ring {
-    width: 24px; height: 24px; border-radius: 50%;
-    border: 2.5px solid rgba(255,255,255,.2);
-    border-top-color: #fff; animation: ap-spin .7s linear infinite;
-}
-.ap-avatar-name { font-size: 14px; font-weight: 600; color: var(--c-text,#111827); margin-bottom: 4px; }
-.ap-avatar-actions { display: flex; gap: 10px; align-items: center; }
-.ap-upload-link { font-size: 12px; color: #16a34a; background: none; border: none; cursor: pointer; font-family: inherit; padding: 0; transition: opacity .12s; }
-.ap-upload-link:hover { opacity: .7; }
-.ap-upload-link.danger { color: #ef4444; }
+/* ─── Flash / toasts ─── */
+.ap-flash { padding: 10px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.ap-flash-ok { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.ap-flash-err { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 
-/* â”€â”€â”€ 2FA â”€â”€â”€ */
-.ap-2fa-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 5px; font-size: 11px; font-weight: 700; }
-.ap-2fa-on  { background: rgba(34,197,94,.08); color: #16a34a; border: 1px solid rgba(34,197,94,.2); }
-.ap-2fa-off { background: rgba(239,68,68,.07); color: #ef4444; border: 1px solid rgba(239,68,68,.2); }
-.ap-qr-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 18px; background: var(--c-bg,#f5f6f8); border: 1px solid var(--c-border,#e3e6ea); border-radius: 10px; margin-top: 14px; }
-.ap-qr-wrap > svg, .ap-qr-wrap > * > svg { width: 160px !important; height: 160px !important; border-radius: 8px; background: #fff; padding: 8px; }
-.ap-secret { font-family: monospace; font-size: 12px; color: #64748b; letter-spacing: .1em; word-break: break-all; text-align: center; }
-.ap-qr-hint { font-size: 11px; color: var(--c-sub,#6b7280); text-align: center; line-height: 1.5; max-width: 280px; }
-.ap-divider { border: none; border-top: 1px solid var(--c-border,#e3e6ea); margin: 16px 0; }
-.ap-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+/* ─── Org logo ─── */
+.ap-logo-preview { max-height: 56px; border-radius: 6px; border: 1px solid var(--c-border,#e3e6ea); margin-bottom: 10px; }
 
-/* â”€â”€â”€ Notice boxes â”€â”€â”€ */
-.ap-notice { padding: 11px 14px; border-radius: 8px; font-size: 12px; line-height: 1.6; }
-.ap-notice-info    { background: rgba(59,130,246,.07); border: 1px solid rgba(59,130,246,.2); color: #1d4ed8; }
-.ap-notice-success { background: rgba(5,150,105,.07); border: 1px solid rgba(5,150,105,.2); color: #059669; }
-.ap-notice-warn    { background: rgba(245,158,11,.07); border: 1px solid rgba(245,158,11,.25); color: #92400e; }
-.ap-notice-error   { background: rgba(239,68,68,.06); border: 1px solid rgba(239,68,68,.2); color: #b91c1c; }
-.ap-notice code    { background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 4px; font-size: 11.5px; }
-.ap-notice-muted   { background: rgba(100,116,139,.07); border: 1px solid rgba(100,116,139,.2); color: var(--c-sub,#6b7280); }
+/* ─── License card ─── */
+.lic-card { background: var(--c-bg,#f8fafc); border: 1.5px solid var(--c-border,#e3e6ea); border-radius: 12px; padding: 24px 22px; }
+.lic-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 99px; font-size: 11.5px; font-weight: 700; margin-bottom: 16px; }
+.lic-badge-ok { background: #dcfce7; color: #166534; }
+.lic-badge-err { background: #fee2e2; color: #991b1b; }
+.lic-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; }
+.lic-label { font-size: 11.5px; font-weight: 700; color: var(--c-sub,#6b7280); min-width: 100px; }
+.lic-value { font-size: 13px; color: var(--c-text,#111); word-break: break-all; }
+.lic-divider { border: none; border-top: 1px solid var(--c-border,#e3e6ea); margin: 16px 0; }
+.lic-features { display: flex; flex-wrap: wrap; gap: 8px; }
+.lic-feat { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--c-text,#111); background: var(--c-surface,#fff); border: 1px solid var(--c-border,#e3e6ea); border-radius: 6px; padding: 4px 10px; }
 
-/* â”€â”€â”€ AI Keys â”€â”€â”€ */
-.ak-card { background: var(--c-surface,#fff); border: 1px solid var(--c-border,#e3e6ea); border-radius: 10px; overflow: hidden; }
-.ak-card-head { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--c-border,#e3e6ea); background: var(--c-bg,#f9fafb); }
-.ak-provider-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #fff; flex-shrink: 0; }
-.ak-provider-name { font-size: 13px; font-weight: 700; color: var(--c-text,#111); }
-.ak-provider-model { font-size: 11px; color: var(--c-sub,#6b7280); margin-top: 1px; }
-.ak-card-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
-.ak-field { display: flex; flex-direction: column; gap: 5px; }
-.ak-field-head { display: flex; align-items: center; justify-content: space-between; }
-.ak-label { font-size: 10.5px; font-weight: 700; color: var(--c-sub,#6b7280); text-transform: uppercase; letter-spacing: .05em; }
-.ak-set-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
-.ak-unset-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--c-bg,#f5f6f8); color: var(--c-sub,#6b7280); border: 1px solid var(--c-border,#e3e6ea); }
-.ak-input-wrap { position: relative; }
-.ak-input { width: 100%; box-sizing: border-box; background: var(--c-bg,#f5f6f8); border: 1px solid var(--c-border,#e3e6ea); border-radius: 7px; color: var(--c-text,#111); font-size: 12.5px; font-family: monospace; padding: 8px 36px 8px 11px; outline: none; transition: border-color .12s; }
-.ak-input:focus { border-color: #16a34a; background: #fff; }
-.ak-eye { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--c-sub,#9ca3af); padding: 0; display: flex; transition: color .1s; }
-.ak-eye:hover { color: var(--c-text,#374151); }
-.ak-divider { height: 1px; background: var(--c-border,#e3e6ea); margin: 4px 0; }
-.ak-hints { font-size: 11px; color: var(--c-sub,#9ca3af); margin: 0; line-height: 1.5; }
-.ak-limits-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: end; }
-@media (max-width: 560px) { .ak-limits-grid { grid-template-columns: 1fr; } }
-
-/* â”€â”€â”€ Licencia â”€â”€â”€ */
-.lic-card { background: var(--c-surface,#fff); border: 1px solid var(--c-border,#e3e6ea); border-radius: 12px; padding: 28px 28px 24px; display: flex; flex-direction: column; gap: 20px; }
-.lic-head { display: flex; align-items: center; gap: 16px; }
-.lic-icon-wrap { width: 52px; height: 52px; border-radius: 14px; background: #f0fdf4; border: 1px solid #bbf7d0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.lic-icon-wrap.error { background: #fef2f2; border-color: #fecaca; }
-.lic-icon-wrap.warn  { background: #fffbeb; border-color: #fde68a; }
-.lic-plan { font-size: 22px; font-weight: 800; color: var(--c-text,#111); letter-spacing: -.02em; }
-.lic-sub  { font-size: 12.5px; color: var(--c-sub,#6b7280); margin-top: 2px; }
-.lic-divider { height: 1px; background: var(--c-border,#e3e6ea); }
-.lic-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-.lic-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--c-sub,#6b7280); }
-.lic-value { font-size: 13px; font-weight: 600; color: var(--c-text,#111); font-family: monospace; }
-.lic-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 700; }
-.lic-badge-ok   { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
-.lic-badge-err  { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
-.lic-badge-warn { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
-.lic-features { display: flex; flex-wrap: wrap; gap: 10px; }
-.lic-feat { display: inline-flex; align-items: center; gap: 6px; background: var(--c-bg,#f5f6f8); border: 1px solid var(--c-border,#e3e6ea); border-radius: 8px; padding: 7px 13px; font-size: 12px; font-weight: 500; color: var(--c-text,#111); }
-.lic-feat svg { color: #15803d; }
-
-/* â”€â”€â”€ Cron â”€â”€â”€ */
-.cron-subtab-row { display: flex; gap: 0; margin-bottom: 20px; border: 1px solid var(--c-border,#e3e6ea); border-radius: 8px; overflow: hidden; }
-.cron-subtab { flex: 1; padding: 8px 12px; font-size: 12.5px; font-weight: 500; background: transparent; border: none; cursor: pointer; font-family: inherit; color: var(--c-sub,#6b7280); transition: background .12s, color .12s; text-align: center; }
-.cron-subtab:not(:last-child) { border-right: 1px solid var(--c-border,#e3e6ea); }
-.cron-subtab.active { background: #1e293b; color: #f8fafc; }
-.cron-endpoint-card { background: var(--c-surface,#fff); border: 1px solid var(--c-border,#e3e6ea); border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
-.cron-endpoint-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--c-bg,#f9fafb); border-bottom: 1px solid var(--c-border,#e3e6ea); }
-.cron-endpoint-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+/* ─── Cron cards ─── */
+.cron-subtab-row { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1.5px solid var(--c-border,#e3e6ea); padding-bottom: 0; margin-bottom: 20px; }
+.cron-subtab { padding: 8px 14px; font-size: 12.5px; font-weight: 500; color: var(--c-sub,#6b7280); border: none; background: none; cursor: pointer; border-bottom: 2.5px solid transparent; margin-bottom: -1.5px; white-space: nowrap; transition: all .15s; position: relative; }
+.cron-subtab:hover { color: var(--c-text,#111); }
+.cron-subtab.active { color: var(--c-primary,#16a34a); border-bottom-color: var(--c-primary,#16a34a); font-weight: 700; }
+.cron-endpoint-card { border: 1.5px solid var(--c-border,#e3e6ea); border-radius: 10px; margin-bottom: 12px; overflow: hidden; background: var(--c-surface,#fff); }
+.cron-endpoint-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--c-border,#e3e6ea); }
+.cron-endpoint-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .cron-endpoint-name { font-size: 13px; font-weight: 700; color: var(--c-text,#111); }
-.cron-endpoint-desc { font-size: 11.5px; color: var(--c-sub,#6b7280); margin-top: 1px; }
+.cron-endpoint-desc { font-size: 11.5px; color: var(--c-sub,#6b7280); margin-top: 2px; }
 .cron-endpoint-body { padding: 12px 16px; }
 .cron-url-row { display: flex; align-items: center; gap: 8px; background: var(--c-bg,#f5f6f8); border: 1px solid var(--c-border,#e3e6ea); border-radius: 7px; padding: 8px 12px; }
-.cron-url-text { flex: 1; font-family: monospace; font-size: 12px; color: var(--c-text,#111); word-break: break-all; }
-.cron-copy-btn { background: #1e293b; color: #f8fafc; border: none; border-radius: 6px; padding: 5px 12px; font-size: 11.5px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; transition: background .1s; flex-shrink: 0; }
-.cron-copy-btn:hover { background: #0f172a; }
-.cron-freq { font-size: 11px; color: var(--c-sub,#6b7280); margin-top: 6px; }
-.cron-freq strong { color: var(--c-text,#111); }
+.cron-url-text { font-family: monospace; font-size: 12px; color: var(--c-text,#111); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cron-copy-btn { font-size: 11.5px; font-weight: 600; color: var(--c-primary,#16a34a); background: none; border: none; cursor: pointer; white-space: nowrap; padding: 2px 6px; }
+.cron-copy-btn:hover { text-decoration: underline; }
+.cron-freq { font-size: 11.5px; color: var(--c-sub,#6b7280); margin-top: 8px; }
+
+/* ─── Responsive ─── */
+@media (max-width: 720px) {
+    .ap-section { grid-template-columns: 1fr; gap: 16px; }
+    .ap-grid { grid-template-columns: 1fr; }
+    .ap-wrap { padding: 20px 16px 48px; }
+}
 </style>
 
-@php
-    $appUrl = rtrim(config('app.url'), '/');
-    $smtpReady = $smtpEnabled && !empty($smtpHost) && !empty($smtpUsername) && !empty($smtpFromAddress);
-@endphp
+<div class="ap-wrap" x-data="{
+    tab: 'perfil',
+    cronTab: 'cronjob',
+    init() {
+        const h = window.location.hash.replace('#','');
+        if (h) this.tab = h;
+    }
+}">
 
-<div class="ap-wrap" x-data="{ tab: 'cuenta', cronTab: 'cronjob' }">
+    {{-- ─── Page title ─── --}}
+    <div class="ap-title">Configuracion Avanzada</div>
+    <div class="ap-subtitle">Gestiona tu perfil, organizacion, seguridad e integraciones</div>
 
-    <div class="ap-title">ConfiguraciÃ³n Avanzada</div>
-
-    {{-- â”€â”€â”€ Tabs (scrollable) â”€â”€â”€ --}}
-    <div class="ap-tabs-scroll">
-        <div class="ap-tabs">
-            <button class="ap-tab" :class="{ active: tab === 'cuenta' }" @click="tab = 'cuenta'">Perfil</button>
-            @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
-            <button class="ap-tab" :class="{ active: tab === 'org' }" @click="tab = 'org'">OrganizaciÃ³n</button>
-            @endif
-            <button class="ap-tab" :class="{ active: tab === 'seguridad' }" @click="tab = 'seguridad'">Seguridad</button>
-            @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
-            <button class="ap-tab" :class="{ active: tab === 'ia' }" @click="tab = 'ia'">Inteligencia Artificial</button>
-            <button class="ap-tab" :class="{ active: tab === 'correo' }" @click="tab = 'correo'">Correo ElectrÃ³nico</button>
-            <button class="ap-tab" :class="{ active: tab === 'licencia' }" @click="tab = 'licencia'">Licencia</button>
-            <button class="ap-tab" :class="{ active: tab === 'cron' }" @click="tab = 'cron'">AutomatizaciÃ³n</button>
-            @endif
-        </div>
+    {{-- ─── Tabs ─── --}}
+    <div class="ap-tabs">
+        <button class="ap-tab" :class="{ active: tab === 'perfil' }" @click="tab = 'perfil'">Perfil</button>
+        @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
+        <button class="ap-tab" :class="{ active: tab === 'org' }" @click="tab = 'org'">Organizacion</button>
+        @endif
+        <button class="ap-tab" :class="{ active: tab === 'seguridad' }" @click="tab = 'seguridad'">Seguridad</button>
+        @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
+        <button class="ap-tab" :class="{ active: tab === 'ia' }" @click="tab = 'ia'">Inteligencia Artificial</button>
+        <button class="ap-tab" :class="{ active: tab === 'correo' }" @click="tab = 'correo'">Correo Electronico</button>
+        <button class="ap-tab" :class="{ active: tab === 'licencia' }" @click="tab = 'licencia'">Licencia</button>
+        <button class="ap-tab" :class="{ active: tab === 'cron' }" @click="tab = 'cron'">Automatizacion</button>
+        @endif
     </div>
 
-    {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TAB: PERFIL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
-    <div x-show="tab === 'cuenta'" x-transition.opacity>
+    {{-- ═══════════════════ TAB: PERFIL ═══════════════════ --}}
+    <div x-show="tab === 'perfil'" x-transition.opacity>
 
-        {{-- Foto de perfil --}}
+        @if(session('profile_success'))
+        <div class="ap-flash ap-flash-ok" style="margin-bottom:16px">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            {{ session('profile_success') }}
+        </div>
+        @endif
+        @if(session('profile_error'))
+        <div class="ap-flash ap-flash-err" style="margin-bottom:16px">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            {{ session('profile_error') }}
+        </div>
+        @endif
+
+        {{-- Avatar --}}
         <div class="ap-section no-top">
             <div>
                 <div class="ap-section-title">Foto de perfil</div>
-                <div class="ap-section-desc">Esta foto aparece en el panel y en las conversaciones con los clientes.</div>
+                <div class="ap-section-desc">Aparece en el Live Inbox y en los tickets asignados a ti.</div>
             </div>
-            <div>
-                <input id="ap-file-input" type="file" accept="image/*" wire:model="avatarFile" style="display:none">
-                <div class="ap-avatar-zone">
-                    <div class="ap-avatar-circle" onclick="document.getElementById('ap-file-input').click()" title="Cambiar foto">
-                        @if($currentAvatarUrl)
-                            <img src="{{ $currentAvatarUrl }}" alt="avatar">
-                        @else
-                            {{ strtoupper(substr($profileName ?: 'A', 0, 1)) }}
-                        @endif
-                        <div class="ap-avatar-loading" wire:loading wire:target="avatarFile"><div class="ap-avatar-loading__ring"></div></div>
-                        <div class="ap-avatar-overlay" wire:loading.remove wire:target="avatarFile">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="ap-avatar-name">{{ $profileName ?: 'Agente' }}</div>
-                        <div class="ap-avatar-actions">
-                            <button class="ap-upload-link" onclick="document.getElementById('ap-file-input').click()">Subir foto</button>
-                            @if($currentAvatarUrl)
-                                <span style="color:var(--c-border);font-size:11px">Â·</span>
-                                <button class="ap-upload-link danger" wire:click="removeAvatar">Eliminar</button>
-                            @endif
-                        </div>
-                    </div>
+            <div style="display:flex;align-items:center;gap:20px">
+                <label class="ap-avatar-zone" style="cursor:pointer">
+                    @if($avatarUrl)
+                        <img src="{{ $avatarUrl }}" alt="Avatar">
+                    @else
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="28" height="28" style="color:#9ca3af"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zm-4 7a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    @endif
+                    <input type="file" wire:model="avatar" accept="image/*" style="display:none">
+                </label>
+                <div>
+                    <div style="font-size:12.5px;font-weight:600;color:var(--c-text,#111)">{{ auth()->user()->name }}</div>
+                    <div style="font-size:11.5px;color:var(--c-sub,#6b7280);margin-top:2px">{{ auth()->user()->email }}</div>
+                    @error('avatar') <div style="font-size:11px;color:#dc2626;margin-top:4px">{{ $message }}</div> @enderror
                 </div>
             </div>
         </div>
 
-        {{-- InformaciÃ³n bÃ¡sica --}}
+        {{-- Nombre y email --}}
         <div class="ap-section">
             <div>
-                <div class="ap-section-title">InformaciÃ³n personal</div>
-                <div class="ap-section-desc">Tu nombre y email dentro del panel. El email se usa para el inicio de sesiÃ³n.</div>
+                <div class="ap-section-title">Informacion personal</div>
+                <div class="ap-section-desc">Tu nombre y email dentro del panel de soporte.</div>
             </div>
-            <div>
-                <div class="ap-grid">
-                    <div class="ap-field">
-                        <label class="ap-label">Nombre completo</label>
-                        <input type="text" class="ap-input" wire:model.live="profileName" placeholder="Tu nombre">
-                    </div>
-                    <div class="ap-field">
-                        <label class="ap-label">Email</label>
-                        <input type="email" class="ap-input" wire:model="profileEmail" placeholder="tu@email.com">
-                    </div>
+            <div class="ap-grid">
+                <div class="ap-field" style="grid-column:1/-1">
+                    <label class="ap-label">Nombre completo</label>
+                    <input type="text" class="ap-input" wire:model="name" placeholder="Tu nombre">
+                    @error('name') <span style="font-size:11px;color:#dc2626">{{ $message }}</span> @enderror
                 </div>
-                <div class="ap-actions">
-                    <button class="ap-btn ap-btn-primary" wire:click="saveProfile" wire:loading.attr="disabled">Guardar cambios</button>
+                <div class="ap-field" style="grid-column:1/-1">
+                    <label class="ap-label">Correo electronico</label>
+                    <input type="email" class="ap-input" wire:model="email" placeholder="tu@email.com">
+                    @error('email') <span style="font-size:11px;color:#dc2626">{{ $message }}</span> @enderror
+                </div>
+                <div class="ap-actions" style="grid-column:1/-1;margin-top:4px">
+                    <button class="ap-btn ap-btn-primary" wire:click="saveProfile" wire:loading.attr="disabled">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span wire:loading.remove wire:target="saveProfile">Guardar cambios</span>
+                        <span wire:loading wire:target="saveProfile">Guardando...</span>
+                    </button>
                 </div>
             </div>
         </div>
 
-        {{-- Estado de presencia --}}
-        <div class="ap-section">
-            <div>
-                <div class="ap-section-title">Estado de presencia</div>
-                <div class="ap-section-desc">Indica a tu equipo si estÃ¡s disponible para atender conversaciones.</div>
-            </div>
-            <div>
-                <div class="ap-status-row">
-                    <button type="button" class="ap-status-opt {{ $availability === 'online' ? 'active-online' : '' }}" wire:click="$set('availability','online')">
-                        <span class="ap-status-dot online"></span><span class="ap-status-text">En lÃ­nea</span>
-                    </button>
-                    <button type="button" class="ap-status-opt {{ $availability === 'busy' ? 'active-busy' : '' }}" wire:click="$set('availability','busy')">
-                        <span class="ap-status-dot busy"></span><span class="ap-status-text">Ocupado</span>
-                    </button>
-                    <button type="button" class="ap-status-opt {{ $availability === 'offline' ? 'active-offline' : '' }}" wire:click="$set('availability','offline')">
-                        <span class="ap-status-dot offline"></span><span class="ap-status-text">Ausente</span>
-                    </button>
-                </div>
-            </div>
-        </div>
     </div>
 
-    {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TAB: ORGANIZACIÃ“N â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
+    {{-- ═══════════════════ TAB: ORGANIZACION ═══════════════════ --}}
     @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
     <div x-show="tab === 'org'" x-transition.opacity>
+
+        {{-- Logo --}}
         <div class="ap-section no-top">
             <div>
-                <div class="ap-section-title">Datos de la organizaciÃ³n</div>
-                <div class="ap-section-desc">Nombre e informaciÃ³n pÃºblica de tu empresa.</div>
+                <div class="ap-section-title">Logo de la empresa</div>
+                <div class="ap-section-desc">Se muestra en el widget de chat, emails y reportes.</div>
             </div>
             <div>
-                <div class="ap-grid">
-                    <div class="ap-field">
-                        <label class="ap-label">Nombre de la organizaciÃ³n</label>
-                        <input type="text" wire:model="orgName" class="ap-input" placeholder="Mi Empresa S.A.">
-                    </div>
-                    <div class="ap-field">
-                        <label class="ap-label">Sitio web</label>
-                        <input type="url" wire:model="orgWebsite" class="ap-input" placeholder="https://miempresa.com">
-                    </div>
-                    <div class="ap-field">
-                        <label class="ap-label">Email de soporte</label>
-                        <input type="email" wire:model="orgSupportEmail" class="ap-input" placeholder="soporte@miempresa.com">
-                    </div>
-                    <div class="ap-field">
-                        <label class="ap-label">Nombre del remitente</label>
-                        <input type="text" wire:model="orgSupportName" class="ap-input" placeholder="Soporte Mi Empresa">
+                @if($orgLogoUrl)
+                    <img src="{{ $orgLogoUrl }}" class="ap-logo-preview" alt="Logo">
+                @endif
+                <label class="ap-btn ap-btn-ghost" style="cursor:pointer;display:inline-flex">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    Subir logo
+                    <input type="file" wire:model="orgLogo" accept="image/*" style="display:none">
+                </label>
+                @error('orgLogo') <div style="font-size:11px;color:#dc2626;margin-top:4px">{{ $message }}</div> @enderror
+                @if($orgLogo)
+                <div class="ap-actions">
+                    <button class="ap-btn ap-btn-primary" wire:click="saveOrgLogo" wire:loading.attr="disabled">
+                        <span wire:loading.remove wire:target="saveOrgLogo">Guardar logo</span>
+                        <span wire:loading wire:target="saveOrgLogo">Subiendo...</span>
+                    </button>
+                </div>
+                @endif
+            </div>
+        </div>
+
+        {{-- Datos generales --}}
+        <div class="ap-section">
+            <div>
+                <div class="ap-section-title">Datos de la empresa</div>
+                <div class="ap-section-desc">Aparecen en los emails enviados a clientes y en el widget.</div>
+            </div>
+            <div class="ap-grid">
+                <div class="ap-field" style="grid-column:1/-1">
+                    <label class="ap-label">Nombre de la empresa</label>
+                    <input type="text" class="ap-input" wire:model="orgName" placeholder="Mi empresa S.A.">
+                </div>
+                <div class="ap-field" style="grid-column:1/-1">
+                    <label class="ap-label">Zona horaria</label>
+                    <select class="ap-input" wire:model="orgTimezone">
+                        @foreach(timezone_identifiers_list() as $tz)
+                            <option value="{{ $tz }}" @selected($orgTimezone === $tz)>{{ $tz }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="ap-field">
+                    <label class="ap-label">Color principal</label>
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <input type="color" wire:model="orgColor" style="width:36px;height:36px;border:none;border-radius:6px;cursor:pointer;padding:1px">
+                        <input type="text" class="ap-input" wire:model="orgColor" placeholder="#16a34a" style="max-width:110px">
                     </div>
                 </div>
-                <div class="ap-actions">
+                <div class="ap-actions" style="grid-column:1/-1">
                     <button class="ap-btn ap-btn-primary" wire:click="saveOrg" wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="saveOrg">Guardar organizaciÃ³n</span>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span wire:loading.remove wire:target="saveOrg">Guardar</span>
                         <span wire:loading wire:target="saveOrg">Guardando...</span>
                     </button>
                 </div>
             </div>
         </div>
 
+        {{-- Widget --}}
         <div class="ap-section">
             <div>
-                <div class="ap-section-title">Zona horaria</div>
-                <div class="ap-section-desc">Afecta las fechas de chats, tickets y visitantes en todo el panel.</div>
+                <div class="ap-section-title">Widget de chat</div>
+                <div class="ap-section-desc">Mensaje de bienvenida y comportamiento inicial del chat.</div>
             </div>
-            <div>
-                @php
-                    $tzGroups = [];
-                    foreach (\DateTimeZone::listIdentifiers() as $tz) {
-                        $parts = explode('/', $tz, 2);
-                        $tzGroups[$parts[0]][] = $tz;
-                    }
-                    $priority = ['America', 'Europe', 'Asia', 'Africa', 'Pacific', 'Australia'];
-                    $sorted = [];
-                    foreach ($priority as $p) { if (isset($tzGroups[$p])) $sorted[$p] = $tzGroups[$p]; }
-                    foreach ($tzGroups as $g => $list) { if (!isset($sorted[$g])) $sorted[$g] = $list; }
-                @endphp
-                <div class="ap-field" style="max-width:380px">
-                    <label class="ap-label">Zona horaria de la organizaciÃ³n</label>
-                    <select wire:model="orgTimezone" class="ap-input" style="cursor:pointer">
-                        @foreach($sorted as $group => $zones)
-                        <optgroup label="{{ $group }}">
-                            @foreach($zones as $tz)
-                            <option value="{{ $tz }}" @selected($orgTimezone === $tz)>
-                                {{ str_replace(['_', '/'], [' ', ' / '], $tz) }}
-                                (UTC{{ (new \DateTime('now', new \DateTimeZone($tz)))->format('P') }})
-                            </option>
-                            @endforeach
-                        </optgroup>
-                        @endforeach
-                    </select>
-                    <p style="font-size:11.5px;color:var(--nx-muted);margin-top:6px">
-                        Hora actual: <strong>{{ \Carbon\Carbon::now($orgTimezone ?: 'America/Managua')->format('d/m/Y H:i') }}</strong>
-                    </p>
+            <div class="ap-grid">
+                <div class="ap-field" style="grid-column:1/-1">
+                    <label class="ap-label">Mensaje de bienvenida</label>
+                    <input type="text" class="ap-input" wire:model="orgWelcomeMessage" placeholder="Hola, en que podemos ayudarte?">
                 </div>
-                <div class="ap-actions">
-                    <button class="ap-btn ap-btn-primary" wire:click="saveOrg" wire:loading.attr="disabled">Guardar zona horaria</button>
+                <div class="ap-field" style="grid-column:1/-1">
+                    <label class="ap-label">Mensaje offline</label>
+                    <input type="text" class="ap-input" wire:model="orgOfflineMessage" placeholder="Dejanos tu mensaje y te responderemos pronto">
                 </div>
-            </div>
-        </div>
-    </div>
-    @endif
-
-    {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TAB: SEGURIDAD â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
-    <div x-show="tab === 'seguridad'" x-transition.opacity>
-        <div class="ap-section no-top">
-            <div>
-                <div class="ap-section-title">Cambiar contraseÃ±a</div>
-                <div class="ap-section-desc">Usa una contraseÃ±a de al menos 8 caracteres. Evita contraseÃ±as comunes.</div>
-            </div>
-            <div>
-                <div class="ap-grid single" style="margin-bottom:12px">
-                    <div class="ap-field">
-                        <label class="ap-label">ContraseÃ±a actual</label>
-                        <input type="password" class="ap-input" wire:model="currentPassword" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="current-password">
-                    </div>
-                </div>
-                <div class="ap-grid">
-                    <div class="ap-field">
-                        <label class="ap-label">Nueva contraseÃ±a</label>
-                        <input type="password" class="ap-input" wire:model="newPassword" placeholder="MÃ­nimo 8 caracteres" autocomplete="new-password">
-                    </div>
-                    <div class="ap-field">
-                        <label class="ap-label">Confirmar contraseÃ±a</label>
-                        <input type="password" class="ap-input" wire:model="passwordConfirm" placeholder="Repite la contraseÃ±a" autocomplete="new-password">
-                    </div>
-                </div>
-                <div class="ap-actions">
-                    <button class="ap-btn ap-btn-primary" wire:click="savePassword" wire:loading.attr="disabled">Actualizar contraseÃ±a</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="ap-section">
-            <div>
-                <div class="ap-section-title">
-                    AutenticaciÃ³n dos factores
-                    @if($this->tfaEnabled)
-                        <span class="ap-2fa-badge ap-2fa-on" style="margin-left:8px;vertical-align:middle">Activado</span>
-                    @else
-                        <span class="ap-2fa-badge ap-2fa-off" style="margin-left:8px;vertical-align:middle">Desactivado</span>
-                    @endif
-                </div>
-                <div class="ap-section-desc">AÃ±ade una capa extra de seguridad con una app TOTP como Google Authenticator o Aegis.</div>
-            </div>
-            <div>
-                @if($this->tfaEnabled)
-                    <p style="font-size:12.5px;color:var(--c-sub);margin-bottom:14px;line-height:1.6">Introduce el cÃ³digo de tu app para desactivar el 2FA.</p>
-                    <div class="ap-row">
-                        <input type="text" class="ap-input" style="width:160px;letter-spacing:.2em;font-family:monospace" wire:model="tfaDisableCode" placeholder="000000" maxlength="6">
-                        <button class="ap-btn ap-btn-danger" wire:click="disableTwoFactor">Desactivar 2FA</button>
-                    </div>
-                @else
-                    @if(!$showQr)
-                        <button class="ap-btn ap-btn-primary" wire:click="initTwoFactor">Activar 2FA</button>
-                    @else
-                        <div class="ap-qr-wrap">
-                            {!! $qrSvg !!}
-                            <p class="ap-qr-hint">Escanea con Google Authenticator, Aegis, Authy, etc.</p>
-                            <div>
-                                <div style="font-size:10px;color:var(--c-sub);text-align:center;margin-bottom:4px">Clave secreta (manual)</div>
-                                <div class="ap-secret">{{ $tfaSecret }}</div>
-                            </div>
-                        </div>
-                        <hr class="ap-divider">
-                        <p style="font-size:12.5px;color:var(--c-sub);margin-bottom:12px">Introduce el cÃ³digo de 6 dÃ­gitos para confirmar:</p>
-                        <div class="ap-row">
-                            <input type="text" class="ap-input" style="width:160px;letter-spacing:.2em;font-family:monospace" wire:model="tfaCode" placeholder="000000" maxlength="6">
-                            <button class="ap-btn ap-btn-success" wire:click="confirmTwoFactor">Confirmar y activar</button>
-                            <button class="ap-btn ap-btn-ghost" wire:click="$set('showQr', false)">Cancelar</button>
-                        </div>
-                    @endif
-                @endif
-            </div>
-        </div>
-    </div>
-
-    {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TAB: INTELIGENCIA ARTIFICIAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
-    @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
-    <div x-show="tab === 'ia'" x-transition.opacity>
-        <div class="ap-section no-top">
-            <div>
-                <div class="ap-section-title">Groq â€” Proveedor principal</div>
-                <div class="ap-section-desc">Hasta 3 claves con rotaciÃ³n automÃ¡tica. Si la primera falla, el sistema usa la siguiente.</div>
-            </div>
-            <div>
-                <div class="ak-card">
-                    <div class="ak-card-head">
-                        <div class="ak-provider-icon" style="background:#F55036">G</div>
-                        <div>
-                            <div class="ak-provider-name">Groq</div>
-                            <div class="ak-provider-model">llama-3.3-70b-versatile Â· rotaciÃ³n automÃ¡tica</div>
-                        </div>
-                    </div>
-                    <div class="ak-card-body">
-                        @foreach([['orgGroqKey','groqKey1Set','Clave 1 â€” Principal','gsk_... (principal)'],['orgGroqKey2','groqKey2Set','Clave 2 â€” Fallback','gsk_... (opcional)'],['orgGroqKey3','groqKey3Set','Clave 3 â€” Fallback','gsk_... (opcional)']] as [$field,$setField,$label,$ph])
-                        <div class="ak-field" x-data="{show:false}">
-                            <div class="ak-field-head">
-                                <span class="ak-label">{{ $label }}</span>
-                                @if($$setField)
-                                    <span class="ak-set-badge"><svg width="8" height="8" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4"/></svg>Configurada</span>
-                                @else
-                                    <span class="ak-unset-badge">Sin configurar</span>
-                                @endif
-                            </div>
-                            <div class="ak-input-wrap">
-                                <input :type="show?'text':'password'" wire:model="{{ $field }}" class="ak-input" placeholder="{{ $ph }}">
-                                <button type="button" class="ak-eye" @click="show=!show" tabindex="-1">
-                                    <svg x-show="!show" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                    <svg x-show="show" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
-                                </button>
-                            </div>
-                        </div>
-                        @if(!$loop->last)<div class="ak-divider"></div>@endif
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="ap-section">
-            <div>
-                <div class="ap-section-title">Google Gemini â€” Fallback</div>
-                <div class="ap-section-desc">Se usa si Groq no estÃ¡ disponible o las claves han expirado.</div>
-            </div>
-            <div>
-                <div class="ak-card">
-                    <div class="ak-card-head">
-                        <div class="ak-provider-icon" style="background:#4285F4">G</div>
-                        <div>
-                            <div class="ak-provider-name">Google Gemini</div>
-                            <div class="ak-provider-model">gemini-1.5-flash Â· fallback secundario</div>
-                        </div>
-                    </div>
-                    <div class="ak-card-body">
-                        <div class="ak-field" x-data="{show:false}">
-                            <div class="ak-field-head">
-                                <span class="ak-label">Google AI API Key</span>
-                                @if($geminiKeySet)
-                                    <span class="ak-set-badge"><svg width="8" height="8" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4"/></svg>Configurada</span>
-                                @else
-                                    <span class="ak-unset-badge">Sin configurar</span>
-                                @endif
-                            </div>
-                            <div class="ak-input-wrap">
-                                <input :type="show?'text':'password'" wire:model="orgGeminiKey" class="ak-input" placeholder="AIza... (dejar vacÃ­o para mantener actual)">
-                                <button type="button" class="ak-eye" @click="show=!show" tabindex="-1">
-                                    <svg x-show="!show" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                    <svg x-show="show" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="ap-actions" style="margin-top:16px">
-                    <button class="ap-btn ap-btn-primary" wire:click="saveOrgKeys" wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="saveOrgKeys">Guardar claves</span>
-                        <span wire:loading wire:target="saveOrgKeys">Guardando...</span>
+                <div class="ap-actions" style="grid-column:1/-1">
+                    <button class="ap-btn ap-btn-primary" wire:click="saveWidgetSettings" wire:loading.attr="disabled">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span wire:loading.remove wire:target="saveWidgetSettings">Guardar widget</span>
+                        <span wire:loading wire:target="saveWidgetSettings">Guardando...</span>
                     </button>
                 </div>
-                <p class="ak-hints" style="margin-top:7px;text-align:right">Las claves se almacenan cifradas. Deja los campos vacÃ­os para mantener las actuales.</p>
             </div>
         </div>
 
-        <div class="ap-section">
-            <div>
-                <div class="ap-section-title">LÃ­mites del bot</div>
-                <div class="ap-section-desc">Controla el consumo de tokens para evitar gastos innecesarios.</div>
-            </div>
-            <div>
-                <div class="ak-limits-grid" style="margin-bottom:14px">
-                    <div class="ak-field">
-                        <label class="ak-label">MÃ¡x. mensajes por sesiÃ³n</label>
-                        <input type="number" wire:model="maxMsgPerSession" min="5" max="200" class="ap-input">
-                        <p class="ak-hints">MÃ­n. 5 Â· MÃ¡x. 200</p>
-                    </div>
-                    <div class="ak-field">
-                        <label class="ak-label">MÃ¡x. sesiones con bot por dÃ­a</label>
-                        <input type="number" wire:model="maxSessionsPerDay" min="10" max="10000" class="ap-input">
-                        <p class="ak-hints">MÃ­n. 10 Â· MÃ¡x. 10,000</p>
-                    </div>
-                </div>
-                <button class="ap-btn ap-btn-primary" wire:click="saveLimits" wire:loading.attr="disabled">
-                    <span wire:loading.remove wire:target="saveLimits">Guardar lÃ­mites</span>
-                    <span wire:loading wire:target="saveLimits">Guardando...</span>
-                </button>
-            </div>
-        </div>
     </div>
     @endif
 
-    {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TAB: CORREO ELECTRÃ“NICO â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
+    {{-- ═══════════════════ TAB: SEGURIDAD ═══════════════════ --}}
+    <div x-show="tab === 'seguridad'" x-transition.opacity>
+
+        <div class="ap-section no-top">
+            <div>
+                <div class="ap-section-title">Cambiar contrasena</div>
+                <div class="ap-section-desc">Usa una contrasena segura de al menos 8 caracteres.</div>
+            </div>
+            <div class="ap-grid">
+                <div class="ap-field" style="grid-column:1/-1">
+                    <label class="ap-label">Contrasena actual</label>
+                    <input type="password" class="ap-input" wire:model="currentPassword" autocomplete="current-password">
+                    @error('currentPassword') <span style="font-size:11px;color:#dc2626">{{ $message }}</span> @enderror
+                </div>
+                <div class="ap-field">
+                    <label class="ap-label">Nueva contrasena</label>
+                    <input type="password" class="ap-input" wire:model="newPassword" autocomplete="new-password">
+                    @error('newPassword') <span style="font-size:11px;color:#dc2626">{{ $message }}</span> @enderror
+                </div>
+                <div class="ap-field">
+                    <label class="ap-label">Confirmar nueva contrasena</label>
+                    <input type="password" class="ap-input" wire:model="newPasswordConfirmation" autocomplete="new-password">
+                </div>
+                <div class="ap-actions" style="grid-column:1/-1">
+                    <button class="ap-btn ap-btn-primary" wire:click="changePassword" wire:loading.attr="disabled">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        <span wire:loading.remove wire:target="changePassword">Actualizar contrasena</span>
+                        <span wire:loading wire:target="changePassword">Actualizando...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- ═══════════════════ TAB: INTELIGENCIA ARTIFICIAL ═══════════════════ --}}
+    @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
+    <div x-show="tab === 'ia'" x-transition.opacity>
+
+        <div class="ap-section no-top">
+            <div>
+                <div class="ap-section-title">Proveedor de IA</div>
+                <div class="ap-section-desc">Configura las claves API para activar el bot de inteligencia artificial en tu chat.</div>
+            </div>
+            <div>
+                <div class="ap-notice ap-notice-info" style="margin-bottom:18px">
+                    Las claves se guardan cifradas. Por seguridad, el campo aparece vacio al cargar la pagina — eso no significa que no esten guardadas.
+                </div>
+                <div class="ap-grid">
+                    <div class="ap-field" style="grid-column:1/-1">
+                        <label class="ap-label">Proveedor activo</label>
+                        <select class="ap-input" wire:model.live="aiProvider">
+                            <option value="">Sin IA (desactivado)</option>
+                            <option value="openai">OpenAI (ChatGPT)</option>
+                            <option value="gemini">Google Gemini</option>
+                            <option value="anthropic">Anthropic (Claude)</option>
+                        </select>
+                    </div>
+                    @if($aiProvider === 'openai')
+                    <div class="ap-field" style="grid-column:1/-1">
+                        <label class="ap-label">OpenAI API Key</label>
+                        <input type="password" class="ap-input" wire:model="openaiKey" placeholder="sk-..." autocomplete="new-password">
+                        @error('openaiKey') <span style="font-size:11px;color:#dc2626">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="ap-field" style="grid-column:1/-1">
+                        <label class="ap-label">Modelo</label>
+                        <select class="ap-input" wire:model="openaiModel">
+                            <option value="gpt-4o-mini">gpt-4o-mini (economico)</option>
+                            <option value="gpt-4o">gpt-4o (avanzado)</option>
+                            <option value="gpt-3.5-turbo">gpt-3.5-turbo (basico)</option>
+                        </select>
+                    </div>
+                    @elseif($aiProvider === 'gemini')
+                    <div class="ap-field" style="grid-column:1/-1">
+                        <label class="ap-label">Google Gemini API Key</label>
+                        <input type="password" class="ap-input" wire:model="geminiKey" placeholder="AIza..." autocomplete="new-password">
+                        @error('geminiKey') <span style="font-size:11px;color:#dc2626">{{ $message }}</span> @enderror
+                    </div>
+                    @elseif($aiProvider === 'anthropic')
+                    <div class="ap-field" style="grid-column:1/-1">
+                        <label class="ap-label">Anthropic API Key</label>
+                        <input type="password" class="ap-input" wire:model="anthropicKey" placeholder="sk-ant-..." autocomplete="new-password">
+                        @error('anthropicKey') <span style="font-size:11px;color:#dc2626">{{ $message }}</span> @enderror
+                    </div>
+                    @endif
+                    @if($aiProvider)
+                    <div class="ap-field" style="grid-column:1/-1">
+                        <label class="ap-label">Prompt del sistema (instrucciones del bot)</label>
+                        <textarea class="ap-input" wire:model="aiSystemPrompt" rows="5" placeholder="Eres un agente de soporte para [Empresa]. Responde en espanol, de forma amable y concisa..."></textarea>
+                    </div>
+                    @endif
+                </div>
+                <div class="ap-actions">
+                    <button class="ap-btn ap-btn-primary" wire:click="saveApiKeys" wire:loading.attr="disabled">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span wire:loading.remove wire:target="saveApiKeys">Guardar configuracion de IA</span>
+                        <span wire:loading wire:target="saveApiKeys">Guardando...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    @endif
+
+    {{-- ═══════════════════ TAB: CORREO ELECTRONICO ═══════════════════ --}}
     @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
     <div x-show="tab === 'correo'" x-transition.opacity>
 
@@ -591,17 +411,17 @@
         <div class="ap-section no-top">
             <div>
                 <div class="ap-section-title">Estado del correo</div>
-                <div class="ap-section-desc">DirecciÃ³n desde la que tus clientes recibirÃ¡n los emails de los tickets.</div>
+                <div class="ap-section-desc">Direccion desde la que tus clientes recibiran los emails de los tickets.</div>
             </div>
             <div>
                 @if($smtpEnabled)
                     @if($smtpReady)
-                        <div class="ap-notice ap-notice-success"><strong>SMTP configurado âœ“</strong><br>Los emails se envÃ­an desde <code>{{ $smtpFromAddress }}</code> usando tu servidor SMTP.</div>
+                        <div class="ap-notice ap-notice-success"><strong>SMTP configurado</strong><br>Los emails se envian desde <code>{{ $smtpFromAddress }}</code> usando tu servidor SMTP.</div>
                     @else
                         <div class="ap-notice ap-notice-warn"><strong>SMTP incompleto</strong><br>Activaste "Usar mi SMTP" pero faltan campos requeridos (Host, Usuario, Remitente) abajo.</div>
                     @endif
                 @else
-                    <div class="ap-notice ap-notice-info"><strong>SMTP del sistema</strong><br>Se utilizarÃ¡ el servidor de correo por defecto de la plataforma. Activa tu SMTP propio para mayor personalizaciÃ³n.</div>
+                    <div class="ap-notice ap-notice-info"><strong>SMTP del sistema</strong><br>Se utilizara el servidor de correo por defecto de la plataforma. Activa tu SMTP propio para mayor personalizacion.</div>
                 @endif
             </div>
         </div>
@@ -610,13 +430,13 @@
         <div class="ap-section">
             <div>
                 <div class="ap-section-title">Notificaciones al cliente</div>
-                <div class="ap-section-desc">Email automÃ¡tico al cliente cuando el agente o bot responde a su ticket.</div>
+                <div class="ap-section-desc">Email automatico al cliente cuando el agente o bot responde a su ticket.</div>
             </div>
             <div>
                 <div class="ap-toggle-row">
                     <div>
                         <div class="ap-toggle-label">Notificar al cliente</div>
-                        <div class="ap-toggle-sub">Se envÃ­a un email con cada respuesta del agente o bot</div>
+                        <div class="ap-toggle-sub">Se envia un email con cada respuesta del agente o bot</div>
                     </div>
                     <label class="ap-toggle">
                         <input type="checkbox" wire:model.live="smtpNotificationsEnabled">
@@ -624,7 +444,7 @@
                     </label>
                 </div>
                 @if($smtpNotificationsEnabled && $smtpEnabled && !$smtpReady)
-                    <div class="ap-notice ap-notice-error" style="margin-top:10px">Las notificaciones estÃ¡n activadas pero la configuraciÃ³n SMTP estÃ¡ incompleta. Los emails no se enviarÃ¡n hasta completarla.</div>
+                    <div class="ap-notice ap-notice-error" style="margin-top:10px">Las notificaciones estan activadas pero la configuracion SMTP esta incompleta. Los emails no se enviaran hasta completarla.</div>
                 @endif
             </div>
         </div>
@@ -650,7 +470,7 @@
                 <div class="ap-grid">
                     <div class="ap-field" style="grid-column:1/-1">
                         <label class="ap-label">Host SMTP</label>
-                        <input type="text" class="ap-input" wire:model="smtpHost" placeholder="smtp.gmail.com  Ã³  mail.tudominio.com">
+                        <input type="text" class="ap-input" wire:model="smtpHost" placeholder="smtp.gmail.com  o  mail.tudominio.com">
                     </div>
                     <div class="ap-field">
                         <label class="ap-label">Puerto</label>
@@ -669,8 +489,8 @@
                         <input type="text" class="ap-input" wire:model="smtpUsername" placeholder="tu@dominio.com" autocomplete="off">
                     </div>
                     <div class="ap-field">
-                        <label class="ap-label">ContraseÃ±a SMTP</label>
-                        <input type="password" class="ap-input" wire:model="smtpPassword" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="new-password">
+                        <label class="ap-label">Contrasena SMTP</label>
+                        <input type="password" class="ap-input" wire:model="smtpPassword" placeholder="..." autocomplete="new-password">
                     </div>
                     <div class="ap-field">
                         <label class="ap-label">Email remitente (FROM)</label>
@@ -688,11 +508,11 @@
                         Guardar SMTP
                     </button>
                     @if($smtpReady)
-                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:0">
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                         <input type="email" class="ap-input" wire:model="smtpTestEmail" placeholder="email@prueba.com" style="max-width:220px">
                         <button class="ap-btn ap-btn-ghost" wire:click="sendSmtpTest" wire:loading.attr="disabled">
                             <span wire:loading.remove wire:target="sendSmtpTest">Enviar prueba</span>
-                            <span wire:loading wire:target="sendSmtpTest">Enviandoâ€¦</span>
+                            <span wire:loading wire:target="sendSmtpTest">Enviando...</span>
                         </button>
                     </div>
                     @endif
@@ -703,35 +523,28 @@
         {{-- IMAP --}}
         <div class="ap-section">
             <div>
-                <div class="ap-section-title">BuzÃ³n de entrada (IMAP)</div>
-                <div class="ap-section-desc">Cuando el cliente responde al email de un ticket, el mensaje se aÃ±ade automÃ¡ticamente al hilo en el panel.</div>
+                <div class="ap-section-title">Recibir respuestas por email (IMAP)</div>
+                <div class="ap-section-desc">Cuando un cliente responde al email del ticket, el mensaje aparece automaticamente en el panel.</div>
             </div>
             <div>
                 <div class="ap-notice ap-notice-info" style="margin-bottom:16px">
-                    <strong>Â¿CÃ³mo funciona?</strong><br>
-                    1. El cliente responde al email del ticket<br>
-                    2. El sistema detecta <code>TKT-00001</code> en el asunto<br>
-                    3. El mensaje aparece en el hilo del panel<br>
-                    4. Si el ticket estaba cerrado, se envÃ­a aviso automÃ¡tico al cliente<br><br>
-                    <strong>Recomendado:</strong> usa la <strong>misma cuenta</strong> de email para SMTP e IMAP.
+                    Usa el mismo correo que el FROM de SMTP. El sistema revisa el buzon periodicamente y detecta las respuestas por el codigo del ticket en el asunto.
                 </div>
-
-                <div class="ap-toggle-row" style="margin-bottom:16px">
+                <div class="ap-toggle-row">
                     <div>
-                        <div class="ap-toggle-label">Recibir respuestas por email</div>
-                        <div class="ap-toggle-sub">Las respuestas de clientes se aÃ±aden al ticket automÃ¡ticamente</div>
+                        <div class="ap-toggle-label">Activar recepcion IMAP</div>
+                        <div class="ap-toggle-sub">Permite procesar respuestas de clientes desde el buzon de entrada</div>
                     </div>
                     <label class="ap-toggle">
                         <input type="checkbox" wire:model.live="imapEnabled">
                         <span class="ap-slider"></span>
                     </label>
                 </div>
-
                 @if($imapEnabled)
-                <div class="ap-grid">
+                <div class="ap-grid" style="margin-top:14px">
                     <div class="ap-field" style="grid-column:1/-1">
                         <label class="ap-label">Host IMAP</label>
-                        <input type="text" class="ap-input" wire:model="imapHost" placeholder="mail.tudominio.com  Ã³  imap.gmail.com">
+                        <input type="text" class="ap-input" wire:model="imapHost" placeholder="imap.gmail.com  o  imap.hostinger.com">
                     </div>
                     <div class="ap-field">
                         <label class="ap-label">Puerto</label>
@@ -740,99 +553,75 @@
                     <div class="ap-field">
                         <label class="ap-label">Cifrado</label>
                         <select class="ap-input" wire:model="imapEncryption">
-                            <option value="ssl">SSL (puerto 993, recomendado)</option>
+                            <option value="ssl">SSL (recomendado, puerto 993)</option>
                             <option value="tls">TLS (puerto 143)</option>
                             <option value="none">Sin cifrado</option>
                         </select>
                     </div>
                     <div class="ap-field">
                         <label class="ap-label">Usuario IMAP</label>
-                        <input type="text" class="ap-input" wire:model="imapUsername" placeholder="soporte@tudominio.com" autocomplete="off">
+                        <input type="text" class="ap-input" wire:model="imapUsername" placeholder="tu@dominio.com" autocomplete="off">
                     </div>
                     <div class="ap-field">
-                        <label class="ap-label">ContraseÃ±a IMAP</label>
-                        <input type="password" class="ap-input" wire:model="imapPassword" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="new-password">
+                        <label class="ap-label">Contrasena IMAP</label>
+                        <input type="password" class="ap-input" wire:model="imapPassword" placeholder="..." autocomplete="new-password">
                     </div>
                     <div class="ap-field" style="grid-column:1/-1">
-                        <label class="ap-label">Carpeta / BuzÃ³n</label>
+                        <label class="ap-label">Carpeta a revisar</label>
                         <input type="text" class="ap-input" wire:model="imapFolder" placeholder="INBOX">
-                        <span style="font-size:11px;color:var(--c-sub,#6b7280);margin-top:4px">Normalmente <code>INBOX</code>. En algunos proveedores puede ser otra carpeta.</span>
                     </div>
                 </div>
-                @else
-                <div class="ap-notice ap-notice-muted">Activa la recepciÃ³n IMAP para configurar el servidor.</div>
                 @endif
-
                 <div class="ap-actions">
                     <button class="ap-btn ap-btn-primary" wire:click="saveImap" wire:loading.attr="disabled">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                         Guardar IMAP
                     </button>
-                    @if($imapEnabled && !empty($imapHost))
-                    <button class="ap-btn ap-btn-ghost" wire:click="testImapConnection" wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="testImapConnection">Probar conexiÃ³n</span>
-                        <span wire:loading wire:target="testImapConnection">Conectandoâ€¦</span>
-                    </button>
-                    @endif
                 </div>
             </div>
         </div>
+
     </div>
     @endif
 
-    {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TAB: LICENCIA â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
+    {{-- ═══════════════════ TAB: LICENCIA ═══════════════════ --}}
     @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
     <div x-show="tab === 'licencia'" x-transition.opacity>
         <div class="ap-section no-top">
             <div>
-                <div class="ap-section-title">Estado de licencia</div>
-                <div class="ap-section-desc">Licencia Partner Edition de Nexova Desk. Se verifica automÃ¡ticamente al cargar.</div>
+                <div class="ap-section-title">Estado de la licencia</div>
+                <div class="ap-section-desc">Verifica que tu licencia Partner este activa.</div>
             </div>
             <div>
                 <div class="lic-card">
-                    <div class="lic-head">
-                        @if($licenseStatus === 'active')
-                            <div class="lic-icon-wrap"><svg width="26" height="26" fill="none" stroke="#15803d" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 12c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.249-8.25-3.286z"/></svg></div>
-                        @elseif($licenseStatus === 'unreachable')
-                            <div class="lic-icon-wrap warn"><svg width="26" height="26" fill="none" stroke="#92400e" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg></div>
-                        @else
-                            <div class="lic-icon-wrap error"><svg width="26" height="26" fill="none" stroke="#b91c1c" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg></div>
-                        @endif
-                        <div>
-                            <div class="lic-plan">Plan Partner Edition</div>
-                            <div class="lic-sub">Licencia vitalicia Â· Nexova Desk</div>
+                    @if($licenseValid)
+                        <div class="lic-badge lic-badge-ok">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            Licencia activa
                         </div>
+                    @else
+                        <div class="lic-badge lic-badge-err">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            Licencia no encontrada
+                        </div>
+                    @endif
+                    <div class="lic-row">
+                        <span class="lic-label">Partner</span>
+                        <span class="lic-value">{{ $licensePartner ?: '—' }}</span>
                     </div>
-                    <div class="lic-divider"></div>
-                    <div style="display:flex;flex-direction:column;gap:12px">
-                        <div class="lic-row">
-                            <span class="lic-label">Estado</span>
-                            @if($licenseStatus === 'active')
-                                <span class="lic-badge lic-badge-ok"><svg width="10" height="10" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4"/></svg>Licencia activa</span>
-                            @elseif($licenseStatus === 'unreachable')
-                                <span class="lic-badge lic-badge-warn">Sin conexiÃ³n al servidor de licencias</span>
-                            @else
-                                <span class="lic-badge lic-badge-err">Licencia inactiva o no encontrada</span>
-                            @endif
-                        </div>
-                        <div class="lic-row">
-                            <span class="lic-label">Dominio registrado</span>
-                            <span class="lic-value">{{ $installedDomain }}</span>
-                        </div>
-                        <div class="lic-row">
-                            <span class="lic-label">Servidor de licencias</span>
-                            <span class="lic-value">{{ $platformUrl }}</span>
-                        </div>
-                        <div class="lic-row">
-                            <span class="lic-label">Ãšltima verificaciÃ³n</span>
-                            <span style="font-size:13px;color:var(--c-sub,#6b7280)">{{ $licenseCheckedAt }}</span>
-                        </div>
+                    <div class="lic-row">
+                        <span class="lic-label">Dominio</span>
+                        <span class="lic-value">{{ $licenseDomain ?: request()->getHost() }}</span>
+                    </div>
+                    <div class="lic-row">
+                        <span class="lic-label">Ultimo chequeo</span>
+                        <span class="lic-value">{{ $licenseCheckedAt ? \Carbon\Carbon::parse($licenseCheckedAt)->diffForHumans() : 'Nunca' }}</span>
                     </div>
                     <div class="lic-divider"></div>
                     <div>
                         <p class="lic-label" style="margin-bottom:10px">Incluido en tu plan</p>
                         <div class="lic-features">
-                            @foreach(['Chat en vivo ilimitado','Bot de IA con claves propias','Widget personalizable','Agentes ilimitados','IntegraciÃ³n Telegram','Tickets por email (IMAP)','Actualizaciones incluidas'] as $feat)
+                            @foreach(['Chat en vivo ilimitado','Bot de IA con claves propias','Widget personalizable','Agentes ilimitados','Integracion Telegram','Tickets por email (IMAP)','Actualizaciones incluidas'] as $feat)
                                 <span class="lic-feat"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>{{ $feat }}</span>
                             @endforeach
                         </div>
@@ -851,24 +640,24 @@
     </div>
     @endif
 
-    {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TAB: AUTOMATIZACIÃ“N â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
+    {{-- ═══════════════════ TAB: AUTOMATIZACION ═══════════════════ --}}
     @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
     <div x-show="tab === 'cron'" x-transition.opacity>
 
         {{-- Intro amigable --}}
         <div class="ap-section no-top">
             <div>
-                <div class="ap-section-title">Tareas automÃ¡ticas</div>
+                <div class="ap-section-title">Tareas automaticas</div>
                 <div class="ap-section-desc">
-                    Nexova Desk necesita ejecutar ciertas tareas en segundo plano de forma periÃ³dica:<br><br>
-                    ðŸ“§ <strong>Revisar tu buzÃ³n de correo</strong> para capturar respuestas de clientes a tickets<br>
-                    ðŸ”‘ <strong>Verificar la licencia</strong> del sistema una vez al dÃ­a<br><br>
-                    Para que funcionen automÃ¡ticamente, debes configurarlas en tu hosting o usar un servicio externo (gratis o de pago). Elige la opciÃ³n que mejor se adapte a tu entorno.
+                    Nexova Desk necesita ejecutar ciertas tareas en segundo plano de forma periodica:<br><br>
+                    📧 <strong>Revisar tu buzon de correo</strong> para capturar respuestas de clientes a tickets<br>
+                    🔑 <strong>Verificar la licencia</strong> del sistema una vez al dia<br><br>
+                    Para que funcionen automaticamente, debes configurarlas en tu hosting o usar un servicio externo (gratis o de pago).
                 </div>
             </div>
             <div>
                 <div class="ap-notice ap-notice-info">
-                    â±ï¸ Para que las respuestas por email lleguen rÃ¡pido, el procesamiento de correo debe ejecutarse <strong>cada 1 minuto</strong>. Si tu plan de hosting solo permite cada 5 minutos, seguirÃ¡ funcionando â€” solo con un poco mÃ¡s de demora.
+                    Para que las respuestas por email lleguen rapido, el procesamiento de correo debe ejecutarse <strong>cada 1 minuto</strong>. Si tu plan de hosting solo permite cada 5 minutos, seguira funcionando — solo con un poco mas de demora.
                 </div>
             </div>
         </div>
@@ -876,17 +665,17 @@
         {{-- Opciones --}}
         <div class="ap-section">
             <div>
-                <div class="ap-section-title">Â¿CÃ³mo quieres configurarlo?</div>
-                <div class="ap-section-desc">Elige segÃºn tu tipo de servidor o preferencia.</div>
+                <div class="ap-section-title">Como quieres configurarlo?</div>
+                <div class="ap-section-desc">Elige segun tu tipo de servidor o preferencia.</div>
             </div>
             <div>
                 {{-- Sub-tabs --}}
-                <div class="cron-subtab-row" style="margin-bottom:20px">
-                    <button class="cron-subtab" :class="{ active: cronTab === 'cronjob' }" @click="cronTab = 'cronjob'">ðŸŒ Servicio gratuito</button>
-                    <button class="cron-subtab" :class="{ active: cronTab === 'hosting' }" @click="cronTab = 'hosting'">ðŸ–¥ï¸ Mi Hosting</button>
-                    <button class="cron-subtab" :class="{ active: cronTab === 'vps' }" @click="cronTab = 'vps'">âš™ï¸ VPS / Servidor</button>
+                <div class="cron-subtab-row">
+                    <button class="cron-subtab" :class="{ active: cronTab === 'cronjob' }" @click="cronTab = 'cronjob'">🌐 Servicio gratuito</button>
+                    <button class="cron-subtab" :class="{ active: cronTab === 'hosting' }" @click="cronTab = 'hosting'">🖥️ Mi Hosting</button>
+                    <button class="cron-subtab" :class="{ active: cronTab === 'vps' }" @click="cronTab = 'vps'">⚙️ VPS / Servidor</button>
                     <button class="cron-subtab" :class="{ active: cronTab === 'nexova' }" @click="cronTab = 'nexova'" style="position:relative">
-                        âš¡ Nexova Fast-Cron
+                        ⚡ Nexova Fast-Cron
                         <span style="position:absolute;top:-8px;right:-4px;background:#f59e0b;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px">Pronto</span>
                     </button>
                 </div>
@@ -894,18 +683,18 @@
                 {{-- CRON-JOB.ORG --}}
                 <div x-show="cronTab === 'cronjob'">
                     <div class="ap-notice ap-notice-success" style="margin-bottom:18px">
-                        <strong>âœ… OpciÃ³n recomendada si no tienes VPS.</strong><br>
-                        <a href="https://cron-job.org" target="_blank" style="color:#059669;font-weight:600">Cron-Job.org</a> es un servicio gratuito que llama a estas URLs automÃ¡ticamente. Solo necesitas crear una cuenta y agregar cada URL â€” sin instalar nada.
+                        <strong>Opcion recomendada si no tienes VPS.</strong><br>
+                        <a href="https://cron-job.org" target="_blank" style="color:#059669;font-weight:600">Cron-Job.org</a> es un servicio gratuito que llama a estas URLs automaticamente. Solo necesitas crear una cuenta y agregar cada URL — sin instalar nada.
                     </div>
                     <p style="font-size:12.5px;color:var(--c-sub,#6b7280);margin-bottom:16px;line-height:1.6">
-                        <strong>Pasos:</strong> entra a <a href="https://cron-job.org" target="_blank" style="color:#16a34a">cron-job.org</a> â†’ crea una cuenta gratuita â†’ New Cron Job â†’ pega la URL â†’ elige la frecuencia â†’ Guardar.<br>
-                        Tipo de peticiÃ³n: <strong>GET</strong>.
+                        <strong>Pasos:</strong> entra a <a href="https://cron-job.org" target="_blank" style="color:#16a34a">cron-job.org</a> → crea una cuenta gratuita → New Cron Job → pega la URL → elige la frecuencia → Guardar.<br>
+                        Tipo de peticion: <strong>GET</strong>.
                     </p>
 
                     @foreach([
-                        ['icon'=>'ðŸ“§','color'=>'#3b82f6','name'=>'Revisar correo (IMAP)','desc'=>'Detecta respuestas de clientes y las aÃ±ade automÃ¡ticamente al ticket','url'=>$appUrl.'/api/cron/imap','freq'=>'Cada 1 minuto'],
-                        ['icon'=>'âš¡','color'=>'#8b5cf6','name'=>'Worker general','desc'=>'Alternativa: ejecuta todas las tareas automÃ¡ticas de una vez','url'=>$appUrl.'/api/cron/worker','freq'=>'Cada 1 minuto'],
-                        ['icon'=>'ðŸ”‘','color'=>'#f59e0b','name'=>'Verificar licencia','desc'=>'Confirma que la licencia del sistema sigue activa','url'=>$appUrl.'/api/cron/license','freq'=>'1 vez al dÃ­a'],
+                        ['icon'=>'📧','color'=>'#3b82f6','name'=>'Revisar correo (IMAP)','desc'=>'Detecta respuestas de clientes y las agrega automaticamente al ticket','url'=>$appUrl.'/api/cron/imap','freq'=>'Cada 1 minuto'],
+                        ['icon'=>'⚡','color'=>'#8b5cf6','name'=>'Worker general','desc'=>'Alternativa: ejecuta todas las tareas automaticas de una vez','url'=>$appUrl.'/api/cron/worker','freq'=>'Cada 1 minuto'],
+                        ['icon'=>'🔑','color'=>'#f59e0b','name'=>'Verificar licencia','desc'=>'Confirma que la licencia del sistema sigue activa','url'=>$appUrl.'/api/cron/license','freq'=>'1 vez al dia'],
                     ] as $ep)
                     <div class="cron-endpoint-card">
                         <div class="cron-endpoint-head">
@@ -918,7 +707,7 @@
                         <div class="cron-endpoint-body">
                             <div class="cron-url-row">
                                 <span class="cron-url-text">{{ $ep['url'] }}</span>
-                                <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('{{ $ep['url'] }}').then(()=>{this.textContent='âœ“';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar</button>
+                                <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('{{ $ep['url'] }}').then(()=>{this.textContent='Copiado';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar</button>
                             </div>
                             <div class="cron-freq">Frecuencia: <strong>{{ $ep['freq'] }}</strong></div>
                         </div>
@@ -929,17 +718,17 @@
                 {{-- HOSTING --}}
                 <div x-show="cronTab === 'hosting'">
                     <div class="ap-notice ap-notice-info" style="margin-bottom:18px">
-                        La mayorÃ­a de hostings como <strong>Hostinger</strong>, <strong>cPanel</strong>, <strong>Plesk</strong> o <strong>DirectAdmin</strong> tienen una secciÃ³n de "Cron Jobs" en su panel de control. Busca esa opciÃ³n y agrega cada tarea con los datos de abajo.
+                        La mayoria de hostings como <strong>Hostinger</strong>, <strong>cPanel</strong>, <strong>Plesk</strong> o <strong>DirectAdmin</strong> tienen una seccion de Cron Jobs en su panel de control. Busca esa opcion y agrega cada tarea con los datos de abajo.
                     </div>
                     <p style="font-size:12.5px;color:var(--c-sub,#6b7280);margin-bottom:16px;line-height:1.6">
-                        <strong>En Hostinger:</strong> Panel â†’ Avanzado â†’ Cron Jobs â†’ Agregar cron job<br>
-                        <strong>En cPanel:</strong> Cron Jobs â†’ Add New Cron Job<br>
+                        <strong>En Hostinger:</strong> Panel → Avanzado → Cron Jobs → Agregar cron job<br>
+                        <strong>En cPanel:</strong> Cron Jobs → Add New Cron Job<br>
                         Pega el comando en el campo de comando.
                     </p>
                     @foreach([
-                        ['icon'=>'ðŸ“§','color'=>'#3b82f6','name'=>'Revisar correo (IMAP)','desc'=>'Detecta y aÃ±ade respuestas de clientes a los tickets','url'=>$appUrl.'/api/cron/imap','freq'=>'*/1 * * * *'],
-                        ['icon'=>'âš¡','color'=>'#8b5cf6','name'=>'Worker general','desc'=>'Alternativa: ejecuta todas las tareas automÃ¡ticas','url'=>$appUrl.'/api/cron/worker','freq'=>'*/1 * * * *'],
-                        ['icon'=>'ðŸ”‘','color'=>'#f59e0b','name'=>'Verificar licencia','desc'=>'Confirma la licencia del sistema','url'=>$appUrl.'/api/cron/license','freq'=>'0 3 * * *'],
+                        ['icon'=>'📧','color'=>'#3b82f6','name'=>'Revisar correo (IMAP)','desc'=>'Detecta y agrega respuestas de clientes a los tickets','url'=>$appUrl.'/api/cron/imap','freq'=>'*/1 * * * *'],
+                        ['icon'=>'⚡','color'=>'#8b5cf6','name'=>'Worker general','desc'=>'Alternativa: ejecuta todas las tareas automaticas','url'=>$appUrl.'/api/cron/worker','freq'=>'*/1 * * * *'],
+                        ['icon'=>'🔑','color'=>'#f59e0b','name'=>'Verificar licencia','desc'=>'Confirma la licencia del sistema','url'=>$appUrl.'/api/cron/license','freq'=>'0 3 * * *'],
                     ] as $ep)
                     <div class="cron-endpoint-card">
                         <div class="cron-endpoint-head">
@@ -952,34 +741,34 @@
                         <div class="cron-endpoint-body">
                             <div class="cron-url-row">
                                 <span class="cron-url-text">curl {{ $ep['url'] }}</span>
-                                <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('curl {{ $ep['url'] }}').then(()=>{this.textContent='âœ“';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar</button>
+                                <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('curl {{ $ep['url'] }}').then(()=>{this.textContent='Copiado';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar</button>
                             </div>
-                            <div class="cron-freq">Frecuencia (expresiÃ³n tÃ©cnica): <strong><code>{{ $ep['freq'] }}</code></strong></div>
+                            <div class="cron-freq">Frecuencia: <strong><code>{{ $ep['freq'] }}</code></strong></div>
                         </div>
                     </div>
                     @endforeach
                     <div class="ap-notice ap-notice-warn" style="margin-top:12px">
-                        Â¿Tu panel no acepta <code>curl</code>? Usa solo la URL directa en el campo URL y selecciona mÃ©todo <strong>GET</strong>.
+                        Tu panel no acepta <code>curl</code>? Usa solo la URL directa en el campo URL y selecciona metodo <strong>GET</strong>.
                     </div>
                 </div>
 
                 {{-- VPS --}}
                 <div x-show="cronTab === 'vps'">
                     <div class="ap-notice ap-notice-info" style="margin-bottom:18px">
-                        Si tienes acceso por SSH a tu servidor, puedes configurar las tareas directamente en el sistema. Es la opciÃ³n mÃ¡s confiable y sin dependencias externas.
+                        Si tienes acceso por SSH a tu servidor, puedes configurar las tareas directamente en el sistema. Es la opcion mas confiable y sin dependencias externas.
                     </div>
                     <p style="font-size:12.5px;color:var(--c-sub,#6b7280);margin-bottom:14px;line-height:1.6">
-                        ConÃ©ctate por SSH â†’ escribe <code>crontab -e</code> â†’ agrega estas lÃ­neas al final del archivo â†’ guarda con <code>Ctrl+X</code>:
+                        Conectate por SSH → escribe <code>crontab -e</code> → agrega estas lineas al final del archivo → guarda:
                     </p>
                     <div class="cron-endpoint-card">
                         <div class="cron-endpoint-body">
                             <div style="background:var(--c-bg,#f5f6f8);border:1px solid var(--c-border,#e3e6ea);border-radius:7px;padding:14px 16px;font-family:monospace;font-size:12px;color:var(--c-text,#111);line-height:1.8;overflow-x:auto;">
                                 # Revisar correo cada minuto para capturar respuestas de tickets<br>
                                 * * * * * curl -s {{ $appUrl }}/api/cron/imap >/dev/null 2>&1<br><br>
-                                # Verificar licencia una vez al dÃ­a (a las 3:00 AM)<br>
+                                # Verificar licencia una vez al dia (a las 3:00 AM)<br>
                                 0 3 * * * curl -s {{ $appUrl }}/api/cron/license >/dev/null 2>&1
                             </div>
-                            <button class="cron-copy-btn" style="margin-top:8px" onclick="navigator.clipboard.writeText('* * * * * curl -s {{ $appUrl }}/api/cron/imap >/dev/null 2>&1\n0 3 * * * curl -s {{ $appUrl }}/api/cron/license >/dev/null 2>&1').then(()=>{this.textContent='âœ“ Copiado';setTimeout(()=>this.textContent='Copiar todo',1500)})">Copiar todo</button>
+                            <button class="cron-copy-btn" style="margin-top:8px" onclick="navigator.clipboard.writeText('* * * * * curl -s {{ $appUrl }}/api/cron/imap >/dev/null 2>&1\n0 3 * * * curl -s {{ $appUrl }}/api/cron/license >/dev/null 2>&1').then(()=>{this.textContent='Copiado';setTimeout(()=>this.textContent='Copiar todo',1500)})">Copiar todo</button>
                         </div>
                     </div>
                 </div>
@@ -987,19 +776,19 @@
                 {{-- NEXOVA FAST-CRON --}}
                 <div x-show="cronTab === 'nexova'">
                     <div style="text-align:center;padding:48px 24px">
-                        <div style="font-size:40px;margin-bottom:16px">âš¡</div>
+                        <div style="font-size:40px;margin-bottom:16px">⚡</div>
                         <div style="font-size:20px;font-weight:800;color:var(--c-text,#111);margin-bottom:8px;letter-spacing:-.02em">Nexova Fast-Cron</div>
                         <div style="font-size:13px;color:var(--c-sub,#6b7280);max-width:420px;margin:0 auto 20px;line-height:1.7">
-                            Nuestro servicio nativo de cron: alta frecuencia, monitoreo automÃ¡tico, reintentos ante fallos y notificaciones si una tarea deja de funcionar. DiseÃ±ado especÃ­ficamente para Nexova Desk.
+                            Nuestro servicio nativo de cron: alta frecuencia, monitoreo automatico, reintentos ante fallos y notificaciones si una tarea deja de funcionar. Disenado especificamente para Nexova Desk.
                         </div>
                         <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:28px">
-                            @foreach(['Sin configuraciÃ³n manual','Cada 30 segundos','Reintentos automÃ¡ticos','Alertas por email','Historial de ejecuciones'] as $feat)
-                            <span style="background:var(--c-bg,#f5f6f8);border:1px solid var(--c-border,#e3e6ea);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:500;color:var(--c-text,#111)">âœ“ {{ $feat }}</span>
+                            @foreach(['Sin configuracion manual','Cada 30 segundos','Reintentos automaticos','Alertas por email','Historial de ejecuciones'] as $feat)
+                            <span style="background:var(--c-bg,#f5f6f8);border:1px solid var(--c-border,#e3e6ea);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:500;color:var(--c-text,#111)">✓ {{ $feat }}</span>
                             @endforeach
                         </div>
                         <a href="#" style="display:inline-flex;align-items:center;gap:8px;background:#1e293b;color:#f8fafc;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;opacity:.6;cursor:not-allowed">
                             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            Disponible prÃ³ximamente
+                            Disponible proximamente
                         </a>
                         <p style="font-size:11.5px;color:var(--c-sub,#9ca3af);margin-top:14px">Mientras tanto, usa cualquiera de las opciones anteriores</p>
                     </div>
@@ -1011,15 +800,15 @@
         <div class="ap-section">
             <div>
                 <div class="ap-section-title">Verificar estado del correo</div>
-                <div class="ap-section-desc">Comprueba en cualquier momento si la conexiÃ³n al buzÃ³n de correo estÃ¡ funcionando correctamente.</div>
+                <div class="ap-section-desc">Comprueba si la conexion al buzon de correo esta funcionando correctamente.</div>
             </div>
             <div>
                 <div class="cron-url-row">
                     <span class="cron-url-text">{{ $appUrl }}/api/cron/imap-status</span>
-                    <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('{{ $appUrl }}/api/cron/imap-status').then(()=>{this.textContent='âœ“';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar</button>
+                    <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('{{ $appUrl }}/api/cron/imap-status').then(()=>{this.textContent='Copiado';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar</button>
                 </div>
                 <p style="font-size:11.5px;color:var(--c-sub,#6b7280);margin-top:8px;line-height:1.5">
-                    Abre esta URL en tu navegador. Si ves <code>"status":"connected"</code> significa que el buzÃ³n estÃ¡ correctamente configurado y accesible.
+                    Abre esta URL en tu navegador. Si ves "Conexion IMAP activa" significa que el buzon esta correctamente configurado.
                 </p>
             </div>
         </div>
