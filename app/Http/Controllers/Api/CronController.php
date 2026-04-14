@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Organization;
 use App\Models\SmtpSetting;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -34,9 +35,10 @@ class CronController extends Controller
         $color   = $ok ? '#16a34a' : '#dc2626';
         $bg      = $ok ? '#f0fdf4' : '#fef2f2';
         $border  = $ok ? '#bbf7d0' : '#fecaca';
-        $icon    = $ok ? '✅' : '❌';
-        $elapsed_html = $elapsed > 0 ? "<p style='font-size:12px;color:#9ca3af;margin-top:8px'>⏱️ Ejecutado en {$elapsed}ms</p>" : '';
+        $elapsed_html = $elapsed > 0 ? "<p style='font-size:12px;color:#9ca3af;margin-top:8px'>Ejecutado en {$elapsed}ms</p>" : '';
         $detail_html  = $detail ? "<pre style='background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;font-size:12px;color:#64748b;overflow-x:auto;white-space:pre-wrap;margin-top:16px;line-height:1.6'>".htmlspecialchars($detail)."</pre>" : '';
+        $orgName      = Organization::first()?->name ?? config('app.name', 'Nexova Desk');
+        $statusIndicator = "<span style='width:8px;height:8px;border-radius:50%;background:{$color};display:inline-block;margin-right:6px'></span>";
 
         $html = <<<HTML
 <!DOCTYPE html>
@@ -50,23 +52,19 @@ class CronController extends Controller
 body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif; background: #f8fafc; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
 .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 40px 36px; max-width: 520px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,.06); }
 .badge { display: inline-flex; align-items: center; gap: 6px; background: {$bg}; border: 1px solid {$border}; color: {$color}; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 99px; margin-bottom: 20px; }
-.icon { font-size: 36px; margin-bottom: 12px; display: block; }
 h1 { font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
 p.msg { font-size: 14px; color: #475569; line-height: 1.6; }
 .footer { margin-top: 28px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 11.5px; color: #94a3b8; text-align: center; }
-.footer a { color: #94a3b8; text-decoration: none; }
 </style>
 </head>
 <body>
 <div class="card">
-    <span class="icon">{$icon}</span>
-    <div class="badge">{$icon} Nexova Desk · Automatización</div>
+    <div class="badge">{$statusIndicator} Nexova Desk · Automatizacion</div>
     <h1>{$title}</h1>
     <p class="msg">{$message}</p>
     {$elapsed_html}
     {$detail_html}
-    <div class="footer">Este endpoint es ejecutado automáticamente por tu servicio de cron.<br>
-    <a href="#">Nexova Desk</a> · Sistema de soporte</div>
+    <div class="footer">Control de Automatizaciones de {$orgName}</div>
 </div>
 </body>
 </html>

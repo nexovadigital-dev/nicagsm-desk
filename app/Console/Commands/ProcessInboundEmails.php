@@ -83,8 +83,10 @@ class ProcessInboundEmails extends Command
 
                 $wasTicket = $this->processMessage($inbox, $uid, $orgId);
 
-                // Guardar en cache para no procesar de nuevo
-                // (true = era reply de ticket, false = no era ticket pero ya revisado)
+                // Guardar en cache para no procesar de nuevo.
+                // IMPORTANTE: solo cachear como 'skip' emails que NO son replies de ticket
+                // (su subject no contiene TKT-XXXXX). Si era ticket ($wasTicket = true),
+                // cachear como 'ticket'. TTL 72h.
                 Cache::put($cacheKey, $wasTicket ? 'ticket' : 'skip', now()->addHours(72));
 
                 if ($wasTicket) {
@@ -125,12 +127,25 @@ class ProcessInboundEmails extends Command
         }
 
         // Extraer y limpiar el cuerpo del email
-        $body = $this->getPlainText($inbox, $uid);
-        $body = $this->stripQuotedReply($body);
+        $rawBody     = $this->getPlainText($inbox, $uid);
+        $strippedBody = $this->stripQuotedReply($rawBody);
 
-        if (empty(trim($body))) {
-            return false; // Email sin contenido útil
+        // Si tras strip el cuerpo quedó vacío, usar los primeros 800 chars del cuerpo
+        // original como fallback (previene perder emails cuando el patrón de strip
+        // es demasiado agresivo con el formato del cliente de correo del usuario).
+        if (empty(trim($strippedBody))) {
+            $fallback = trim(mb_substr($rawBody, 0, 800));
+            if (empty($fallback)) {
+                Log::info("[IMAP] uid={$uid} org=#{$orgId}: body vacío antes y después del strip — descartado");
+                return false;
+            }
+            Log::info("[IMAP] uid={$uid} org=#{$orgId}: strip dejó vacío, usando cuerpo original (primeros 800 chars)");
+            $body = $fallback;
+        } else {
+            $body = $strippedBody;
         }
+
+        Log::info("[IMAP] uid={$uid} org=#{$orgId}: body extraído (" . strlen($body) . " chars)");
 
         // Ticket cerrado: NO reabrir — enviar aviso automático al cliente
         if ($ticket->status === 'closed') {
