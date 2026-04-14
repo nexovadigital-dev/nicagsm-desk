@@ -24,7 +24,6 @@ print('==> optimize:clear...')
 run(f'cd {base} && php artisan config:clear 2>&1')
 run(f'cd {base} && php artisan route:clear 2>&1')
 run(f'cd {base} && php artisan view:clear 2>&1')
-run(f'cd {base} && php artisan cache:clear 2>&1')
 run(f'cd {base} && php artisan config:cache 2>&1')
 run(f'cd {base} && php artisan route:cache 2>&1')
 

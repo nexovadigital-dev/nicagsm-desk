@@ -272,16 +272,16 @@ class ProcessInboundEmails extends Command
         // Normalizar saltos de línea
         $body = str_replace("\r\n", "\n", $body);
 
-        // ── 1. Gmail ES: "El lun, 13 abr 2026 a las 14:55, X (<email>) escribió:" ──
+        // ── 1. Gmail ES: "El lun, 13 abr 2026, 3:50 p.m., X (<email>) escribió:" ──
         $body = preg_replace(
-            '/\nEl\s+\w{2,4}[\.,]\s+\d{1,2}\s+\w{3,10}[\.,]?\s+\d{4}\s+a\s+las\s+.+escribi[oó]:?.*/si',
+            '/\nEl\s+(?:lun|mar|mi[eé]|jue|vie|s[aá]b|dom).*?escribi[oó]:?.*/isu',
             '',
             $body
         );
 
         // ── 2. Gmail EN: "On Mon, Apr 13, 2026 at 2:55 PM, X <email> wrote:" ──
         $body = preg_replace(
-            '/\nOn\s+\w{3,4},?\s+\w{3,9}\.?\s+\d{1,2},?\s+\d{4}.+wrote:?.*/si',
+            '/\nOn\s+(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun).*?wrote:?.*/isu',
             '',
             $body
         );
