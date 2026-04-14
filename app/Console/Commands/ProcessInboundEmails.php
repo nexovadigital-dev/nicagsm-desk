@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Mail\TicketReopenBlockedMail;
 use App\Models\Message;
 use App\Models\SmtpSetting;
 use App\Models\Ticket;
+use App\Services\OrgMailer;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * ProcessInboundEmails
@@ -109,6 +112,14 @@ class ProcessInboundEmails extends Command
             return;
         }
 
+        // ── Ticket cerrado: NO reabrir — enviar aviso automático al cliente ──
+        if ($ticket->status === 'closed') {
+            $this->sendClosedNotice($smtp, $ticket, $header);
+            imap_setflag_full($inbox, (string) $uid, '\\Seen', ST_UID);
+            Log::info("[IMAP] Ticket {$ticketNumber} está cerrado — enviado aviso al cliente (org #{$orgId})");
+            return;
+        }
+
         // ── Create the message ────────────────────────────────────────────────
         Message::create([
             'ticket_id'   => $ticket->id,
@@ -116,15 +127,62 @@ class ProcessInboundEmails extends Command
             'content'     => trim($body),
         ]);
 
-        // Reopen if closed
-        if ($ticket->status === 'closed') {
-            $ticket->update(['status' => 'human']);
-        }
+        // Bump updated_at so the ticket rises to the top of the LiveInbox list
+        $ticket->touch();
 
         // Mark as read so we don't process it again
         imap_setflag_full($inbox, (string) $uid, '\\Seen', ST_UID);
 
         Log::info("[IMAP] Ticket {$ticketNumber} — new reply from client (org #{$orgId})");
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Closed-ticket auto-reply
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Send an automatic email to the client informing them that the ticket
+     * is closed and they should open a new one instead.
+     *
+     * @param  SmtpSetting  $smtp    The org's SMTP config (used to derive the mailer)
+     * @param  Ticket        $ticket  The closed ticket that was replied to
+     * @param  object        $header  Parsed RFC-822 header of the inbound email
+     */
+    private function sendClosedNotice(SmtpSetting $smtp, Ticket $ticket, object $header): void
+    {
+        // Resolve sender email from the header (Reply-To → From)
+        $senderAddr = null;
+        if (! empty($header->reply_toaddress)) {
+            $parsed = imap_rfc822_parse_adrlist($header->reply_toaddress, 'localhost');
+            $senderAddr = ($parsed[0]->mailbox ?? '') . '@' . ($parsed[0]->host ?? '');
+        }
+        if (! $senderAddr || str_ends_with($senderAddr, '@localhost')) {
+            $parsed = imap_rfc822_parse_adrlist($header->fromaddress ?? '', 'localhost');
+            $senderAddr = ($parsed[0]->mailbox ?? '') . '@' . ($parsed[0]->host ?? '');
+        }
+
+        if (! $senderAddr || str_ends_with($senderAddr, '@localhost')) {
+            Log::warning("[IMAP] sendClosedNotice: no se pudo obtener el email del remitente para ticket #{$ticket->ticket_number}");
+            return;
+        }
+
+        $fresh = $ticket->fresh(['organization']);
+        $org   = $fresh?->organization;
+
+        if (! $org) {
+            Log::warning("[IMAP] sendClosedNotice: no se encontró la organización del ticket #{$ticket->ticket_number}");
+            return;
+        }
+
+        try {
+            $mailerName = OrgMailer::mailerNameFor($org);
+            $mailable   = new TicketReopenBlockedMail($fresh);
+            $mailerName
+                ? Mail::mailer($mailerName)->to($senderAddr)->send($mailable)
+                : Mail::to($senderAddr)->send($mailable);
+        } catch (\Throwable $e) {
+            Log::error("[IMAP] sendClosedNotice error: {$e->getMessage()}");
+        }
     }
 
     // ──────────────────────────────────────────────────────────────────────────
