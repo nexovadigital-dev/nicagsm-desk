@@ -225,6 +225,13 @@ class LiveInbox extends Page
             $query->where('status', 'closed');
         } else {
             $query->whereIn('status', ['bot', 'human']);
+            // Ocultar sesiones de chat web donde el visitante nunca escribió un mensaje
+            // (se conectó pero no interactuó). Tickets de soporte y Telegram siempre visibles.
+            $query->where(function ($q) {
+                $q->where('is_support_ticket', true)
+                  ->orWhere('platform', 'telegram')
+                  ->orWhereHas('messages', fn ($m) => $m->where('sender_type', 'user'));
+            });
         }
 
         if ($s = trim($this->search)) {

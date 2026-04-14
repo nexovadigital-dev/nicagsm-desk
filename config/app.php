@@ -123,4 +123,8 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    // Token secreto para endpoints de cron HTTP (/api/cron/*)
+    'cron_secret' => env('CRON_SECRET', ''),
+
 ];
+

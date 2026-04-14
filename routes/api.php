@@ -44,3 +44,16 @@ Route::prefix('wp')->group(function () {
     Route::get('/widgets',         [WpApiController::class, 'widgets']);
     Route::get('/widgets/{id}',    [WpApiController::class, 'widget']);
 });
+
+// ── Cron HTTP — para Hostinger hPanel, cron-job.org, UptimeRobot, etc. ──────
+// Protegido por ?token=CRON_SECRET (configurar en .env del servidor)
+// Rate-limit: 10 req/min para evitar abuso
+Route::prefix('cron')->middleware(['throttle:10,1'])->group(function () {
+    Route::get('/run',            [\App\Http\Controllers\Api\CronController::class, 'run']);
+    Route::get('/imap',           [\App\Http\Controllers\Api\CronController::class, 'imap']);
+    Route::get('/subscriptions',  [\App\Http\Controllers\Api\CronController::class, 'subscriptions']);
+    Route::get('/sync',           [\App\Http\Controllers\Api\CronController::class, 'sync']);
+    Route::get('/crypto',         [\App\Http\Controllers\Api\CronController::class, 'crypto']);
+    Route::get('/license',        [\App\Http\Controllers\Api\CronController::class, 'license']);
+});
+

@@ -279,7 +279,7 @@ class="nx-inbox" wire:poll.3s>
                          wire:click="selectTicket({{ $ticket->id }})"
                          style="flex:1;min-width:0;cursor:pointer">
                         <div class="nx-ticket__top">
-                            <span class="nx-ticket__name">{{ $ticket->conversation_name ?? $ticket->client_name }}@if($ticket->is_support_ticket) <span style="font-weight:400;opacity:.6;font-size:.9em">(Ticket)</span>@elseif($ticket->platform === 'telegram') <span style="font-weight:400;opacity:.6;font-size:.9em">(Telegram)</span>@endif</span>
+                            <span class="nx-ticket__name">{{ $ticket->conversation_name ?? $ticket->client_name }}@if($ticket->is_support_ticket) <span style="font-weight:400;opacity:.6;font-size:.9em">(Ticket #{{ $ticket->ticket_number }})</span>@elseif($ticket->platform === 'telegram') <span style="font-weight:400;opacity:.6;font-size:.9em">(Telegram)</span>@endif</span>
                             <span class="nx-ticket__time">{{ $ticket->updated_at->diffForHumans(null, true, true) }}</span>
                         </div>
                         <div class="nx-ticket__bottom">
@@ -494,13 +494,13 @@ class="nx-inbox" wire:poll.3s>
                          }
                      }"
                      x-init="
-                         // Hard-limit: skeleton nunca dura más de 600ms aunque falle un promise
-                         const _skTimer = setTimeout(() => { loading = false; }, 600);
-                         $nextTick(() => {
-                             clearTimeout(_skTimer);
+                         // Hard-limit: skeleton nunca dura mas de 600ms aunque falle un promise
+                         var _sk = setTimeout(function() { loading = false; }, 600);
+                         $nextTick(function() {
+                             clearTimeout(_sk);
                              loading = false;
                              sessionStorage.setItem('nx_inbox_ready', '1');
-                             $nextTick(() => snap());
+                             $nextTick(function() { snap(); });
                          });
                      "
                      x-on:livewire:updated.window="$nextTick(() => { snap(); checkNewUserMsg(); })">
