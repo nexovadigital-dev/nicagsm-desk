@@ -46,12 +46,11 @@ Route::prefix('wp')->group(function () {
 });
 
 // ── Cron HTTP — para Hostinger hPanel, cron-job.org, EasyCron, etc. ─────────
-// Endpoints públicos (sin token). Rate-limit a 10 req/min para evitar abuso.
+// Endpoints públicos (sin token). Rate-limit a 30 req/min para evitar abuso.
 // Usar via: curl https://tu-dominio.com/api/cron/worker
-Route::prefix('cron')->middleware(['throttle:10,1'])->group(function () {
+Route::prefix('cron')->middleware(['throttle:30,1'])->group(function () {
     Route::get('/worker',       [\App\Http\Controllers\Api\CronController::class, 'worker']);
     Route::get('/imap',         [\App\Http\Controllers\Api\CronController::class, 'imap']);
     Route::get('/license',      [\App\Http\Controllers\Api\CronController::class, 'license']);
     Route::get('/imap-status',  [\App\Http\Controllers\Api\CronController::class, 'imapStatus']);
 });
-

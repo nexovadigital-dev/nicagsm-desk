@@ -1,14 +1,14 @@
-<x-filament-panels::page>
+﻿<x-filament-panels::page>
 <style>
 .fi-page-header, .fi-breadcrumbs { display: none !important; }
 
-/* ─── Wrapper ─── */
+/* â”€â”€â”€ Wrapper â”€â”€â”€ */
 .ap-wrap { padding: 32px 36px 64px; max-width: 1040px; }
 
-/* ─── Page title ─── */
+/* â”€â”€â”€ Page title â”€â”€â”€ */
 .ap-title { font-size: 22px; font-weight: 700; color: var(--c-text,#111827); margin-bottom: 20px; }
 
-/* ─── Tabs scrollable ─── */
+/* â”€â”€â”€ Tabs scrollable â”€â”€â”€ */
 .ap-tabs-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 32px; scrollbar-width: none; }
 .ap-tabs-scroll::-webkit-scrollbar { display: none; }
 .ap-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--c-border,#e3e6ea); min-width: max-content; }
@@ -22,7 +22,7 @@
 .ap-tab:hover { color: var(--c-text,#111827); }
 .ap-tab.active { color: var(--c-text,#111827); font-weight: 600; border-bottom-color: #22c55e; }
 
-/* ─── Section row ─── */
+/* â”€â”€â”€ Section row â”€â”€â”€ */
 .ap-section {
     display: grid; grid-template-columns: 240px 1fr; gap: 32px;
     padding: 28px 0; border-top: 1px solid var(--c-border,#e3e6ea);
@@ -32,7 +32,7 @@
 .ap-section-title { font-size: 14px; font-weight: 600; color: var(--c-text,#111827); margin-bottom: 6px; }
 .ap-section-desc { font-size: 12.5px; color: var(--c-sub,#6b7280); line-height: 1.6; }
 
-/* ─── Form fields ─── */
+/* â”€â”€â”€ Form fields â”€â”€â”€ */
 .ap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .ap-grid.single { grid-template-columns: 1fr; }
 @media (max-width: 560px) { .ap-grid { grid-template-columns: 1fr; } }
@@ -47,7 +47,7 @@
 .ap-input:focus, .ap-select:focus { border-color: #16a34a; }
 .ap-input::placeholder { color: var(--c-sub); opacity: .5; }
 
-/* ─── Toggle ─── */
+/* â”€â”€â”€ Toggle â”€â”€â”€ */
 .ap-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .ap-toggle { position: relative; display: inline-block; width: 38px; height: 21px; flex-shrink: 0; }
 .ap-toggle input { opacity: 0; width: 0; height: 0; }
@@ -58,7 +58,7 @@
 .ap-toggle-label { font-size: 13px; font-weight: 500; color: var(--c-text,#111); }
 .ap-toggle-sub { font-size: 11.5px; color: var(--c-sub,#6b7280); margin-top: 2px; }
 
-/* ─── Availability ─── */
+/* â”€â”€â”€ Availability â”€â”€â”€ */
 .ap-status-row { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
 .ap-status-opt {
     display: flex; align-items: center; gap: 9px; padding: 8px 12px;
@@ -79,7 +79,7 @@
 .ap-status-opt.active-busy .ap-status-text,
 .ap-status-opt.active-offline .ap-status-text { color: var(--c-text,#111827); font-weight: 600; }
 
-/* ─── Buttons ─── */
+/* â”€â”€â”€ Buttons â”€â”€â”€ */
 .ap-actions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
 .ap-btn {
     display: inline-flex; align-items: center; gap: 5px; padding: 8px 18px;
@@ -95,7 +95,7 @@
 .ap-btn-ghost:hover { background: var(--c-surf2,#f0f2f5); }
 .ap-btn-success { background: rgba(34,197,94,.08); color: #16a34a; border-color: rgba(34,197,94,.2); }
 
-/* ─── Avatar ─── */
+/* â”€â”€â”€ Avatar â”€â”€â”€ */
 .ap-avatar-zone { display: flex; align-items: center; gap: 16px; }
 .ap-avatar-circle {
     width: 64px; height: 64px; border-radius: 12px; background: #1e293b;
@@ -127,7 +127,7 @@
 .ap-upload-link:hover { opacity: .7; }
 .ap-upload-link.danger { color: #ef4444; }
 
-/* ─── 2FA ─── */
+/* â”€â”€â”€ 2FA â”€â”€â”€ */
 .ap-2fa-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 5px; font-size: 11px; font-weight: 700; }
 .ap-2fa-on  { background: rgba(34,197,94,.08); color: #16a34a; border: 1px solid rgba(34,197,94,.2); }
 .ap-2fa-off { background: rgba(239,68,68,.07); color: #ef4444; border: 1px solid rgba(239,68,68,.2); }
@@ -138,7 +138,7 @@
 .ap-divider { border: none; border-top: 1px solid var(--c-border,#e3e6ea); margin: 16px 0; }
 .ap-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-/* ─── Notice boxes ─── */
+/* â”€â”€â”€ Notice boxes â”€â”€â”€ */
 .ap-notice { padding: 11px 14px; border-radius: 8px; font-size: 12px; line-height: 1.6; }
 .ap-notice-info    { background: rgba(59,130,246,.07); border: 1px solid rgba(59,130,246,.2); color: #1d4ed8; }
 .ap-notice-success { background: rgba(5,150,105,.07); border: 1px solid rgba(5,150,105,.2); color: #059669; }
@@ -147,7 +147,7 @@
 .ap-notice code    { background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 4px; font-size: 11.5px; }
 .ap-notice-muted   { background: rgba(100,116,139,.07); border: 1px solid rgba(100,116,139,.2); color: var(--c-sub,#6b7280); }
 
-/* ─── AI Keys ─── */
+/* â”€â”€â”€ AI Keys â”€â”€â”€ */
 .ak-card { background: var(--c-surface,#fff); border: 1px solid var(--c-border,#e3e6ea); border-radius: 10px; overflow: hidden; }
 .ak-card-head { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--c-border,#e3e6ea); background: var(--c-bg,#f9fafb); }
 .ak-provider-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #fff; flex-shrink: 0; }
@@ -169,7 +169,7 @@
 .ak-limits-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: end; }
 @media (max-width: 560px) { .ak-limits-grid { grid-template-columns: 1fr; } }
 
-/* ─── Licencia ─── */
+/* â”€â”€â”€ Licencia â”€â”€â”€ */
 .lic-card { background: var(--c-surface,#fff); border: 1px solid var(--c-border,#e3e6ea); border-radius: 12px; padding: 28px 28px 24px; display: flex; flex-direction: column; gap: 20px; }
 .lic-head { display: flex; align-items: center; gap: 16px; }
 .lic-icon-wrap { width: 52px; height: 52px; border-radius: 14px; background: #f0fdf4; border: 1px solid #bbf7d0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -189,7 +189,7 @@
 .lic-feat { display: inline-flex; align-items: center; gap: 6px; background: var(--c-bg,#f5f6f8); border: 1px solid var(--c-border,#e3e6ea); border-radius: 8px; padding: 7px 13px; font-size: 12px; font-weight: 500; color: var(--c-text,#111); }
 .lic-feat svg { color: #15803d; }
 
-/* ─── Cron ─── */
+/* â”€â”€â”€ Cron â”€â”€â”€ */
 .cron-subtab-row { display: flex; gap: 0; margin-bottom: 20px; border: 1px solid var(--c-border,#e3e6ea); border-radius: 8px; overflow: hidden; }
 .cron-subtab { flex: 1; padding: 8px 12px; font-size: 12.5px; font-weight: 500; background: transparent; border: none; cursor: pointer; font-family: inherit; color: var(--c-sub,#6b7280); transition: background .12s, color .12s; text-align: center; }
 .cron-subtab:not(:last-child) { border-right: 1px solid var(--c-border,#e3e6ea); }
@@ -215,26 +215,26 @@
 
 <div class="ap-wrap" x-data="{ tab: 'cuenta', cronTab: 'cronjob' }">
 
-    <div class="ap-title">Configuración Avanzada</div>
+    <div class="ap-title">ConfiguraciÃ³n Avanzada</div>
 
-    {{-- ─── Tabs (scrollable) ─── --}}
+    {{-- â”€â”€â”€ Tabs (scrollable) â”€â”€â”€ --}}
     <div class="ap-tabs-scroll">
         <div class="ap-tabs">
             <button class="ap-tab" :class="{ active: tab === 'cuenta' }" @click="tab = 'cuenta'">Perfil</button>
             @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
-            <button class="ap-tab" :class="{ active: tab === 'org' }" @click="tab = 'org'">Organización</button>
+            <button class="ap-tab" :class="{ active: tab === 'org' }" @click="tab = 'org'">OrganizaciÃ³n</button>
             @endif
             <button class="ap-tab" :class="{ active: tab === 'seguridad' }" @click="tab = 'seguridad'">Seguridad</button>
             @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
             <button class="ap-tab" :class="{ active: tab === 'ia' }" @click="tab = 'ia'">Inteligencia Artificial</button>
-            <button class="ap-tab" :class="{ active: tab === 'correo' }" @click="tab = 'correo'">Correo Electrónico</button>
+            <button class="ap-tab" :class="{ active: tab === 'correo' }" @click="tab = 'correo'">Correo ElectrÃ³nico</button>
             <button class="ap-tab" :class="{ active: tab === 'licencia' }" @click="tab = 'licencia'">Licencia</button>
-            <button class="ap-tab" :class="{ active: tab === 'cron' }" @click="tab = 'cron'">Automatización</button>
+            <button class="ap-tab" :class="{ active: tab === 'cron' }" @click="tab = 'cron'">AutomatizaciÃ³n</button>
             @endif
         </div>
     </div>
 
-    {{-- ═══════════════════ TAB: PERFIL ═══════════════════ --}}
+    {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TAB: PERFIL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
     <div x-show="tab === 'cuenta'" x-transition.opacity>
 
         {{-- Foto de perfil --}}
@@ -262,7 +262,7 @@
                         <div class="ap-avatar-actions">
                             <button class="ap-upload-link" onclick="document.getElementById('ap-file-input').click()">Subir foto</button>
                             @if($currentAvatarUrl)
-                                <span style="color:var(--c-border);font-size:11px">·</span>
+                                <span style="color:var(--c-border);font-size:11px">Â·</span>
                                 <button class="ap-upload-link danger" wire:click="removeAvatar">Eliminar</button>
                             @endif
                         </div>
@@ -271,11 +271,11 @@
             </div>
         </div>
 
-        {{-- Información básica --}}
+        {{-- InformaciÃ³n bÃ¡sica --}}
         <div class="ap-section">
             <div>
-                <div class="ap-section-title">Información personal</div>
-                <div class="ap-section-desc">Tu nombre y email dentro del panel. El email se usa para el inicio de sesión.</div>
+                <div class="ap-section-title">InformaciÃ³n personal</div>
+                <div class="ap-section-desc">Tu nombre y email dentro del panel. El email se usa para el inicio de sesiÃ³n.</div>
             </div>
             <div>
                 <div class="ap-grid">
@@ -298,12 +298,12 @@
         <div class="ap-section">
             <div>
                 <div class="ap-section-title">Estado de presencia</div>
-                <div class="ap-section-desc">Indica a tu equipo si estás disponible para atender conversaciones.</div>
+                <div class="ap-section-desc">Indica a tu equipo si estÃ¡s disponible para atender conversaciones.</div>
             </div>
             <div>
                 <div class="ap-status-row">
                     <button type="button" class="ap-status-opt {{ $availability === 'online' ? 'active-online' : '' }}" wire:click="$set('availability','online')">
-                        <span class="ap-status-dot online"></span><span class="ap-status-text">En línea</span>
+                        <span class="ap-status-dot online"></span><span class="ap-status-text">En lÃ­nea</span>
                     </button>
                     <button type="button" class="ap-status-opt {{ $availability === 'busy' ? 'active-busy' : '' }}" wire:click="$set('availability','busy')">
                         <span class="ap-status-dot busy"></span><span class="ap-status-text">Ocupado</span>
@@ -316,18 +316,18 @@
         </div>
     </div>
 
-    {{-- ═══════════════════ TAB: ORGANIZACIÓN ═══════════════════ --}}
+    {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TAB: ORGANIZACIÃ“N â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
     @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
     <div x-show="tab === 'org'" x-transition.opacity>
         <div class="ap-section no-top">
             <div>
-                <div class="ap-section-title">Datos de la organización</div>
-                <div class="ap-section-desc">Nombre e información pública de tu empresa.</div>
+                <div class="ap-section-title">Datos de la organizaciÃ³n</div>
+                <div class="ap-section-desc">Nombre e informaciÃ³n pÃºblica de tu empresa.</div>
             </div>
             <div>
                 <div class="ap-grid">
                     <div class="ap-field">
-                        <label class="ap-label">Nombre de la organización</label>
+                        <label class="ap-label">Nombre de la organizaciÃ³n</label>
                         <input type="text" wire:model="orgName" class="ap-input" placeholder="Mi Empresa S.A.">
                     </div>
                     <div class="ap-field">
@@ -345,7 +345,7 @@
                 </div>
                 <div class="ap-actions">
                     <button class="ap-btn ap-btn-primary" wire:click="saveOrg" wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="saveOrg">Guardar organización</span>
+                        <span wire:loading.remove wire:target="saveOrg">Guardar organizaciÃ³n</span>
                         <span wire:loading wire:target="saveOrg">Guardando...</span>
                     </button>
                 </div>
@@ -370,7 +370,7 @@
                     foreach ($tzGroups as $g => $list) { if (!isset($sorted[$g])) $sorted[$g] = $list; }
                 @endphp
                 <div class="ap-field" style="max-width:380px">
-                    <label class="ap-label">Zona horaria de la organización</label>
+                    <label class="ap-label">Zona horaria de la organizaciÃ³n</label>
                     <select wire:model="orgTimezone" class="ap-input" style="cursor:pointer">
                         @foreach($sorted as $group => $zones)
                         <optgroup label="{{ $group }}">
@@ -395,32 +395,32 @@
     </div>
     @endif
 
-    {{-- ═══════════════════ TAB: SEGURIDAD ═══════════════════ --}}
+    {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TAB: SEGURIDAD â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
     <div x-show="tab === 'seguridad'" x-transition.opacity>
         <div class="ap-section no-top">
             <div>
-                <div class="ap-section-title">Cambiar contraseña</div>
-                <div class="ap-section-desc">Usa una contraseña de al menos 8 caracteres. Evita contraseñas comunes.</div>
+                <div class="ap-section-title">Cambiar contraseÃ±a</div>
+                <div class="ap-section-desc">Usa una contraseÃ±a de al menos 8 caracteres. Evita contraseÃ±as comunes.</div>
             </div>
             <div>
                 <div class="ap-grid single" style="margin-bottom:12px">
                     <div class="ap-field">
-                        <label class="ap-label">Contraseña actual</label>
-                        <input type="password" class="ap-input" wire:model="currentPassword" placeholder="••••••••" autocomplete="current-password">
+                        <label class="ap-label">ContraseÃ±a actual</label>
+                        <input type="password" class="ap-input" wire:model="currentPassword" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="current-password">
                     </div>
                 </div>
                 <div class="ap-grid">
                     <div class="ap-field">
-                        <label class="ap-label">Nueva contraseña</label>
-                        <input type="password" class="ap-input" wire:model="newPassword" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+                        <label class="ap-label">Nueva contraseÃ±a</label>
+                        <input type="password" class="ap-input" wire:model="newPassword" placeholder="MÃ­nimo 8 caracteres" autocomplete="new-password">
                     </div>
                     <div class="ap-field">
-                        <label class="ap-label">Confirmar contraseña</label>
-                        <input type="password" class="ap-input" wire:model="passwordConfirm" placeholder="Repite la contraseña" autocomplete="new-password">
+                        <label class="ap-label">Confirmar contraseÃ±a</label>
+                        <input type="password" class="ap-input" wire:model="passwordConfirm" placeholder="Repite la contraseÃ±a" autocomplete="new-password">
                     </div>
                 </div>
                 <div class="ap-actions">
-                    <button class="ap-btn ap-btn-primary" wire:click="savePassword" wire:loading.attr="disabled">Actualizar contraseña</button>
+                    <button class="ap-btn ap-btn-primary" wire:click="savePassword" wire:loading.attr="disabled">Actualizar contraseÃ±a</button>
                 </div>
             </div>
         </div>
@@ -428,18 +428,18 @@
         <div class="ap-section">
             <div>
                 <div class="ap-section-title">
-                    Autenticación dos factores
+                    AutenticaciÃ³n dos factores
                     @if($this->tfaEnabled)
                         <span class="ap-2fa-badge ap-2fa-on" style="margin-left:8px;vertical-align:middle">Activado</span>
                     @else
                         <span class="ap-2fa-badge ap-2fa-off" style="margin-left:8px;vertical-align:middle">Desactivado</span>
                     @endif
                 </div>
-                <div class="ap-section-desc">Añade una capa extra de seguridad con una app TOTP como Google Authenticator o Aegis.</div>
+                <div class="ap-section-desc">AÃ±ade una capa extra de seguridad con una app TOTP como Google Authenticator o Aegis.</div>
             </div>
             <div>
                 @if($this->tfaEnabled)
-                    <p style="font-size:12.5px;color:var(--c-sub);margin-bottom:14px;line-height:1.6">Introduce el código de tu app para desactivar el 2FA.</p>
+                    <p style="font-size:12.5px;color:var(--c-sub);margin-bottom:14px;line-height:1.6">Introduce el cÃ³digo de tu app para desactivar el 2FA.</p>
                     <div class="ap-row">
                         <input type="text" class="ap-input" style="width:160px;letter-spacing:.2em;font-family:monospace" wire:model="tfaDisableCode" placeholder="000000" maxlength="6">
                         <button class="ap-btn ap-btn-danger" wire:click="disableTwoFactor">Desactivar 2FA</button>
@@ -457,7 +457,7 @@
                             </div>
                         </div>
                         <hr class="ap-divider">
-                        <p style="font-size:12.5px;color:var(--c-sub);margin-bottom:12px">Introduce el código de 6 dígitos para confirmar:</p>
+                        <p style="font-size:12.5px;color:var(--c-sub);margin-bottom:12px">Introduce el cÃ³digo de 6 dÃ­gitos para confirmar:</p>
                         <div class="ap-row">
                             <input type="text" class="ap-input" style="width:160px;letter-spacing:.2em;font-family:monospace" wire:model="tfaCode" placeholder="000000" maxlength="6">
                             <button class="ap-btn ap-btn-success" wire:click="confirmTwoFactor">Confirmar y activar</button>
@@ -469,13 +469,13 @@
         </div>
     </div>
 
-    {{-- ═══════════════════ TAB: INTELIGENCIA ARTIFICIAL ═══════════════════ --}}
+    {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TAB: INTELIGENCIA ARTIFICIAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
     @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
     <div x-show="tab === 'ia'" x-transition.opacity>
         <div class="ap-section no-top">
             <div>
-                <div class="ap-section-title">Groq — Proveedor principal</div>
-                <div class="ap-section-desc">Hasta 3 claves con rotación automática. Si la primera falla, el sistema usa la siguiente.</div>
+                <div class="ap-section-title">Groq â€” Proveedor principal</div>
+                <div class="ap-section-desc">Hasta 3 claves con rotaciÃ³n automÃ¡tica. Si la primera falla, el sistema usa la siguiente.</div>
             </div>
             <div>
                 <div class="ak-card">
@@ -483,11 +483,11 @@
                         <div class="ak-provider-icon" style="background:#F55036">G</div>
                         <div>
                             <div class="ak-provider-name">Groq</div>
-                            <div class="ak-provider-model">llama-3.3-70b-versatile · rotación automática</div>
+                            <div class="ak-provider-model">llama-3.3-70b-versatile Â· rotaciÃ³n automÃ¡tica</div>
                         </div>
                     </div>
                     <div class="ak-card-body">
-                        @foreach([['orgGroqKey','groqKey1Set','Clave 1 — Principal','gsk_... (principal)'],['orgGroqKey2','groqKey2Set','Clave 2 — Fallback','gsk_... (opcional)'],['orgGroqKey3','groqKey3Set','Clave 3 — Fallback','gsk_... (opcional)']] as [$field,$setField,$label,$ph])
+                        @foreach([['orgGroqKey','groqKey1Set','Clave 1 â€” Principal','gsk_... (principal)'],['orgGroqKey2','groqKey2Set','Clave 2 â€” Fallback','gsk_... (opcional)'],['orgGroqKey3','groqKey3Set','Clave 3 â€” Fallback','gsk_... (opcional)']] as [$field,$setField,$label,$ph])
                         <div class="ak-field" x-data="{show:false}">
                             <div class="ak-field-head">
                                 <span class="ak-label">{{ $label }}</span>
@@ -514,8 +514,8 @@
 
         <div class="ap-section">
             <div>
-                <div class="ap-section-title">Google Gemini — Fallback</div>
-                <div class="ap-section-desc">Se usa si Groq no está disponible o las claves han expirado.</div>
+                <div class="ap-section-title">Google Gemini â€” Fallback</div>
+                <div class="ap-section-desc">Se usa si Groq no estÃ¡ disponible o las claves han expirado.</div>
             </div>
             <div>
                 <div class="ak-card">
@@ -523,7 +523,7 @@
                         <div class="ak-provider-icon" style="background:#4285F4">G</div>
                         <div>
                             <div class="ak-provider-name">Google Gemini</div>
-                            <div class="ak-provider-model">gemini-1.5-flash · fallback secundario</div>
+                            <div class="ak-provider-model">gemini-1.5-flash Â· fallback secundario</div>
                         </div>
                     </div>
                     <div class="ak-card-body">
@@ -537,7 +537,7 @@
                                 @endif
                             </div>
                             <div class="ak-input-wrap">
-                                <input :type="show?'text':'password'" wire:model="orgGeminiKey" class="ak-input" placeholder="AIza... (dejar vacío para mantener actual)">
+                                <input :type="show?'text':'password'" wire:model="orgGeminiKey" class="ak-input" placeholder="AIza... (dejar vacÃ­o para mantener actual)">
                                 <button type="button" class="ak-eye" @click="show=!show" tabindex="-1">
                                     <svg x-show="!show" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     <svg x-show="show" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
@@ -552,30 +552,30 @@
                         <span wire:loading wire:target="saveOrgKeys">Guardando...</span>
                     </button>
                 </div>
-                <p class="ak-hints" style="margin-top:7px;text-align:right">Las claves se almacenan cifradas. Deja los campos vacíos para mantener las actuales.</p>
+                <p class="ak-hints" style="margin-top:7px;text-align:right">Las claves se almacenan cifradas. Deja los campos vacÃ­os para mantener las actuales.</p>
             </div>
         </div>
 
         <div class="ap-section">
             <div>
-                <div class="ap-section-title">Límites del bot</div>
+                <div class="ap-section-title">LÃ­mites del bot</div>
                 <div class="ap-section-desc">Controla el consumo de tokens para evitar gastos innecesarios.</div>
             </div>
             <div>
                 <div class="ak-limits-grid" style="margin-bottom:14px">
                     <div class="ak-field">
-                        <label class="ak-label">Máx. mensajes por sesión</label>
+                        <label class="ak-label">MÃ¡x. mensajes por sesiÃ³n</label>
                         <input type="number" wire:model="maxMsgPerSession" min="5" max="200" class="ap-input">
-                        <p class="ak-hints">Mín. 5 · Máx. 200</p>
+                        <p class="ak-hints">MÃ­n. 5 Â· MÃ¡x. 200</p>
                     </div>
                     <div class="ak-field">
-                        <label class="ak-label">Máx. sesiones con bot por día</label>
+                        <label class="ak-label">MÃ¡x. sesiones con bot por dÃ­a</label>
                         <input type="number" wire:model="maxSessionsPerDay" min="10" max="10000" class="ap-input">
-                        <p class="ak-hints">Mín. 10 · Máx. 10,000</p>
+                        <p class="ak-hints">MÃ­n. 10 Â· MÃ¡x. 10,000</p>
                     </div>
                 </div>
                 <button class="ap-btn ap-btn-primary" wire:click="saveLimits" wire:loading.attr="disabled">
-                    <span wire:loading.remove wire:target="saveLimits">Guardar límites</span>
+                    <span wire:loading.remove wire:target="saveLimits">Guardar lÃ­mites</span>
                     <span wire:loading wire:target="saveLimits">Guardando...</span>
                 </button>
             </div>
@@ -583,7 +583,7 @@
     </div>
     @endif
 
-    {{-- ═══════════════════ TAB: CORREO ELECTRÓNICO ═══════════════════ --}}
+    {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TAB: CORREO ELECTRÃ“NICO â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
     @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
     <div x-show="tab === 'correo'" x-transition.opacity>
 
@@ -591,17 +591,17 @@
         <div class="ap-section no-top">
             <div>
                 <div class="ap-section-title">Estado del correo</div>
-                <div class="ap-section-desc">Dirección desde la que tus clientes recibirán los emails de los tickets.</div>
+                <div class="ap-section-desc">DirecciÃ³n desde la que tus clientes recibirÃ¡n los emails de los tickets.</div>
             </div>
             <div>
                 @if($smtpEnabled)
                     @if($smtpReady)
-                        <div class="ap-notice ap-notice-success"><strong>SMTP configurado ✓</strong><br>Los emails se envían desde <code>{{ $smtpFromAddress }}</code> usando tu servidor SMTP.</div>
+                        <div class="ap-notice ap-notice-success"><strong>SMTP configurado âœ“</strong><br>Los emails se envÃ­an desde <code>{{ $smtpFromAddress }}</code> usando tu servidor SMTP.</div>
                     @else
                         <div class="ap-notice ap-notice-warn"><strong>SMTP incompleto</strong><br>Activaste "Usar mi SMTP" pero faltan campos requeridos (Host, Usuario, Remitente) abajo.</div>
                     @endif
                 @else
-                    <div class="ap-notice ap-notice-info"><strong>SMTP del sistema</strong><br>Se utilizará el servidor de correo por defecto de la plataforma. Activa tu SMTP propio para mayor personalización.</div>
+                    <div class="ap-notice ap-notice-info"><strong>SMTP del sistema</strong><br>Se utilizarÃ¡ el servidor de correo por defecto de la plataforma. Activa tu SMTP propio para mayor personalizaciÃ³n.</div>
                 @endif
             </div>
         </div>
@@ -610,13 +610,13 @@
         <div class="ap-section">
             <div>
                 <div class="ap-section-title">Notificaciones al cliente</div>
-                <div class="ap-section-desc">Email automático al cliente cuando el agente o bot responde a su ticket.</div>
+                <div class="ap-section-desc">Email automÃ¡tico al cliente cuando el agente o bot responde a su ticket.</div>
             </div>
             <div>
                 <div class="ap-toggle-row">
                     <div>
                         <div class="ap-toggle-label">Notificar al cliente</div>
-                        <div class="ap-toggle-sub">Se envía un email con cada respuesta del agente o bot</div>
+                        <div class="ap-toggle-sub">Se envÃ­a un email con cada respuesta del agente o bot</div>
                     </div>
                     <label class="ap-toggle">
                         <input type="checkbox" wire:model.live="smtpNotificationsEnabled">
@@ -624,7 +624,7 @@
                     </label>
                 </div>
                 @if($smtpNotificationsEnabled && $smtpEnabled && !$smtpReady)
-                    <div class="ap-notice ap-notice-error" style="margin-top:10px">Las notificaciones están activadas pero la configuración SMTP está incompleta. Los emails no se enviarán hasta completarla.</div>
+                    <div class="ap-notice ap-notice-error" style="margin-top:10px">Las notificaciones estÃ¡n activadas pero la configuraciÃ³n SMTP estÃ¡ incompleta. Los emails no se enviarÃ¡n hasta completarla.</div>
                 @endif
             </div>
         </div>
@@ -650,7 +650,7 @@
                 <div class="ap-grid">
                     <div class="ap-field" style="grid-column:1/-1">
                         <label class="ap-label">Host SMTP</label>
-                        <input type="text" class="ap-input" wire:model="smtpHost" placeholder="smtp.gmail.com  ó  mail.tudominio.com">
+                        <input type="text" class="ap-input" wire:model="smtpHost" placeholder="smtp.gmail.com  Ã³  mail.tudominio.com">
                     </div>
                     <div class="ap-field">
                         <label class="ap-label">Puerto</label>
@@ -669,8 +669,8 @@
                         <input type="text" class="ap-input" wire:model="smtpUsername" placeholder="tu@dominio.com" autocomplete="off">
                     </div>
                     <div class="ap-field">
-                        <label class="ap-label">Contraseña SMTP</label>
-                        <input type="password" class="ap-input" wire:model="smtpPassword" placeholder="••••••••" autocomplete="new-password">
+                        <label class="ap-label">ContraseÃ±a SMTP</label>
+                        <input type="password" class="ap-input" wire:model="smtpPassword" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="new-password">
                     </div>
                     <div class="ap-field">
                         <label class="ap-label">Email remitente (FROM)</label>
@@ -692,7 +692,7 @@
                         <input type="email" class="ap-input" wire:model="smtpTestEmail" placeholder="email@prueba.com" style="max-width:220px">
                         <button class="ap-btn ap-btn-ghost" wire:click="sendSmtpTest" wire:loading.attr="disabled">
                             <span wire:loading.remove wire:target="sendSmtpTest">Enviar prueba</span>
-                            <span wire:loading wire:target="sendSmtpTest">Enviando…</span>
+                            <span wire:loading wire:target="sendSmtpTest">Enviandoâ€¦</span>
                         </button>
                     </div>
                     @endif
@@ -703,23 +703,23 @@
         {{-- IMAP --}}
         <div class="ap-section">
             <div>
-                <div class="ap-section-title">Buzón de entrada (IMAP)</div>
-                <div class="ap-section-desc">Cuando el cliente responde al email de un ticket, el mensaje se añade automáticamente al hilo en el panel.</div>
+                <div class="ap-section-title">BuzÃ³n de entrada (IMAP)</div>
+                <div class="ap-section-desc">Cuando el cliente responde al email de un ticket, el mensaje se aÃ±ade automÃ¡ticamente al hilo en el panel.</div>
             </div>
             <div>
                 <div class="ap-notice ap-notice-info" style="margin-bottom:16px">
-                    <strong>¿Cómo funciona?</strong><br>
+                    <strong>Â¿CÃ³mo funciona?</strong><br>
                     1. El cliente responde al email del ticket<br>
                     2. El sistema detecta <code>TKT-00001</code> en el asunto<br>
                     3. El mensaje aparece en el hilo del panel<br>
-                    4. Si el ticket estaba cerrado, se envía aviso automático al cliente<br><br>
+                    4. Si el ticket estaba cerrado, se envÃ­a aviso automÃ¡tico al cliente<br><br>
                     <strong>Recomendado:</strong> usa la <strong>misma cuenta</strong> de email para SMTP e IMAP.
                 </div>
 
                 <div class="ap-toggle-row" style="margin-bottom:16px">
                     <div>
                         <div class="ap-toggle-label">Recibir respuestas por email</div>
-                        <div class="ap-toggle-sub">Las respuestas de clientes se añaden al ticket automáticamente</div>
+                        <div class="ap-toggle-sub">Las respuestas de clientes se aÃ±aden al ticket automÃ¡ticamente</div>
                     </div>
                     <label class="ap-toggle">
                         <input type="checkbox" wire:model.live="imapEnabled">
@@ -731,7 +731,7 @@
                 <div class="ap-grid">
                     <div class="ap-field" style="grid-column:1/-1">
                         <label class="ap-label">Host IMAP</label>
-                        <input type="text" class="ap-input" wire:model="imapHost" placeholder="mail.tudominio.com  ó  imap.gmail.com">
+                        <input type="text" class="ap-input" wire:model="imapHost" placeholder="mail.tudominio.com  Ã³  imap.gmail.com">
                     </div>
                     <div class="ap-field">
                         <label class="ap-label">Puerto</label>
@@ -750,17 +750,17 @@
                         <input type="text" class="ap-input" wire:model="imapUsername" placeholder="soporte@tudominio.com" autocomplete="off">
                     </div>
                     <div class="ap-field">
-                        <label class="ap-label">Contraseña IMAP</label>
-                        <input type="password" class="ap-input" wire:model="imapPassword" placeholder="••••••••" autocomplete="new-password">
+                        <label class="ap-label">ContraseÃ±a IMAP</label>
+                        <input type="password" class="ap-input" wire:model="imapPassword" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="new-password">
                     </div>
                     <div class="ap-field" style="grid-column:1/-1">
-                        <label class="ap-label">Carpeta / Buzón</label>
+                        <label class="ap-label">Carpeta / BuzÃ³n</label>
                         <input type="text" class="ap-input" wire:model="imapFolder" placeholder="INBOX">
                         <span style="font-size:11px;color:var(--c-sub,#6b7280);margin-top:4px">Normalmente <code>INBOX</code>. En algunos proveedores puede ser otra carpeta.</span>
                     </div>
                 </div>
                 @else
-                <div class="ap-notice ap-notice-muted">Activa la recepción IMAP para configurar el servidor.</div>
+                <div class="ap-notice ap-notice-muted">Activa la recepciÃ³n IMAP para configurar el servidor.</div>
                 @endif
 
                 <div class="ap-actions">
@@ -770,8 +770,8 @@
                     </button>
                     @if($imapEnabled && !empty($imapHost))
                     <button class="ap-btn ap-btn-ghost" wire:click="testImapConnection" wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="testImapConnection">Probar conexión</span>
-                        <span wire:loading wire:target="testImapConnection">Conectando…</span>
+                        <span wire:loading.remove wire:target="testImapConnection">Probar conexiÃ³n</span>
+                        <span wire:loading wire:target="testImapConnection">Conectandoâ€¦</span>
                     </button>
                     @endif
                 </div>
@@ -780,13 +780,13 @@
     </div>
     @endif
 
-    {{-- ═══════════════════ TAB: LICENCIA ═══════════════════ --}}
+    {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TAB: LICENCIA â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
     @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
     <div x-show="tab === 'licencia'" x-transition.opacity>
         <div class="ap-section no-top">
             <div>
                 <div class="ap-section-title">Estado de licencia</div>
-                <div class="ap-section-desc">Licencia Partner Edition de Nexova Desk. Se verifica automáticamente al cargar.</div>
+                <div class="ap-section-desc">Licencia Partner Edition de Nexova Desk. Se verifica automÃ¡ticamente al cargar.</div>
             </div>
             <div>
                 <div class="lic-card">
@@ -800,7 +800,7 @@
                         @endif
                         <div>
                             <div class="lic-plan">Plan Partner Edition</div>
-                            <div class="lic-sub">Licencia vitalicia · Nexova Desk</div>
+                            <div class="lic-sub">Licencia vitalicia Â· Nexova Desk</div>
                         </div>
                     </div>
                     <div class="lic-divider"></div>
@@ -810,7 +810,7 @@
                             @if($licenseStatus === 'active')
                                 <span class="lic-badge lic-badge-ok"><svg width="10" height="10" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4"/></svg>Licencia activa</span>
                             @elseif($licenseStatus === 'unreachable')
-                                <span class="lic-badge lic-badge-warn">Sin conexión al servidor de licencias</span>
+                                <span class="lic-badge lic-badge-warn">Sin conexiÃ³n al servidor de licencias</span>
                             @else
                                 <span class="lic-badge lic-badge-err">Licencia inactiva o no encontrada</span>
                             @endif
@@ -824,7 +824,7 @@
                             <span class="lic-value">{{ $platformUrl }}</span>
                         </div>
                         <div class="lic-row">
-                            <span class="lic-label">Última verificación</span>
+                            <span class="lic-label">Ãšltima verificaciÃ³n</span>
                             <span style="font-size:13px;color:var(--c-sub,#6b7280)">{{ $licenseCheckedAt }}</span>
                         </div>
                     </div>
@@ -832,7 +832,7 @@
                     <div>
                         <p class="lic-label" style="margin-bottom:10px">Incluido en tu plan</p>
                         <div class="lic-features">
-                            @foreach(['Chat en vivo ilimitado','Bot de IA con claves propias','Widget personalizable','Agentes ilimitados','Integración Telegram','Tickets por email (IMAP)','Actualizaciones incluidas'] as $feat)
+                            @foreach(['Chat en vivo ilimitado','Bot de IA con claves propias','Widget personalizable','Agentes ilimitados','IntegraciÃ³n Telegram','Tickets por email (IMAP)','Actualizaciones incluidas'] as $feat)
                                 <span class="lic-feat"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>{{ $feat }}</span>
                             @endforeach
                         </div>
@@ -851,47 +851,61 @@
     </div>
     @endif
 
-    {{-- ═══════════════════ TAB: AUTOMATIZACIÓN ═══════════════════ --}}
+    {{-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TAB: AUTOMATIZACIÃ“N â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• --}}
     @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
     <div x-show="tab === 'cron'" x-transition.opacity>
+
+        {{-- Intro amigable --}}
         <div class="ap-section no-top">
             <div>
-                <div class="ap-section-title">¿Qué es un Cron Job?</div>
+                <div class="ap-section-title">Tareas automÃ¡ticas</div>
                 <div class="ap-section-desc">
-                    Los cron jobs son tareas automáticas que se ejecutan en horarios definidos. Nexova Desk los usa para procesar respuestas de email por IMAP y verificar la licencia del sistema.<br><br>
-                    Puedes configurarlos desde tu hosting, un VPS, o un servicio externo gratuito como <strong>cron-job.org</strong>.
+                    Nexova Desk necesita ejecutar ciertas tareas en segundo plano de forma periÃ³dica:<br><br>
+                    ðŸ“§ <strong>Revisar tu buzÃ³n de correo</strong> para capturar respuestas de clientes a tickets<br>
+                    ðŸ”‘ <strong>Verificar la licencia</strong> del sistema una vez al dÃ­a<br><br>
+                    Para que funcionen automÃ¡ticamente, debes configurarlas en tu hosting o usar un servicio externo (gratis o de pago). Elige la opciÃ³n que mejor se adapte a tu entorno.
                 </div>
             </div>
             <div>
                 <div class="ap-notice ap-notice-info">
-                    <strong>Importante:</strong> el cron de IMAP debe correr <strong>cada 1 minuto</strong> para que las respuestas de email aparezcan rápidamente en el panel. Si tu hosting solo permite cada 5 minutos, será un poco más lento pero funciona igual.
+                    â±ï¸ Para que las respuestas por email lleguen rÃ¡pido, el procesamiento de correo debe ejecutarse <strong>cada 1 minuto</strong>. Si tu plan de hosting solo permite cada 5 minutos, seguirÃ¡ funcionando â€” solo con un poco mÃ¡s de demora.
                 </div>
             </div>
         </div>
 
+        {{-- Opciones --}}
         <div class="ap-section">
             <div>
-                <div class="ap-section-title">Cómo configurarlos</div>
-                <div class="ap-section-desc">Elige el método según tu tipo de servidor.</div>
+                <div class="ap-section-title">Â¿CÃ³mo quieres configurarlo?</div>
+                <div class="ap-section-desc">Elige segÃºn tu tipo de servidor o preferencia.</div>
             </div>
             <div>
                 {{-- Sub-tabs --}}
-                <div class="cron-subtab-row">
-                    <button class="cron-subtab" :class="{ active: cronTab === 'cronjob' }" @click="cronTab = 'cronjob'">🌐 Cron-Job.org (gratis)</button>
-                    <button class="cron-subtab" :class="{ active: cronTab === 'hosting' }" @click="cronTab = 'hosting'">🖥️ Hosting / cPanel</button>
-                    <button class="cron-subtab" :class="{ active: cronTab === 'vps' }" @click="cronTab = 'vps'">⚙️ VPS / Linux</button>
+                <div class="cron-subtab-row" style="margin-bottom:20px">
+                    <button class="cron-subtab" :class="{ active: cronTab === 'cronjob' }" @click="cronTab = 'cronjob'">ðŸŒ Servicio gratuito</button>
+                    <button class="cron-subtab" :class="{ active: cronTab === 'hosting' }" @click="cronTab = 'hosting'">ðŸ–¥ï¸ Mi Hosting</button>
+                    <button class="cron-subtab" :class="{ active: cronTab === 'vps' }" @click="cronTab = 'vps'">âš™ï¸ VPS / Servidor</button>
+                    <button class="cron-subtab" :class="{ active: cronTab === 'nexova' }" @click="cronTab = 'nexova'" style="position:relative">
+                        âš¡ Nexova Fast-Cron
+                        <span style="position:absolute;top:-8px;right:-4px;background:#f59e0b;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px">Pronto</span>
+                    </button>
                 </div>
 
                 {{-- CRON-JOB.ORG --}}
                 <div x-show="cronTab === 'cronjob'">
+                    <div class="ap-notice ap-notice-success" style="margin-bottom:18px">
+                        <strong>âœ… OpciÃ³n recomendada si no tienes VPS.</strong><br>
+                        <a href="https://cron-job.org" target="_blank" style="color:#059669;font-weight:600">Cron-Job.org</a> es un servicio gratuito que llama a estas URLs automÃ¡ticamente. Solo necesitas crear una cuenta y agregar cada URL â€” sin instalar nada.
+                    </div>
                     <p style="font-size:12.5px;color:var(--c-sub,#6b7280);margin-bottom:16px;line-height:1.6">
-                        Ve a <a href="https://cron-job.org" target="_blank" style="color:#16a34a">cron-job.org</a>, crea una cuenta gratuita y agrega cada una de estas URLs como un nuevo cron job. Selecciona frecuencia <strong>cada 1 minuto</strong> para IMAP. Tipo de petición: <strong>GET</strong>.
+                        <strong>Pasos:</strong> entra a <a href="https://cron-job.org" target="_blank" style="color:#16a34a">cron-job.org</a> â†’ crea una cuenta gratuita â†’ New Cron Job â†’ pega la URL â†’ elige la frecuencia â†’ Guardar.<br>
+                        Tipo de peticiÃ³n: <strong>GET</strong>.
                     </p>
 
                     @foreach([
-                        ['icon'=>'📧','color'=>'#3b82f6','name'=>'Procesar emails IMAP','desc'=>'Recibe respuestas de clientes y las añade al ticket','url'=>$appUrl.'/api/cron/imap','freq'=>'Cada 1 minuto'],
-                        ['icon'=>'⚡','color'=>'#8b5cf6','name'=>'Worker (todos los jobs)','desc'=>'Alternativa: ejecuta todo el scheduler de una vez','url'=>$appUrl.'/api/cron/worker','freq'=>'Cada 1 minuto'],
-                        ['icon'=>'🔑','color'=>'#f59e0b','name'=>'Verificar licencia','desc'=>'Comprueba que la licencia Partner siga activa','url'=>$appUrl.'/api/cron/license','freq'=>'Una vez al día'],
+                        ['icon'=>'ðŸ“§','color'=>'#3b82f6','name'=>'Revisar correo (IMAP)','desc'=>'Detecta respuestas de clientes y las aÃ±ade automÃ¡ticamente al ticket','url'=>$appUrl.'/api/cron/imap','freq'=>'Cada 1 minuto'],
+                        ['icon'=>'âš¡','color'=>'#8b5cf6','name'=>'Worker general','desc'=>'Alternativa: ejecuta todas las tareas automÃ¡ticas de una vez','url'=>$appUrl.'/api/cron/worker','freq'=>'Cada 1 minuto'],
+                        ['icon'=>'ðŸ”‘','color'=>'#f59e0b','name'=>'Verificar licencia','desc'=>'Confirma que la licencia del sistema sigue activa','url'=>$appUrl.'/api/cron/license','freq'=>'1 vez al dÃ­a'],
                     ] as $ep)
                     <div class="cron-endpoint-card">
                         <div class="cron-endpoint-head">
@@ -904,9 +918,9 @@
                         <div class="cron-endpoint-body">
                             <div class="cron-url-row">
                                 <span class="cron-url-text">{{ $ep['url'] }}</span>
-                                <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('{{ $ep['url'] }}').then(()=>{this.textContent='✓';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar</button>
+                                <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('{{ $ep['url'] }}').then(()=>{this.textContent='âœ“';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar</button>
                             </div>
-                            <div class="cron-freq">Frecuencia recomendada: <strong>{{ $ep['freq'] }}</strong></div>
+                            <div class="cron-freq">Frecuencia: <strong>{{ $ep['freq'] }}</strong></div>
                         </div>
                     </div>
                     @endforeach
@@ -914,13 +928,18 @@
 
                 {{-- HOSTING --}}
                 <div x-show="cronTab === 'hosting'">
+                    <div class="ap-notice ap-notice-info" style="margin-bottom:18px">
+                        La mayorÃ­a de hostings como <strong>Hostinger</strong>, <strong>cPanel</strong>, <strong>Plesk</strong> o <strong>DirectAdmin</strong> tienen una secciÃ³n de "Cron Jobs" en su panel de control. Busca esa opciÃ³n y agrega cada tarea con los datos de abajo.
+                    </div>
                     <p style="font-size:12.5px;color:var(--c-sub,#6b7280);margin-bottom:16px;line-height:1.6">
-                        En <strong>Hostinger hPanel</strong>, ve a <em>Avanzado → Cron Jobs</em>. Usa el comando <code>curl</code> con cada URL. Si tu panel no acepta caracteres especiales, usa el comando simplificado.
+                        <strong>En Hostinger:</strong> Panel â†’ Avanzado â†’ Cron Jobs â†’ Agregar cron job<br>
+                        <strong>En cPanel:</strong> Cron Jobs â†’ Add New Cron Job<br>
+                        Pega el comando en el campo de comando.
                     </p>
                     @foreach([
-                        ['icon'=>'📧','color'=>'#3b82f6','name'=>'Procesar emails IMAP','desc'=>'Añade respuestas de clientes al ticket','url'=>$appUrl.'/api/cron/imap','freq'=>'*/1 * * * *'],
-                        ['icon'=>'⚡','color'=>'#8b5cf6','name'=>'Worker (todos los jobs)','desc'=>'Ejecuta todo el scheduler completo','url'=>$appUrl.'/api/cron/worker','freq'=>'*/1 * * * *'],
-                        ['icon'=>'🔑','color'=>'#f59e0b','name'=>'Verificar licencia','desc'=>'Verifica la licencia Partner','url'=>$appUrl.'/api/cron/license','freq'=>'0 3 * * *'],
+                        ['icon'=>'ðŸ“§','color'=>'#3b82f6','name'=>'Revisar correo (IMAP)','desc'=>'Detecta y aÃ±ade respuestas de clientes a los tickets','url'=>$appUrl.'/api/cron/imap','freq'=>'*/1 * * * *'],
+                        ['icon'=>'âš¡','color'=>'#8b5cf6','name'=>'Worker general','desc'=>'Alternativa: ejecuta todas las tareas automÃ¡ticas','url'=>$appUrl.'/api/cron/worker','freq'=>'*/1 * * * *'],
+                        ['icon'=>'ðŸ”‘','color'=>'#f59e0b','name'=>'Verificar licencia','desc'=>'Confirma la licencia del sistema','url'=>$appUrl.'/api/cron/license','freq'=>'0 3 * * *'],
                     ] as $ep)
                     <div class="cron-endpoint-card">
                         <div class="cron-endpoint-head">
@@ -933,54 +952,74 @@
                         <div class="cron-endpoint-body">
                             <div class="cron-url-row">
                                 <span class="cron-url-text">curl {{ $ep['url'] }}</span>
-                                <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('curl {{ $ep['url'] }}').then(()=>{this.textContent='✓';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar</button>
+                                <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('curl {{ $ep['url'] }}').then(()=>{this.textContent='âœ“';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar</button>
                             </div>
-                            <div class="cron-freq">Expresión cron: <strong><code>{{ $ep['freq'] }}</code></strong></div>
+                            <div class="cron-freq">Frecuencia (expresiÃ³n tÃ©cnica): <strong><code>{{ $ep['freq'] }}</code></strong></div>
                         </div>
                     </div>
                     @endforeach
                     <div class="ap-notice ap-notice-warn" style="margin-top:12px">
-                        <strong>Hosting compartido:</strong> algunos paneles no aceptan <code>curl</code> o caracteres especiales. En ese caso usa la URL directa en la URL del cron (sin <code>curl</code>) y selecciona método GET.
+                        Â¿Tu panel no acepta <code>curl</code>? Usa solo la URL directa en el campo URL y selecciona mÃ©todo <strong>GET</strong>.
                     </div>
                 </div>
 
                 {{-- VPS --}}
                 <div x-show="cronTab === 'vps'">
-                    <p style="font-size:12.5px;color:var(--c-sub,#6b7280);margin-bottom:16px;line-height:1.6">
-                        En un VPS con acceso SSH, edita el crontab con <code>crontab -e</code> y agrega las siguientes líneas:
+                    <div class="ap-notice ap-notice-info" style="margin-bottom:18px">
+                        Si tienes acceso por SSH a tu servidor, puedes configurar las tareas directamente en el sistema. Es la opciÃ³n mÃ¡s confiable y sin dependencias externas.
+                    </div>
+                    <p style="font-size:12.5px;color:var(--c-sub,#6b7280);margin-bottom:14px;line-height:1.6">
+                        ConÃ©ctate por SSH â†’ escribe <code>crontab -e</code> â†’ agrega estas lÃ­neas al final del archivo â†’ guarda con <code>Ctrl+X</code>:
                     </p>
                     <div class="cron-endpoint-card">
                         <div class="cron-endpoint-body">
                             <div style="background:var(--c-bg,#f5f6f8);border:1px solid var(--c-border,#e3e6ea);border-radius:7px;padding:14px 16px;font-family:monospace;font-size:12px;color:var(--c-text,#111);line-height:1.8;overflow-x:auto;">
-                                # Procesar emails IMAP (cada minuto)<br>
+                                # Revisar correo cada minuto para capturar respuestas de tickets<br>
                                 * * * * * curl -s {{ $appUrl }}/api/cron/imap >/dev/null 2>&1<br><br>
-                                # Verificar licencia (a las 3:00 am)<br>
+                                # Verificar licencia una vez al dÃ­a (a las 3:00 AM)<br>
                                 0 3 * * * curl -s {{ $appUrl }}/api/cron/license >/dev/null 2>&1
                             </div>
-                            <button class="cron-copy-btn" style="margin-top:8px" onclick="navigator.clipboard.writeText('* * * * * curl -s {{ $appUrl }}/api/cron/imap >/dev/null 2>&1\n0 3 * * * curl -s {{ $appUrl }}/api/cron/license >/dev/null 2>&1').then(()=>{this.textContent='✓ Copiado';setTimeout(()=>this.textContent='Copiar todo',1500)})">Copiar todo</button>
+                            <button class="cron-copy-btn" style="margin-top:8px" onclick="navigator.clipboard.writeText('* * * * * curl -s {{ $appUrl }}/api/cron/imap >/dev/null 2>&1\n0 3 * * * curl -s {{ $appUrl }}/api/cron/license >/dev/null 2>&1').then(()=>{this.textContent='âœ“ Copiado';setTimeout(()=>this.textContent='Copiar todo',1500)})">Copiar todo</button>
                         </div>
                     </div>
-                    <div class="ap-notice ap-notice-info" style="margin-top:12px">
-                        <strong>Alternativa con artisan:</strong> si tienes PHP en el PATH del servidor, puedes usar directamente:<br>
-                        <code>* * * * * php {{ base_path() }}/artisan schedule:run >/dev/null 2>&1</code>
+                </div>
+
+                {{-- NEXOVA FAST-CRON --}}
+                <div x-show="cronTab === 'nexova'">
+                    <div style="text-align:center;padding:48px 24px">
+                        <div style="font-size:40px;margin-bottom:16px">âš¡</div>
+                        <div style="font-size:20px;font-weight:800;color:var(--c-text,#111);margin-bottom:8px;letter-spacing:-.02em">Nexova Fast-Cron</div>
+                        <div style="font-size:13px;color:var(--c-sub,#6b7280);max-width:420px;margin:0 auto 20px;line-height:1.7">
+                            Nuestro servicio nativo de cron: alta frecuencia, monitoreo automÃ¡tico, reintentos ante fallos y notificaciones si una tarea deja de funcionar. DiseÃ±ado especÃ­ficamente para Nexova Desk.
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:28px">
+                            @foreach(['Sin configuraciÃ³n manual','Cada 30 segundos','Reintentos automÃ¡ticos','Alertas por email','Historial de ejecuciones'] as $feat)
+                            <span style="background:var(--c-bg,#f5f6f8);border:1px solid var(--c-border,#e3e6ea);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:500;color:var(--c-text,#111)">âœ“ {{ $feat }}</span>
+                            @endforeach
+                        </div>
+                        <a href="#" style="display:inline-flex;align-items:center;gap:8px;background:#1e293b;color:#f8fafc;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;opacity:.6;cursor:not-allowed">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Disponible prÃ³ximamente
+                        </a>
+                        <p style="font-size:11.5px;color:var(--c-sub,#9ca3af);margin-top:14px">Mientras tanto, usa cualquiera de las opciones anteriores</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Diagnóstico --}}
+        {{-- Verificar estado --}}
         <div class="ap-section">
             <div>
-                <div class="ap-section-title">Diagnóstico IMAP</div>
-                <div class="ap-section-desc">Verifica el estado de la conexión IMAP sin procesar mensajes.</div>
+                <div class="ap-section-title">Verificar estado del correo</div>
+                <div class="ap-section-desc">Comprueba en cualquier momento si la conexiÃ³n al buzÃ³n de correo estÃ¡ funcionando correctamente.</div>
             </div>
             <div>
                 <div class="cron-url-row">
                     <span class="cron-url-text">{{ $appUrl }}/api/cron/imap-status</span>
-                    <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('{{ $appUrl }}/api/cron/imap-status').then(()=>{this.textContent='✓';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar</button>
+                    <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('{{ $appUrl }}/api/cron/imap-status').then(()=>{this.textContent='âœ“';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar</button>
                 </div>
                 <p style="font-size:11.5px;color:var(--c-sub,#6b7280);margin-top:8px;line-height:1.5">
-                    Abre esta URL en el navegador para ver: si la conexión IMAP es exitosa, cuántos mensajes hay en el buzón, y cuántos están sin leer (pendientes de procesar).
+                    Abre esta URL en tu navegador. Si ves <code>"status":"connected"</code> significa que el buzÃ³n estÃ¡ correctamente configurado y accesible.
                 </p>
             </div>
         </div>

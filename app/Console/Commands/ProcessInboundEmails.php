@@ -10,20 +10,19 @@ use App\Models\SmtpSetting;
 use App\Models\Ticket;
 use App\Services\OrgMailer;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 /**
  * ProcessInboundEmails
  *
- * Polls each organization's IMAP inbox every minute (via scheduler).
- * When a client replies to a ticket email, this command:
- *   1. Parses the subject to find the ticket number  (e.g. "Re: Ticket #TKT-00001 …")
- *   2. Creates a Message with sender_type = 'visitor'
- *   3. Reopens the ticket if it was closed
- *   4. Marks the email as \Seen so it is not processed again
+ * Revisa el buzón IMAP de cada organización y procesa los emails que son
+ * respuestas a tickets (identificados por TKT-XXXXX en el asunto).
  *
- * Requires PHP IMAP extension: php-imap (usually pre-installed on cPanel / Hostinger).
+ * Busca los últimos 2 días de mensajes (leídos o no leídos) y usa una caché
+ * de UIDs procesados para no crear mensajes duplicados. Esto permite que
+ * el buzón sea revisado por un cliente de correo externo sin perder replies.
  */
 class ProcessInboundEmails extends Command
 {
@@ -37,7 +36,6 @@ class ProcessInboundEmails extends Command
             return self::FAILURE;
         }
 
-        // Process every org that has IMAP enabled
         SmtpSetting::where('imap_enabled', true)
             ->whereNotNull('imap_host')
             ->whereNotNull('imap_username')
@@ -53,43 +51,66 @@ class ProcessInboundEmails extends Command
     {
         $orgId  = $smtp->organization_id;
         $folder = $smtp->imap_folder ?: 'INBOX';
-
-        $dsn = $this->buildDsn($smtp, $folder);
+        $dsn    = $this->buildDsn($smtp, $folder);
 
         $inbox = @imap_open($dsn, $smtp->imap_username, $smtp->imap_password, 0, 1);
 
         if (! $inbox) {
-            Log::warning("[IMAP] Could not connect for org #{$orgId}: " . imap_last_error());
+            Log::warning("[IMAP] No se pudo conectar para org #{$orgId}: " . imap_last_error());
             return;
         }
 
         try {
-            // Fetch unseen messages only
-            $uids = imap_search($inbox, 'UNSEEN', SE_UID);
+            // Buscar emails de las últimas 48 horas (leídos Y no leídos)
+            // Solución para buzones monitoreados: no depende del flag UNSEEN.
+            // Se usa caché de UIDs para evitar procesar el mismo mensaje dos veces.
+            $since = date('d-M-Y', strtotime('-2 days'));
+            $uids  = imap_search($inbox, "SINCE \"{$since}\"", SE_UID);
 
             if (! $uids) {
-                return; // nothing new
+                Log::info("[IMAP] org #{$orgId}: sin mensajes en los últimos 2 días");
+                return;
             }
 
+            $processed = 0;
             foreach ($uids as $uid) {
-                $this->processMessage($inbox, $uid, $orgId);
+                $cacheKey = "imap_uid_{$orgId}_{$uid}";
+
+                // Si ya fue procesado, saltar
+                if (Cache::has($cacheKey)) {
+                    continue;
+                }
+
+                $wasTicket = $this->processMessage($inbox, $uid, $orgId);
+
+                // Guardar en cache para no procesar de nuevo
+                // (true = era reply de ticket, false = no era ticket pero ya revisado)
+                Cache::put($cacheKey, $wasTicket ? 'ticket' : 'skip', now()->addHours(72));
+
+                if ($wasTicket) {
+                    $processed++;
+                }
             }
+
+            Log::info("[IMAP] org #{$orgId}: revisados " . count($uids) . " msgs — {$processed} replies de ticket añadidos");
         } finally {
-            imap_close($inbox, CL_EXPUNGE);
+            imap_close($inbox);
         }
     }
 
-    private function processMessage($inbox, int $uid, int $orgId): void
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Procesa un email. Retorna true si era una respuesta de ticket que se procesó.
+     */
+    private function processMessage($inbox, int $uid, int $orgId): bool
     {
         $header  = imap_rfc822_parse_headers(imap_fetchheader($inbox, $uid, FT_UID));
         $subject = isset($header->subject) ? imap_utf8($header->subject) : '';
 
-        // ── Extract ticket number from subject ────────────────────────────────
-        // Matches: TKT-00001 anywhere in the subject (case-insensitive)
+        // Solo procesar si el subject contiene TKT-XXXXX
         if (! preg_match('/TKT-\d+/i', $subject, $m)) {
-            // Not a ticket reply — mark as seen and skip
-            imap_setflag_full($inbox, (string) $uid, '\\Seen', ST_UID);
-            return;
+            return false; // No es respuesta de ticket
         }
 
         $ticketNumber = strtoupper($m[0]);
@@ -99,59 +120,48 @@ class ProcessInboundEmails extends Command
             ->first();
 
         if (! $ticket) {
-            imap_setflag_full($inbox, (string) $uid, '\\Seen', ST_UID);
-            return;
+            Log::warning("[IMAP] org #{$orgId}: ticket {$ticketNumber} no encontrado");
+            return false;
         }
 
-        // ── Extract plain-text body ───────────────────────────────────────────
+        // Extraer y limpiar el cuerpo del email
         $body = $this->getPlainText($inbox, $uid);
         $body = $this->stripQuotedReply($body);
 
         if (empty(trim($body))) {
-            imap_setflag_full($inbox, (string) $uid, '\\Seen', ST_UID);
-            return;
+            return false; // Email sin contenido útil
         }
 
-        // ── Ticket cerrado: NO reabrir — enviar aviso automático al cliente ──
+        // Ticket cerrado: NO reabrir — enviar aviso automático al cliente
         if ($ticket->status === 'closed') {
             $this->sendClosedNotice($ticket, $header);
-            imap_setflag_full($inbox, (string) $uid, '\\Seen', ST_UID);
-            Log::info("[IMAP] Ticket {$ticketNumber} está cerrado — enviado aviso al cliente (org #{$orgId})");
-            return;
+            Log::info("[IMAP] Ticket {$ticketNumber} cerrado — enviado aviso al cliente (org #{$orgId})");
+            return true; // Sí era ticket reply (aunque cerrado)
         }
 
-        // ── Create the message ────────────────────────────────────────────────
+        // Crear el mensaje en el ticket
         Message::create([
             'ticket_id'   => $ticket->id,
-            'sender_type' => 'user',   // 'user' = cliente — coincide con el renderizado del chat
+            'sender_type' => 'user',   // 'user' = cliente
             'content'     => trim($body),
         ]);
 
-        // Bump updated_at so the ticket rises to the top of the LiveInbox list
+        // Subir el ticket al tope del Live Inbox
         $ticket->touch();
 
-        // Mark as read so we don't process it again
-        imap_setflag_full($inbox, (string) $uid, '\\Seen', ST_UID);
+        Log::info("[IMAP] Ticket {$ticketNumber} — nuevo reply del cliente (org #{$orgId})");
 
-        Log::info("[IMAP] Ticket {$ticketNumber} — new reply from client (org #{$orgId})");
+        return true;
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // Closed-ticket auto-reply
+    // Aviso de ticket cerrado
     // ──────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Send an automatic email to the client informing them that the ticket
-     * is closed and they should open a new one instead.
-     *
-     * @param  SmtpSetting  $smtp    The org's SMTP config (used to derive the mailer)
-     * @param  Ticket        $ticket  The closed ticket that was replied to
-     * @param  object        $header  Parsed RFC-822 header of the inbound email
-     */
     private function sendClosedNotice(Ticket $ticket, object $header): void
     {
-        // Resolve sender email from the header (Reply-To → From)
         $senderAddr = null;
+
         if (! empty($header->reply_toaddress)) {
             $parsed = imap_rfc822_parse_adrlist($header->reply_toaddress, 'localhost');
             $senderAddr = ($parsed[0]->mailbox ?? '') . '@' . ($parsed[0]->host ?? '');
@@ -170,7 +180,6 @@ class ProcessInboundEmails extends Command
         $org   = $fresh?->organization;
 
         if (! $org) {
-            Log::warning("[IMAP] sendClosedNotice: no se encontró la organización del ticket #{$ticket->ticket_number}");
             return;
         }
 
@@ -203,33 +212,24 @@ class ProcessInboundEmails extends Command
         return "{{$smtp->imap_host}:{$port}/imap{$enc}}{$folder}";
     }
 
-    /**
-     * Return the plain-text body of a message.
-     * Falls back to stripping HTML tags if only HTML part exists.
-     */
     private function getPlainText($inbox, int $uid): string
     {
         $structure = imap_fetchstructure($inbox, $uid, FT_UID);
 
-        // Simple (non-multipart) message
         if (! isset($structure->parts)) {
             $body = imap_fetchbody($inbox, $uid, '1', FT_UID);
             return $this->decode($body, $structure->encoding);
         }
 
-        // Multipart — find text/plain first, then text/html
         foreach ($structure->parts as $i => $part) {
-            $subtype = strtolower($part->subtype ?? '');
-            if ($subtype === 'plain') {
+            if (strtolower($part->subtype ?? '') === 'plain') {
                 $raw = imap_fetchbody($inbox, $uid, (string) ($i + 1), FT_UID);
                 return $this->decode($raw, $part->encoding);
             }
         }
 
-        // Fallback to HTML part
         foreach ($structure->parts as $i => $part) {
-            $subtype = strtolower($part->subtype ?? '');
-            if ($subtype === 'html') {
+            if (strtolower($part->subtype ?? '') === 'html') {
                 $raw  = imap_fetchbody($inbox, $uid, (string) ($i + 1), FT_UID);
                 $html = $this->decode($raw, $part->encoding);
                 return strip_tags($html);
@@ -248,13 +248,8 @@ class ProcessInboundEmails extends Command
         };
     }
 
-    /**
-     * Remove the quoted original message that most email clients append
-     * when replying (e.g. "On ... wrote:", ">..." lines).
-     */
     private function stripQuotedReply(string $body): string
     {
-        // Remove lines starting with ">"
         $lines = explode("\n", $body);
         $clean = [];
         foreach ($lines as $line) {
@@ -262,10 +257,7 @@ class ProcessInboundEmails extends Command
             $clean[] = $line;
         }
         $body = implode("\n", $clean);
-
-        // Remove common "On [date] ... wrote:" patterns
         $body = preg_replace('/\r?\nOn .+wrote:\r?\n/s', '', $body);
-
         return trim($body);
     }
 }
