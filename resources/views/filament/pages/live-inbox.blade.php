@@ -466,7 +466,7 @@ class="nx-inbox" wire:poll.3s>
             <section class="nx-messages"
                      data-last-user-msg="{{ $lastUserMsgId }}"
                      x-data="{
-                         loading: true,
+                         loading: !sessionStorage.getItem('nx_inbox_ready'),
                          prevUserMsgId: {{ $lastUserMsgId }},
                          snap() { this.$el.scrollTop = this.$el.scrollHeight },
                          checkNewUserMsg() {
@@ -493,7 +493,16 @@ class="nx-inbox" wire:poll.3s>
                              }
                          }
                      }"
-                     x-init="$nextTick(() => { loading = false; $nextTick(() => snap()) })"
+                     x-init="
+                         // Hard-limit: skeleton nunca dura más de 600ms aunque falle un promise
+                         const _skTimer = setTimeout(() => { loading = false; }, 600);
+                         $nextTick(() => {
+                             clearTimeout(_skTimer);
+                             loading = false;
+                             sessionStorage.setItem('nx_inbox_ready', '1');
+                             $nextTick(() => snap());
+                         });
+                     "
                      x-on:livewire:updated.window="$nextTick(() => { snap(); checkNewUserMsg(); })">
 
                 {{-- Skeleton loading --}}

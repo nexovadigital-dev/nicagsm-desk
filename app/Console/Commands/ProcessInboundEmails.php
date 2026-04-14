@@ -114,7 +114,7 @@ class ProcessInboundEmails extends Command
 
         // ── Ticket cerrado: NO reabrir — enviar aviso automático al cliente ──
         if ($ticket->status === 'closed') {
-            $this->sendClosedNotice($smtp, $ticket, $header);
+            $this->sendClosedNotice($ticket, $header);
             imap_setflag_full($inbox, (string) $uid, '\\Seen', ST_UID);
             Log::info("[IMAP] Ticket {$ticketNumber} está cerrado — enviado aviso al cliente (org #{$orgId})");
             return;
@@ -148,7 +148,7 @@ class ProcessInboundEmails extends Command
      * @param  Ticket        $ticket  The closed ticket that was replied to
      * @param  object        $header  Parsed RFC-822 header of the inbound email
      */
-    private function sendClosedNotice(SmtpSetting $smtp, Ticket $ticket, object $header): void
+    private function sendClosedNotice(Ticket $ticket, object $header): void
     {
         // Resolve sender email from the header (Reply-To → From)
         $senderAddr = null;
