@@ -248,16 +248,56 @@ class ProcessInboundEmails extends Command
         };
     }
 
+    /**
+     * Elimina el hilo citado que los clientes de correo añaden al responder.
+     * Soporta patrones de Gmail (español e inglés), Outlook y Apple Mail.
+     */
     private function stripQuotedReply(string $body): string
     {
-        $lines = explode("\n", $body);
-        $clean = [];
+        // Normalizar saltos de línea
+        $body = str_replace("\r\n", "\n", $body);
+
+        // ── 1. Gmail ES: "El lun, 13 abr 2026 a las 14:55, X (<email>) escribió:" ──
+        $body = preg_replace(
+            '/\nEl\s+\w{2,4}[\.,]\s+\d{1,2}\s+\w{3,10}[\.,]?\s+\d{4}\s+a\s+las\s+.+escribi[oó]:?.*/si',
+            '',
+            $body
+        );
+
+        // ── 2. Gmail EN: "On Mon, Apr 13, 2026 at 2:55 PM, X <email> wrote:" ──
+        $body = preg_replace(
+            '/\nOn\s+\w{3,4},?\s+\w{3,9}\.?\s+\d{1,2},?\s+\d{4}.+wrote:?.*/si',
+            '',
+            $body
+        );
+
+        // ── 3. Líneas que empiezan con ">" (bloques citados) ──────────────────
+        $lines   = explode("\n", $body);
+        $clean   = [];
+        $inQuote = false;
         foreach ($lines as $line) {
-            if (str_starts_with(ltrim($line), '>')) continue;
+            $trimmed = ltrim($line);
+            if (str_starts_with($trimmed, '>')) {
+                $inQuote = true;
+                continue;
+            }
+            if ($inQuote && trim($line) === '') {
+                continue; // línea vacía tras bloque citado
+            }
+            $inQuote = false;
             $clean[] = $line;
         }
         $body = implode("\n", $clean);
-        $body = preg_replace('/\r?\nOn .+wrote:\r?\n/s', '', $body);
+
+        // ── 4. Separadores de Outlook ("From:", "De:", "________") ─────────────
+        $body = preg_replace('/\n-{5,}.*?(From|De):.+/si', '', $body);
+        $body = preg_replace('/\n(From|De):\s*.+\n(Sent|Enviado|Date|Fecha):.*/si', '', $body);
+        $body = preg_replace('/\n_{5,}.*$/s', '', $body);
+
+        // ── 5. Limpiar espacios extra ──────────────────────────────────────────
+        $body = preg_replace('/\n{3,}/', "\n\n", $body);
+
         return trim($body);
     }
 }
+
