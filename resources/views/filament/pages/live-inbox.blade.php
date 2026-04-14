@@ -705,9 +705,16 @@ class="nx-inbox" wire:poll.3s>
                                 if (e.key === 'Enter')  { e.preventDefault(); this.pick(this.filtered[this.selected]); return; }
                                 if (e.key === 'Escape') { this.open = false; return; }
                             }
+                            // Ctrl+Enter: enviar/nota según modo
+                            if (e.key === 'Enter' && e.ctrlKey) {
+                                e.preventDefault();
+                                this.noteMode ? $wire.sendNote() : $wire.sendReply();
+                                return;
+                            }
+                            // Enter solo (sin Shift) cuando enterSend está activo
                             if (e.key === 'Enter' && !e.shiftKey && this.enterSend && !this.open) {
                                 e.preventDefault();
-                                @this.call('sendReply');
+                                this.noteMode ? $wire.sendNote() : $wire.sendReply();
                             }
                         }
                     }">
@@ -778,11 +785,10 @@ class="nx-inbox" wire:poll.3s>
                         <textarea
                             x-ref="ta"
                             wire:model="replyContent"
-                            :wire:keydown.ctrl.enter="noteMode ? 'sendNote' : 'sendReply'"
                             wire:loading.attr="disabled"
-                            :wire:target="noteMode ? 'sendNote' : 'sendReply'"
+                            wire:target="sendReply,sendNote"
                             rows="1"
-                            :placeholder="noteMode ? '🔒 Nota interna (solo agentes)…' : 'Escribe una respuesta… (/ para respuestas rápidas)'"
+                            :placeholder="noteMode ? '\uD83D\uDD12 Nota interna (solo agentes)…' : 'Escribe una respuesta… (/ para respuestas rápidas)'"
                             :class="noteMode ? 'nx-composer__input nx-composer__input--note' : 'nx-composer__input'"
                             @input="onInput($event.target.value); $event.target.style.height='auto'; $event.target.style.height=Math.min($event.target.scrollHeight,120)+'px'"
                             @keydown="onKeydown($event)"
