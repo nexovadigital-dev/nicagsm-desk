@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\SmtpSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -15,43 +16,27 @@ use Illuminate\Support\Facades\Log;
  *
  * Expone endpoints HTTP para disparar tareas programadas desde:
  *   - Hostinger hPanel (Cron Jobs)
- *   - Servicios de cron externos (cron-job.org, UptimeRobot, EasyCron, etc.)
+ *   - Servicios de cron externos (cron-job.org, EasyCron, etc.)
  *
- * Protección: token secreto en CRON_SECRET (.env). Sin token → 403.
+ * Los endpoints son públicos (sin token). Protege a nivel de servidor
+ * usando User-Agent filtering o IP whitelist si lo deseas.
  *
  * Uso:
- *   GET /cron/run?token=SECRET            → ejecuta schedule:run (todos los jobs activos)
- *   GET /cron/imap?token=SECRET           → solo tickets:process-inbound
- *   GET /cron/subscriptions?token=SECRET  → solo nexova:check-subscriptions
- *   GET /cron/sync?token=SECRET           → solo nexova:sync-external
- *   GET /cron/crypto?token=SECRET         → solo nexova:verify-crypto
- *   GET /cron/license?token=SECRET        → solo partner:check-license
+ *   GET /api/cron/worker       → ejecuta todo el scheduler (schedule:run)
+ *   GET /api/cron/imap         → solo tickets:process-inbound (respuestas email)
+ *   GET /api/cron/license      → solo partner:check-license
+ *   GET /api/cron/imap-status  → diagnóstico IMAP (no procesa, solo informa)
  */
 class CronController extends Controller
 {
     // ─────────────────────────────────────────────────────────────────────────
-
-    private function authorize(Request $request): bool
-    {
-        $secret = config('app.cron_secret', env('CRON_SECRET', ''));
-        if (empty($secret)) {
-            // Si no hay CRON_SECRET configurado, bloquear siempre
-            return false;
-        }
-        return $request->query('token') === $secret;
-    }
-
-    private function forbidden(): JsonResponse
-    {
-        return response()->json(['error' => 'Unauthorized'], 403);
-    }
 
     private function runCommand(string $command, string $label): JsonResponse
     {
         $start = microtime(true);
         try {
             Artisan::call($command);
-            $output = Artisan::output();
+            $output  = Artisan::output();
             $elapsed = round((microtime(true) - $start) * 1000);
             Log::info("[Cron HTTP] {$label} ejecutado en {$elapsed}ms");
             return response()->json([
@@ -70,45 +55,69 @@ class CronController extends Controller
     // Endpoints
     // ─────────────────────────────────────────────────────────────────────────
 
-    /** Ejecuta schedule:run — equivalente al cron de sistema `php artisan schedule:run` */
-    public function run(Request $request): JsonResponse
+    /** Worker genérico — ejecuta todos los jobs del scheduler */
+    public function worker(): JsonResponse
     {
-        if (! $this->authorize($request)) return $this->forbidden();
-        return $this->runCommand('schedule:run', 'schedule:run');
+        return $this->runCommand('schedule:run', 'worker (schedule:run)');
     }
 
     /** Solo procesar emails IMAP entrantes (respuestas de clientes a tickets) */
-    public function imap(Request $request): JsonResponse
+    public function imap(): JsonResponse
     {
-        if (! $this->authorize($request)) return $this->forbidden();
         return $this->runCommand('tickets:process-inbound', 'IMAP');
     }
 
-    /** Solo verificar suscripciones vencidas */
-    public function subscriptions(Request $request): JsonResponse
-    {
-        if (! $this->authorize($request)) return $this->forbidden();
-        return $this->runCommand('nexova:check-subscriptions', 'subscriptions');
-    }
-
-    /** Solo sincronizar sistema externo */
-    public function sync(Request $request): JsonResponse
-    {
-        if (! $this->authorize($request)) return $this->forbidden();
-        return $this->runCommand('nexova:sync-external', 'sync');
-    }
-
-    /** Solo verificar pagos crypto */
-    public function crypto(Request $request): JsonResponse
-    {
-        if (! $this->authorize($request)) return $this->forbidden();
-        return $this->runCommand('nexova:verify-crypto', 'crypto');
-    }
-
     /** Solo verificar licencia partner */
-    public function license(Request $request): JsonResponse
+    public function license(): JsonResponse
     {
-        if (! $this->authorize($request)) return $this->forbidden();
         return $this->runCommand('partner:check-license', 'license');
+    }
+
+    /**
+     * Diagnóstico IMAP — NO procesa mensajes.
+     * Retorna: estado de conexión, total mensajes, mensajes no leídos.
+     */
+    public function imapStatus(): JsonResponse
+    {
+        if (! function_exists('imap_open')) {
+            return response()->json(['ok' => false, 'error' => 'PHP IMAP extension not installed']);
+        }
+
+        $results = [];
+
+        SmtpSetting::where('imap_enabled', true)
+            ->whereNotNull('imap_host')
+            ->whereNotNull('imap_username')
+            ->whereNotNull('imap_password')
+            ->each(function ($s) use (&$results) {
+                $enc    = match ($s->imap_encryption) { 'ssl' => '/ssl', 'tls' => '/tls', default => '/novalidate-cert' };
+                $folder = $s->imap_folder ?: 'INBOX';
+                $dsn    = "{{$s->imap_host}:{$s->imap_port}/imap{$enc}}{$folder}";
+
+                $conn = @imap_open($dsn, $s->imap_username, $s->imap_password, 0, 1);
+
+                if ($conn) {
+                    $total  = imap_num_msg($conn);
+                    $unseen = imap_search($conn, 'UNSEEN', SE_UID);
+                    imap_close($conn);
+                    $results[] = [
+                        'org_id'  => $s->organization_id,
+                        'host'    => $s->imap_host,
+                        'folder'  => $folder,
+                        'total'   => $total,
+                        'unseen'  => $unseen ? count($unseen) : 0,
+                        'status'  => 'connected',
+                    ];
+                } else {
+                    $results[] = [
+                        'org_id' => $s->organization_id,
+                        'host'   => $s->imap_host,
+                        'status' => 'error',
+                        'error'  => imap_last_error() ?: 'unknown',
+                    ];
+                }
+            });
+
+        return response()->json(['ok' => true, 'accounts' => $results]);
     }
 }
