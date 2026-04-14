@@ -19,6 +19,7 @@ class SmtpSettings extends Page
     protected string $view = 'filament.pages.smtp-settings';
     protected Width|string|null $maxContentWidth = 'full';
 
+    protected static bool $shouldRegisterNavigation = false; // Movido a Configuración Avanzada
     protected static ?string $navigationLabel = 'Correo electrónico';
     protected static string|\UnitEnum|null $navigationGroup = 'Correo y Notificaciones';
     protected static ?int $navigationSort = 10;

@@ -18,6 +18,7 @@ class SubscriptionPage extends Page
     protected string $view = 'filament.pages.subscription';
     protected Width|string|null $maxContentWidth = 'full';
 
+    protected static bool $shouldRegisterNavigation = false; // Movido a Configuración Avanzada
     protected static ?string $navigationLabel = 'Licencia';
     protected static string|\UnitEnum|null $navigationGroup = 'Cuenta';
     protected static ?int    $navigationSort  = 20;

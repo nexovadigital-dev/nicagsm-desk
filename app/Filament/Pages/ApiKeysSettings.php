@@ -16,6 +16,7 @@ class ApiKeysSettings extends Page
     protected string $view = 'filament.pages.api-keys-settings';
     protected Width|string|null $maxContentWidth = 'full';
 
+    protected static bool $shouldRegisterNavigation = false; // Movido a Configuración Avanzada
     protected static ?string $navigationLabel = 'Inteligencia Artificial';
     protected static string|\UnitEnum|null $navigationGroup = 'Inteligencia';
     protected static ?int    $navigationSort  = 20;
