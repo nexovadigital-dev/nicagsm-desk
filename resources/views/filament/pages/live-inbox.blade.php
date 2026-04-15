@@ -4,6 +4,8 @@
 @php 
     $incomingCalls = $this->incomingAgentCalls(); 
     \Carbon\Carbon::setLocale('es');
+    // Timezone de la organización (configurado en Perfil → Datos de la empresa)
+    $orgTimezone = auth()->user()?->organization?->timezone ?? config('app.timezone', 'UTC');
 @endphp
 
 <div x-data="{
@@ -280,7 +282,7 @@ class="nx-inbox" wire:poll.3s>
                          style="flex:1;min-width:0;cursor:pointer">
                         <div class="nx-ticket__top">
                             <span class="nx-ticket__name">{{ $ticket->conversation_name ?? $ticket->client_name }}@if($ticket->is_support_ticket) <span style="font-weight:400;opacity:.6;font-size:.9em">(Ticket #{{ $ticket->ticket_number }})</span>@elseif($ticket->platform === 'telegram') <span style="font-weight:400;opacity:.6;font-size:.9em">(Telegram)</span>@endif</span>
-                            <span class="nx-ticket__time">{{ $ticket->updated_at->diffForHumans(null, true, true) }}</span>
+                            <span class="nx-ticket__time">{{ $ticket->updated_at->setTimezone($orgTimezone)->diffForHumans(null, true, true) }}</span>
                         </div>
                         <div class="nx-ticket__bottom">
                             <span class="nx-ticket__preview">{{ $preview }}</span>
@@ -341,7 +343,7 @@ class="nx-inbox" wire:poll.3s>
                             @if($ticket->platform === 'telegram' && $ticket->telegram_id)
                                 &middot; {{ $ticket->telegram_username ? '@' . $ticket->telegram_username : 'Chat ID: ' . $ticket->telegram_id }}
                             @endif
-                            &middot; {{ $ticket->created_at->translatedFormat('d M, H:i') }}
+                            &middot; {{ $ticket->created_at->setTimezone($orgTimezone)->translatedFormat('d M, H:i') }}
                             @if($ticket->status === 'human')
                                 &middot; <span class="nx-status-label nx-status-label--human">Agente activo</span>
                             @elseif($ticket->status === 'closed')
@@ -564,7 +566,7 @@ class="nx-inbox" wire:poll.3s>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                             </svg>
                             <span>{{ $msg->content }}</span>
-                            <time style="font-size:10px;color:#92400e;opacity:.6;margin-left:auto;white-space:nowrap">{{ $msg->created_at->format('H:i') }}</time>
+                            <time style="font-size:10px;color:#92400e;opacity:.6;margin-left:auto;white-space:nowrap">{{ $msg->created_at->setTimezone($orgTimezone)->format('H:i') }}</time>
                         </div>
                         @continue
                     @endif
@@ -623,7 +625,7 @@ class="nx-inbox" wire:poll.3s>
                                 @if($msg->sender_type === 'agent') Agente &middot;
                                 @elseif($msg->sender_type === 'bot') Nexova IA &middot;
                                 @endif
-                                {{ $msg->created_at->format('H:i') }}
+                                {{ $msg->created_at->setTimezone($orgTimezone)->format('H:i') }}
                             </time>
                         </div>
 
@@ -1151,7 +1153,7 @@ class="nx-inbox" wire:poll.3s>
             </div>
             <div class="nx-detail__row">
                 <span class="nx-detail__key">Inicio</span>
-                <span class="nx-detail__val">{{ $ticket->created_at->translatedFormat('d M, H:i') }}</span>
+                <span class="nx-detail__val">{{ $ticket->created_at->setTimezone($orgTimezone)->translatedFormat('d M, H:i') }}</span>
             </div>
         </div>
 
