@@ -76,20 +76,18 @@ class ProcessInboundEmails extends Command
             foreach ($uids as $uid) {
                 $cacheKey = "imap_uid_{$orgId}_{$uid}";
 
-                // 'skip'         = no era respuesta de ticket (sin TKT-XXXXX en asunto)
-                // 'closed_notice' = ya se envió el aviso de ticket cerrado para este UID
-                // 'ticket'       = fue procesado como reply de ticket abierto
-                //    → NO saltamos 'ticket' para permitir re-detectar si el ticket
-                //      fue cerrado posteriormente y el cliente responde de nuevo.
+                // 'skip'          = no era respuesta de ticket (sin TKT-XXXXX en asunto)
+                // 'ticket'        = reply procesado en ticket abierto — no duplicar
+                // 'closed_notice' = aviso de ticket cerrado ya enviado para este UID
                 $cached = Cache::get($cacheKey);
-                if ($cached === 'skip' || $cached === 'closed_notice') {
+                if ($cached === 'skip' || $cached === 'ticket' || $cached === 'closed_notice') {
                     continue;
                 }
 
                 $wasTicket = $this->processMessage($inbox, $uid, $orgId, $smtp);
 
                 // Solo marcar 'skip' si definitivamente no era respuesta de ticket.
-                // 'ticket' y 'closed_notice' los gestiona processMessage()
+                // 'ticket' y 'closed_notice' los escribe processMessage() internamente.
                 if (! $wasTicket) {
                     Cache::put($cacheKey, 'skip', now()->addHours(72));
                 }
@@ -128,15 +126,18 @@ class ProcessInboundEmails extends Command
 
         Log::info("[IMAP] uid={$uid} org=#{$orgId}: subject='{$subject}'");
 
-        // ─── ANTI-LOOP: ignorar auto-respuestas propias ───────────────────────
-        // Si el asunto contiene "ya fue cerrado" es nuestro propio TicketReopenBlockedMail
-        // que rebotó de vuelta. También ignorar si el remitente es la misma cuenta IMAP.
+        // ─── ANTI-LOOP: ignorar emails enviados por el propio sistema ────────
+        // Si el remitente es la misma cuenta IMAP/SMTP, ignoramos el email.
+        // Esto evita que nuestras propias notificaciones (TicketReopenBlockedMail,
+        // etc.) sean re-procesadas como replies de clientes.
+        // NOTA: NO filtramos por asunto ("ya fue cerrado") porque el cliente puede
+        // responder legítimamente a ese email y debe recibir el aviso de nuevo.
         $senderFrom = imap_rfc822_parse_adrlist($header->fromaddress ?? '', 'localhost');
         $fromEmail  = strtolower(($senderFrom[0]->mailbox ?? '') . '@' . ($senderFrom[0]->host ?? ''));
         $ownEmail   = strtolower($smtp->imap_username ?? '');
 
-        if ($fromEmail === $ownEmail || str_contains(mb_strtolower($subject), 'ya fue cerrado')) {
-            Log::info("[IMAP] uid={$uid} org=#{$orgId}: LOOP GUARD — auto-reply ignorado (from={$fromEmail})");
+        if ($fromEmail === $ownEmail) {
+            Log::info("[IMAP] uid={$uid} org=#{$orgId}: LOOP GUARD — email propio ignorado (from={$fromEmail})");
             return false;
         }
         // ─── FIN ANTI-LOOP ────────────────────────────────────────────────────
