@@ -27,7 +27,7 @@
   .steps li { font-size: 13.5px; color: #374151; line-height: 1.7; margin-bottom: 6px; }
   .steps li span { font-weight: 700; color: {{ $accentColor }}; }
   .reply-hint { margin-top: 8px; padding: 12px 16px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; color: #4b5563; line-height: 1.6; }
-  .footer { padding: 16px 32px; background: #f9fafb; border-top: 1px solid #f3f4f6; font-size: 11px; color: #9ca3af; text-align: center; }
+  .footer { display:none }
 </style>
 </head>
 <body>
@@ -77,13 +77,7 @@
     </div>
     @endif
 
-    <div class="reply-hint">
-      ¿Tienes dudas sobre este proceso? Responde a este correo y un agente
-      te orientará para abrir el nuevo ticket correctamente.
-    </div>
-  </div>
-  <div class="footer">
-    Ticket {{ $ticket->ticket_number }} · {{ $orgName }} · Este mensaje es automático
+    @include('emails._email-footer', ['orgName' => $orgName, 'org' => $org, 'ticket' => $ticket, 'footerNote' => 'Gestión de Soporte'])
   </div>
 </div>
 </body>

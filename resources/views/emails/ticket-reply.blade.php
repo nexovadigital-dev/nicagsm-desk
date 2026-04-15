@@ -43,8 +43,7 @@
     </div>
     <p class="ticket-ref">Referencia: {{ $ticket->ticket_number }} · {{ $ticket->ticket_subject }}</p>
   </div>
-  <div class="footer">
-    {{ $orgName }} · Este email fue enviado porque tienes una consulta activa.
+    @include('emails._email-footer', ['orgName' => $orgName, 'org' => $org, 'ticket' => $ticket, 'footerNote' => 'Gestión de Soporte'])
   </div>
 </div>
 </body>

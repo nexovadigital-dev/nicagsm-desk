@@ -77,8 +77,7 @@
       </a>
     </div>
   </div>
-  <div class="footer">
-    Ticket {{ $ticket->ticket_number }} · {{ $orgName }} · Si tienes más dudas, abre un nuevo ticket
+    @include('emails._email-footer', ['orgName' => $orgName, 'org' => $org, 'ticket' => $ticket, 'footerNote' => 'Gestión de Soporte'])
   </div>
 </div>
 </body>

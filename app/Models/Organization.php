@@ -17,6 +17,7 @@ class Organization extends Model
         'max_messages_per_session', 'max_bot_sessions_per_day',
         'bot_sessions_today', 'bot_messages_this_month', 'bot_messages_month_reset', 'usage_date',
         'plan', 'trial_ends_at', 'is_active', 'is_partner', 'partner_token', 'accent_color', 'logo_path',
+        'social_links',
     ];
 
     protected $casts = [
@@ -25,6 +26,7 @@ class Organization extends Model
         'domain_verified'         => 'boolean',
         'ai_use_own_keys'         => 'boolean',
         'telegram_config'         => 'array',
+        'social_links'            => 'array',
         'trial_ends_at'           => 'datetime',
         'usage_date'              => 'date',
         'max_messages_per_session'  => 'integer',

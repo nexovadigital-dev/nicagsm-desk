@@ -58,6 +58,14 @@ class AgentProfile extends Page
     public string $orgSupportName  = '';
     public string $orgTimezone     = 'America/Managua';
 
+    // ── Redes sociales ────────────────────────────────────────────────────────
+    public string $socialFacebook  = '';
+    public string $socialInstagram = '';
+    public string $socialX         = '';
+    public string $socialWhatsapp  = '';
+    public string $socialTelegram  = '';
+    public string $socialYoutube   = '';
+
     // ── Seguridad (contraseña + 2FA) ──────────────────────────────────────────
     public string $currentPassword = '';
     public string $newPassword     = '';
@@ -131,6 +139,15 @@ class AgentProfile extends Page
             $this->orgSupportEmail = $org->support_email  ?? '';
             $this->orgSupportName  = $org->support_name   ?? '';
             $this->orgTimezone     = $org->timezone        ?? 'America/Managua';
+
+            // Redes sociales
+            $social = $org->social_links ?? [];
+            $this->socialFacebook  = $social['facebook']  ?? '';
+            $this->socialInstagram = $social['instagram'] ?? '';
+            $this->socialX         = $social['x']         ?? '';
+            $this->socialWhatsapp  = $social['whatsapp']  ?? '';
+            $this->socialTelegram  = $social['telegram']  ?? '';
+            $this->socialYoutube   = $social['youtube']   ?? '';
 
             // SMTP / IMAP
             if ($orgId = $this->orgId()) {
@@ -267,6 +284,27 @@ class AgentProfile extends Page
             'timezone'      => $tz,
         ]);
         $this->dispatch('nexova-toast', type: 'success', message: 'Organización actualizada');
+    }
+
+    public function saveSocialLinks(): void
+    {
+        $user = Filament::auth()->user();
+        if (! $user->organization_id || ! in_array($user->role, ['owner', 'admin'])) {
+            $this->dispatch('nexova-toast', type: 'error', message: 'Sin permisos');
+            return;
+        }
+
+        Organization::where('id', $user->organization_id)->update([
+            'social_links' => [
+                'facebook'  => trim($this->socialFacebook)  ?: null,
+                'instagram' => trim($this->socialInstagram) ?: null,
+                'x'         => trim($this->socialX)         ?: null,
+                'whatsapp'  => trim($this->socialWhatsapp)  ?: null,
+                'telegram'  => trim($this->socialTelegram)  ?: null,
+                'youtube'   => trim($this->socialYoutube)   ?: null,
+            ],
+        ]);
+        $this->dispatch('nexova-toast', type: 'success', message: 'Redes sociales guardadas');
     }
 
     // ─────────────────────────────────────────────────────────────────────────

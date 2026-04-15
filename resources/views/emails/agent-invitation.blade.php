@@ -19,7 +19,7 @@
   .divider { height: 1px; background: #f3f4f6; margin: 24px 0; }
   .link-fallback { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px; font-size: 12px; color: #6b7280; word-break: break-all; }
   .link-fallback strong { color: #111827; display: block; margin-bottom: 6px; }
-  .footer { padding: 16px 32px; background: #f9fafb; border-top: 1px solid #f3f4f6; font-size: 11px; color: #9ca3af; text-align: center; }
+  .footer { display:none }
   .expire-note { font-size: 12px; color: #9ca3af; }
 </style>
 </head>
@@ -49,8 +49,8 @@
       {{ url('/invitation/' . $invitation->token) }}
     </div>
   </div>
-  <div class="footer">
-    Nexova Digital Solutions &nbsp;·&nbsp; Este mensaje fue enviado automáticamente, no respondas a este correo.
+@php $org = $invitation->organization; $orgName = $org->name ?? 'Nexova Desk'; @endphp
+    @include('emails._email-footer', ['orgName' => $orgName, 'org' => $org, 'footerNote' => 'Gestión de Soporte'])
   </div>
 </div>
 </body>

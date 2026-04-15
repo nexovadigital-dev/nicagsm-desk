@@ -67,8 +67,7 @@
       Puedes responder directamente a este correo y tu mensaje se añadirá al ticket. Asegúrate de no eliminar el asunto del correo al responder.
     </div>
   </div>
-  <div class="footer">
-    Ticket {{ $ticket->ticket_number }} · {{ $orgName }} · Este es un correo automático
+    @include('emails._email-footer', ['orgName' => $orgName, 'org' => $org, 'ticket' => $ticket, 'footerNote' => 'Gestión de Soporte'])
   </div>
 </div>
 </body>
