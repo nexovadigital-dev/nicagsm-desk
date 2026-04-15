@@ -728,17 +728,8 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                     <div style="font-size:13px;font-weight:500;color:var(--c-text)">Mostrar marca de agua</div>
                     <div style="font-size:11.5px;color:var(--c-sub)">Muestra "Powered by Nexova Digital Solutions"</div>
                 </div>
-                {{-- Toggle branding — onclick nativo JS, sin depender de Alpine context --}}
-                @if($showBranding)
-                <div onclick="window.dispatchEvent(new CustomEvent('nx-branding-modal-open'))" style="cursor:pointer;display:inline-flex;align-items:center">
-                @else
-                <div onclick="var w=window.livewire||window.Livewire;if(w){var c=w.find(document.querySelector('[wire\\:id]').getAttribute('wire:id'));if(c)c.set('showBranding',true);}" style="cursor:pointer;display:inline-flex;align-items:center">
-                @endif
-                    <div style="width:40px;height:22px;border-radius:11px;position:relative;background:{{ $showBranding ? '#22c55e' : '#d1d5db' }};transition:background .2s;flex-shrink:0;">
-                        <div style="position:absolute;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);{{ $showBranding ? 'left:20px' : 'left:2px' }};"></div>
-                    </div>
-                </div>
-
+                {{-- Toggle branding — simple wire:model.live, sin modal por ahora --}}
+                <label class="wc-toggle"><input type="checkbox" wire:model.live="showBranding"><span class="wc-slider"></span></label>
 
             </div>
 
@@ -761,44 +752,8 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
     </div>
 </div>
 
-{{-- ══ Modal branding — JS puro, sin depender de Alpine ni Livewire para mostrarse ══ --}}
-<div id="nx-branding-modal"
-    style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,.45);backdrop-filter:blur(2px)"
->
-    <div style="background:#fff;border-radius:16px;padding:32px 28px;max-width:400px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center">
-        <div style="font-size:36px;margin-bottom:12px">&#128156;</div>
-        <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:10px">Gracias por apoyar a Nexova</div>
-        <div style="font-size:13px;color:#6b7280;line-height:1.65;margin-bottom:24px">
-            Mostrar el respaldo al ecosistema <strong>Nexova Digital Solutions</strong> conlleva
-            <strong>descuentos en sus suscripciones</strong> y <strong>acceso anticipado</strong>
-            a los nuevos productos.<br><br>
-            &iexcl;Agradecemos su apoyo! Sin embargo, puede desactivar la marca de agua si lo desea.
-        </div>
-        <div style="display:flex;gap:10px;justify-content:center">
-            <button type="button"
-                onclick="document.getElementById('nx-branding-modal').style.display='none'"
-                style="padding:10px 22px;border-radius:9px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;color:#374151;cursor:pointer">
-                Cancelar
-            </button>
-            <button type="button"
-                onclick="document.getElementById('nx-branding-modal').style.display='none'; var el=document.querySelector('[wire\\:id]'); if(el){ var wid=el.getAttribute('wire:id'); window.Livewire.find(wid).set('showBranding',false); }"
-                style="padding:10px 22px;border-radius:9px;border:none;background:#ef4444;font-size:13px;font-weight:600;color:#fff;cursor:pointer">
-                Confirmar desactivar
-            </button>
-        </div>
-    </div>
-</div>
-<script>
-(function(){
-    window.addEventListener('nx-branding-modal-open', function(){
-        var m = document.getElementById('nx-branding-modal');
-        if(m){ m.style.display='flex'; }
-    });
-})();
-</script>
-
-
 {{-- ══ Llamada a agente ══ --}}
+
 <div class="nx-section" x-data="{ open: false }">
     <div class="nx-section-hd" @click="open = !open">
         <span class="nx-section-title">Llamada a agente humano</span>

@@ -82,7 +82,7 @@ class ProcessInboundEmails extends Command
                     continue;
                 }
 
-                $wasTicket = $this->processMessage($inbox, $uid, $orgId);
+                $wasTicket = $this->processMessage($inbox, $uid, $orgId, $smtp);
 
                 // Cachear resultado. TTL 72h.
                 // 'ticket' = procesado como reply de ticket
@@ -105,7 +105,7 @@ class ProcessInboundEmails extends Command
     /**
      * Procesa un email. Retorna true si era una respuesta de ticket que se procesó.
      */
-    private function processMessage($inbox, int $uid, int $orgId): bool
+    private function processMessage($inbox, int $uid, int $orgId, SmtpSetting $smtp): bool
     {
         $rawSubject = imap_fetchheader($inbox, $uid, FT_UID);
         $header     = imap_rfc822_parse_headers($rawSubject);
@@ -122,6 +122,19 @@ class ProcessInboundEmails extends Command
         $subject = mb_convert_encoding($subject, 'UTF-8', 'UTF-8');
 
         Log::info("[IMAP] uid={$uid} org=#{$orgId}: subject='{$subject}'");
+
+        // ─── ANTI-LOOP: ignorar auto-respuestas propias ───────────────────────
+        // Si el asunto contiene "ya fue cerrado" es nuestro propio TicketReopenBlockedMail
+        // que rebotó de vuelta. También ignorar si el remitente es la misma cuenta IMAP.
+        $senderFrom = imap_rfc822_parse_adrlist($header->fromaddress ?? '', 'localhost');
+        $fromEmail  = strtolower(($senderFrom[0]->mailbox ?? '') . '@' . ($senderFrom[0]->host ?? ''));
+        $ownEmail   = strtolower($smtp->imap_username ?? '');
+
+        if ($fromEmail === $ownEmail || str_contains(mb_strtolower($subject), 'ya fue cerrado')) {
+            Log::info("[IMAP] uid={$uid} org=#{$orgId}: LOOP GUARD — auto-reply ignorado (from={$fromEmail})");
+            return false;
+        }
+        // ─── FIN ANTI-LOOP ────────────────────────────────────────────────────
 
         // Detectar TKT-XXXXX en el asunto en cualquier formato:
         // Re: [TKT-00001], Re: Ticket TKT-00001, Fwd: TKT-00001, etc.
