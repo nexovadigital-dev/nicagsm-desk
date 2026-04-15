@@ -22,6 +22,14 @@ class MessageObserver
             return;
         }
 
+        // ── LIVE CHAT: NO enviar emails por cada mensaje ──────────────────────
+        // Los chats en vivo del widget (platform='web') son conversaciones en tiempo real.
+        // Solo se envía email cuando hay un ticket formal (ticket_number asignado)
+        // que implica que el cliente espera respuesta por email (canal IMAP/email).
+        if ($ticket->platform === 'web' && ! $ticket->ticket_number) {
+            return;
+        }
+
         $org = $ticket->organization;
         if (! $org || ! OrgMailer::notificationsEnabled($org)) {
             return;
@@ -31,7 +39,7 @@ class MessageObserver
             $mailerName = OrgMailer::mailerNameFor($org);
             $mailable   = new TicketReplyMail($ticket, $message);
 
-            // Use ->send() (synchronous) — no queue worker required on shared hosting
+            // Use ->send() (synchronous) â€” no queue worker required on shared hosting
             if ($mailerName) {
                 Mail::mailer($mailerName)->to($ticket->client_email)->send($mailable);
             } else {

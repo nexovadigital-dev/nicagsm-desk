@@ -7,19 +7,21 @@ use App\Jobs\ProcessBotReply;
 use App\Models\ActiveVisitor;
 use App\Models\BannedIp;
 use App\Models\Contact;
+use App\Mail\ChatTranscriptMail;
 use App\Models\Message;
 use App\Models\Ticket;
 use App\Models\ChatWidget;
 use App\Models\WidgetSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ChatController extends Controller
 {
-    // ── 0. Configuración pública del widget ──────────────────────────────────
+    // â”€â”€ 0. ConfiguraciÃ³n pÃºblica del widget â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public function widgetConfig(Request $request): JsonResponse
     {
         // Si viene un token de widget personalizado, usarlo; si no, el global
@@ -90,7 +92,7 @@ class ChatController extends Controller
         ]);
     }
 
-    // ── 1. Iniciar sesión ────────────────────────────────────────────────────
+    // â”€â”€ 1. Iniciar sesiÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public function startSession(Request $request): JsonResponse
     {
         $request->validate([
@@ -129,7 +131,7 @@ class ChatController extends Controller
         $botStatus = 'bot';
         if (isset($org) && $org) {
             if (! $org->canStartBotSession()) {
-                $botStatus = 'human'; // Limit reached — skip bot, go straight to human
+                $botStatus = 'human'; // Limit reached â€” skip bot, go straight to human
             } else {
                 $org->incrementBotSessions();
             }
@@ -142,10 +144,10 @@ class ChatController extends Controller
         $ua      = $request->userAgent() ?? '';
         $uaInfo  = $this->parseUserAgent($ua);
 
-        // Geolocalización por IP (gratis, sin API key)
+        // GeolocalizaciÃ³n por IP (gratis, sin API key)
         $geo = $this->geolocate($ip);
 
-        // ── Resolve Contact ───────────────────────────────────────────────────
+        // â”€â”€ Resolve Contact â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $contact    = null;
         $clientName = $request->client_name;
         $clientEmail= $request->client_email;
@@ -175,7 +177,7 @@ class ChatController extends Controller
             }
         }
 
-        // 2. Email-based contact lookup — only if visitor provided a real email
+        // 2. Email-based contact lookup â€” only if visitor provided a real email
         //    Anonymous visitors (no email) are NOT saved as contacts.
         if (! $contact && $clientEmail && filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) {
             $contact = Contact::findOrCreateByEmail(
@@ -190,11 +192,11 @@ class ChatController extends Controller
 
         $clientName = $clientName ?: 'Visitante';
 
-        // Sanitizar store_context: limitar tamaño para no sobrecargar el prompt de IA
+        // Sanitizar store_context: limitar tamaÃ±o para no sobrecargar el prompt de IA
         $storeContext = null;
         if ($request->filled('store_context')) {
             $raw = $request->input('store_context');
-            // Truncar descripciones largas de productos/categorías
+            // Truncar descripciones largas de productos/categorÃ­as
             if (isset($raw['products']) && is_array($raw['products'])) {
                 $raw['products'] = array_slice($raw['products'], 0, 12);
                 foreach ($raw['products'] as &$p) {
@@ -228,7 +230,7 @@ class ChatController extends Controller
             'store_context'     => $storeContext,
         ]);
 
-        // Nombre de conversación
+        // Nombre de conversaciÃ³n
         $conversationName = ($clientName !== 'Visitante')
             ? $clientName
             : 'Visitante #' . $ticket->id;
@@ -249,7 +251,7 @@ class ChatController extends Controller
         ]);
     }
 
-    // ── 2. Enviar mensaje ────────────────────────────────────────────────────
+    // â”€â”€ 2. Enviar mensaje â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public function sendMessage(Request $request): JsonResponse
     {
         $request->validate([
@@ -261,11 +263,11 @@ class ChatController extends Controller
         $ticket = Ticket::where('session_id', $request->session_id)->first();
 
         if (! $ticket) {
-            return response()->json(['error' => 'Sesión de chat no encontrada'], 404);
+            return response()->json(['error' => 'SesiÃ³n de chat no encontrada'], 404);
         }
 
         if ($ticket->status === 'closed') {
-            return response()->json(['error' => 'Este chat está cerrado'], 422);
+            return response()->json(['error' => 'Este chat estÃ¡ cerrado'], 422);
         }
 
         if (! $request->filled('content') && ! $request->hasFile('attachment')) {
@@ -282,7 +284,7 @@ class ChatController extends Controller
                 ->whereNotNull('attachment_path')
                 ->count();
             if ($existingAttachments >= 5) {
-                return response()->json(['error' => 'Límite de 5 archivos adjuntos por conversación alcanzado'], 422);
+                return response()->json(['error' => 'LÃ­mite de 5 archivos adjuntos por conversaciÃ³n alcanzado'], 422);
             }
 
             $file           = $request->file('attachment');
@@ -307,13 +309,13 @@ class ChatController extends Controller
         return response()->json(['success' => true, 'message' => $message]);
     }
 
-    // ── 3. Obtener mensajes (short polling) ──────────────────────────────────
+    // â”€â”€ 3. Obtener mensajes (short polling) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public function getMessages(string $session_id): JsonResponse
     {
         $ticket = Ticket::where('session_id', $session_id)->first();
 
         if (! $ticket) {
-            return response()->json(['error' => 'Sesión no encontrada'], 404);
+            return response()->json(['error' => 'SesiÃ³n no encontrada'], 404);
         }
 
         $messages = Message::where('ticket_id', $ticket->id)
@@ -336,18 +338,18 @@ class ChatController extends Controller
         ]);
     }
 
-    // ── 4. Solicitar agente humano ───────────────────────────────────────────
+    // â”€â”€ 4. Solicitar agente humano â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public function requestAgent(Request $request): JsonResponse
     {
         $request->validate(['session_id' => 'required|string']);
 
         $ticket = Ticket::where('session_id', $request->session_id)->first();
         if (! $ticket) {
-            return response()->json(['error' => 'Sesión no encontrada'], 404);
+            return response()->json(['error' => 'SesiÃ³n no encontrada'], 404);
         }
 
         if ($ticket->status === 'closed') {
-            return response()->json(['error' => 'El chat está cerrado'], 422);
+            return response()->json(['error' => 'El chat estÃ¡ cerrado'], 422);
         }
 
         if ($ticket->status !== 'human') {
@@ -358,11 +360,11 @@ class ChatController extends Controller
             Message::create([
                 'ticket_id'   => $ticket->id,
                 'sender_type' => 'system',
-                'content'     => 'Cliente solicitó atención con un agente.',
+                'content'     => 'Cliente solicitÃ³ atenciÃ³n con un agente.',
             ]);
         }
 
-        // Retornar configuración de timeout del widget
+        // Retornar configuraciÃ³n de timeout del widget
         $widget  = $ticket->widget;
         $timeout = $widget?->agent_call_timeout ?? 10;
         $noResp  = $widget?->agent_no_response  ?? 'bot';
@@ -375,14 +377,14 @@ class ChatController extends Controller
         ]);
     }
 
-    // ── 4b. Revertir a bot cuando expira el timeout sin respuesta ────────────
+    // â”€â”€ 4b. Revertir a bot cuando expira el timeout sin respuesta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public function revertToBot(Request $request): JsonResponse
     {
         $request->validate(['session_id' => 'required|string']);
 
         $ticket = Ticket::where('session_id', $request->session_id)->first();
         if (! $ticket) {
-            return response()->json(['error' => 'Sesión no encontrada'], 404);
+            return response()->json(['error' => 'SesiÃ³n no encontrada'], 404);
         }
 
         // Solo revertir si el ticket sigue esperando agente (no fue tomado)
@@ -394,14 +396,14 @@ class ChatController extends Controller
             Message::create([
                 'ticket_id'   => $ticket->id,
                 'sender_type' => 'system',
-                'content'     => 'No hay agentes disponibles. El asistente IA continuará ayudándote.',
+                'content'     => 'No hay agentes disponibles. El asistente IA continuarÃ¡ ayudÃ¡ndote.',
             ]);
         }
 
         return response()->json(['success' => true, 'status' => $ticket->fresh()->status]);
     }
 
-    // ── 5. Calificación del chat ─────────────────────────────────────────────
+    // â”€â”€ 5. CalificaciÃ³n del chat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public function rateChat(Request $request): JsonResponse
     {
         $request->validate([
@@ -413,7 +415,7 @@ class ChatController extends Controller
         $ticket = Ticket::where('session_id', $request->session_id)->first();
 
         if (! $ticket) {
-            return response()->json(['error' => 'Sesión no encontrada'], 404);
+            return response()->json(['error' => 'SesiÃ³n no encontrada'], 404);
         }
 
         if ($ticket->status !== 'closed') {
@@ -428,7 +430,7 @@ class ChatController extends Controller
         return response()->json(['success' => true]);
     }
 
-    // ── 6. Actualizar nombre del visitante ───────────────────────────────────
+    // â”€â”€ 6. Actualizar nombre del visitante â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public function updateVisitor(Request $request): JsonResponse
     {
         $request->validate([
@@ -440,7 +442,7 @@ class ChatController extends Controller
 
         $ticket = Ticket::where('session_id', $request->session_id)->first();
         if (! $ticket) {
-            return response()->json(['error' => 'Sesión no encontrada'], 404);
+            return response()->json(['error' => 'SesiÃ³n no encontrada'], 404);
         }
 
         $updateData = array_filter([
@@ -467,7 +469,7 @@ class ChatController extends Controller
         return response()->json(['success' => true]);
     }
 
-    // ── 7. Lookup de contacto (para widget — detectar visitante recurrente) ──
+    // â”€â”€ 7. Lookup de contacto (para widget â€” detectar visitante recurrente) â”€â”€
     public function contactLookup(Request $request): JsonResponse
     {
         $request->validate([
@@ -524,9 +526,9 @@ class ChatController extends Controller
         ]);
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
+    // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-    // ── Admin: polling de nuevos eventos (para sonidos/notificaciones) ────────
+    // â”€â”€ Admin: polling de nuevos eventos (para sonidos/notificaciones) â”€â”€â”€â”€â”€â”€â”€â”€
     public function adminNewEvents(Request $request): JsonResponse
     {
         $since     = $request->query('since');
@@ -544,8 +546,8 @@ class ChatController extends Controller
             ->limit(10)
             ->get();
 
-        // 2. Tickets recién escalados a humano (bot o cliente solicitó intervención)
-        //    Se detectan porque su updated_at cambió dentro de la ventana
+        // 2. Tickets reciÃ©n escalados a humano (bot o cliente solicitÃ³ intervenciÃ³n)
+        //    Se detectan porque su updated_at cambiÃ³ dentro de la ventana
         $newEscalations = Ticket::where('status', 'human')
             ->where('platform', '!=', 'internal')
             ->where('updated_at', '>', $sinceTime)
@@ -577,14 +579,14 @@ class ChatController extends Controller
         ]);
     }
 
-    // ── Renombrar conversación (usa primer mensaje del usuario como nombre) ───
+    // â”€â”€ Renombrar conversaciÃ³n (usa primer mensaje del usuario como nombre) â”€â”€â”€
     public function renameConversation(Request $request): JsonResponse
     {
         $sessionId = $request->input('session_id');
         $name      = trim((string) $request->input('name', ''));
 
         if (! $sessionId || ! $name) {
-            return response()->json(['error' => 'Faltan parámetros'], 422);
+            return response()->json(['error' => 'Faltan parÃ¡metros'], 422);
         }
 
         // Truncar a 60 chars para que sea legible en la lista
@@ -592,7 +594,7 @@ class ChatController extends Controller
 
         $ticket = Ticket::where('session_id', $sessionId)->first();
         if (! $ticket) {
-            return response()->json(['error' => 'Sesión no encontrada'], 404);
+            return response()->json(['error' => 'SesiÃ³n no encontrada'], 404);
         }
 
         $ticket->update(['conversation_name' => $name]);
@@ -600,7 +602,7 @@ class ChatController extends Controller
         return response()->json(['ok' => true, 'name' => $name]);
     }
 
-    // ── Bulk: resumen de conversaciones por session_ids (historial widget) ───
+    // â”€â”€ Bulk: resumen de conversaciones por session_ids (historial widget) â”€â”€â”€
     public function conversationsBulk(Request $request): JsonResponse
     {
         $ids = array_slice((array) $request->input('session_ids', []), 0, 20);
@@ -638,7 +640,7 @@ class ChatController extends Controller
         return response()->json(['conversations' => $result]);
     }
 
-    // ── Sneak-peek: visitante transmite texto mientras escribe ────────────────
+    // â”€â”€ Sneak-peek: visitante transmite texto mientras escribe â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public function typingPreview(Request $request): JsonResponse
     {
         $sessionId = $request->input('session_id');
@@ -653,7 +655,7 @@ class ChatController extends Controller
             return response()->json(['ok' => false], 404);
         }
 
-        // Store for 30 seconds — agent panel reads this via Livewire
+        // Store for 30 seconds â€” agent panel reads this via Livewire
         \Illuminate\Support\Facades\Cache::put(
             "typing_preview_{$ticket->id}",
             ['text' => (string) $text, 'at' => now()->toIso8601String()],
@@ -663,7 +665,7 @@ class ChatController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    // ── Admin: count de tickets activos (para badge del sidebar) ─────────────
+    // â”€â”€ Admin: count de tickets activos (para badge del sidebar) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public function adminUnreadCount(): JsonResponse
     {
         $count = \App\Models\Ticket::where('status', 'human')
@@ -673,21 +675,75 @@ class ChatController extends Controller
         return response()->json(['count' => $count]);
     }
 
+
+    // ── Enviar transcripción por email ───────────────────────────────────────
+    public function sendTranscript(Request $request): JsonResponse
+    {
+        $request->validate([
+            'session_id' => 'required|string',
+            'email'      => 'nullable|email|max:255',
+        ]);
+
+        $ticket = Ticket::where('session_id', $request->session_id)
+            ->with(['messages' => fn ($q) => $q->orderBy('created_at')])
+            ->first();
+
+        if (! $ticket) {
+            return response()->json(['error' => 'Sesión no encontrada'], 404);
+        }
+
+        if ($ticket->platform !== 'web') {
+            return response()->json(['error' => 'Solo disponible para chats del widget'], 422);
+        }
+
+        $toEmail = $request->email ?: $ticket->client_email;
+
+        if (! $toEmail || ! filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
+            return response()->json([
+                'error'       => 'no_email',
+                'needs_email' => true,
+                'message'     => 'Proporciona un email para enviar la transcripción.',
+            ], 422);
+        }
+
+        $messages = $ticket->messages->filter(
+            fn ($m) => $m->sender_type !== 'system' ||
+                       ! preg_match('/^__[A-Z_]+__$/', trim($m->content ?? ''))
+        )->values();
+
+        try {
+            $org      = $ticket->organization;
+            $mailer   = \App\Services\OrgMailer::mailerNameFor($org);
+            $mailable = new ChatTranscriptMail($ticket, $messages);
+
+            // send() sincrónico — Hostinger shared hosting no tiene queue worker
+            if ($mailer) {
+                Mail::mailer($mailer)->to($toEmail)->send($mailable);
+            } else {
+                Mail::to($toEmail)->send($mailable);
+            }
+
+            return response()->json(['success' => true]);
+        } catch (\Throwable $e) {
+            Log::error("ChatTranscriptMail failed for ticket #{$ticket->id}: {$e->getMessage()}");
+            return response()->json(['error' => 'Error al enviar el email. Intenta de nuevo.'], 500);
+        }
+    }
     private function generateConversationName(): string
     {
         static $adjectives = [
-            'Azul','Verde','Rojo','Dorado','Plata','Coral','Lima','Jade','Zafiro','Ámbar',
-            'Gris','Rosa','Cielo','Turquesa','Índigo','Violeta','Teal','Bronce','Oliva','Crema',
+            'Azul','Verde','Rojo','Dorado','Plata','Coral','Lima','Jade','Zafiro','Ãmbar',
+            'Gris','Rosa','Cielo','Turquesa','Ãndigo','Violeta','Teal','Bronce','Oliva','Crema',
         ];
         static $animals = [
-            'Puma','Cóndor','Jaguar','Colibrí','Delfín','Halcón','Zorro','Búho','Lince','Lobo',
-            'Tigre','León','Águila','Oso','Pantera','Serpiente','Elefante','Jirafa','Rinoceronte','Guepardo',
+            'Puma','CÃ³ndor','Jaguar','ColibrÃ­','DelfÃ­n','HalcÃ³n','Zorro','BÃºho','Lince','Lobo',
+            'Tigre','LeÃ³n','Ãguila','Oso','Pantera','Serpiente','Elefante','Jirafa','Rinoceronte','Guepardo',
         ];
 
         return $adjectives[array_rand($adjectives)] . ' ' . $animals[array_rand($animals)];
     }
 
-    // ── Visitor Management ───────────────────────────────────────────────────
+    // â”€â”€ Visitor Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     public function visitorPing(Request $request): JsonResponse
     {
@@ -720,7 +776,7 @@ class ChatController extends Controller
                         ->where('visitor_key', $visitorKey)
                         ->first();
 
-        // Build pages_visited — append if URL changed
+        // Build pages_visited â€” append if URL changed
         $currentUrl = $request->input('current_url');
         $pageTitle  = $request->input('page_title');
         $pages      = $existing ? ($existing->pages_visited ?? []) : [];

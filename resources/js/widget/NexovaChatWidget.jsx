@@ -739,7 +739,26 @@ const statusLabel = status =>
 // ---------------------------------------------------------------------------
 // Pantalla de calificación
 // ---------------------------------------------------------------------------
-function RatingScreen({ onRate, onBack, accentColor, ratingMessage, alreadyRated, ratingValue }) {
+function RatingScreen({ onRate, onBack, accentColor, ratingMessage, alreadyRated, ratingValue, sessionId, clientEmail }) {
+    // Estado transcripción
+    const [txState, setTxState] = useState('idle'); // idle|needs_email|sending|sent|error
+    const [txEmail, setTxEmail] = useState(clientEmail || '');
+    const [txError, setTxError] = useState('');
+
+    const sendTranscript = async (emailOverride = null) => {
+        setTxState('sending'); setTxError('');
+        try {
+            const res = await fetch(`${API_BASE}/api/chat/send-transcript`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                body: JSON.stringify({ session_id: sessionId, email: emailOverride || txEmail || undefined }),
+            });
+            const data = await res.json();
+            if (data.needs_email) setTxState('needs_email');
+            else if (data.success) setTxState('sent');
+            else { setTxError(data.error || 'Error al enviar.'); setTxState('error'); }
+        } catch { setTxError('Error de conexión.'); setTxState('error'); }
+    };
     const [hovered,  setHovered]  = useState(0);
     const [selected, setSelected] = useState(ratingValue || 0);
     const [comment,  setComment]  = useState('');
@@ -762,7 +781,57 @@ function RatingScreen({ onRate, onBack, accentColor, ratingMessage, alreadyRated
                         </svg>
                     ))}
                 </div>
-                <button onClick={onBack} style={{ marginTop: 8, fontSize: 12, color: accentColor,
+                {/* Botón transcripción */}
+                <div style={{ width: '100%', marginTop: 10 }}>
+                    {txState === 'idle' && (
+                        <button onClick={() => sendTranscript()}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                width: '100%', background: 'transparent', border: `1px solid ${accentColor}44`,
+                                borderRadius: 8, padding: '9px 0', fontSize: 12, fontWeight: 600,
+                                color: accentColor, cursor: 'pointer', fontFamily: 'inherit' }}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" width="14" height="14">
+                                <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            Enviar transcripción por email
+                        </button>
+                    )}
+                    {txState === 'sending' && (
+                        <div style={{ textAlign: 'center', fontSize: 12, color: '#9ca3af', padding: '9px 0' }}>Enviando…</div>
+                    )}
+                    {txState === 'sent' && (
+                        <div style={{ textAlign: 'center', fontSize: 12, color: '#10b981', padding: '9px 0', fontWeight: 600 }}>
+                            ✓ Transcripción enviada a {txEmail || clientEmail}
+                        </div>
+                    )}
+                    {txState === 'needs_email' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+                            <p style={{ fontSize: 12, color: '#6b7280', margin: 0, textAlign: 'center' }}>¿A qué email enviamos la transcripción?</p>
+                            <input type="email" value={txEmail} onChange={e => setTxEmail(e.target.value)}
+                                placeholder="tucorreo@ejemplo.com"
+                                style={{ width: '100%', padding: '8px 12px', border: `1.5px solid ${accentColor}55`,
+                                    borderRadius: 8, fontSize: 13, fontFamily: 'inherit', outline: 'none',
+                                    color: '#1f2937', boxSizing: 'border-box', background: '#f9fafb' }} />
+                            <button onClick={() => sendTranscript(txEmail)} disabled={!txEmail.trim()}
+                                style={{ background: txEmail.trim() ? accentColor : '#e5e7eb',
+                                    color: txEmail.trim() ? '#fff' : '#9ca3af', border: 'none',
+                                    borderRadius: 8, padding: '9px 0', fontSize: 13, fontWeight: 600,
+                                    cursor: txEmail.trim() ? 'pointer' : 'default', fontFamily: 'inherit', width: '100%' }}>
+                                Enviar →
+                            </button>
+                        </div>
+                    )}
+                    {txState === 'error' && (
+                        <div style={{ textAlign: 'center' }}>
+                            <p style={{ fontSize: 12, color: '#dc2626', margin: '0 0 6px' }}>{txError}</p>
+                            <button onClick={() => setTxState('idle')}
+                                style={{ fontSize: 11, color: accentColor, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                                Intentar de nuevo
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                <button onClick={onBack} style={{ marginTop: 4, fontSize: 12, color: '#9ca3af',
                     background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: '4px 0' }}>
                     ← Ver conversación
                 </button>
@@ -1632,6 +1701,7 @@ function ChannelsScreen({ cfg, accentColor }) {
 export default function NexovaChatWidget() {
     const [cfg,           setCfg]          = useState(null);
     const [isOpen,        setIsOpen]       = useState(false);
+    const [isExpanded,    setIsExpanded]   = useState(false); // expandir widget
     const [unreadCount,   setUnreadCount]  = useState(0);
     const [bubbleClosed,  setBubbleClosed] = useState(false);
     const [agentBubbleMsg,setAgentBubbleMsg] = useState(''); // last unread agent msg for bubble
@@ -1654,6 +1724,7 @@ export default function NexovaChatWidget() {
     const [attachmentPrev, setAttachmentPrev] = useState(null); // data URL for preview
     const [attachmentError, setAttachmentError] = useState(null);
     const sessionUploadCount = useRef(0); // tracks uploads in current session
+    const isSendingRef = useRef(false); // guard: evita race condition poll+send
 
     const messagesEndRef   = useRef(null);
     const messagesBoxRef   = useRef(null);   // ref to the scroll container
@@ -1665,6 +1736,7 @@ export default function NexovaChatWidget() {
     const textareaRef     = useRef(null);
     const fileInputRef    = useRef(null);
     const lastBotMsgIdRef = useRef(null);
+    const pendingFaqSendRef = useRef(null); // mensaje FAQ pendiente de enviar al iniciar sesion
 
     const accentColor    = cfg?.accent_color    || '#7c3aed';
     const botName        = cfg?.bot_name         || 'Nexova IA';
@@ -1900,6 +1972,7 @@ export default function NexovaChatWidget() {
     // ── Polling ──────────────────────────────────────────────────────────────
     const fetchMessages = useCallback(async () => {
         if (!sessionId) return;
+        if (isSendingRef.current) return; // guard: no poll durante send
         try {
             const res = await fetch(`${API_BASE}/api/chat/messages/${sessionId}`, {
                 headers: { Accept: 'application/json' },
@@ -2054,11 +2127,14 @@ export default function NexovaChatWidget() {
     }, [sessionId]);
 
     // ── Nueva conversación ───────────────────────────────────────────────────
-    const startNewChat = () => {
+    const startNewChat = (prefillFaq = null) => {
+        // Detener poll ANTES de limpiar sessionId
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+        isSendingRef.current = false;
         // Limpiar estado completamente
         localStorage.removeItem(STORAGE_KEY);
         try { localStorage.removeItem(CONTACT_KEY); } catch {}
-        clearInterval(pollRef.current);
         setSessionId(null);
         setMessages([]);
         setTicketStatus('bot');
@@ -2143,7 +2219,10 @@ export default function NexovaChatWidget() {
     };
 
     // ── Iniciar chat desde home screen ────────────────────────────────────────
+    // FAQ desde home siempre inicia nueva conversacion
     const handleStartChatFromHome = useCallback((prefillMessage = null) => {
+        const isFaqMsg = typeof prefillMessage === 'string' && prefillMessage;
+        if (isFaqMsg) { startNewChat(prefillMessage); return; }
         if (!sessionId) {
             if (cfg?.pre_chat_enabled && cfg?.pre_chat_fields?.length > 0) {
                 setScreen('prechat');
@@ -2179,8 +2258,8 @@ export default function NexovaChatWidget() {
     };
 
     // ── Seleccionar archivo ──────────────────────────────────────────────────
-    const MAX_FILE_SIZE  = 2 * 1024 * 1024; // 2 MB
-    const MAX_UPLOADS    = 5;
+    const MAX_FILE_SIZE  = 5 * 1024 * 1024; // 5 MB por archivo
+    const MAX_UPLOADS    = 3; // max 3 archivos por conversacion
 
     const applyFile = file => {
         if (!file) return;
@@ -2232,6 +2311,7 @@ export default function NexovaChatWidget() {
         const content = inputValue.trim();
         if ((!content && !attachmentFile) || !sessionId || isSending || isClosed || isTyping) return;
 
+        isSendingRef.current = true; // bloquear poll durante envio
         setIsSending(true);
         setInputValue('');
         clearTimeout(sneakPeekTimer.current);
@@ -2309,10 +2389,12 @@ export default function NexovaChatWidget() {
                     }
                 }, 30000);
             }
+            isSendingRef.current = false; // liberar guard
             await fetchMessages();
         } catch {
             setError('Error al enviar el mensaje.');
         } finally {
+            isSendingRef.current = false;
             setIsSending(false);
             setTimeout(() => textareaRef.current?.focus(), 50);
         }
@@ -2494,9 +2576,14 @@ export default function NexovaChatWidget() {
             {/* ── Ventana de chat ── */}
             {isOpen && (
                 <div className="nx-widget-window" style={{
-                    position: 'fixed', bottom: fabSize + 16, ...posStyle, width: 'min(350px, calc(100vw - 32px))',
-                    background: '#fff', borderRadius: 16,
-                    boxShadow: '0 8px 40px rgba(0,0,0,.16), 0 2px 8px rgba(0,0,0,.07)',
+                    position: 'fixed',
+                    bottom: isExpanded ? 0 : fabSize + 16,
+                    ...(isExpanded
+                        ? { left: 0, right: 0, top: 0, width: '100%', height: '100%', borderRadius: 0 }
+                        : { ...posStyle, width: 'min(370px, calc(100vw - 32px))', height: 'min(520px, calc(100vh - 100px))', borderRadius: 16 }
+                    ),
+                    background: '#fff',
+                    boxShadow: isExpanded ? 'none' : '0 8px 40px rgba(0,0,0,.16), 0 2px 8px rgba(0,0,0,.07)',
                     display: 'flex', flexDirection: 'column', zIndex: 9999,
                     overflow: 'hidden', border: '1px solid rgba(0,0,0,.07)',
                     height: 'min(480px, calc(100vh - 100px))', fontFamily: "'Inter', system-ui, sans-serif",
@@ -2544,6 +2631,19 @@ export default function NexovaChatWidget() {
                                 ))}
                             </div>
                         )}
+
+                        {/* Boton expandir */}
+                        <button onClick={() => setIsExpanded(e => !e)}
+                            title={isExpanded ? 'Minimizar' : 'Expandir'}
+                            style={{ background: 'rgba(255,255,255,.15)', border: 'none', borderRadius: 8,
+                                color: '#fff', cursor: 'pointer', padding: 6, display: 'flex',
+                                alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            {isExpanded ? (
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" width="16" height="16"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/></svg>
+                            ) : (
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" width="16" height="16"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                            )}
+                        </button>
 
                         <button onClick={() => setIsOpen(false)}
                             style={{ background: 'rgba(255,255,255,.15)', border: 'none', borderRadius: 8,
@@ -2636,6 +2736,8 @@ export default function NexovaChatWidget() {
                             ratingMessage={ratingMessage}
                             alreadyRated={!!ticketRating}
                             ratingValue={ticketRating}
+                            sessionId={sessionId}
+                            clientEmail={preChatData?.email || preChatData?.correo || WOO_CUSTOMER?.email || null}
                         />
                     )}
 
