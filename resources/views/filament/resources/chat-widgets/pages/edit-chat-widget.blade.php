@@ -729,16 +729,14 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                         <div style="font-size:11.5px;color:var(--c-sub)">Muestra "Powered by Nexova Digital Solutions"</div>
                     </div>
                     {{-- Toggle branding con modal de confirmacion al desactivar --}}
-                    <div x-data="{ showBrandingModal: false }">
-                        <label class="wc-toggle">
-                            <input type="checkbox"
-                                x-bind:checked="$wire.showBranding"
-                                @change="if (!$event.target.checked) { $event.preventDefault(); $event.target.checked = true; showBrandingModal = true; } else { $wire.set('showBranding', true); }">
+                    <div x-data="{ showModal: false, brandingOn: @js($showBranding) }"
+                        x-init="$watch('brandingOn', v => { if (!v) { brandingOn = true; showModal = true; } })">
+                        <label class="wc-toggle" @click.prevent="if (brandingOn) { showModal = true; } else { brandingOn = true; $wire.set('showBranding', true); }">
+                            <input type="checkbox" :checked="brandingOn" tabindex="-1" style="pointer-events:none">
                             <span class="wc-slider"></span>
                         </label>
                         {{-- Modal de confirmacion --}}
-                        <div x-show="showBrandingModal" x-cloak
-                             style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);backdrop-filter:blur(2px)">
+                        <div x-show="showModal" style="display:none;position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);backdrop-filter:blur(2px)">
                             <div style="background:#fff;border-radius:16px;padding:32px 28px;max-width:400px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center">
                                 <div style="font-size:36px;margin-bottom:12px">💜</div>
                                 <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:10px">Gracias por apoyar a Nexova</div>
@@ -750,12 +748,12 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                                 </div>
                                 <div style="display:flex;gap:10px;justify-content:center">
                                     <button type="button"
-                                        @click="showBrandingModal = false"
+                                        @click="showModal = false"
                                         style="padding:10px 22px;border-radius:9px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;color:#374151;cursor:pointer">
                                         Cancelar
                                     </button>
                                     <button type="button"
-                                        @click="$wire.set('showBranding', false); showBrandingModal = false"
+                                        @click="brandingOn = false; $wire.set('showBranding', false); showModal = false"
                                         style="padding:10px 22px;border-radius:9px;border:none;background:#ef4444;font-size:13px;font-weight:600;color:#fff;cursor:pointer">
                                         Confirmar desactivar
                                     </button>
