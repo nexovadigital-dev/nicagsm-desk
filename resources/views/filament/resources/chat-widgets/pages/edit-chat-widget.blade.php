@@ -728,38 +728,42 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                         <div style="font-size:13px;font-weight:500;color:var(--c-text)">Mostrar marca de agua</div>
                         <div style="font-size:11.5px;color:var(--c-sub)">Muestra "Powered by Nexova Digital Solutions"</div>
                     </div>
-                    {{-- Toggle branding con modal de confirmacion al desactivar --}}
-                    <div x-data="{ showModal: false, brandingOn: @js($showBranding) }"
-                        x-init="$watch('brandingOn', v => { if (!v) { brandingOn = true; showModal = true; } })">
-                        <label class="wc-toggle" @click.prevent="if (brandingOn) { showModal = true; } else { brandingOn = true; $wire.set('showBranding', true); }">
-                            <input type="checkbox" :checked="brandingOn" tabindex="-1" style="pointer-events:none">
+                    {{-- Toggle branding — Livewire puro, sin Alpine --}}
+                    <button type="button"
+                        wire:click="requestDisableBranding"
+                        style="background:none;border:none;padding:0;cursor:pointer;display:flex">
+                        <label class="wc-toggle" style="pointer-events:none">
+                            <input type="checkbox" {{ $showBranding ? 'checked' : '' }} tabindex="-1">
                             <span class="wc-slider"></span>
                         </label>
-                        {{-- Modal de confirmacion --}}
-                        <div x-show="showModal" style="display:none;position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);backdrop-filter:blur(2px)">
-                            <div style="background:#fff;border-radius:16px;padding:32px 28px;max-width:400px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center">
-                                <div style="font-size:36px;margin-bottom:12px">💜</div>
-                                <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:10px">Gracias por apoyar a Nexova</div>
-                                <div style="font-size:13px;color:#6b7280;line-height:1.65;margin-bottom:24px">
-                                    Mostrar el respaldo al ecosistema <strong>Nexova Digital Solutions</strong> conlleva
-                                    <strong>descuentos en sus suscripciones</strong> y <strong>acceso anticipado</strong>
-                                    a los nuevos productos.<br><br>
-                                    ¡Agradecemos su apoyo! Sin embargo, puede desactivar la marca de agua si lo desea.
-                                </div>
-                                <div style="display:flex;gap:10px;justify-content:center">
-                                    <button type="button"
-                                        @click="showModal = false"
-                                        style="padding:10px 22px;border-radius:9px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;color:#374151;cursor:pointer">
-                                        Cancelar
-                                    </button>
-                                    <button type="button"
-                                        @click="brandingOn = false; $wire.set('showBranding', false); showModal = false"
-                                        style="padding:10px 22px;border-radius:9px;border:none;background:#ef4444;font-size:13px;font-weight:600;color:#fff;cursor:pointer">
-                                        Confirmar desactivar
-                                    </button>
-                                </div>
+                    </button>
+
+                    @if($showBrandingModal)
+                    {{-- Modal de confirmacion Livewire --}}
+                    <div style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);backdrop-filter:blur(2px)">
+                        <div style="background:#fff;border-radius:16px;padding:32px 28px;max-width:400px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center">
+                            <div style="font-size:36px;margin-bottom:12px">&#128156;</div>
+                            <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:10px">Gracias por apoyar a Nexova</div>
+                            <div style="font-size:13px;color:#6b7280;line-height:1.65;margin-bottom:24px">
+                                Mostrar el respaldo al ecosistema <strong>Nexova Digital Solutions</strong> conlleva
+                                <strong>descuentos en sus suscripciones</strong> y <strong>acceso anticipado</strong>
+                                a los nuevos productos.<br><br>
+                                &iexcl;Agradecemos su apoyo! Sin embargo, puede desactivar la marca de agua si lo desea.
+                            </div>
+                            <div style="display:flex;gap:10px;justify-content:center">
+                                <button type="button" wire:click="cancelDisableBranding"
+                                    style="padding:10px 22px;border-radius:9px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;color:#374151;cursor:pointer">
+                                    Cancelar
+                                </button>
+                                <button type="button" wire:click="confirmDisableBranding"
+                                    style="padding:10px 22px;border-radius:9px;border:none;background:#ef4444;font-size:13px;font-weight:600;color:#fff;cursor:pointer">
+                                    Confirmar desactivar
+                                </button>
                             </div>
                         </div>
+                    </div>
+                    @endif
+                </div>
                     </div>
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--c-border,#e3e6ea)">

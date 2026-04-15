@@ -52,6 +52,7 @@ class EditChatWidget extends Page
     public array  $workingHours    = [];
     public string $offlineMessage  = 'Estamos fuera de horario. Te responderemos pronto.';
     public bool   $showBranding    = true;
+    public bool   $showBrandingModal = false; // modal de confirmacion al desactivar
     public bool   $soundEnabled    = true;
     public bool   $requireRating   = false;
     public string $ratingMessage   = '¿Cómo fue tu experiencia?';
@@ -231,6 +232,26 @@ class EditChatWidget extends Page
     // ── FAQ helpers ──────────────────────────────────────────────────────────
     public function addFaq(): void    { $this->faqItems[] = ['question' => '', 'answer' => '']; }
     public function removeFaq(int $i): void { array_splice($this->faqItems, $i, 1); }
+
+    // ── Branding modal helpers ────────────────────────────────────────────────
+    public function requestDisableBranding(): void
+    {
+        // Si ya está desactivado, solo guardar sin modal
+        if (! $this->showBranding) return;
+        $this->showBrandingModal = true;
+    }
+
+    public function confirmDisableBranding(): void
+    {
+        $this->showBranding      = false;
+        $this->showBrandingModal = false;
+    }
+
+    public function cancelDisableBranding(): void
+    {
+        $this->showBranding      = true; // asegurar que queda encendido
+        $this->showBrandingModal = false;
+    }
 
     // ── Social helpers ───────────────────────────────────────────────────────
     public function addSocialChannel(): void    { $this->socialChannels[] = ['type' => 'whatsapp', 'label' => '', 'url' => '']; }
