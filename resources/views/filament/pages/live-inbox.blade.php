@@ -549,14 +549,37 @@ class="nx-inbox" wire:poll.3s>
 
                     @if ($msg->sender_type === 'system')
                         @php
-                            $sysLabel = match($msg->content) {
-                                '__AGENT_CTA__' => '📞 Cliente solicitó atención con un agente',
-                                default         => $msg->content,
+                            $isTicketOpened = str_starts_with($msg->content, '__TICKET_OPENED__:');
+                            $ticketNum      = $isTicketOpened ? substr($msg->content, strlen('__TICKET_OPENED__:')) : null;
+                            $sysLabel = match(true) {
+                                $isTicketOpened => null, // rendered separately below
+                                $msg->content === '__AGENT_CTA__' => '📞 Cliente solicitó atención con un agente',
+                                default => $msg->content,
                             };
                         @endphp
-                        <div class="nx-msg--system" wire:key="msg-{{ $msg->id }}">
-                            <span>{{ $sysLabel }}</span>
-                        </div>
+                        @if($isTicketOpened)
+                            {{-- Tarjeta especial: chat finalizado, ticket de soporte creado --}}
+                            <div wire:key="msg-{{ $msg->id }}"
+                                 style="margin:12px auto;max-width:420px;background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1.5px solid #bfdbfe;border-radius:14px;padding:14px 18px;text-align:center;box-shadow:0 2px 8px rgba(99,102,241,.08)">
+                                <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px">
+                                    <svg fill="none" stroke="#6366f1" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+                                    <span style="font-size:13px;font-weight:700;color:#4338ca">Ticket de Soporte Creado</span>
+                                </div>
+                                <div style="font-size:15px;font-weight:800;color:#312e81;letter-spacing:.5px;margin-bottom:6px">#{{ $ticketNum }}</div>
+                                <div style="font-size:11.5px;color:#64748b;line-height:1.5">
+                                    Esta conversación ha sido finalizada y trasladada a soporte por correo electrónico.<br>
+                                    El cliente recibirá seguimiento en su bandeja.
+                                </div>
+                                <div style="margin-top:10px;display:inline-flex;align-items:center;gap:5px;background:#e0e7ff;border-radius:99px;padding:4px 12px;font-size:11px;font-weight:600;color:#4338ca">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    Chat finalizado — Ver en sección Tickets
+                                </div>
+                            </div>
+                        @else
+                            <div class="nx-msg--system" wire:key="msg-{{ $msg->id }}">
+                                <span>{{ $sysLabel }}</span>
+                            </div>
+                        @endif
                         @continue
                     @endif
 

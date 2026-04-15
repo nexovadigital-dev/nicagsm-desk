@@ -925,6 +925,10 @@ class LiveInbox extends Page
             'ticket_reply_token' => $token,
             'ticket_opened_at'   => now(),
             'client_email'       => $email ?: $ticket->client_email,
+            // Cerrar el chat: el hilo del widget queda finalizado.
+            // Ni el agente ni el cliente pueden seguir escribiendo en este chat.
+            // El ticket continua como ticket de soporte por email.
+            'status'             => 'closed',
         ]);
 
         if ($email) {
@@ -944,15 +948,19 @@ class LiveInbox extends Page
             }
         }
 
+        // Mensaje especial: el widget lo detecta para mostrar el banner de ticket abierto
+        // y deshabilitar el input. El Live Inbox lo renderiza como tarjeta informativa.
         Message::create([
             'ticket_id'   => $ticket->id,
             'sender_type' => 'system',
-            'content'     => "ðŸŽ« Ticket de soporte {$number} abierto â€” el cliente recibirÃ¡ confirmaciÃ³n por correo.",
+            'content'     => "__TICKET_OPENED__:{$number}",
         ]);
 
         $this->showTicketModal      = false;
         $this->ticketSubject        = '';
         $this->ticketEmailForTicket = '';
+        // El ticket pasa al Historial del Live Inbox automaticamente (status=closed).
+        // Limpiar la seleccion actual para que el panel quede en blanco.
+        $this->selectedTicketId = null;
     }
 }
-
