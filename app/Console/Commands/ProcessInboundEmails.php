@@ -107,10 +107,21 @@ class ProcessInboundEmails extends Command
      */
     private function processMessage($inbox, int $uid, int $orgId): bool
     {
-        $header  = imap_rfc822_parse_headers(imap_fetchheader($inbox, $uid, FT_UID));
-        $subject = isset($header->subject) ? imap_utf8($header->subject) : '';
+        $rawSubject = imap_fetchheader($inbox, $uid, FT_UID);
+        $header     = imap_rfc822_parse_headers($rawSubject);
 
-        Log::info("[IMAP] uid={$uid} org=#{$orgId}: subject=' {$subject}'");
+        // Decodificar subject: primero imap_utf8(), luego mb_decode_mimeheader() como refuerzo.
+        // Los clientes de correo (Gmail, Outlook) encodifican caracteres especiales ([, ], —, ñ)
+        // como MIME encoded-words: =?UTF-8?Q?Re=3A_=5BTKT=2D00003=5D...?=
+        $rawSub  = isset($header->subject) ? $header->subject : '';
+        $subject = imap_utf8($rawSub);
+        // Si aún quedan secuencias MIME sin decodificar, aplicar mb_decode_mimeheader
+        if (str_contains($subject, '=?') || str_contains($subject, '?=')) {
+            $subject = mb_decode_mimeheader($rawSub);
+        }
+        $subject = mb_convert_encoding($subject, 'UTF-8', 'UTF-8');
+
+        Log::info("[IMAP] uid={$uid} org=#{$orgId}: subject='{$subject}'");
 
         // Detectar TKT-XXXXX en el asunto en cualquier formato:
         // Re: [TKT-00001], Re: Ticket TKT-00001, Fwd: TKT-00001, etc.
