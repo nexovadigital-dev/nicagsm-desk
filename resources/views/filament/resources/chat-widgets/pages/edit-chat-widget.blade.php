@@ -759,22 +759,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                 </div>
             </div>
             @endif
-            <div style="display:flex;gap:10px;justify-content:center">
-                                <button type="button" wire:click="cancelDisableBranding"
-                                    style="padding:10px 22px;border-radius:9px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;color:#374151;cursor:pointer">
-                                    Cancelar
-                                </button>
-                                <button type="button" wire:click="confirmDisableBranding"
-                                    style="padding:10px 22px;border-radius:9px;border:none;background:#ef4444;font-size:13px;font-weight:600;color:#fff;cursor:pointer">
-                                    Confirmar desactivar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-                </div>
-                    </div>
-            </div>
+
             <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--c-border,#e3e6ea)">
                 <div><div style="font-size:13px;font-weight:500;color:var(--c-text)">Sonidos de notificación</div><div style="font-size:11.5px;color:var(--c-sub)">Reproduce sonido al recibir mensajes</div></div>
                 <label class="wc-toggle"><input type="checkbox" wire:model.live="soundEnabled"><span class="wc-slider"></span></label>
