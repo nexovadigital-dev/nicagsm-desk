@@ -113,6 +113,10 @@ class NexovaAiService
 
         // ── Intentar responder desde FAQ del widget (para canales web) ───────────
         $hasStoreCtx = ! empty($ticket->store_context);
+        // Si hay plugin WP conectado para el org (web channel), tratar como store context
+        // para que FAQ/KB no respondan antes que la IA con el catalogo real
+        $hasWpPlugin = ($ticket->platform === 'web' && $org && WpPluginToken::where('organization_id', $org->id)->exists());
+        if ($hasWpPlugin) $hasStoreCtx = true; // forzar skip FAQ/KB directo
         if (! $hasStoreCtx) {
             $faqAnswer = $this->tryFaqAnswer($ticket);
             if ($faqAnswer !== null) {

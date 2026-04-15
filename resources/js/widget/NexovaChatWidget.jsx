@@ -1426,7 +1426,7 @@ function OrdersOtpScreen({ accentColor, onBack, onVerified }) {
 // ---------------------------------------------------------------------------
 // Home Screen (default_screen = 'home')
 // ---------------------------------------------------------------------------
-function HomeScreen({ cfg, accentColor, botName, onStartChat, contactName, isReturning, hasSession, onContinue, onOrdersOtp }) {
+function HomeScreen({ cfg, accentColor, botName, onStartChat, contactName, isReturning, hasSession, onContinue, onOrdersOtp, showBranding }) {
     const initial = (botName || 'N')[0].toUpperCase();
     const faqs    = cfg?.faq_enabled && Array.isArray(cfg?.faq_items) ? cfg.faq_items : [];
     const socials = Array.isArray(cfg?.social_channels) ? cfg.social_channels : [];
@@ -1587,6 +1587,15 @@ function HomeScreen({ cfg, accentColor, botName, onStartChat, contactName, isRet
                     </div>
                 )}
             </div>
+            {/* Powered by — home screen */}
+            {showBranding && (
+                <p style={{ textAlign: 'center', fontSize: 10, color: '#9ca3af',
+                    margin: 0, padding: '4px 0 6px', background: '#f5f6f8',
+                    flexShrink: 0, userSelect: 'none' }}>
+                    Powered by <a href="https://nexova-digital.com" target="_blank" rel="noopener noreferrer"
+                        style={{ color: accentColor, fontWeight: 600, textDecoration: 'none' }}>Nexova Digital Solutions</a>
+                </p>
+            )}
         </div>
     );
 }
@@ -1655,6 +1664,7 @@ function ChannelsScreen({ cfg, accentColor }) {
         </div>
     );
     return (
+        <>
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 14px',
             display: 'flex', flexDirection: 'column', gap: 8,
             animation: 'nx-fade-up .2s ease-out' }}>
@@ -1692,6 +1702,16 @@ function ChannelsScreen({ cfg, accentColor }) {
                 );
             })}
         </div>
+        {/* Powered by — channels screen */}
+        {cfg?.show_branding !== false && (
+            <p style={{ textAlign: 'center', fontSize: 10, color: '#9ca3af',
+                margin: 0, padding: '4px 0 6px', background: '#f5f6f8',
+                flexShrink: 0, userSelect: 'none' }}>
+                Powered by <a href="https://nexova-digital.com" target="_blank" rel="noopener noreferrer"
+                    style={{ color: accentColor, fontWeight: 600, textDecoration: 'none' }}>Nexova Digital Solutions</a>
+            </p>
+        )}
+        </>
     );
 }
 
@@ -2432,6 +2452,19 @@ export default function NexovaChatWidget() {
                 }).catch(() => {});
             }
 
+            // Si se envió adjunto en modo bot, mostrar nota inmediata (el bot responderá via AI)
+            if (file && ticketStatus === 'bot') {
+                const noteId = `tmp-note-${Date.now()}`;
+                setMessages(prev2 => [...prev2, {
+                    id: noteId, sender_type: 'bot',
+                    content: content
+                        ? `He recibido tu archivo. No tengo la capacidad de leer imágenes o documentos, pero respondiendo a tu consulta:\n`
+                        : `He recibido tu archivo. Aunque no puedo leer imágenes o documentos adjuntos directamente, puedo ayudarte con cualquier pregunta que tengas en texto. ¿En qué más puedo ayudarte?`,
+                    created_at: new Date().toISOString(), attachment_url: null,
+                }]);
+                setTimeout(() => scrollToBottom(true), 30);
+            }
+
             if (ticketStatus === 'bot') {
                 // Snapshot de cuántos msgs de bot hay ahora, para detectar el nuevo
                 botMsgCountAtSend.current = messages.filter(
@@ -2741,6 +2774,7 @@ export default function NexovaChatWidget() {
                             isReturning={isReturning}
                             hasSession={!!sessionId}
                             onContinue={() => setScreen('chat')}
+                            showBranding={showBranding}
                             onOrdersOtp={WP_CONFIG?.otpEnabled ? () => setScreen('orders_otp') : null} />
                     )}
 
@@ -3082,30 +3116,49 @@ export default function NexovaChatWidget() {
                                                 </button>
                                             </div>
                                         )}
-                                        {/* Attachment preview */}
+                                        {/* Attachment preview — square card style */}
                                         {attachmentFile && (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8,
-                                                background: '#f0fdf4', borderTop: '1px solid #bbf7d0',
-                                                padding: '6px 12px' }}>
-                                                {attachmentPrev ? (
-                                                    <img src={attachmentPrev} alt="" style={{ width: 36, height: 36,
-                                                        objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
-                                                ) : (
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" width="20" height="20" style={{ flexShrink: 0 }}>
-                                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                                        <polyline points="14 2 14 8 20 8"/>
-                                                    </svg>
-                                                )}
-                                                <span style={{ fontSize: 11, color: '#15803d', flex: 1,
-                                                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            <div style={{ padding: '8px 12px', background: '#f8fafc',
+                                                borderTop: '1px solid #e5e7eb' }}>
+                                                <div style={{ position: 'relative', display: 'inline-flex',
+                                                    width: 72, height: 72, borderRadius: 10,
+                                                    overflow: 'hidden', border: '1.5px solid #e2e8f0',
+                                                    background: '#fff', flexShrink: 0,
+                                                    boxShadow: '0 1px 4px rgba(0,0,0,.07)' }}>
+                                                    {attachmentPrev ? (
+                                                        <img src={attachmentPrev} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    ) : (
+                                                        <div style={{ width: '100%', height: '100%', display: 'flex',
+                                                            flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                                            gap: 4, padding: 6 }}>
+                                                            <svg viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.5" width="24" height="24">
+                                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                                <polyline points="14 2 14 8 20 8"/>
+                                                            </svg>
+                                                            <span style={{ fontSize: 9, color: '#9ca3af', textAlign: 'center',
+                                                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                                                maxWidth: 60, display: 'block' }}>
+                                                                {attachmentFile.name.split('.').pop()?.toUpperCase()}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {/* X button corner */}
+                                                    <button onClick={clearAttachment} style={{
+                                                        position: 'absolute', top: 3, right: 3,
+                                                        width: 18, height: 18, borderRadius: '50%',
+                                                        background: 'rgba(0,0,0,.55)', border: 'none',
+                                                        cursor: 'pointer', color: '#fff', padding: 0,
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" width="10" height="10">
+                                                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 4,
+                                                    maxWidth: 72, overflow: 'hidden', textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap' }}>
                                                     {attachmentFile.name}
-                                                </span>
-                                                <button onClick={clearAttachment} style={{ background: 'none', border: 'none',
-                                                    cursor: 'pointer', color: '#6b7280', padding: 2, display: 'flex' }}>
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
-                                                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                                                    </svg>
-                                                </button>
+                                                </div>
                                             </div>
                                         )}
                                         {/* Input row — position:absolute para botones, inmune a cualquier CSS externo */}
@@ -3135,7 +3188,8 @@ export default function NexovaChatWidget() {
                                                 disabled={isTyping || isSending || isClosed}
                                                 placeholder={isTyping ? 'El asistente está escribiendo...' : 'Escribe tu mensaje...'}
                                                 style={{ ...s.input, height: 24, maxHeight: 96, overflowY: 'auto',
-                                                    display: 'block', width: '100%',
+                                                    display: 'block', width: '100%', boxSizing: 'border-box',
+                                                    minWidth: 0, flex: 1,
                                                     opacity: (isTyping || isSending) ? 0.5 : 1,
                                                     cursor: (isTyping || isSending) ? 'not-allowed' : 'text' }} />
                                             {/* Send — absolute derecha abajo */}
