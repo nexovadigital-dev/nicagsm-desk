@@ -716,7 +716,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
 {{-- ══════════════════════════════════════════
      SECTION 5 — Comportamiento
 ══════════════════════════════════════════ --}}
-<div class="nx-section" x-data="{ open: false }">
+<div class="nx-section" x-data="{ open: {{ $showBrandingModal ? 'true' : 'false' }} }">
     <div class="nx-section-hd" @click="open = !open">
         <span class="nx-section-title">Comportamiento</span>
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" :style="open ? 'transform:rotate(0deg)' : 'transform:rotate(180deg)'" style="transition:transform .2s;color:var(--c-sub)"><polyline points="18 15 12 9 6 15" stroke-width="2" stroke-linecap="round"/></svg>
@@ -743,31 +743,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                     </div>
                 </div>
             </div>
-            @if($showBrandingModal)
-            {{-- Modal de confirmacion --}}
-            <div style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);backdrop-filter:blur(2px)">
-                <div style="background:#fff;border-radius:16px;padding:32px 28px;max-width:400px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center">
-                    <div style="font-size:36px;margin-bottom:12px">&#128156;</div>
-                    <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:10px">Gracias por apoyar a Nexova</div>
-                    <div style="font-size:13px;color:#6b7280;line-height:1.65;margin-bottom:24px">
-                        Mostrar el respaldo al ecosistema <strong>Nexova Digital Solutions</strong> conlleva
-                        <strong>descuentos en sus suscripciones</strong> y <strong>acceso anticipado</strong>
-                        a los nuevos productos.<br><br>
-                        &iexcl;Agradecemos su apoyo! Sin embargo, puede desactivar la marca de agua si lo desea.
-                    </div>
-                    <div style="display:flex;gap:10px;justify-content:center">
-                        <button type="button" wire:click="cancelDisableBranding"
-                            style="padding:10px 22px;border-radius:9px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;color:#374151;cursor:pointer">
-                            Cancelar
-                        </button>
-                        <button type="button" wire:click="confirmDisableBranding"
-                            style="padding:10px 22px;border-radius:9px;border:none;background:#ef4444;font-size:13px;font-weight:600;color:#fff;cursor:pointer">
-                            Confirmar desactivar
-                        </button>
-                    </div>
-                </div>
-            </div>
-            @endif
+
 
             <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--c-border,#e3e6ea)">
                 <div><div style="font-size:13px;font-weight:500;color:var(--c-text)">Sonidos de notificación</div><div style="font-size:11.5px;color:var(--c-sub)">Reproduce sonido al recibir mensajes</div></div>
@@ -786,6 +762,32 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         </div>
     </div>
 </div>
+
+{{-- ══ Modal branding — FUERA del x-show para que Livewire lo muestre sin importar el estado Alpine ══ --}}
+@if($showBrandingModal)
+<div style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);backdrop-filter:blur(2px)">
+    <div style="background:#fff;border-radius:16px;padding:32px 28px;max-width:400px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center">
+        <div style="font-size:36px;margin-bottom:12px">&#128156;</div>
+        <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:10px">Gracias por apoyar a Nexova</div>
+        <div style="font-size:13px;color:#6b7280;line-height:1.65;margin-bottom:24px">
+            Mostrar el respaldo al ecosistema <strong>Nexova Digital Solutions</strong> conlleva
+            <strong>descuentos en sus suscripciones</strong> y <strong>acceso anticipado</strong>
+            a los nuevos productos.<br><br>
+            &iexcl;Agradecemos su apoyo! Sin embargo, puede desactivar la marca de agua si lo desea.
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center">
+            <button type="button" wire:click="cancelDisableBranding"
+                style="padding:10px 22px;border-radius:9px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;color:#374151;cursor:pointer">
+                Cancelar
+            </button>
+            <button type="button" wire:click="confirmDisableBranding"
+                style="padding:10px 22px;border-radius:9px;border:none;background:#ef4444;font-size:13px;font-weight:600;color:#fff;cursor:pointer">
+                Confirmar desactivar
+            </button>
+        </div>
+    </div>
+</div>
+@endif
 
 {{-- ══ Llamada a agente ══ --}}
 <div class="nx-section" x-data="{ open: false }">
