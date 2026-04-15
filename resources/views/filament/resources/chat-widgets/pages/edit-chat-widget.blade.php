@@ -728,14 +728,17 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                     <div style="font-size:13px;font-weight:500;color:var(--c-text)">Mostrar marca de agua</div>
                     <div style="font-size:11.5px;color:var(--c-sub)">Muestra "Powered by Nexova Digital Solutions"</div>
                 </div>
-                {{-- Toggle branding — Alpine puro, $dispatch a modal global, sin Livewire round-trip para mostrar --}}
-                <div
-                    @click="{{ $showBranding ? "$dispatch('nx-branding-modal-open')" : "$wire.set('showBranding', true)" }}"
-                    style="cursor:pointer;display:inline-flex;align-items:center">
+                {{-- Toggle branding — Alpine puro con $dispatch, sin mezclar {{ }} con Alpine --}}
+                @if($showBranding)
+                <div @click="$dispatch('nx-branding-modal-open')" style="cursor:pointer;display:inline-flex;align-items:center">
+                @else
+                <div @click="$wire.set('showBranding', true)" style="cursor:pointer;display:inline-flex;align-items:center">
+                @endif
                     <div style="width:40px;height:22px;border-radius:11px;position:relative;background:{{ $showBranding ? '#22c55e' : '#d1d5db' }};transition:background .2s;flex-shrink:0;">
                         <div style="position:absolute;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);{{ $showBranding ? 'left:20px' : 'left:2px' }};"></div>
                     </div>
                 </div>
+
             </div>
 
 
