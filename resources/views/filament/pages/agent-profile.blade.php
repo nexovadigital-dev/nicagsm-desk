@@ -191,7 +191,7 @@ input:checked + .ap-slider:before { transform: translateX(16px); }
         <div class="ap-section no-top">
             <div>
                 <div class="ap-section-title">Datos de la empresa</div>
-                <div class="ap-section-desc">Aparecen en los emails enviados a clientes y en el widget de chat.</div>
+                <div class="ap-section-desc">Información institucional de la organización. Utilizada en las comunicaciones con clientes y en la identidad visual del widget de soporte.</div>
             </div>
             <div class="ap-grid">
                 <div class="ap-field" style="grid-column:1/-1">
@@ -231,7 +231,7 @@ input:checked + .ap-slider:before { transform: translateX(16px); }
         <div class="ap-section">
             <div>
                 <div class="ap-section-title">Redes sociales</div>
-                <div class="ap-section-desc">Aparecen como iconos en el pie de todos los emails de soporte enviados a clientes.</div>
+                <div class="ap-section-desc">Los enlaces configurados se mostrarán como iconos en el pie de todas las comunicaciones de soporte enviadas por correo electrónico.</div>
             </div>
             <div class="ap-grid">
                 <div class="ap-field">
