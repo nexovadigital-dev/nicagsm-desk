@@ -633,8 +633,84 @@ input:checked + .ap-slider:before { transform: translateX(16px); }
                 </div>
             </div>
         </div>
+
+        {{-- Disclaimer legal --}}
+        <div class="ap-section">
+            <div>
+                <div class="ap-section-title" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--c-sub,#6b7280)">Acuerdo de Licencia de Uso</div>
+                <div class="ap-section-desc">Términos y condiciones del software instalado en este servidor.</div>
+            </div>
+            <div>
+                <div style="border:1px solid var(--c-border,#e3e6ea);border-radius:10px;overflow:hidden">
+                    {{-- Header del disclaimer --}}
+                    <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;background:var(--c-bg,#f8fafc);border-bottom:1px solid var(--c-border,#e3e6ea)">
+                        <div style="width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#1e293b,#334155);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <svg fill="none" stroke="#f8fafc" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        </div>
+                        <div>
+                            <div style="font-size:13px;font-weight:700;color:var(--c-text,#111)">Nexova Desk Edge — Licencia de Uso Exclusivo</div>
+                            <div style="font-size:11.5px;color:var(--c-sub,#6b7280);margin-top:1px">Nexova Digital Solutions · Documento vinculante</div>
+                        </div>
+                        <div style="margin-left:auto">
+                            <span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:#059669;background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.2);padding:3px 10px;border-radius:99px">
+                                <span style="width:6px;height:6px;background:currentColor;border-radius:50%;display:inline-block"></span>
+                                En Vigor
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Cuerpo del disclaimer --}}
+                    <div style="padding:20px">
+                        <p style="font-size:12.5px;color:var(--c-text,#111827);line-height:1.75;margin:0 0 16px">
+                            <strong>Nexova Desk Edge</strong> es un producto de software desarrollado y de propiedad exclusiva de
+                            <strong>Nexova Digital Solutions</strong>. El presente software ha sido instalado y configurado en la
+                            infraestructura de servidores de <strong>NicaGSM</strong> bajo un acuerdo de licencia de uso exclusivo
+                            que le otorga el derecho a ejecutar esta instancia únicamente en sus dominios y servidor autorizado.
+                        </p>
+
+                        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+                            <div style="display:flex;gap:10px;align-items:flex-start">
+                                <div style="width:20px;height:20px;border-radius:5px;background:rgba(5,150,105,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+                                    <svg fill="none" stroke="#059669" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                                <p style="font-size:12px;color:var(--c-sub,#6b7280);line-height:1.65;margin:0">
+                                    <strong style="color:var(--c-text,#111)">Uso autorizado:</strong> NicaGSM cuenta con permiso para ejecutar esta instancia de Nexova Desk Edge en su servidor y bajo sus dominios registrados. Este derecho es intransferible y no incluye la redistribución, reventa o sublicenciamiento del software a terceros.
+                                </p>
+                            </div>
+                            <div style="display:flex;gap:10px;align-items:flex-start">
+                                <div style="width:20px;height:20px;border-radius:5px;background:rgba(5,150,105,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+                                    <svg fill="none" stroke="#059669" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                                <p style="font-size:12px;color:var(--c-sub,#6b7280);line-height:1.65;margin:0">
+                                    <strong style="color:var(--c-text,#111)">Vigencia del soporte:</strong> El soporte técnico, actualizaciones y garantías sobre el correcto funcionamiento del software se encuentran activos conforme al estado indicado en esta sección. La vigencia está sujeta al acuerdo comercial vigente entre las partes.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style="background:rgba(220,38,38,.04);border:1px solid rgba(220,38,38,.18);border-radius:8px;padding:12px 16px;margin-bottom:0">
+                            <div style="display:flex;gap:8px;align-items:flex-start">
+                                <svg fill="none" stroke="#dc2626" viewBox="0 0 24 24" width="14" height="14" style="flex-shrink:0;margin-top:1px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                                <div>
+                                    <div style="font-size:12px;font-weight:700;color:#991b1b;margin-bottom:3px">Advertencia sobre integridad del código fuente</div>
+                                    <p style="font-size:11.5px;color:#991b1b;line-height:1.65;margin:0">
+                                        Cualquier intento de modificación, alteración, ingeniería inversa o manipulación no autorizada del código fuente de esta instancia resultará en la <strong>suspensión inmediata del soporte técnico y de todas las garantías</strong> asociadas al software. Nexova Digital Solutions se reserva el derecho de revocar la licencia de uso ante cualquier incumplimiento de los presentes términos.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Footer --}}
+                    <div style="padding:11px 20px;background:var(--c-bg,#f8fafc);border-top:1px solid var(--c-border,#e3e6ea);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+                        <span style="font-size:11px;color:var(--c-sub,#9ca3af)">© {{ date('Y') }} Nexova Digital Solutions — Todos los derechos reservados</span>
+                        <span style="font-size:11px;color:var(--c-sub,#9ca3af)">Instancia: <strong>{{ $installedDomain }}</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     @endif
+
 
     {{-- ═══ TAB: AUTOMATIZACION ═══ --}}
     @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))

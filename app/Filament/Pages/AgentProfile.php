@@ -545,7 +545,9 @@ class AgentProfile extends Page
             $this->licenseStatus = 'unreachable';
             $this->licenseValid  = false;
         }
-        $this->licenseCheckedAt = now()->format('d/m/Y H:i');
+        $this->licenseCheckedAt = now()
+            ->setTimezone($this->orgTimezone ?: 'America/Managua')
+            ->format('d/m/Y H:i') . ' ' . ($this->orgTimezone ? \Carbon\CarbonTimeZone::create($this->orgTimezone)->getAbbreviatedName(now()) : 'CST');
     }
 }
 
