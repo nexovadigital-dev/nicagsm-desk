@@ -2184,10 +2184,18 @@ export default function NexovaChatWidget() {
                         localStorage.setItem(STORAGE_KEY, data.session_id);
                         saveSession(data.session_id);
                         setSessionId(data.session_id);
-                        // Auto-enviar FAQ pendiente
+                        // Auto-enviar FAQ pendiente — con actualizado optimista en UI
                         if (pendingFaqSendRef.current) {
                             const faqText = pendingFaqSendRef.current;
                             pendingFaqSendRef.current = null;
+                            // Mostrar el mensaje del usuario en la UI inmediatamente
+                            const tmpFaq = {
+                                id: `tmp-faq-${Date.now()}`, sender_type: 'user', content: faqText,
+                                created_at: new Date().toISOString(), attachment_url: null,
+                            };
+                            setMessages([tmpFaq]);
+                            setTimeout(() => scrollToBottom(true), 30);
+                            // Enviar al backend y luego activar typing
                             setTimeout(async () => {
                                 try {
                                     await fetch(`${API_BASE}/api/chat/send`, {
@@ -2195,8 +2203,11 @@ export default function NexovaChatWidget() {
                                         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
                                         body: JSON.stringify({ session_id: data.session_id, content: faqText }),
                                     });
+                                    setIsTyping(true);
+                                    typingSinceRef.current = true;
+                                    botMsgCountAtSend.current = 0;
                                 } catch { /* silent */ }
-                            }, 300);
+                            }, 200);
                         }
                     }
                 }).catch(() => setError('No se pudo iniciar el chat. Intenta de nuevo.'));
@@ -2239,7 +2250,7 @@ export default function NexovaChatWidget() {
                 setScreen('home');
             } else {
                 setScreen('chat');
-                initSession();
+                // initSession se llama lazy — solo al primer mensaje (sendMessage), no al abrir
             }
         } else if (isClosed) {
             setScreen('closed');
@@ -2343,7 +2354,21 @@ export default function NexovaChatWidget() {
     // ── Enviar mensaje ───────────────────────────────────────────────────────
     const sendMessage = async () => {
         const content = inputValue.trim();
-        if ((!content && !attachmentFile) || !sessionId || isSending || isClosed || isTyping) return;
+        if ((!content && !attachmentFile) || isSending || isClosed || isTyping) return;
+        // Lazy init: si no hay sesion activa, crearla antes de enviar
+        if (!sessionId) {
+            setIsSending(true);
+            try {
+                await initSession();
+            } finally {
+                setIsSending(false);
+            }
+            // Después de initSession, sessionId estará disponible en el próximo render
+            // Volver a disparar sendMessage cuando sessionId se establezca
+            pendingFaqSendRef.current = content;
+            setInputValue(content); // re-poner el texto para reintento
+            return;
+        }
 
         isSendingRef.current = true; // bloquear poll durante envio
         setIsSending(true);
@@ -3132,7 +3157,7 @@ export default function NexovaChatWidget() {
                                 {showBranding && (
                                     <p style={{ textAlign: 'center', fontSize: 10, color: '#9ca3af',
                                         margin: 0, padding: '4px 0 6px', background: '#f5f6f8', userSelect: 'none' }}>
-                                        Powered by <span style={{ color: accentColor, fontWeight: 600 }}>Nexova Digital Solutions</span>
+                                        Powered by <a href="https://nexova-digital.com" target="_blank" rel="noopener noreferrer" style={{ color: accentColor, fontWeight: 600, textDecoration: 'none' }}>Nexova Digital Solutions</a>
                                     </p>
                                 )}
                             </div>

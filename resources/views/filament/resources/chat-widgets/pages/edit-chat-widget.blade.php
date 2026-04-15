@@ -724,8 +724,45 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
     <div x-show="open" x-transition style="padding:0 20px 20px">
         <div style="margin-top:6px">
             <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--c-border,#e3e6ea)">
-                <div><div style="font-size:13px;font-weight:500;color:var(--c-text)">Mostrar watermark</div><div style="font-size:11.5px;color:var(--c-sub)">Muestra "Powered by Nexova Digital Solutions"</div></div>
-                <label class="wc-toggle"><input type="checkbox" wire:model.live="showBranding"><span class="wc-slider"></span></label>
+                <div>
+                        <div style="font-size:13px;font-weight:500;color:var(--c-text)">Mostrar marca de agua</div>
+                        <div style="font-size:11.5px;color:var(--c-sub)">Muestra "Powered by Nexova Digital Solutions"</div>
+                    </div>
+                    {{-- Toggle branding con modal de confirmacion al desactivar --}}
+                    <div x-data="{ showBrandingModal: false }">
+                        <label class="wc-toggle">
+                            <input type="checkbox"
+                                x-bind:checked="$wire.showBranding"
+                                @change="if (!$event.target.checked) { $event.preventDefault(); $event.target.checked = true; showBrandingModal = true; } else { $wire.set('showBranding', true); }">
+                            <span class="wc-slider"></span>
+                        </label>
+                        {{-- Modal de confirmacion --}}
+                        <div x-show="showBrandingModal" x-cloak
+                             style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);backdrop-filter:blur(2px)">
+                            <div style="background:#fff;border-radius:16px;padding:32px 28px;max-width:400px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center">
+                                <div style="font-size:36px;margin-bottom:12px">💜</div>
+                                <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:10px">Gracias por apoyar a Nexova</div>
+                                <div style="font-size:13px;color:#6b7280;line-height:1.65;margin-bottom:24px">
+                                    Mostrar el respaldo al ecosistema <strong>Nexova Digital Solutions</strong> conlleva
+                                    <strong>descuentos en sus suscripciones</strong> y <strong>acceso anticipado</strong>
+                                    a los nuevos productos.<br><br>
+                                    ¡Agradecemos su apoyo! Sin embargo, puede desactivar la marca de agua si lo desea.
+                                </div>
+                                <div style="display:flex;gap:10px;justify-content:center">
+                                    <button type="button"
+                                        @click="showBrandingModal = false"
+                                        style="padding:10px 22px;border-radius:9px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;color:#374151;cursor:pointer">
+                                        Cancelar
+                                    </button>
+                                    <button type="button"
+                                        @click="$wire.set('showBranding', false); showBrandingModal = false"
+                                        style="padding:10px 22px;border-radius:9px;border:none;background:#ef4444;font-size:13px;font-weight:600;color:#fff;cursor:pointer">
+                                        Confirmar desactivar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--c-border,#e3e6ea)">
                 <div><div style="font-size:13px;font-weight:500;color:var(--c-text)">Sonidos de notificación</div><div style="font-size:11.5px;color:var(--c-sub)">Reproduce sonido al recibir mensajes</div></div>
