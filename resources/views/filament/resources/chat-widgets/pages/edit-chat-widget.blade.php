@@ -728,16 +728,17 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                     <div style="font-size:13px;font-weight:500;color:var(--c-text)">Mostrar marca de agua</div>
                     <div style="font-size:11.5px;color:var(--c-sub)">Muestra "Powered by Nexova Digital Solutions"</div>
                 </div>
-                {{-- Toggle branding — Alpine puro con $dispatch, sin mezclar {{ }} con Alpine --}}
+                {{-- Toggle branding — onclick nativo JS, sin depender de Alpine context --}}
                 @if($showBranding)
-                <div @click="$dispatch('nx-branding-modal-open')" style="cursor:pointer;display:inline-flex;align-items:center">
+                <div onclick="window.dispatchEvent(new CustomEvent('nx-branding-modal-open'))" style="cursor:pointer;display:inline-flex;align-items:center">
                 @else
-                <div @click="$wire.set('showBranding', true)" style="cursor:pointer;display:inline-flex;align-items:center">
+                <div onclick="var w=window.livewire||window.Livewire;if(w){var c=w.find(document.querySelector('[wire\\:id]').getAttribute('wire:id'));if(c)c.set('showBranding',true);}" style="cursor:pointer;display:inline-flex;align-items:center">
                 @endif
                     <div style="width:40px;height:22px;border-radius:11px;position:relative;background:{{ $showBranding ? '#22c55e' : '#d1d5db' }};transition:background .2s;flex-shrink:0;">
                         <div style="position:absolute;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);{{ $showBranding ? 'left:20px' : 'left:2px' }};"></div>
                     </div>
                 </div>
+
 
             </div>
 
@@ -760,14 +761,9 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
     </div>
 </div>
 
-{{-- ══ Modal branding — Alpine puro, independiente de Livewire, escucha evento global ══ --}}
-<div
-    x-data="{ show: false }"
-    @nx-branding-modal-open.window="show = true"
-    x-show="show"
-    x-transition.opacity
+{{-- ══ Modal branding — JS puro, sin depender de Alpine ni Livewire para mostrarse ══ --}}
+<div id="nx-branding-modal"
     style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:rgba(0,0,0,.45);backdrop-filter:blur(2px)"
-    :style="show ? 'display:flex' : 'display:none'"
 >
     <div style="background:#fff;border-radius:16px;padding:32px 28px;max-width:400px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.2);text-align:center">
         <div style="font-size:36px;margin-bottom:12px">&#128156;</div>
@@ -780,18 +776,27 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         </div>
         <div style="display:flex;gap:10px;justify-content:center">
             <button type="button"
-                @click="show = false"
+                onclick="document.getElementById('nx-branding-modal').style.display='none'"
                 style="padding:10px 22px;border-radius:9px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;color:#374151;cursor:pointer">
                 Cancelar
             </button>
             <button type="button"
-                @click="show = false; $wire.set('showBranding', false)"
+                onclick="document.getElementById('nx-branding-modal').style.display='none'; var el=document.querySelector('[wire\\:id]'); if(el){ var wid=el.getAttribute('wire:id'); window.Livewire.find(wid).set('showBranding',false); }"
                 style="padding:10px 22px;border-radius:9px;border:none;background:#ef4444;font-size:13px;font-weight:600;color:#fff;cursor:pointer">
                 Confirmar desactivar
             </button>
         </div>
     </div>
 </div>
+<script>
+(function(){
+    window.addEventListener('nx-branding-modal-open', function(){
+        var m = document.getElementById('nx-branding-modal');
+        if(m){ m.style.display='flex'; }
+    });
+})();
+</script>
+
 
 {{-- ══ Llamada a agente ══ --}}
 <div class="nx-section" x-data="{ open: false }">
