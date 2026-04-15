@@ -55,13 +55,31 @@ html.dark {
 }
 
 /* Instant background — sin JS, sin flash */
+/* Aplica bg oscuro ANTES de que cargue el JS para evitar el flash blanco en SPA nav */
 html { background: var(--nx-bg); }
+html.dark { background-color: #0f1117 !important; }
+html.dark body,
+html.dark .fi-body,
+html.dark .fi-layout,
+html.dark .fi-main-ctn,
+html.dark .fi-main {
+    background-color: #0f1117 !important;
+}
 
 /* ─────────────────────────────────────────
    LAYOUT BASE
 ───────────────────────────────────────── */
 body, .fi-body { background: var(--c-bg) !important; color: var(--c-text) !important; }
 .fi-layout, .fi-main-ctn, .fi-main { background: var(--c-bg) !important; }
+
+/* Durante navegación wire:navigate — prevenir flash blanco temporal */
+html.dark .fi-main-ctn,
+html.dark .fi-main,
+html.dark .fi-page-wrap {
+    background-color: #0f1117 !important;
+}
+/* Evitar que al re-pintar el DOM el fondo sea blanco por microsegundos */
+html.dark * { color-scheme: dark; }
 
 /* Content wrapper — breathing room */
 .fi-main { padding: 0 !important; }

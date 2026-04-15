@@ -117,7 +117,7 @@ input:checked + .ap-slider:before { transform: translateX(16px); }
         @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
         <button class="ap-tab" :class="{ active: tab === 'ia' }" @click="tab = 'ia'">Inteligencia Artificial</button>
         <button class="ap-tab" :class="{ active: tab === 'correo' }" @click="tab = 'correo'">Correo Electronico</button>
-        <button class="ap-tab" :class="{ active: tab === 'licencia' }" @click="tab = 'licencia'">Licencia</button>
+        <button class="ap-tab" :class="{ active: tab === 'licencia' }" @click="tab = 'licencia'">Soporte</button>
         <button class="ap-tab" :class="{ active: tab === 'cron' }" @click="tab = 'cron'">Automatizacion</button>
         @endif
     </div>
@@ -546,43 +546,88 @@ input:checked + .ap-slider:before { transform: translateX(16px); }
     </div>
     @endif
 
-    {{-- ═══ TAB: LICENCIA ═══ --}}
+    {{-- ═══ TAB: SOPORTE ═══ --}}
     @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
     <div x-show="tab === 'licencia'" x-transition.opacity>
         <div class="ap-section no-top">
             <div>
-                <div class="ap-section-title">Estado de la licencia</div>
-                <div class="ap-section-desc">Verifica que tu licencia Partner este activa.</div>
+                <div class="ap-section-title">Soporte</div>
+                <div class="ap-section-desc">Estado de tu plan y módulos disponibles en esta instancia.</div>
             </div>
             <div>
                 <div class="lic-card">
+
+                    {{-- Badge estado --}}
                     @if($licenseValid)
-                        <div class="lic-badge lic-badge-ok">Licencia activa</div>
+                        <div class="lic-badge lic-badge-ok">
+                            <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            Soporte activo
+                        </div>
                     @else
-                        <div class="lic-badge lic-badge-err">Licencia no verificada</div>
+                        <div class="lic-badge lic-badge-err">
+                            <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Soporte no verificado
+                        </div>
                     @endif
+
+                    {{-- Detalles --}}
                     <div class="lic-row">
-                        <span class="lic-label">Dominio</span>
+                        <span class="lic-label">Dominio de instalación</span>
                         <span class="lic-value">{{ $installedDomain }}</span>
                     </div>
                     <div class="lic-row">
-                        <span class="lic-label">Estado</span>
-                        <span class="lic-value">{{ $licenseStatus ?? 'No verificado' }}</span>
+                        <span class="lic-label">Estado Soporte</span>
+                        <span class="lic-value" style="font-weight:700;color:{{ $licenseValid ? '#059669' : '#dc2626' }}">
+                            {{ $licenseValid ? 'Activo' : 'Inactivo' }}
+                        </span>
                     </div>
                     <div class="lic-row">
-                        <span class="lic-label">Ultimo chequeo</span>
+                        <span class="lic-label">Último chequeo</span>
                         <span class="lic-value">{{ $licenseCheckedAt ?: 'Nunca' }}</span>
                     </div>
+
                     <div class="lic-divider"></div>
-                    <p class="lic-label" style="margin-bottom:10px">Incluido en tu plan</p>
+
+                    {{-- Módulos disponibles --}}
+                    <p class="lic-label" style="margin-bottom:12px">Módulos Disponibles</p>
                     <div class="lic-features">
-                        @foreach(['Chat en vivo ilimitado','Bot de IA con claves propias','Widget personalizable','Agentes ilimitados','Integracion Telegram','Tickets por email (IMAP)','Actualizaciones incluidas'] as $feat)
-                            <span class="lic-feat"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>{{ $feat }}</span>
+                        {{-- ACTIVOS primero --}}
+                        @foreach([
+                            ['label' => 'Chat en vivo ilimitado',           'on' => true],
+                            ['label' => 'Bot de IA con claves propias',     'on' => true],
+                            ['label' => 'Widget personalizable',            'on' => true],
+                            ['label' => 'Agentes ilimitados',               'on' => true],
+                            ['label' => 'Integración Telegram Bot',         'on' => true],
+                            ['label' => 'Tickets via email (IMAP)',         'on' => true],
+                            ['label' => 'Automatización de tareas (Cron)', 'on' => true],
+                            ['label' => 'Integración WooCommerce',          'on' => true],
+                            ['label' => 'Control de visitantes',            'on' => true],
+                            ['label' => 'Gestión de contactos',             'on' => true],
+                            {{-- DESACTIVADOS --}}
+                            ['label' => 'Tickets via Widget',               'on' => false],
+                            ['label' => 'Página de Tickets pública',        'on' => false],
+                            ['label' => 'Telegram Bot de Tickets',          'on' => false],
+                            ['label' => 'Integración WhatsApp API',         'on' => false],
+                            ['label' => 'Nexova Payments Manual (Binance)', 'on' => false],
+                            ['label' => 'Reportes estadísticos semanales',  'on' => false],
+                        ] as $mod)
+                            <span class="lic-feat" style="@if(!$mod['on']) opacity:.55; @endif">
+                                @if($mod['on'])
+                                    <svg width="11" height="11" fill="none" stroke="#059669" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                @else
+                                    <svg width="11" height="11" fill="none" stroke="#9ca3af" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6"/></svg>
+                                @endif
+                                {{ $mod['label'] }}
+                                @if(!$mod['on'])
+                                    <span style="font-size:10px;color:#9ca3af;font-weight:400">— desactivado</span>
+                                @endif
+                            </span>
                         @endforeach
                     </div>
+
                     <div class="lic-divider"></div>
                     <button class="ap-btn ap-btn-ghost" wire:click="checkLicense" wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="checkLicense">Verificar ahora</span>
+                        <span wire:loading.remove wire:target="checkLicense">Verificar soporte</span>
                         <span wire:loading wire:target="checkLicense">Verificando...</span>
                     </button>
                 </div>

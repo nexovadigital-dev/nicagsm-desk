@@ -76,17 +76,17 @@ class ProcessInboundEmails extends Command
             foreach ($uids as $uid) {
                 $cacheKey = "imap_uid_{$orgId}_{$uid}";
 
-                // Si ya fue procesado, saltar
-                if (Cache::has($cacheKey)) {
+                // Si ya fue procesado como ticket o skip, saltar
+                $cached = Cache::get($cacheKey);
+                if ($cached === 'ticket' || $cached === 'skip') {
                     continue;
                 }
 
                 $wasTicket = $this->processMessage($inbox, $uid, $orgId);
 
-                // Guardar en cache para no procesar de nuevo.
-                // IMPORTANTE: solo cachear como 'skip' emails que NO son replies de ticket
-                // (su subject no contiene TKT-XXXXX). Si era ticket ($wasTicket = true),
-                // cachear como 'ticket'. TTL 72h.
+                // Cachear resultado. TTL 72h.
+                // 'ticket' = procesado como reply de ticket
+                // 'skip'   = no era reply de ticket (no tiene TKT-XXXXX)
                 Cache::put($cacheKey, $wasTicket ? 'ticket' : 'skip', now()->addHours(72));
 
                 if ($wasTicket) {
@@ -110,12 +110,16 @@ class ProcessInboundEmails extends Command
         $header  = imap_rfc822_parse_headers(imap_fetchheader($inbox, $uid, FT_UID));
         $subject = isset($header->subject) ? imap_utf8($header->subject) : '';
 
-        // Solo procesar si el subject contiene TKT-XXXXX
-        if (! preg_match('/TKT-\d+/i', $subject, $m)) {
+        Log::info("[IMAP] uid={$uid} org=#{$orgId}: subject=' {$subject}'");
+
+        // Detectar TKT-XXXXX en el asunto en cualquier formato:
+        // Re: [TKT-00001], Re: Ticket TKT-00001, Fwd: TKT-00001, etc.
+        if (! preg_match('/\bTKT-?(\d+)\b/i', $subject, $m)) {
+            Log::info("[IMAP] uid={$uid} org=#{$orgId}: sin TKT en asunto — omitido");
             return false; // No es respuesta de ticket
         }
 
-        $ticketNumber = strtoupper($m[0]);
+        $ticketNumber = 'TKT-' . str_pad($m[1], 5, '0', STR_PAD_LEFT);
 
         $ticket = Ticket::where('organization_id', $orgId)
             ->where('ticket_number', $ticketNumber)
