@@ -664,7 +664,7 @@ input:checked + .ap-slider:before { transform: translateX(16px); }
                         <p style="font-size:12.5px;color:var(--c-text,#111827);line-height:1.75;margin:0 0 16px">
                             <strong>Nexova Desk Edge</strong> es un producto de software desarrollado y de propiedad exclusiva de
                             <strong>Nexova Digital Solutions</strong>. El presente software ha sido instalado y configurado en la
-                            infraestructura de servidores de <strong>NicaGSM</strong> bajo un acuerdo de licencia de uso exclusivo
+                            infraestructura de servidores de <strong>{{ $orgName ?: 'la organización' }}</strong> bajo un acuerdo de licencia de uso exclusivo
                             que le otorga el derecho a ejecutar esta instancia únicamente en sus dominios y servidor autorizado.
                         </p>
 
@@ -674,7 +674,7 @@ input:checked + .ap-slider:before { transform: translateX(16px); }
                                     <svg fill="none" stroke="#059669" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                 </div>
                                 <p style="font-size:12px;color:var(--c-sub,#6b7280);line-height:1.65;margin:0">
-                                    <strong style="color:var(--c-text,#111)">Uso autorizado:</strong> NicaGSM cuenta con permiso para ejecutar esta instancia de Nexova Desk Edge en su servidor y bajo sus dominios registrados. Este derecho es intransferible y no incluye la redistribución, reventa o sublicenciamiento del software a terceros.
+                                    <strong style="color:var(--c-text,#111)">Uso autorizado:</strong> {{ $orgName ?: 'La organización' }} cuenta con permiso para ejecutar esta instancia de Nexova Desk Edge en su servidor y bajo sus dominios registrados. Este derecho es intransferible y no incluye la redistribución, reventa o sublicenciamiento del software a terceros.
                                 </p>
                             </div>
                             <div style="display:flex;gap:10px;align-items:flex-start">
