@@ -494,14 +494,12 @@ class="nx-inbox" wire:poll.3s>
                          }
                      }"
                      x-init="
-                         // Hard-limit: skeleton nunca dura mas de 600ms aunque falle un promise
-                         var _sk = setTimeout(function() { loading = false; }, 600);
-                         $nextTick(function() {
-                             clearTimeout(_sk);
+                         $nextTick(() => {
                              loading = false;
                              sessionStorage.setItem('nx_inbox_ready', '1');
-                             $nextTick(function() { snap(); });
+                             $nextTick(() => snap());
                          });
+                         setTimeout(() => { loading = false; }, 800);
                      "
                      x-on:livewire:updated.window="$nextTick(() => { snap(); checkNewUserMsg(); })">
 
