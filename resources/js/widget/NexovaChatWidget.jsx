@@ -2010,8 +2010,14 @@ export default function NexovaChatWidget() {
             setMessages(prev => {
                 const serverIds  = new Set(newMsgs.map(m => String(m.id)));
                 // Keep optimistic messages not yet confirmed by the server
+                // Excluir tmp- cuyo contenido ya fue confirmado por el servidor (evita duplicados)
+                const confirmedUserContent = new Set(
+                    newMsgs.filter(m => m.sender_type === 'user').map(m => String(m.content||''))
+                );
                 const stillPending = prev.filter(
-                    m => String(m.id).startsWith('tmp-') && !serverIds.has(String(m.id))
+                    m => String(m.id).startsWith('tmp-') &&
+                         !serverIds.has(String(m.id)) &&
+                         !confirmedUserContent.has(String(m.content||''))
                 );
                 // Merge: server messages + any still-pending optimistic messages
                 const merged = [...newMsgs, ...stillPending];
@@ -2128,6 +2134,20 @@ export default function NexovaChatWidget() {
 
     // ── Nueva conversación ───────────────────────────────────────────────────
     const startNewChat = (prefillFaq = null) => {
+        // Si la sesion actual NO tiene mensajes del usuario, reaprovecharla (no crear otra en backend)
+        const userMsgsCount = messages.filter(m => m.sender_type === 'user').length;
+        if (sessionId && userMsgsCount === 0 && !prefillFaq) {
+            // Solo limpiar UI y volver al estado limpio sin nueva sesion
+            setMessages([]);
+            setTicketStatus('bot');
+            setTicketRating(null);
+            setInputValue('');
+            setError(null);
+            setScreen('chat');
+            setTimeout(() => textareaRef.current?.focus(), 200);
+            return;
+        }
+
         // Detener poll ANTES de limpiar sessionId
         clearInterval(pollRef.current);
         pollRef.current = null;
@@ -2164,6 +2184,20 @@ export default function NexovaChatWidget() {
                         localStorage.setItem(STORAGE_KEY, data.session_id);
                         saveSession(data.session_id);
                         setSessionId(data.session_id);
+                        // Auto-enviar FAQ pendiente
+                        if (pendingFaqSendRef.current) {
+                            const faqText = pendingFaqSendRef.current;
+                            pendingFaqSendRef.current = null;
+                            setTimeout(async () => {
+                                try {
+                                    await fetch(`${API_BASE}/api/chat/send`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                                        body: JSON.stringify({ session_id: data.session_id, content: faqText }),
+                                    });
+                                } catch { /* silent */ }
+                            }, 300);
+                        }
                     }
                 }).catch(() => setError('No se pudo iniciar el chat. Intenta de nuevo.'));
             }, 50);
@@ -2488,7 +2522,18 @@ export default function NexovaChatWidget() {
                     0%   { transform: scale(1);   opacity: .6; }
                     100% { transform: scale(1.9); opacity: 0; }
                 }
-                .nx-widget-window { animation: nx-fade-up .22s cubic-bezier(.16,1,.3,1); }
+                @keyframes nx-widget-open {
+                    from { opacity: 0; transform: translateY(12px) scale(.97); }
+                    to   { opacity: 1; transform: translateY(0)   scale(1); }
+                }
+                .nx-widget-window {
+                    animation: nx-widget-open .25s cubic-bezier(.16,1,.3,1);
+                    transition: width .3s cubic-bezier(.4,0,.2,1),
+                                height .3s cubic-bezier(.4,0,.2,1),
+                                border-radius .3s cubic-bezier(.4,0,.2,1),
+                                bottom .3s cubic-bezier(.4,0,.2,1),
+                                box-shadow .3s ease;
+                }
                 .nx-msg-bubble    { animation: nx-msg-in .18s ease-out both; }
                 .nx-fab-btn { transition: transform .15s, box-shadow .15s !important; }
                 .nx-fab-btn:hover { transform: scale(1.07) !important; }
@@ -2577,16 +2622,17 @@ export default function NexovaChatWidget() {
             {isOpen && (
                 <div className="nx-widget-window" style={{
                     position: 'fixed',
-                    bottom: isExpanded ? 0 : fabSize + 16,
-                    ...(isExpanded
-                        ? { left: 0, right: 0, top: 0, width: '100%', height: '100%', borderRadius: 0 }
-                        : { ...posStyle, width: 'min(370px, calc(100vw - 32px))', height: 'min(520px, calc(100vh - 100px))', borderRadius: 16 }
-                    ),
+                    bottom: fabSize + 16,
+                    ...posStyle,
+                    // Intercom-style expand: wider panel, not full-screen
+                    width: isExpanded ? 'min(480px, calc(100vw - 32px))' : 'min(370px, calc(100vw - 32px))',
+                    height: isExpanded ? 'min(640px, calc(100vh - 80px))' : 'min(500px, calc(100vh - 100px))',
+                    borderRadius: 16,
                     background: '#fff',
-                    boxShadow: isExpanded ? 'none' : '0 8px 40px rgba(0,0,0,.16), 0 2px 8px rgba(0,0,0,.07)',
+                    boxShadow: '0 8px 40px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08)',
                     display: 'flex', flexDirection: 'column', zIndex: 9999,
                     overflow: 'hidden', border: '1px solid rgba(0,0,0,.07)',
-                    height: 'min(480px, calc(100vh - 100px))', fontFamily: "'Inter', system-ui, sans-serif",
+                    fontFamily: "'Inter', system-ui, sans-serif",
                 }}>
 
                     {/* ── Header ── */}
