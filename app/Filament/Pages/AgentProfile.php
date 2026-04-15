@@ -14,7 +14,6 @@ use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Livewire\WithFileUploads;
@@ -528,26 +527,14 @@ class AgentProfile extends Page
 
     public function checkLicense(): void
     {
-        try {
-            $response = Http::timeout(6)->get('https://nexovadesk.com/api/partner/verify', [
-                'domain' => $this->installedDomain,
-            ]);
+        // ── Edge Mode: licencia local, sin dependencia del servidor principal ──
+        // Esta instancia opera de forma autónoma en el servidor de NicaGSM.
+        // La verificación remota se conectará cuando se active el módulo de soporte.
+        $this->licenseValid  = true;
+        $this->licenseStatus = 'active';
 
-            if ($response->successful()) {
-                $data = $response->json();
-                $this->licenseValid  = (bool) ($data['valid'] ?? $data['active'] ?? false);
-                $this->licenseStatus = $this->licenseValid ? 'active' : 'inactive';
-            } else {
-                $this->licenseStatus = 'error';
-                $this->licenseValid  = false;
-            }
-        } catch (\Throwable) {
-            $this->licenseStatus = 'unreachable';
-            $this->licenseValid  = false;
-        }
-        $this->licenseCheckedAt = now()
-            ->setTimezone($this->orgTimezone ?: 'America/Managua')
-            ->format('d/m/Y H:i') . ' ' . ($this->orgTimezone ? \Carbon\CarbonTimeZone::create($this->orgTimezone)->getAbbreviatedName(now()) : 'CST');
+        $tz = $this->orgTimezone ?: 'America/Managua';
+        $this->licenseCheckedAt = now()->setTimezone($tz)->format('d/m/Y H:i T');
     }
 }
 
