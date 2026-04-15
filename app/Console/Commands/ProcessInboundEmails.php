@@ -76,18 +76,23 @@ class ProcessInboundEmails extends Command
             foreach ($uids as $uid) {
                 $cacheKey = "imap_uid_{$orgId}_{$uid}";
 
-                // Si ya fue procesado como ticket o skip, saltar
+                // 'skip'         = no era respuesta de ticket (sin TKT-XXXXX en asunto)
+                // 'closed_notice' = ya se envió el aviso de ticket cerrado para este UID
+                // 'ticket'       = fue procesado como reply de ticket abierto
+                //    → NO saltamos 'ticket' para permitir re-detectar si el ticket
+                //      fue cerrado posteriormente y el cliente responde de nuevo.
                 $cached = Cache::get($cacheKey);
-                if ($cached === 'ticket' || $cached === 'skip') {
+                if ($cached === 'skip' || $cached === 'closed_notice') {
                     continue;
                 }
 
                 $wasTicket = $this->processMessage($inbox, $uid, $orgId, $smtp);
 
-                // Cachear resultado. TTL 72h.
-                // 'ticket' = procesado como reply de ticket
-                // 'skip'   = no era reply de ticket (no tiene TKT-XXXXX)
-                Cache::put($cacheKey, $wasTicket ? 'ticket' : 'skip', now()->addHours(72));
+                // Solo marcar 'skip' si definitivamente no era respuesta de ticket.
+                // 'ticket' y 'closed_notice' los gestiona processMessage()
+                if (! $wasTicket) {
+                    Cache::put($cacheKey, 'skip', now()->addHours(72));
+                }
 
                 if ($wasTicket) {
                     $processed++;
@@ -178,6 +183,8 @@ class ProcessInboundEmails extends Command
         // Ticket cerrado: NO reabrir — enviar aviso automático al cliente
         if ($ticket->status === 'closed') {
             $this->sendClosedNotice($ticket, $header);
+            // Marcar como 'closed_notice' para no reenviar el aviso en el siguiente ciclo
+            Cache::put("imap_uid_{$orgId}_{$uid}", 'closed_notice', now()->addHours(72));
             Log::info("[IMAP] Ticket {$ticketNumber} cerrado — enviado aviso al cliente (org #{$orgId})");
             return true; // Sí era ticket reply (aunque cerrado)
         }
@@ -191,6 +198,9 @@ class ProcessInboundEmails extends Command
 
         // Subir el ticket al tope del Live Inbox
         $ticket->touch();
+
+        // Marcar como procesado para no duplicar
+        Cache::put("imap_uid_{$orgId}_{$uid}", 'ticket', now()->addHours(72));
 
         Log::info("[IMAP] Ticket {$ticketNumber} — nuevo reply del cliente (org #{$orgId})");
 
