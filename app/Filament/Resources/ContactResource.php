@@ -7,7 +7,7 @@ use App\Models\Contact;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\Section;
@@ -24,6 +24,79 @@ class ContactResource extends Resource
     protected static string|\UnitEnum|null   $navigationGroup = 'Conversaciones';
     protected static ?int    $navigationSort  = 30;
     protected static ?string $slug            = 'contacts';
+
+    /**
+     * Infolist used by the modal ViewAction.
+     * Filament v3: when 'view' is absent from getPages(), ViewAction opens this as a modal.
+     */
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist->schema([
+            Grid::make(2)->schema([
+
+                Section::make('Identidad')->columnSpan(1)->schema([
+                    TextEntry::make('name')->label('Nombre')->default('—'),
+                    TextEntry::make('email')->label('Email')->copyable()->default('—'),
+                    TextEntry::make('phone')->label('Teléfono')->default('—'),
+                    TextEntry::make('source')->label('Origen')->badge()
+                        ->formatStateUsing(fn ($state) => match($state) {
+                            'woocommerce' => 'WooCommerce',
+                            'pre_chat'    => 'Pre-chat',
+                            'widget'      => 'Widget',
+                            'manual'      => 'Manual',
+                            default       => $state,
+                        })
+                        ->color(fn ($state) => match($state) {
+                            'woocommerce' => 'success',
+                            'pre_chat'    => 'info',
+                            'manual'      => 'warning',
+                            default       => 'gray',
+                        }),
+                    TextEntry::make('woo_customer_id')->label('WooCommerce ID')->default('—'),
+                    TextEntry::make('notes')->label('Notas internas')->default('—'),
+                ]),
+
+                Section::make('Actividad')->columnSpan(1)->schema([
+                    TextEntry::make('total_conversations')->label('Conversaciones'),
+                    TextEntry::make('last_seen_at')->label('Última visita')
+                        ->dateTime('d M Y, H:i')->default('—'),
+                    TextEntry::make('created_at')->label('Registro')
+                        ->dateTime('d M Y, H:i'),
+                ]),
+
+            ]),
+
+            Section::make('Historial de tickets')->schema([
+                RepeatableEntry::make('tickets')->label('')->schema([
+                    Grid::make(4)->schema([
+                        TextEntry::make('conversation_name')->label('Conversación')
+                            ->weight('medium')->default('—'),
+                        TextEntry::make('status')->label('Estado')->badge()
+                            ->formatStateUsing(fn ($s) => match($s) {
+                                'bot'    => 'Bot',
+                                'human'  => 'Agente',
+                                'closed' => 'Cerrado',
+                                'open'   => 'Abierto',
+                                default  => $s,
+                            })
+                            ->color(fn ($s) => match($s) {
+                                'bot'    => 'info',
+                                'human'  => 'success',
+                                'closed' => 'gray',
+                                default  => 'warning',
+                            }),
+                        TextEntry::make('survey_rating')->label('CSAT')
+                            ->formatStateUsing(fn ($s) => $s
+                                ? str_repeat('★', $s) . str_repeat('☆', 5 - $s) . " ({$s}/5)"
+                                : '—')
+                            ->default('—'),
+                        TextEntry::make('created_at')->label('Fecha')
+                            ->dateTime('d M Y'),
+                    ]),
+                ])->contained(false),
+            ]),
+        ]);
+    }
 
     public static function table(Table $table): Table
     {
@@ -92,26 +165,13 @@ class ContactResource extends Resource
                     ]),
             ])
             ->actions([
-                // View as modal (infolist) — avoids the 500 on /contacts/{id}
-                Action::make('view')
-                    ->label('Ver')
-                    ->icon('heroicon-o-eye')
-                    ->color('gray')
-                    ->modalHeading(fn (Contact $record) => $record->name ?: $record->email ?: 'Contacto')
-                    ->modalWidth('4xl')
-                    ->modalContent(fn (Contact $record) => view(
-                        'filament.modals.contact-detail',
-                        ['contact' => $record]
-                    ))
-                    ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Cerrar'),
-
+                // No 'view' in getPages() → this opens as a slide-over modal automatically
+                ViewAction::make()->label('Ver')->modalWidth('4xl'),
                 DeleteAction::make()
                     ->label('Eliminar')
-                    ->icon('heroicon-o-trash')
                     ->requiresConfirmation()
                     ->modalHeading('Eliminar contacto')
-                    ->modalDescription('¿Estás seguro de que deseas eliminar este contacto? Esta acción no se puede deshacer.')
+                    ->modalDescription('Esta acción no se puede deshacer. Las conversaciones asociadas quedarán sin contacto vinculado.')
                     ->modalSubmitActionLabel('Sí, eliminar'),
             ])
             ->bulkActions([
@@ -120,12 +180,13 @@ class ContactResource extends Resource
                 ]),
             ])
             ->emptyStateHeading('Sin contactos aún')
-            ->emptyStateDescription('Los contactos se crean automáticamente cuando un visitante deja su email o se identifica a través de WooCommerce.');
+            ->emptyStateDescription('Los contactos se crean automáticamente cuando un visitante deja su email.');
     }
 
     public static function getPages(): array
     {
         return [
+            // Only the list — no 'view' page so ViewAction opens as modal
             'index' => Pages\ListContacts::route('/'),
         ];
     }
