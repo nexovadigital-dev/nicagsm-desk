@@ -99,14 +99,23 @@ class ContactResource extends Resource
                     ->modalFooterActions([]),
                 DeleteAction::make()
                     ->label('Eliminar')
-                    ->requiresConfirmation()
-                    ->modalHeading('Eliminar contacto')
-                    ->modalDescription('Esta acción no se puede deshacer.')
-                    ->modalSubmitActionLabel('Sí, eliminar'),
+                    ->modalHeading(fn ($record) => 'Eliminar a ' . ($record->name ?: $record->email ?: 'este contacto'))
+                    ->modalDescription(fn ($record) => 'Se eliminará permanentemente el contacto y todo su historial de conversaciones. Esta acción no se puede deshacer.')
+                    ->modalSubmitActionLabel('Eliminar contacto')
+                    ->modalCancelActionLabel('Cancelar')
+                    ->modalWidth('sm')
+                    ->color('danger'),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()->label('Eliminar seleccionados'),
+                    DeleteBulkAction::make()
+                        ->label('Eliminar seleccionados')
+                        ->modalHeading('Eliminar contactos seleccionados')
+                        ->modalDescription('Se eliminarán permanentemente los contactos seleccionados y todo su historial. Esta acción no se puede deshacer.')
+                        ->modalSubmitActionLabel('Eliminar contactos')
+                        ->modalCancelActionLabel('Cancelar')
+                        ->modalWidth('sm')
+                        ->color('danger'),
                 ]),
             ])
             ->emptyStateHeading('Sin contactos aún')
