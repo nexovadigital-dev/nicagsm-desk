@@ -11,9 +11,9 @@ use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\Section;
-use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Infolists\Infolist;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Schema;
 
 class ContactResource extends Resource
 {
@@ -26,12 +26,12 @@ class ContactResource extends Resource
     protected static ?string $slug            = 'contacts';
 
     /**
-     * Infolist used by the modal ViewAction.
-     * Filament v3: when 'view' is absent from getPages(), ViewAction opens this as a modal.
+     * Infolist displayed inside the ViewAction modal.
+     * Uses Schema (Filament v4 / unified schema system).
      */
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist->schema([
+        return $schema->components([
             Grid::make(2)->schema([
 
                 Section::make('Identidad')->columnSpan(1)->schema([
@@ -165,13 +165,12 @@ class ContactResource extends Resource
                     ]),
             ])
             ->actions([
-                // No 'view' in getPages() → this opens as a slide-over modal automatically
                 ViewAction::make()->label('Ver')->modalWidth('4xl'),
                 DeleteAction::make()
                     ->label('Eliminar')
                     ->requiresConfirmation()
                     ->modalHeading('Eliminar contacto')
-                    ->modalDescription('Esta acción no se puede deshacer. Las conversaciones asociadas quedarán sin contacto vinculado.')
+                    ->modalDescription('Esta acción no se puede deshacer.')
                     ->modalSubmitActionLabel('Sí, eliminar'),
             ])
             ->bulkActions([
@@ -186,7 +185,6 @@ class ContactResource extends Resource
     public static function getPages(): array
     {
         return [
-            // Only the list — no 'view' page so ViewAction opens as modal
             'index' => Pages\ListContacts::route('/'),
         ];
     }

@@ -48,7 +48,9 @@ class LiveInbox extends Page
     public static function getNavigationBadge(): ?string
     {
         $orgId = auth()->user()?->organization_id;
-        $q = Ticket::whereIn('status', ['bot', 'human']);
+        // Only count live widget/telegram sessions — NOT formal support tickets
+        $q = Ticket::whereIn('status', ['bot', 'human'])
+                   ->where('is_support_ticket', false);
         if ($orgId) $q->where('organization_id', $orgId);
         $count = $q->count();
         return $count > 0 ? (string) $count : null;
@@ -222,14 +224,15 @@ class LiveInbox extends Page
         }
 
         if ($this->inboxView === 'history') {
-            $query->where('status', 'closed');
+            $query->where('status', 'closed')
+                  ->where('is_support_ticket', false); // Support tickets history is in Tickets page
         } else {
-            $query->whereIn('status', ['bot', 'human']);
+            $query->whereIn('status', ['bot', 'human'])
+                  ->where('is_support_ticket', false); // Formal support tickets ONLY in Tickets page
             // Ocultar sesiones de chat web donde el visitante nunca escribió un mensaje
-            // (se conectó pero no interactuó). Tickets de soporte y Telegram siempre visibles.
+            // (se conectó pero no interactuó). Telegram siempre visible.
             $query->where(function ($q) {
-                $q->where('is_support_ticket', true)
-                  ->orWhere('platform', 'telegram')
+                $q->where('platform', 'telegram')
                   ->orWhereHas('messages', fn ($m) => $m->where('sender_type', 'user'));
             });
         }
