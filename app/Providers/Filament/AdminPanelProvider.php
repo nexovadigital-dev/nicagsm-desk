@@ -699,6 +699,25 @@ HTML
     document.addEventListener('livewire:navigated', function(){ setTimeout(fmt, 50); });
 })();
 </script>
+<style>
+/* ── Global mobile overrides ── */
+@media (max-width: 768px) {
+    /* Filament native tables (Contacts, Agents, etc.) */
+    .fi-ta-table-ctn { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+    .fi-ta-table { min-width: 480px; font-size: 12.5px !important; }
+    .fi-ta-cell { padding: 8px 10px !important; }
+    /* Filament header padding */
+    .fi-main-ctn { padding: 8px !important; }
+    .fi-page { padding: 0 !important; }
+    /* Prevent iOS zoom on input focus (font-size >= 16px) */
+    input[type="text"], input[type="email"], input[type="tel"],
+    input[type="search"], textarea, select { font-size: 16px !important; }
+    /* Filament filters / toolbar */
+    .fi-ta-header-toolbar { flex-wrap: wrap !important; gap: 6px !important; }
+    /* Toast position on mobile */
+    #nx-toast-ctn { right: 8px !important; bottom: 12px !important; }
+}
+</style>
 HTML;
                 })
             ->renderHook(

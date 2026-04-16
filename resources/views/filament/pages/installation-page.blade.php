@@ -104,6 +104,23 @@
     .inst-widget-token { display: none; }
     .inst-code-block { font-size: 10.5px; padding: 12px 48px 12px 12px; }
 }
+
+/* ─── MOBILE INSTALLATION ─── */
+@media (max-width: 768px) {
+    /* Platform icons grid: 2 columns */
+    .ip-platforms, [class*="platform"] { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+    /* Code blocks scroll */
+    pre, code, .ip-code, [class*="code-block"] {
+        overflow-x: auto !important;
+        white-space: pre !important;
+        font-size: 11px !important;
+        word-break: normal !important;
+    }
+    /* Page padding */
+    [class*="ip-wrap"], [class*="ip-page"] { padding: 12px 10px 48px !important; }
+    /* Steps: stack vertically */
+    [class*="ip-step"] { flex-direction: column !important; align-items: flex-start !important; }
+}
 </style>
 
 @php

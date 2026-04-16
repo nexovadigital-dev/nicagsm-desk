@@ -135,15 +135,20 @@ x-init="
             this.playNewTicket();
         }
         this.prevTicketCount = currentCount;
-    }
+    },
+
+    // Mobile: show sidebar list by default, toggle to chat panel
+    mobileShowList: true,
+    openChat() { if (window.innerWidth < 768) { this.mobileShowList = false; } },
+    backToList() { this.mobileShowList = true; }
 }"
 @nexova-new-message.window="$wire.$refresh().then(() => { const el = document.querySelector('[data-inbox-count]'); if (typeof $data !== 'undefined' && $data.checkNewTickets) $data.checkNewTickets(el ? parseInt(el.dataset.inboxCount) : 0); })"
-class="nx-inbox" wire:poll.3s>
+:class="{ 'mob-list': mobileShowList, 'mob-chat': !mobileShowList }" class="nx-inbox" wire:poll.3s>
 
     {{-- ═══════════════════════════
          SIDEBAR — Lista de tickets
     ════════════════════════════════ --}}
-    <aside class="nx-sidebar">
+    <aside class="nx-sidebar" :class="{ 'mob-hidden': !mobileShowList }" >
 
         @php $liveTickets = $this->tickets(); $activeCount = $liveTickets->count(); @endphp
         <div class="nx-sidebar__header" data-inbox-count="{{ $activeCount }}">
@@ -328,6 +333,11 @@ class="nx-inbox" wire:poll.3s>
 
             {{-- Cabecera --}}
             <header class="nx-chat__header">
+                {{-- Mobile back button --}}
+                <button class="nx-mobile-back" @click="backToList()" title="Volver a conversaciones">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+
                 @php
                     $palette = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1'];
                     $color   = $palette[abs(crc32($ticket->client_name)) % count($palette)];
@@ -2505,6 +2515,45 @@ class="nx-inbox" wire:poll.3s>
     .nx-detail-panel { display: none; }
     /* Message bubbles wider on mobile */
     .nx-bubble { max-width: 88% !important; }
+}
+
+/* ─── MOBILE INBOX (< 768px) ─────────────────────────── */
+@media (max-width: 768px) {
+    .nx-inbox {
+        flex-direction: column !important;
+        height: 100dvh !important;
+        overflow: hidden;
+        position: relative;
+    }
+    /* On mobile, show sidebar OR chat panel — not both */
+    .nx-inbox .nx-sidebar { display: flex; flex-direction: column; width: 100% !important; max-width: 100% !important; border-right: none !important; height: 100% !important; }
+    .nx-inbox .mob-hidden { display: none !important; }
+
+    /* Panel takes full height */
+    .nx-inbox > div:not(.nx-sidebar) { height: 100% !important; }
+
+    /* Back button: only visible on mobile */
+    .nx-mobile-back {
+        display: flex !important;
+        align-items: center; justify-content: center;
+        width: 36px; height: 36px;
+        background: none; border: none; cursor: pointer;
+        color: var(--nx-text, #111);
+        border-radius: 8px;
+        flex-shrink: 0;
+    }
+    .nx-mobile-back:hover { background: var(--nx-surf2, rgba(0,0,0,.06)); }
+
+    /* Bubble width on mobile */
+    .nx-bubble { max-width: 88% !important; }
+    /* Composer larger tap target */
+    .nx-composer-input, .nx-compose-input { font-size: 16px !important; }
+    /* Hide detail sidebar on mobile */
+    .nx-detail-panel, .nx-ticket-detail { display: none !important; }
+}
+@media (min-width: 769px) {
+    .nx-mobile-back { display: none !important; }
+    .nx-inbox .nx-sidebar.mob-hidden { display: flex !important; }
 }
 </style>
 
