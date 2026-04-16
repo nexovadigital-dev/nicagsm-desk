@@ -540,12 +540,32 @@ class="nx-inbox" wire:poll.3s>
 
 
 
+                @php $lastDateKey = null; @endphp
                 @forelse ($allMsgs as $msg)
                     @php
                         $isUser = $msg->sender_type === 'user';
                         $vcPalette = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1'];
                         $vcColor   = $vcPalette[abs(crc32($ticket->client_name ?? 'V')) % 6];
+
+                        // Date separator
+                        $msgDate2    = $msg->created_at->setTimezone($orgTimezone);
+                        $dateKey2    = $msgDate2->format('Y-m-d');
+                        $showSep2    = $dateKey2 !== $lastDateKey;
+                        $lastDateKey = $dateKey2;
+                        $todayKey    = now()->setTimezone($orgTimezone)->format('Y-m-d');
+                        $yesterKey   = now()->setTimezone($orgTimezone)->subDay()->format('Y-m-d');
+                        $sepLabel2   = match($dateKey2) {
+                            $todayKey  => 'Hoy',
+                            $yesterKey => 'Ayer',
+                            default    => $msgDate2->translatedFormat('d M Y'),
+                        };
                     @endphp
+
+                    @if($showSep2)
+                        <div class="nx-msg--system" wire:key="datesep-{{ $dateKey2 }}-{{ $ticket->id }}">
+                            <span>{{ $sepLabel2 }}</span>
+                        </div>
+                    @endif
 
                     @if ($msg->sender_type === 'system')
                         @php
@@ -1918,6 +1938,17 @@ class="nx-inbox" wire:poll.3s>
     content: ''; flex: 1; height: 1px; background: var(--nx-border);
 }
 .nx-msg--system span { white-space: nowrap; flex-shrink: 0; }
+
+/* ─── Date separator (same style as system msg) ─── */
+.nx-date-sep {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 10.5px; font-weight: 600; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--nx-muted);
+    margin: 10px 0 6px;
+}
+.nx-date-sep::before, .nx-date-sep::after {
+    content: ''; flex: 1; height: 1px; background: var(--nx-border);
+}
 
 /* ─── NOTA INTERNA ─── */
 .nx-msg--note {
