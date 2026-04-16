@@ -19,7 +19,7 @@
 @endphp
 
 <style>
-.cx { font-family:'Inter',ui-sans-serif,system-ui,sans-serif; font-size:13px; }
+.cx { font-family:'Inter',ui-sans-serif,system-ui,sans-serif; font-size:13px; padding-top:4px; }
 
 /* Header */
 .cx-header { display:flex; align-items:center; gap:12px; padding-bottom:12px; border-bottom:1px solid #f1f5f9; margin-bottom:12px; }
@@ -54,9 +54,7 @@
                 color:#6366f1; display:flex; align-items:center; gap:7px; margin-bottom:8px; }
 .cx-tk-count  { background:#e0e7ff; color:#4338ca; font-size:10px; font-weight:700;
                 padding:1px 7px; border-radius:99px; text-transform:none; letter-spacing:0; }
-.cx-tk-list   { max-height:260px; overflow-y:auto; padding-right:2px; }
-.cx-tk-list::-webkit-scrollbar { width:3px; }
-.cx-tk-list::-webkit-scrollbar-thumb { background:#e2e8f0; border-radius:99px; }
+.cx-tk-list   { }
 .cx-tk        { display:flex; align-items:center; justify-content:space-between; gap:8px;
                 padding:7px 10px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:5px; background:#fff; }
 .cx-tk-l      { flex:1; min-width:0; }
