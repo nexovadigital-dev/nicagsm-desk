@@ -269,6 +269,26 @@
 /* System message */
 .tk-sys-msg { text-align: center; font-size: 11px; color: var(--nx-muted, #94a3b8); padding: 6px 0; }
 
+/* Date separator */
+.tk-date-sep {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 14px 0 10px;
+    color: var(--nx-muted, #94a3b8);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+}
+.tk-date-sep::before,
+.tk-date-sep::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--nx-border, rgba(128,128,128,.18));
+}
+
 /* Ticket opened card */
 .tk-ticket-card {
     margin: 10px auto;
@@ -581,6 +601,7 @@
                      x-init="$el.scrollTop = $el.scrollHeight"
                      x-on:livewire:updated.window="$nextTick(() => $el.scrollTop = $el.scrollHeight)">
 
+                @php $lastDateKey = null; @endphp
                 @forelse($chatMsgs as $msg)
                     @php
                         $isTicketOpened = str_starts_with($msg->content, '__TICKET_OPENED__:');
@@ -588,7 +609,25 @@
                         $isUser         = $msg->sender_type === 'user';
                         $isAgent        = $msg->sender_type === 'agent';
                         $isSystem       = $msg->sender_type === 'system';
+
+                        // Date separator logic
+                        $msgDate    = $msg->created_at->setTimezone($orgTimezone);
+                        $dateKey    = $msgDate->format('Y-m-d');
+                        $showSep    = $dateKey !== $lastDateKey;
+                        $lastDateKey = $dateKey;
+                        $today      = now()->setTimezone($orgTimezone)->format('Y-m-d');
+                        $yesterday  = now()->setTimezone($orgTimezone)->subDay()->format('Y-m-d');
+                        $sepLabel   = match($dateKey) {
+                            $today     => 'Hoy',
+                            $yesterday => 'Ayer',
+                            default    => $msgDate->translatedFormat('d M Y'),
+                        };
                     @endphp
+
+                    {{-- Date separator --}}
+                    @if($showSep)
+                        <div class="tk-date-sep">{{ $sepLabel }}</div>
+                    @endif
 
                     @if($isSystem)
                         @if($isTicketOpened)
