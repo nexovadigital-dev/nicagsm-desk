@@ -11,7 +11,7 @@ use Filament\Actions\ViewAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Support\NxNotification;
+use Livewire\Component as Livewire;
 
 class ContactResource extends Resource
 {
@@ -106,12 +106,11 @@ class ContactResource extends Resource
                     ->modalCancelActionLabel('Cancelar')
                     ->modalWidth('sm')
                     ->color('danger')
-                    ->successNotification(
-                        NxNotification::makeDanger(
-                            'Contacto eliminado',
-                            'El contacto fue eliminado correctamente.'
-                        )
-                    ),
+                    ->successNotification(null)
+                    ->after(function (Contact $record, Livewire $livewire): void {
+                        $name = $record->name ?: $record->email ?: 'El contacto';
+                        $livewire->dispatch('nexova-toast', type: 'success', message: "{$name} fue eliminado");
+                    }),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
@@ -123,12 +122,10 @@ class ContactResource extends Resource
                         ->modalCancelActionLabel('Cancelar')
                         ->modalWidth('sm')
                         ->color('danger')
-                        ->successNotification(
-                            NxNotification::makeDanger(
-                                'Contactos eliminados',
-                                'Los contactos seleccionados fueron eliminados correctamente.'
-                            )
-                        ),
+                        ->successNotification(null)
+                        ->after(function (Livewire $livewire): void {
+                            $livewire->dispatch('nexova-toast', type: 'success', message: 'Contactos eliminados correctamente');
+                        }),
                 ]),
             ])
             ->emptyStateHeading('Sin contactos aún')
