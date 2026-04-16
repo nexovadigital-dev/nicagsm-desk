@@ -211,23 +211,60 @@
 }
 
 /* Bubbles */
-.tk-bubble-wrap { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 4px; }
+.tk-bubble-wrap {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    margin-bottom: 6px;
+}
 .tk-bubble-wrap.agent { flex-direction: row-reverse; }
-.tk-bubble-avatar { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
+
+.tk-bubble-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,.15);
+    align-self: flex-end;
+}
+
+.tk-bubble-col { display: flex; flex-direction: column; max-width: 72%; }
+.tk-bubble-wrap.agent .tk-bubble-col { align-items: flex-end; }
+.tk-bubble-wrap:not(.agent) .tk-bubble-col { align-items: flex-start; }
+
 .tk-bubble {
-    max-width: 78%;
-    padding: 9px 13px;
-    border-radius: 14px;
+    padding: 10px 14px;
+    border-radius: 16px;
     font-size: 13.5px;
-    line-height: 1.55;
+    line-height: 1.6;
     word-break: break-word;
     white-space: pre-wrap;
+    text-align: left;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    animation: tkFadeIn .18s ease;
 }
-.tk-bubble.user  { background: #f1f5f9; color: #0f172a; border-radius: 14px 14px 14px 2px; }
-.tk-bubble.agent { background: #312e81; color: #fff; border-radius: 14px 14px 2px 14px; }
-.tk-bubble.bot   { background: #f1f5f9; color: #0f172a; border-radius: 14px 14px 14px 2px; }
-.tk-bubble-time { font-size: 10px; color: var(--nx-muted, #9ca3af); margin-top: 3px; }
-.tk-bubble-wrap.agent .tk-bubble-time { text-align: right; }
+@keyframes tkFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+.tk-bubble.user {
+    background: #fff;
+    color: #0f172a;
+    border: 1px solid rgba(0,0,0,.07);
+    border-radius: 16px 16px 16px 4px;
+}
+.tk-bubble.agent {
+    background: linear-gradient(135deg, #4338ca, #312e81);
+    color: #fff;
+    border-radius: 16px 16px 4px 16px;
+}
+.tk-bubble.bot {
+    background: #fff;
+    color: #0f172a;
+    border: 1px solid rgba(0,0,0,.07);
+    border-radius: 16px 16px 16px 4px;
+}
+
+.tk-bubble-time { font-size: 10px; color: var(--nx-muted, #9ca3af); margin-top: 3px; padding: 0 2px; }
 
 /* System message */
 .tk-sys-msg { text-align: center; font-size: 11px; color: var(--nx-muted, #94a3b8); padding: 6px 0; }
@@ -572,6 +609,7 @@
                     @endif
 
                     <div class="tk-bubble-wrap {{ $isAgent ? 'agent' : '' }}" wire:key="cm-{{ $msg->id }}">
+
                         {{-- Avatar --}}
                         @if($isUser)
                             <div class="tk-bubble-avatar" style="background:{{ $tc }}">
@@ -583,21 +621,25 @@
                                     <img src="{{ $agentAvatar }}" alt="A" style="width:100%;height:100%;object-fit:cover;border-radius:50%">
                                 </div>
                             @else
-                                <div class="tk-bubble-avatar" style="background:#334155">A</div>
+                                <div class="tk-bubble-avatar" style="background:#4338ca">A</div>
                             @endif
                         @else
-                            <div class="tk-bubble-avatar" style="background:#64748b">N</div>
+                            <div class="tk-bubble-avatar" style="background:#6366f1">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-2"/></svg>
+                            </div>
                         @endif
 
-                        <div>
-                            <div class="tk-bubble {{ $msg->sender_type }}">
-                                {!! nl2br(e(trim($msg->content))) !!}
-                            </div>
+                        {{-- Bubble + time --}}
+                        <div class="tk-bubble-col">
+                            <div class="tk-bubble {{ $msg->sender_type }}">{{ trim($msg->content) }}</div>
                             <div class="tk-bubble-time">
-                                @if($isAgent) Agente &middot; @elseif($msg->sender_type==='bot') Nexova IA &middot; @endif
+                                @if($isAgent) Agente &middot;
+                                @elseif($msg->sender_type==='bot') Nexova IA &middot;
+                                @endif
                                 {{ $msg->created_at->setTimezone($orgTimezone)->format('H:i') }}
                             </div>
                         </div>
+
                     </div>
                 @empty
                     <div style="text-align:center;padding:40px 20px;color:var(--nx-muted,#94a3b8);font-size:13px">
