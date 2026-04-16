@@ -11,11 +11,6 @@ use Filament\Actions\ViewAction;       // Filament v5: filament/actions
 use Filament\Actions\DeleteAction;    // Filament v5: filament/actions
 use Filament\Actions\BulkActionGroup; // Filament v5: filament/actions
 use Filament\Actions\DeleteBulkAction; // Filament v5: filament/actions
-use Filament\Infolists\Components\TextEntry;      // v5: Entry components stay in Infolists
-use Filament\Infolists\Components\RepeatableEntry; // v5: Entry components stay in Infolists
-use Filament\Schemas\Components\Section;  // v5: Layout components moved to Schemas
-use Filament\Schemas\Components\Grid;     // v5: Layout components moved to Schemas
-use Filament\Schemas\Schema;              // v5: Unified schema system
 
 class ContactResource extends Resource
 {
@@ -26,79 +21,6 @@ class ContactResource extends Resource
     protected static string|\UnitEnum|null   $navigationGroup = 'Conversaciones';
     protected static ?int    $navigationSort  = 30;
     protected static ?string $slug            = 'contacts';
-
-    /**
-     * Infolist shown in the ViewAction modal.
-     * Filament v5 uses Schema instead of Infolist (unified schema system).
-     */
-    public static function infolist(Schema $schema): Schema
-    {
-        return $schema->components([
-            Grid::make(2)->schema([
-
-                Section::make('Identidad')->columnSpan(1)->schema([
-                    TextEntry::make('name')->label('Nombre')->default('—'),
-                    TextEntry::make('email')->label('Email')->copyable()->default('—'),
-                    TextEntry::make('phone')->label('Teléfono')->default('—'),
-                    TextEntry::make('source')->label('Origen')->badge()
-                        ->formatStateUsing(fn ($state) => match($state) {
-                            'woocommerce' => 'WooCommerce',
-                            'pre_chat'    => 'Pre-chat',
-                            'widget'      => 'Widget',
-                            'manual'      => 'Manual',
-                            default       => $state,
-                        })
-                        ->color(fn ($state) => match($state) {
-                            'woocommerce' => 'success',
-                            'pre_chat'    => 'info',
-                            'manual'      => 'warning',
-                            default       => 'gray',
-                        }),
-                    TextEntry::make('woo_customer_id')->label('WooCommerce ID')->default('—'),
-                    TextEntry::make('notes')->label('Notas internas')->default('—'),
-                ]),
-
-                Section::make('Actividad')->columnSpan(1)->schema([
-                    TextEntry::make('total_conversations')->label('Conversaciones'),
-                    TextEntry::make('last_seen_at')->label('Última visita')
-                        ->dateTime('d M Y, H:i')->default('—'),
-                    TextEntry::make('created_at')->label('Registro')
-                        ->dateTime('d M Y, H:i'),
-                ]),
-
-            ]),
-
-            Section::make('Historial de tickets')->schema([
-                RepeatableEntry::make('tickets')->label('')->schema([
-                    Grid::make(4)->schema([
-                        TextEntry::make('conversation_name')->label('Conversación')
-                            ->weight('medium')->default('—'),
-                        TextEntry::make('status')->label('Estado')->badge()
-                            ->formatStateUsing(fn ($s) => match($s) {
-                                'bot'    => 'Bot',
-                                'human'  => 'Agente',
-                                'closed' => 'Cerrado',
-                                'open'   => 'Abierto',
-                                default  => $s,
-                            })
-                            ->color(fn ($s) => match($s) {
-                                'bot'    => 'info',
-                                'human'  => 'success',
-                                'closed' => 'gray',
-                                default  => 'warning',
-                            }),
-                        TextEntry::make('survey_rating')->label('CSAT')
-                            ->formatStateUsing(fn ($s) => $s
-                                ? str_repeat('★', $s) . str_repeat('☆', 5 - $s) . " ({$s}/5)"
-                                : '—')
-                            ->default('—'),
-                        TextEntry::make('created_at')->label('Fecha')
-                            ->dateTime('d M Y'),
-                    ]),
-                ])->contained(false),
-            ]),
-        ]);
-    }
 
     public static function table(Table $table): Table
     {
