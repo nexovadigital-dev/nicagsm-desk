@@ -183,37 +183,18 @@ $visitorTimes = $visitors->pluck('first_seen_at', 'id')->map(fn($dt) => $dt?->ti
 /* ─── MOBILE VISITORS ─── */
 @media (max-width: 768px) {
     .vp-page { padding: 10px 8px 48px; gap: 10px; }
-    .vp-toolbar { flex-direction: column; gap: 8px; }
-    .vp-search-wrap { width: 100%; }
-    /* Convert table to card list on mobile */
-    .vp-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .vp-thead { display: none; }
-    .vp-tbody tr {
-        display: block;
-        border: 1px solid var(--nx-border, rgba(128,128,128,.18));
-        border-radius: 10px;
-        margin-bottom: 8px;
-        padding: 10px 12px;
-    }
-    .vp-tbody td {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 4px 0;
-        border: none;
-        font-size: 12.5px;
-    }
-    .vp-tbody td::before {
-        content: attr(data-label);
-        font-weight: 700;
-        font-size: 10px;
-        color: var(--nx-muted, #9ca3af);
-        text-transform: uppercase;
-        letter-spacing: .04em;
-        min-width: 80px;
-        flex-shrink: 0;
-    }
-    .vp-btn-new { width: 100%; justify-content: center; }
+
+    /* Toolbar: stack */
+    .vp-toolbar { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 12px; }
+    .vp-search-wrap, .vp-search { width: 100%; }
+    .vp-btn-new { justify-content: center; }
+
+    /* Table: horizontal scroll */
+    .vp-table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; border-radius: 8px; }
+    .vp-table-wrap table { min-width: 600px; }
+
+    /* Compact rows */
+    .vp-thead tr th, .vp-tbody tr td { padding: 8px 10px !important; font-size: 12px; white-space: nowrap; }
 }
 </style>
 

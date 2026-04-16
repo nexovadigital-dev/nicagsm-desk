@@ -407,6 +407,32 @@
     .tk-chat-header-actions { flex-wrap: wrap; }
     .tk-filters { grid-template-columns: 1fr; }
 }
+
+/* ─── Additional mobile fixes ─── */
+@media (max-width: 768px) {
+    /* Stack sidebar + main vertically */
+    .tk-root { flex-direction: column !important; height: auto !important; min-height: 100dvh; overflow: visible !important; }
+    .tk-sidebar { width: 100% !important; max-width: 100% !important; border-right: none !important; border-bottom: 1px solid var(--nx-border, rgba(128,128,128,.18)) !important; max-height: 45vh; overflow-y: auto; }
+    .tk-main { min-height: 55vh; }
+
+    /* Chat header: stack on mobile */
+    .tk-chat-header { padding: 10px 14px; }
+    .tk-chat-header-top { flex-wrap: wrap; gap: 8px; }
+    .tk-chat-header-sub { font-size: 11px; flex-wrap: wrap; }
+    .tk-chat-header-name { font-size: 14px; }
+    .tk-chat-header-actions { width: 100%; justify-content: flex-end; flex-wrap: wrap; gap: 4px; }
+
+    /* Hide dept dropdown text overflow */
+    .tk-chat-header-actions select { max-width: 130px; font-size: 11px; }
+
+    /* Bubbles */
+    .tk-bubble { max-width: 86% !important; }
+    .tk-bubble-col { max-width: 86% !important; }
+
+    /* Sidebar filters: 1 col on very small */
+    .tk-filters { grid-template-columns: 1fr !important; }
+    .tk-sidebar-header { padding: 10px 12px 8px; }
+}
 </style>
 
 <div class="tk-root">

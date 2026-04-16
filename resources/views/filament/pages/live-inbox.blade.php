@@ -2519,20 +2519,42 @@ x-init="
 
 /* ─── MOBILE INBOX (< 768px) ─────────────────────────── */
 @media (max-width: 768px) {
+    /* Root: stack vertically, auto height (scroll naturally) */
     .nx-inbox {
         flex-direction: column !important;
-        height: 100dvh !important;
-        overflow: hidden;
-        position: relative;
+        height: auto !important;
+        max-height: none !important;
+        min-height: 100dvh;
+        overflow: visible !important;
     }
-    /* On mobile, show sidebar OR chat panel — not both */
-    .nx-inbox .nx-sidebar { display: flex; flex-direction: column; width: 100% !important; max-width: 100% !important; border-right: none !important; height: 100% !important; }
-    .nx-inbox .mob-hidden { display: none !important; }
 
-    /* Panel takes full height */
-    .nx-inbox > div:not(.nx-sidebar) { height: 100% !important; }
+    /* Sidebar: full width, limited height with internal scroll */
+    .nx-sidebar {
+        width: 100% !important;
+        min-width: 100% !important;
+        border-right: none !important;
+        border-bottom: 1px solid var(--nx-border) !important;
+        height: auto !important;
+        max-height: 50vh;
+        overflow-y: auto;
+    }
 
-    /* Back button: only visible on mobile */
+    /* Chat panel: fills rest of screen */
+    .nx-chat {
+        flex: 1 !important;
+        min-height: 55vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* When chat is open on mobile, hide sidebar to give full height */
+    .nx-inbox.mob-chat .nx-sidebar { display: none !important; }
+    .nx-inbox.mob-chat .nx-chat { min-height: 100dvh; }
+    /* When on list view, show sidebar full height */
+    .nx-inbox.mob-list .nx-chat { display: none !important; }
+    .nx-inbox.mob-list .nx-sidebar { max-height: 100dvh; height: 100dvh; }
+
+    /* Back button */
     .nx-mobile-back {
         display: flex !important;
         align-items: center; justify-content: center;
@@ -2541,19 +2563,25 @@ x-init="
         color: var(--nx-text, #111);
         border-radius: 8px;
         flex-shrink: 0;
+        margin-right: 4px;
     }
     .nx-mobile-back:hover { background: var(--nx-surf2, rgba(0,0,0,.06)); }
 
-    /* Bubble width on mobile */
+    /* Bubbles */
     .nx-bubble { max-width: 88% !important; }
-    /* Composer larger tap target */
-    .nx-composer-input, .nx-compose-input { font-size: 16px !important; }
-    /* Hide detail sidebar on mobile */
+
+    /* Hide fixed-width detail panel */
     .nx-detail-panel, .nx-ticket-detail { display: none !important; }
+
+    /* Chat header: allow wrapping */
+    .nx-chat__header-top { flex-wrap: wrap; gap: 6px; }
+    .nx-chat__actions { flex-wrap: wrap; }
+
+    /* Messages internal scroll */
+    .nx-messages, .nx-chat__msgs { flex: 1; overflow-y: auto; }
 }
 @media (min-width: 769px) {
     .nx-mobile-back { display: none !important; }
-    .nx-inbox .nx-sidebar.mob-hidden { display: flex !important; }
 }
 </style>
 

@@ -54,6 +54,16 @@
 .dp-color-presets { display:flex; gap:6px; flex-wrap:wrap; }
 .dp-color-dot { width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:transform .1s, border-color .1s; }
 .dp-color-dot:hover { transform:scale(1.15); border-color:#fff; box-shadow:0 0 0 2px #94a3b8; }
+
+@media (max-width: 640px) {
+    .dp-wrap { padding: 0 0 48px; gap: 16px; }
+    .dp-head { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px 16px; }
+    .dp-add { width: 100%; justify-content: center; }
+    .dp-grid { grid-template-columns: 1fr; }
+    .dp-body { padding: 14px; }
+    .dp-actions { opacity: 1; } /* Always show on mobile (no hover) */
+    .dp-tag-actions { display: flex; } /* Always show on mobile */
+}
 </style>
 
 @php
