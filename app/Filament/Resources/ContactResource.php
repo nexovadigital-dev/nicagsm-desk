@@ -7,15 +7,15 @@ use App\Models\Contact;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Actions\ViewAction;      // Filament v5: from filament/actions, not filament/tables
-use Filament\Actions\DeleteAction;    // Filament v5: from filament/actions, not filament/tables
-use Filament\Actions\BulkActionGroup; // Filament v5
-use Filament\Actions\DeleteBulkAction; // Filament v5
-use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\Section;
-use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Schema;
+use Filament\Actions\ViewAction;       // Filament v5: filament/actions
+use Filament\Actions\DeleteAction;    // Filament v5: filament/actions
+use Filament\Actions\BulkActionGroup; // Filament v5: filament/actions
+use Filament\Actions\DeleteBulkAction; // Filament v5: filament/actions
+use Filament\Infolists\Components\TextEntry;      // v5: Entry components stay in Infolists
+use Filament\Infolists\Components\RepeatableEntry; // v5: Entry components stay in Infolists
+use Filament\Schemas\Components\Section;  // v5: Layout components moved to Schemas
+use Filament\Schemas\Components\Grid;     // v5: Layout components moved to Schemas
+use Filament\Schemas\Schema;              // v5: Unified schema system
 
 class ContactResource extends Resource
 {
