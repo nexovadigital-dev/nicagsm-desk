@@ -167,8 +167,14 @@ class ContactResource extends Resource
                     ]),
             ])
             ->actions([
-                // No 'view' in getPages() → ViewAction auto-opens as a modal slide-over
-                ViewAction::make()->label('Ver')->modalWidth('4xl'),
+                ViewAction::make()
+                    ->label('Ver')
+                    ->slideOver()
+                    ->modalContent(fn ($record) => view(
+                        'filament.modals.contact-detail',
+                        ['record' => $record]
+                    ))
+                    ->modalFooterActions([]),
                 DeleteAction::make()
                     ->label('Eliminar')
                     ->requiresConfirmation()
