@@ -4,10 +4,16 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ContactResource\Pages;
 use App\Models\Contact;
-use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\Grid;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Infolist;
 
 class ContactResource extends Resource
 {
@@ -86,9 +92,33 @@ class ContactResource extends Resource
                     ]),
             ])
             ->actions([
-                ViewAction::make()->label('Ver'),
+                // View as modal (infolist) — avoids the 500 on /contacts/{id}
+                Action::make('view')
+                    ->label('Ver')
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->modalHeading(fn (Contact $record) => $record->name ?: $record->email ?: 'Contacto')
+                    ->modalWidth('4xl')
+                    ->modalContent(fn (Contact $record) => view(
+                        'filament.modals.contact-detail',
+                        ['contact' => $record]
+                    ))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Cerrar'),
+
+                DeleteAction::make()
+                    ->label('Eliminar')
+                    ->icon('heroicon-o-trash')
+                    ->requiresConfirmation()
+                    ->modalHeading('Eliminar contacto')
+                    ->modalDescription('¿Estás seguro de que deseas eliminar este contacto? Esta acción no se puede deshacer.')
+                    ->modalSubmitActionLabel('Sí, eliminar'),
             ])
-            ->bulkActions([])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make()->label('Eliminar seleccionados'),
+                ]),
+            ])
             ->emptyStateHeading('Sin contactos aún')
             ->emptyStateDescription('Los contactos se crean automáticamente cuando un visitante deja su email o se identifica a través de WooCommerce.');
     }
@@ -97,7 +127,6 @@ class ContactResource extends Resource
     {
         return [
             'index' => Pages\ListContacts::route('/'),
-            'view'  => Pages\ViewContact::route('/{record}'),
         ];
     }
 
