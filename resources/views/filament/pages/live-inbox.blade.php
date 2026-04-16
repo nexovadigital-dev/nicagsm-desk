@@ -2487,6 +2487,25 @@ class="nx-inbox" wire:poll.3s>
     .nx-composer { padding: 8px 12px; }
 }
 
+
+/* ─── Mobile: inbox list vs chat panel ─── */
+@media (max-width: 768px) {
+    .nx-inbox { flex-direction: column; height: auto; min-height: 100dvh; }
+    .nx-sidebar { width: 100% !important; max-width: 100% !important; border-right: none !important; border-bottom: 1px solid var(--nx-border); max-height: 45vh; overflow-y: auto; }
+    .nx-chat-panel { min-height: 55vh; }
+    /* Hide sidebar when chat is open on mobile */
+    .nx-inbox.chat-open .nx-sidebar { display: none; }
+    .nx-inbox.chat-open .nx-chat-panel { min-height: 100dvh; }
+    /* Composer */
+    .nx-composer-row { gap: 6px; }
+    .nx-composer-input { font-size: 14px; }
+    /* Header actions wrap */
+    .nx-chat-header-actions { flex-wrap: wrap; gap: 4px; }
+    /* Ticket panel details */
+    .nx-detail-panel { display: none; }
+    /* Message bubbles wider on mobile */
+    .nx-bubble { max-width: 88% !important; }
+}
 </style>
 
 </x-filament-panels::page>

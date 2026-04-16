@@ -179,6 +179,23 @@ $visitorTimes = $visitors->pluck('first_seen_at', 'id')->map(fn($dt) => $dt?->ti
 .vp-btn-primary:hover { background:#16a34a; }
 .vp-btn-danger  { background:#dc2626;color:#fff;border:none;border-radius:7px;padding:7px 18px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit; }
 .vp-btn-danger:hover  { background:#b91c1c; }
+
+/* ─── Responsive ─── */
+@media (max-width: 900px) {
+    .vp-toolbar { flex-wrap: wrap; }
+    .vp-search-wrap { min-width: 100%; order: -1; }
+    .vp-thead th:nth-child(n+5) { display: none; }
+    .vp-tbody td:nth-child(n+5) { display: none; }
+}
+@media (max-width: 640px) {
+    .vp-table-wrap { font-size: 12px; }
+    .vp-thead th:nth-child(n+4) { display: none; }
+    .vp-tbody td:nth-child(n+4) { display: none; }
+    .vp-thead th:first-child, .vp-tbody td:first-child { padding-left: 10px; }
+    .vp-page { padding: 12px 10px 48px; }
+    .vp-toolbar { padding: 10px 12px; gap: 6px; }
+    .vp-btn-new { padding: 7px 12px; font-size: 12px; }
+}
 </style>
 
 {{-- ══ Visitor timestamps for client-side timer ══ --}}

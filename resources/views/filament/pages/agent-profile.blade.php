@@ -90,10 +90,18 @@ input:checked + .ap-slider:before { transform: translateX(16px); }
 .cron-copy-btn:hover { text-decoration: underline; }
 .cron-freq { font-size: 11.5px; color: var(--c-sub,#6b7280); margin-top: 8px; }
 
+@media (max-width: 900px) {
+    .ap-tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+    .ap-tab { white-space: nowrap; flex-shrink: 0; }
+}
 @media (max-width: 720px) {
     .ap-section { grid-template-columns: 1fr; gap: 16px; }
-    .ap-grid { grid-template-columns: 1fr; }
-    .ap-wrap { padding: 20px 16px 48px; }
+    .ap-grid { grid-template-columns: 1fr !important; }
+    .ap-wrap { padding: 16px 12px 48px; }
+    .ap-title { font-size: 20px; }
+    .cron-endpoint-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .cron-url-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .cron-url-text { white-space: normal; word-break: break-all; }
 }
 </style>
 
