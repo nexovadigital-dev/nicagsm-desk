@@ -46,6 +46,58 @@ class TicketsPage extends Page
     public string  $filterDepartment  = 'all';
     public int     $perPage           = 20;
 
+    // ── Ticket inbox (chat panel) ─────────────────────────────────────────────
+    public ?int   $selectedTicketId  = null;
+    public string $replyContent      = '';
+
+    public function selectTicket(int $id): void
+    {
+        $this->selectedTicketId = $id;
+        $this->replyContent     = '';
+    }
+
+    public function selectedTicket(): ?Ticket
+    {
+        if (! $this->selectedTicketId) return null;
+        return $this->scopeToOrg(
+            Ticket::with(['messages', 'organization', 'department'])
+        )->where('is_support_ticket', true)
+         ->find($this->selectedTicketId);
+    }
+
+    public function chatMessages()
+    {
+        if (! $this->selectedTicketId) return collect();
+        return Message::where('ticket_id', $this->selectedTicketId)
+            ->orderBy('created_at')
+            ->get();
+    }
+
+    public function sendReply(): void
+    {
+        $content = trim($this->replyContent);
+        if (! $content || ! $this->selectedTicketId) return;
+
+        $ticket = $this->selectedTicket();
+        if (! $ticket) return;
+
+        // Create the message — MessageObserver will automatically send the email
+        Message::create([
+            'ticket_id'   => $ticket->id,
+            'sender_type' => 'agent',
+            'content'     => $content,
+        ]);
+
+        // Reopen ticket if it was closed (agent reply restores it to active)
+        if ($ticket->status === 'closed') {
+            $ticket->update(['status' => 'human', 'assigned_agent' => auth()->user()?->name]);
+        }
+
+        $ticket->touch();
+        $this->replyContent = '';
+    }
+
+    // ── New ticket modal ──────────────────────────────────────────────────────
     // â”€â”€ New ticket modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public bool   $showNewModal      = false;
     public string $newContactMode    = 'existing'; // 'existing' | 'new'
