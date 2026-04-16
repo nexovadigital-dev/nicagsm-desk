@@ -9,39 +9,42 @@
     $orgTz       = auth()->user()?->organization?->timezone ?? 'UTC';
     $initial     = strtoupper(mb_substr($contact->name ?? $contact->email ?? '?', 0, 1));
 
-    // Fecha relativa amigable
-    $lastSeen = $contact->last_seen_at;
+    // Fechas en español con Carbon locale
+    $lastSeen = $contact->last_seen_at?->setTimezone($orgTz)->locale('es');
     $lastSeenText = $lastSeen
-        ? ($lastSeen->isToday()    ? 'Hoy, '      . $lastSeen->setTimezone($orgTz)->format('H:i')
-          : ($lastSeen->isYesterday() ? 'Ayer, '  . $lastSeen->setTimezone($orgTz)->format('H:i')
-          : $lastSeen->setTimezone($orgTz)->format('d M Y, H:i')))
+        ? ($lastSeen->isToday()      ? 'Hoy, '   . $lastSeen->format('H:i')
+          : ($lastSeen->isYesterday() ? 'Ayer, '  . $lastSeen->format('H:i')
+          : $lastSeen->isoFormat('D MMM Y, H:mm')))
         : 'Nunca';
+
+    $clienteSince = $contact->created_at->locale('es')->isoFormat('MMM Y'); // "abr 2026"
+    $csatAvg = $tickets->where('survey_rating', '>', 0)->avg('survey_rating');
 @endphp
 
 <style>
 .cx { font-family:'Inter',ui-sans-serif,system-ui,sans-serif; font-size:13px; padding-top:4px; }
 
 /* Header */
-.cx-header { display:flex; align-items:center; gap:12px; padding-bottom:12px; border-bottom:1px solid #f1f5f9; margin-bottom:12px; }
-.cx-avatar  { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-              font-size:18px; font-weight:700; color:#fff; flex-shrink:0;
+.cx-header { display:flex; align-items:center; gap:10px; padding-bottom:10px; border-bottom:1px solid #f1f5f9; margin-bottom:10px; }
+.cx-avatar  { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+              font-size:15px; font-weight:700; color:#fff; flex-shrink:0;
               background:linear-gradient(135deg,#22c55e,#16a34a); overflow:hidden; }
-.cx-avatar img { width:44px; height:44px; object-fit:cover; }
-.cx-name    { font-size:15px; font-weight:700; color:#0f172a; }
-.cx-pill    { display:inline-flex; align-items:center; padding:1px 9px; border-radius:99px; font-size:11px; font-weight:600; margin-top:4px; }
+.cx-avatar img { width:38px; height:38px; object-fit:cover; }
+.cx-name    { font-size:14px; font-weight:700; color:#0f172a; }
+.cx-pill    { display:inline-flex; align-items:center; padding:1px 8px; border-radius:99px; font-size:10.5px; font-weight:600; }
 
 /* Stats */
-.cx-stats   { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-bottom:12px; }
-.cx-stat    { background:#f8fafc; border-radius:9px; padding:8px 10px; text-align:center; }
-.cx-stat-n  { font-size:18px; font-weight:700; color:#22c55e; line-height:1; }
-.cx-stat-l  { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:#94a3b8; margin-top:2px; }
+.cx-stats   { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:10px; }
+.cx-stat    { background:#f8fafc; border-radius:8px; padding:7px 8px; text-align:center; }
+.cx-stat-n  { font-size:16px; font-weight:700; color:#22c55e; line-height:1; }
+.cx-stat-l  { font-size:9.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:#94a3b8; margin-top:2px; }
 
 /* Info rows */
-.cx-info    { display:flex; flex-direction:column; gap:5px; margin-bottom:12px; }
-.cx-row     { display:flex; align-items:center; gap:9px; padding:7px 10px; background:#f8fafc; border-radius:8px; }
-.cx-row-ico { font-size:14px; flex-shrink:0; }
+.cx-info    { display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+.cx-row     { display:flex; align-items:center; gap:8px; padding:6px 10px; background:#f8fafc; border-radius:7px; }
+.cx-row-ico { font-size:13px; flex-shrink:0; }
 .cx-row-body { min-width:0; flex:1; display:flex; flex-direction:column; }
-.cx-row-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#94a3b8; }
+.cx-row-label { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#94a3b8; }
 .cx-row-val   { font-size:12.5px; font-weight:500; color:#1e293b; word-break:break-all; }
 
 /* Notes */
@@ -73,7 +76,7 @@
 
 <div class="cx">
 
-    {{-- Header --}}
+    {{-- Header compacto: avatar + nombre + badge en una línea --}}
     <div class="cx-header">
         <div class="cx-avatar">
             @if($contact->avatar_url)
@@ -82,8 +85,8 @@
                 {{ $initial }}
             @endif
         </div>
-        <div>
-            <div class="cx-name">{{ $contact->display_name }}</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span class="cx-name">{{ $contact->display_name }}</span>
             <span class="cx-pill"
                   style="background:{{ $sourceBg[$contact->source] ?? '#f1f5f9' }};color:{{ $sourceFg[$contact->source] ?? '#475569' }}">
                 {{ $sourceLabel[$contact->source] ?? ucfirst($contact->source) }}
@@ -98,14 +101,12 @@
             <div class="cx-stat-l">Chats</div>
         </div>
         <div class="cx-stat">
-            <div class="cx-stat-n" style="font-size:14px;color:#64748b;">
-                {{ $contact->created_at->setTimezone($orgTz)->format('M Y') }}
-            </div>
+            <div class="cx-stat-n" style="font-size:13px;color:#64748b;">{{ $clienteSince }}</div>
             <div class="cx-stat-l">Cliente desde</div>
         </div>
         <div class="cx-stat">
             <div class="cx-stat-n" style="font-size:14px;color:#64748b;">
-                {{ $tickets->where('survey_rating', '>', 0)->avg('survey_rating') ? number_format($tickets->where('survey_rating','>',0)->avg('survey_rating'),1) : '—' }}
+                {{ $csatAvg ? number_format($csatAvg, 1) : '—' }}
             </div>
             <div class="cx-stat-l">CSAT prom.</div>
         </div>
@@ -170,7 +171,7 @@
             <div class="cx-tk-l">
                 <div class="cx-tk-name">{{ $tk->conversation_name ?: 'Conversación #'.$tk->id }}</div>
                 <div class="cx-tk-date">
-                    {{ $tk->created_at->setTimezone($orgTz)->format('d M Y') }}
+                    {{ $tk->created_at->locale('es')->isoFormat('D MMM Y') }}
                     @if($rt) · <span class="cx-stars">{{ str_repeat('★',$rt) }}{{ str_repeat('☆',5-$rt) }}</span> @endif
                 </div>
             </div>
