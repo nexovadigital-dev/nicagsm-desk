@@ -12,16 +12,18 @@
 @endphp
 
 <style>
-/* ─── Reset Filament header ─── */
+/* ─── Reset Filament ─── */
 .fi-page-header, .fi-breadcrumbs { display: none !important; }
-.fi-main { padding: 0 !important; }
+.fi-page, .fi-page > div, .fi-page > div > div { height: 100%; padding: 0 !important; margin: 0 !important; max-width: none !important; }
+.fi-main-ctn { padding: 0 !important; }
 
 /* ─── Root layout ─── */
 .tk-root {
     display: flex;
-    height: calc(100vh - 64px);
+    height: calc(100dvh - 57px);
     overflow: hidden;
     font-family: inherit;
+    position: relative;
 }
 
 /* ─── Sidebar ─── */
@@ -51,12 +53,13 @@
 }
 .tk-sidebar-title-text { font-size: 15px; font-weight: 700; color: var(--nx-text, #0f172a); }
 
-/* Filters row */
+/* Filters row - compact, 2 per row */
 .tk-filters {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 5px;
 }
+.tk-filters .tk-select { min-width: 0; }
 .tk-select {
     flex: 1;
     min-width: 110px;
@@ -212,12 +215,13 @@
 .tk-bubble-wrap.agent { flex-direction: row-reverse; }
 .tk-bubble-avatar { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
 .tk-bubble {
-    max-width: 68%;
+    max-width: 78%;
     padding: 9px 13px;
     border-radius: 14px;
     font-size: 13.5px;
     line-height: 1.55;
     word-break: break-word;
+    white-space: pre-wrap;
 }
 .tk-bubble.user  { background: #f1f5f9; color: #0f172a; border-radius: 14px 14px 14px 2px; }
 .tk-bubble.agent { background: #312e81; color: #fff; border-radius: 14px 14px 2px 14px; }
@@ -339,11 +343,12 @@
 
 /* ─── Responsive: móvil ─── */
 @media (max-width: 768px) {
-    .tk-root { flex-direction: column; height: auto; overflow: visible; }
-    .tk-sidebar { width: 100%; max-width: 100%; border-right: none; border-bottom: 1px solid var(--nx-border, rgba(128,128,128,.18)); max-height: 45vh; }
-    .tk-main { min-height: 55vh; }
-    .tk-bubble { max-width: 88%; }
+    .tk-root { flex-direction: column; height: auto; overflow: visible; min-height: 100dvh; }
+    .tk-sidebar { width: 100%; max-width: 100%; border-right: none; border-bottom: 1px solid var(--nx-border, rgba(128,128,128,.18)); max-height: 40vh; }
+    .tk-main { min-height: 60vh; }
+    .tk-bubble { max-width: 85%; }
     .tk-chat-header-actions { flex-wrap: wrap; }
+    .tk-filters { grid-template-columns: 1fr; }
 }
 </style>
 
@@ -403,7 +408,14 @@
                     $priority = $ticket->priority ?? 'normal';
                     $active   = $selectedTicketId === $ticket->id;
                     $lastMsg  = $ticket->messages->first();
-                    $preview  = $lastMsg ? \Illuminate\Support\Str::limit($lastMsg->content, 50) : ($ticket->ticket_subject ?? '—');
+                    // Usar asunto como preview primario; si no hay, último mensaje (excluyendo system)
+                    if ($ticket->ticket_subject) {
+                        $preview = \Illuminate\Support\Str::limit($ticket->ticket_subject, 55);
+                    } elseif ($lastMsg && !str_starts_with($lastMsg->content, '__')) {
+                        $preview = \Illuminate\Support\Str::limit($lastMsg->content, 55);
+                    } else {
+                        $preview = '—';
+                    }
                 @endphp
                 <div class="tk-list-item {{ $active ? 'active' : '' }}"
                      wire:click="selectTicket({{ $ticket->id }})"
