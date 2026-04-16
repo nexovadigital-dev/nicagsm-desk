@@ -1,69 +1,78 @@
 @php
-    // Filament pasa el record como $record en modalContent
     $contact     = $record;
     $tickets     = $contact->tickets()->orderByDesc('created_at')->get();
-    $statusLabel = ['bot' => 'Bot', 'human' => 'Agente', 'closed' => 'Cerrado', 'open' => 'Abierto'];
+    $statusLabel = ['bot' => 'Bot activo', 'human' => 'Con agente', 'closed' => 'Cerrada', 'open' => 'Abierta'];
     $statusColor = ['bot' => '#3b82f6', 'human' => '#22c55e', 'closed' => '#9ca3af', 'open' => '#f59e0b'];
-    $sourceLabel = ['woocommerce' => 'WooCommerce', 'pre_chat' => 'Pre-chat', 'widget' => 'Widget', 'manual' => 'Manual'];
+    $sourceLabel = ['woocommerce' => 'WooCommerce', 'pre_chat' => 'Formulario', 'widget' => 'Chat', 'manual' => 'Manual'];
     $sourceBg    = ['woocommerce' => '#dcfce7', 'pre_chat' => '#dbeafe', 'widget' => '#f1f5f9', 'manual' => '#fef9c3'];
     $sourceFg    = ['woocommerce' => '#15803d', 'pre_chat' => '#1d4ed8', 'widget' => '#475569', 'manual' => '#92400e'];
     $orgTz       = auth()->user()?->organization?->timezone ?? 'UTC';
     $initial     = strtoupper(mb_substr($contact->name ?? $contact->email ?? '?', 0, 1));
+
+    // Fecha relativa amigable
+    $lastSeen = $contact->last_seen_at;
+    $lastSeenText = $lastSeen
+        ? ($lastSeen->isToday()    ? 'Hoy, '      . $lastSeen->setTimezone($orgTz)->format('H:i')
+          : ($lastSeen->isYesterday() ? 'Ayer, '  . $lastSeen->setTimezone($orgTz)->format('H:i')
+          : $lastSeen->setTimezone($orgTz)->format('d M Y, H:i')))
+        : 'Nunca';
 @endphp
 
 <style>
-.cx-modal { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; padding-bottom: 4px; }
+.cx { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
 
 /* Header */
-.cx-header { display: flex; align-items: center; gap: 14px; padding: 4px 0 18px; border-bottom: 1px solid #f1f5f9; margin-bottom: 18px; }
-.cx-avatar { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-             font-size: 20px; font-weight: 700; color: #fff; flex-shrink: 0;
-             background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
-.cx-avatar img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; }
-.cx-header-name { font-size: 17px; font-weight: 700; color: #0f172a; line-height: 1.2; }
-.cx-badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; margin-top: 5px; }
+.cx-header { display:flex; align-items:center; gap:14px; padding-bottom:16px; border-bottom:1px solid #f1f5f9; margin-bottom:16px; }
+.cx-avatar  { width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+              font-size:20px; font-weight:700; color:#fff; flex-shrink:0;
+              background:linear-gradient(135deg,#22c55e,#16a34a); overflow:hidden; }
+.cx-avatar img { width:50px; height:50px; object-fit:cover; }
+.cx-name    { font-size:16px; font-weight:700; color:#0f172a; }
+.cx-pill    { display:inline-flex; align-items:center; padding:2px 10px; border-radius:99px; font-size:11px; font-weight:600; margin-top:5px; }
 
-/* Info grid */
-.cx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
-.cx-field { background: #f8fafc; border-radius: 9px; padding: 10px 12px; min-width: 0; }
-.cx-field-full { grid-column: 1 / -1; }
-.cx-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #94a3b8; margin-bottom: 3px; }
-.cx-val   { font-size: 13px; color: #1e293b; font-weight: 500; word-break: break-all; line-height: 1.4; }
-.cx-val-big { font-size: 22px; font-weight: 700; color: #22c55e; }
+/* Stat row */
+.cx-stats   { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px; }
+.cx-stat    { background:#f8fafc; border-radius:10px; padding:10px 12px; text-align:center; }
+.cx-stat-n  { font-size:22px; font-weight:700; color:#22c55e; line-height:1; }
+.cx-stat-l  { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:#94a3b8; margin-top:3px; }
+
+/* Info rows */
+.cx-info    { display:flex; flex-direction:column; gap:6px; margin-bottom:16px; }
+.cx-row     { display:flex; align-items:flex-start; gap:10px; padding:9px 12px; background:#f8fafc; border-radius:9px; }
+.cx-row-ico { font-size:15px; flex-shrink:0; margin-top:1px; }
+.cx-row-body { min-width:0; flex:1; }
+.cx-row-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#94a3b8; }
+.cx-row-val   { font-size:13px; font-weight:500; color:#1e293b; word-break:break-all; margin-top:1px; }
 
 /* Notes */
-.cx-notes { background: #fffbeb; border-left: 3px solid #fbbf24; border-radius: 8px; padding: 10px 12px; margin-bottom: 18px; }
-.cx-notes .cx-label { color: #92400e; }
-.cx-notes .cx-val   { color: #78350f; }
+.cx-notes { background:#fffbeb; border-left:3px solid #fbbf24; border-radius:8px; padding:10px 12px; margin-bottom:16px; }
+.cx-notes .cx-row-label { color:#92400e; }
+.cx-notes .cx-row-val   { color:#78350f; }
 
-/* Section title */
-.cx-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
-                    color: #6366f1; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-.cx-count { background: #e0e7ff; color: #4338ca; font-size: 10px; font-weight: 700;
-            padding: 1px 7px; border-radius: 99px; text-transform: none; letter-spacing: 0; }
+/* Tickets */
+.cx-tk-header { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+                color:#6366f1; display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.cx-tk-count  { background:#e0e7ff; color:#4338ca; font-size:10px; font-weight:700;
+                padding:1px 7px; border-radius:99px; text-transform:none; letter-spacing:0; }
+.cx-tk        { display:flex; align-items:flex-start; justify-content:space-between; gap:8px;
+                padding:10px 12px; border:1px solid #e2e8f0; border-radius:9px; margin-bottom:7px; background:#fff; }
+.cx-tk-l      { flex:1; min-width:0; }
+.cx-tk-r      { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
+.cx-tk-name   { font-size:13px; font-weight:600; color:#1e293b; line-height:1.3; }
+.cx-tk-date   { font-size:11px; color:#94a3b8; }
+.cx-tk-badge  { display:inline-flex; align-items:center; padding:2px 9px; border-radius:99px; font-size:11px; font-weight:600; }
+.cx-stars     { color:#f59e0b; font-size:12px; }
+.cx-empty     { text-align:center; padding:20px 0; color:#94a3b8; font-size:13px; }
 
-/* Ticket rows */
-.cx-tk-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
-             padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 9px; margin-bottom: 7px; background: #fff; flex-wrap: wrap; }
-.cx-tk-left  { flex: 1; min-width: 0; }
-.cx-tk-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
-.cx-tk-name  { font-size: 13px; font-weight: 600; color: #1e293b; line-height: 1.3; }
-.cx-tk-sub   { font-size: 11px; color: #94a3b8; margin-top: 2px; }
-.cx-tk-date  { font-size: 11px; color: #94a3b8; white-space: nowrap; }
-.cx-stars    { color: #f59e0b; font-size: 12px; white-space: nowrap; }
-.cx-st-badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; }
-
-.cx-empty { text-align: center; padding: 20px 0; color: #94a3b8; font-size: 13px; }
-
-@media (max-width: 480px) {
-    .cx-grid { grid-template-columns: 1fr; }
-    .cx-tk-date { display: none; }
+@media (max-width:480px) {
+    .cx-stats { grid-template-columns:1fr 1fr; }
+    .cx-tk-date { display:none; }
 }
 </style>
 
-<div class="cx-modal">
+<div class="cx">
 
-    {{-- ── Header ── --}}
+    {{-- Header --}}
     <div class="cx-header">
         <div class="cx-avatar">
             @if($contact->avatar_url)
@@ -73,86 +82,103 @@
             @endif
         </div>
         <div>
-            <div class="cx-header-name">{{ $contact->display_name }}</div>
-            <span class="cx-badge"
+            <div class="cx-name">{{ $contact->display_name }}</div>
+            <span class="cx-pill"
                   style="background:{{ $sourceBg[$contact->source] ?? '#f1f5f9' }};color:{{ $sourceFg[$contact->source] ?? '#475569' }}">
-                {{ $sourceLabel[$contact->source] ?? $contact->source }}
+                {{ $sourceLabel[$contact->source] ?? ucfirst($contact->source) }}
             </span>
         </div>
     </div>
 
-    {{-- ── Info cards ── --}}
-    <div class="cx-grid">
+    {{-- Stats --}}
+    <div class="cx-stats">
+        <div class="cx-stat">
+            <div class="cx-stat-n">{{ $contact->total_conversations ?? 0 }}</div>
+            <div class="cx-stat-l">Chats</div>
+        </div>
+        <div class="cx-stat">
+            <div class="cx-stat-n" style="font-size:14px;color:#64748b;">
+                {{ $contact->created_at->setTimezone($orgTz)->format('M Y') }}
+            </div>
+            <div class="cx-stat-l">Cliente desde</div>
+        </div>
+        <div class="cx-stat">
+            <div class="cx-stat-n" style="font-size:14px;color:#64748b;">
+                {{ $tickets->where('survey_rating', '>', 0)->avg('survey_rating') ? number_format($tickets->where('survey_rating','>',0)->avg('survey_rating'),1) : '—' }}
+            </div>
+            <div class="cx-stat-l">CSAT prom.</div>
+        </div>
+    </div>
+
+    {{-- Contact info rows --}}
+    <div class="cx-info">
         @if($contact->email)
-        <div class="cx-field">
-            <div class="cx-label">Email</div>
-            <div class="cx-val">{{ $contact->email }}</div>
+        <div class="cx-row">
+            <span class="cx-row-ico">✉️</span>
+            <div class="cx-row-body">
+                <div class="cx-row-label">Email</div>
+                <div class="cx-row-val">{{ $contact->email }}</div>
+            </div>
         </div>
         @endif
 
-        <div class="cx-field">
-            <div class="cx-label">Teléfono</div>
-            <div class="cx-val">{{ $contact->phone ?: '—' }}</div>
-        </div>
-
-        <div class="cx-field">
-            <div class="cx-label">Conversaciones</div>
-            <div class="cx-val cx-val-big">{{ $contact->total_conversations ?? 0 }}</div>
-        </div>
-
-        <div class="cx-field">
-            <div class="cx-label">Última visita</div>
-            <div class="cx-val">
-                {{ $contact->last_seen_at ? $contact->last_seen_at->setTimezone($orgTz)->format('d M Y, H:i') : '—' }}
+        @if($contact->phone)
+        <div class="cx-row">
+            <span class="cx-row-ico">📞</span>
+            <div class="cx-row-body">
+                <div class="cx-row-label">Teléfono</div>
+                <div class="cx-row-val">{{ $contact->phone }}</div>
             </div>
         </div>
+        @endif
 
-        <div class="cx-field">
-            <div class="cx-label">Registro</div>
-            <div class="cx-val">{{ $contact->created_at->setTimezone($orgTz)->format('d M Y') }}</div>
+        <div class="cx-row">
+            <span class="cx-row-ico">🕐</span>
+            <div class="cx-row-body">
+                <div class="cx-row-label">Última visita</div>
+                <div class="cx-row-val">{{ $lastSeenText }}</div>
+            </div>
         </div>
-
     </div>
 
-    {{-- ── Notas ── --}}
+    {{-- Notes --}}
     @if($contact->notes)
     <div class="cx-notes">
-        <div class="cx-label">Notas internas</div>
-        <div class="cx-val" style="margin-top:3px;">{{ $contact->notes }}</div>
+        <div class="cx-row-label">📝 Notas internas</div>
+        <div class="cx-row-val" style="margin-top:4px;">{{ $contact->notes }}</div>
     </div>
     @endif
 
-    {{-- ── Historial de tickets ── --}}
-    <div class="cx-section-title">
-        Historial de conversaciones
-        <span class="cx-count">{{ $tickets->count() }}</span>
+    {{-- Conversation history --}}
+    <div class="cx-tk-header">
+        Conversaciones
+        <span class="cx-tk-count">{{ $tickets->count() }}</span>
     </div>
 
     @if($tickets->isEmpty())
-        <div class="cx-empty">Sin conversaciones registradas.</div>
+        <div class="cx-empty">Sin conversaciones registradas aún.</div>
     @else
         @foreach($tickets as $tk)
         @php
             $sc = $statusColor[$tk->status] ?? '#9ca3af';
-            $sl = $statusLabel[$tk->status] ?? $tk->status;
+            $sl = $statusLabel[$tk->status] ?? ucfirst($tk->status);
             $rt = $tk->survey_rating;
         @endphp
-        <div class="cx-tk-row">
-            <div class="cx-tk-left">
+        <div class="cx-tk">
+            <div class="cx-tk-l">
                 <div class="cx-tk-name">{{ $tk->conversation_name ?: 'Conversación #'.$tk->id }}</div>
-                <div class="cx-tk-sub">
-                    {{ ucfirst($tk->platform ?? 'widget') }} · TKT-{{ str_pad($tk->id, 4, '0', STR_PAD_LEFT) }}
+                <div class="cx-tk-date" style="margin-top:3px;">
+                    {{ $tk->created_at->setTimezone($orgTz)->format('d M Y') }}
+                    @if($rt)
+                        · <span class="cx-stars">{{ str_repeat('★',$rt) }}{{ str_repeat('☆',5-$rt) }}</span>
+                    @endif
                 </div>
             </div>
-            <div class="cx-tk-right">
-                <span class="cx-st-badge"
-                      style="background:{{ $sc }}22;color:{{ $sc }};border:1px solid {{ $sc }}44;">
+            <div class="cx-tk-r">
+                <span class="cx-tk-badge"
+                      style="background:{{ $sc }}18;color:{{ $sc }};border:1px solid {{ $sc }}33;">
                     {{ $sl }}
                 </span>
-                @if($rt)
-                    <span class="cx-stars">{{ str_repeat('★', $rt) }}{{ str_repeat('☆', 5-$rt) }}</span>
-                @endif
-                <span class="cx-tk-date">{{ $tk->created_at->setTimezone($orgTz)->format('d M Y') }}</span>
             </div>
         </div>
         @endforeach
