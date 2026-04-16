@@ -7,10 +7,11 @@ use App\Models\Contact;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Actions\ViewAction;       // Filament v5: filament/actions
-use Filament\Actions\DeleteAction;    // Filament v5: filament/actions
-use Filament\Actions\BulkActionGroup; // Filament v5: filament/actions
-use Filament\Actions\DeleteBulkAction; // Filament v5: filament/actions
+use Filament\Actions\ViewAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Support\NxNotification;
 
 class ContactResource extends Resource
 {
@@ -104,7 +105,13 @@ class ContactResource extends Resource
                     ->modalSubmitActionLabel('Eliminar contacto')
                     ->modalCancelActionLabel('Cancelar')
                     ->modalWidth('sm')
-                    ->color('danger'),
+                    ->color('danger')
+                    ->successNotification(
+                        NxNotification::makeDanger(
+                            'Contacto eliminado',
+                            'El contacto fue eliminado correctamente.'
+                        )
+                    ),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
@@ -115,7 +122,13 @@ class ContactResource extends Resource
                         ->modalSubmitActionLabel('Eliminar contactos')
                         ->modalCancelActionLabel('Cancelar')
                         ->modalWidth('sm')
-                        ->color('danger'),
+                        ->color('danger')
+                        ->successNotification(
+                            NxNotification::makeDanger(
+                                'Contactos eliminados',
+                                'Los contactos seleccionados fueron eliminados correctamente.'
+                            )
+                        ),
                 ]),
             ])
             ->emptyStateHeading('Sin contactos aún')
