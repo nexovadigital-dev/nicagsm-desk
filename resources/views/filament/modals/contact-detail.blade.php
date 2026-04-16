@@ -54,19 +54,22 @@
                 color:#6366f1; display:flex; align-items:center; gap:7px; margin-bottom:8px; }
 .cx-tk-count  { background:#e0e7ff; color:#4338ca; font-size:10px; font-weight:700;
                 padding:1px 7px; border-radius:99px; text-transform:none; letter-spacing:0; }
+.cx-tk-list   { max-height:260px; overflow-y:auto; padding-right:2px; }
+.cx-tk-list::-webkit-scrollbar { width:3px; }
+.cx-tk-list::-webkit-scrollbar-thumb { background:#e2e8f0; border-radius:99px; }
 .cx-tk        { display:flex; align-items:center; justify-content:space-between; gap:8px;
-                padding:8px 10px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:5px; background:#fff; }
+                padding:7px 10px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:5px; background:#fff; }
 .cx-tk-l      { flex:1; min-width:0; }
 .cx-tk-r      { display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0; }
-.cx-tk-name   { font-size:12.5px; font-weight:600; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; }
-.cx-tk-date   { font-size:11px; color:#94a3b8; }
-.cx-tk-badge  { display:inline-flex; align-items:center; padding:2px 8px; border-radius:99px; font-size:11px; font-weight:600; }
+.cx-tk-name   { font-size:12.5px; font-weight:600; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; }
+.cx-tk-date   { font-size:11px; color:#94a3b8; margin-top:1px; }
+.cx-tk-badge  { display:inline-flex; align-items:center; padding:2px 8px; border-radius:99px; font-size:11px; font-weight:600; white-space:nowrap; }
 .cx-stars     { color:#f59e0b; font-size:11px; }
 .cx-empty     { text-align:center; padding:16px 0; color:#94a3b8; font-size:12px; }
 
 @media (max-width:480px) {
     .cx-stats { grid-template-columns:1fr 1fr; }
-    .cx-tk-name { max-width:140px; }
+    .cx-tk-list { max-height:200px; }
 }
 </style>
 
@@ -158,6 +161,7 @@
     @if($tickets->isEmpty())
         <div class="cx-empty">Sin conversaciones registradas aún.</div>
     @else
+    <div class="cx-tk-list">
         @foreach($tickets as $tk)
         @php
             $sc = $statusColor[$tk->status] ?? '#9ca3af';
@@ -167,11 +171,9 @@
         <div class="cx-tk">
             <div class="cx-tk-l">
                 <div class="cx-tk-name">{{ $tk->conversation_name ?: 'Conversación #'.$tk->id }}</div>
-                <div class="cx-tk-date" style="margin-top:3px;">
+                <div class="cx-tk-date">
                     {{ $tk->created_at->setTimezone($orgTz)->format('d M Y') }}
-                    @if($rt)
-                        · <span class="cx-stars">{{ str_repeat('★',$rt) }}{{ str_repeat('☆',5-$rt) }}</span>
-                    @endif
+                    @if($rt) · <span class="cx-stars">{{ str_repeat('★',$rt) }}{{ str_repeat('☆',5-$rt) }}</span> @endif
                 </div>
             </div>
             <div class="cx-tk-r">
@@ -182,6 +184,7 @@
             </div>
         </div>
         @endforeach
+    </div>
     @endif
 
 </div>
