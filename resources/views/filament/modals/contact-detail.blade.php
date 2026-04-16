@@ -41,8 +41,7 @@
 
 /* Info rows */
 .cx-info    { display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
-.cx-row     { display:flex; align-items:center; gap:8px; padding:6px 10px; background:#f8fafc; border-radius:7px; }
-.cx-row-ico { font-size:13px; flex-shrink:0; }
+.cx-row     { display:flex; align-items:center; padding:6px 10px; background:#f8fafc; border-radius:7px; }
 .cx-row-body { min-width:0; flex:1; display:flex; flex-direction:column; }
 .cx-row-label { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#94a3b8; }
 .cx-row-val   { font-size:12.5px; font-weight:500; color:#1e293b; word-break:break-all; }
@@ -116,7 +115,6 @@
     <div class="cx-info">
         @if($contact->email)
         <div class="cx-row">
-            <span class="cx-row-ico">✉️</span>
             <div class="cx-row-body">
                 <div class="cx-row-label">Email</div>
                 <div class="cx-row-val">{{ $contact->email }}</div>
@@ -126,7 +124,6 @@
 
         @if($contact->phone)
         <div class="cx-row">
-            <span class="cx-row-ico">📞</span>
             <div class="cx-row-body">
                 <div class="cx-row-label">Teléfono</div>
                 <div class="cx-row-val">{{ $contact->phone }}</div>
@@ -135,7 +132,6 @@
         @endif
 
         <div class="cx-row">
-            <span class="cx-row-ico">🕐</span>
             <div class="cx-row-body">
                 <div class="cx-row-label">Última visita</div>
                 <div class="cx-row-val">{{ $lastSeenText }}</div>
@@ -146,7 +142,7 @@
     {{-- Notes --}}
     @if($contact->notes)
     <div class="cx-notes">
-        <div class="cx-row-label">📝 Notas internas</div>
+        <div class="cx-row-label">Notas internas</div>
         <div class="cx-row-val" style="margin-top:4px;">{{ $contact->notes }}</div>
     </div>
     @endif
