@@ -288,6 +288,40 @@ const formatDate = iso =>
     new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
 
 // ---------------------------------------------------------------------------
+// Renderiza contenido de mensajes del bot: parsea [label](url) → botones
+// ---------------------------------------------------------------------------
+function renderBotContent(text, accentColor) {
+    if (!text) return null;
+    const linkRe = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
+    const parts = [];
+    let last = 0, m;
+    while ((m = linkRe.exec(text)) !== null) {
+        if (m.index > last) parts.push({ t: 'text', v: text.slice(last, m.index) });
+        parts.push({ t: 'link', label: m[1], url: m[2] });
+        last = m.index + m[0].length;
+    }
+    if (last < text.length) parts.push({ t: 'text', v: text.slice(last) });
+    if (!parts.length || parts.every(p => p.t === 'text')) return text;
+    return parts.map((p, i) => p.t === 'text' ? (
+        <span key={i} style={{ whiteSpace: 'pre-wrap' }}>{p.v}</span>
+    ) : (
+        <a key={i} href={p.url} target="_blank" rel="noopener noreferrer"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 5,
+                background: accentColor, color: '#fff', borderRadius: 7,
+                padding: '5px 11px', fontSize: 11.5, fontWeight: 600,
+                textDecoration: 'none', margin: '5px 0 2px',
+                verticalAlign: 'middle', lineHeight: 1.3, flexShrink: 0 }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                strokeLinecap="round" width="11" height="11">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            {p.label}
+        </a>
+    ));
+}
+
+// ---------------------------------------------------------------------------
 // Sessions localStorage helpers
 // ---------------------------------------------------------------------------
 function storedSessions() {
@@ -2947,7 +2981,10 @@ export default function NexovaChatWidget() {
                                                             <span style={{ fontSize: 11, opacity: 0.75 }}>Subiendo archivo...</span>
                                                         </div>
                                                     )}
-                                                    {msg.content}
+                                                    {isUser
+                                                        ? msg.content
+                                                        : renderBotContent(msg.content, accentColor)
+                                                    }
                                                 </div>
                                                 <span style={{ fontSize: 10, color: '#9ca3af', padding: '0 3px' }}>
                                                     {formatTime(msg.created_at)}
