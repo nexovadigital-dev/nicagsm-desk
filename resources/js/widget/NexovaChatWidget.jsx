@@ -1561,41 +1561,7 @@ function HomeScreen({ cfg, accentColor, botName, onStartChat, contactName, isRet
                     </div>
                 )}
 
-                {/* Social channels */}
-                {socials.length > 0 && (
-                    <div>
-                        <p style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase',
-                            letterSpacing: '.06em', margin: '0 0 7px' }}>Contacto</p>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            {socials.map((ch, i) => {
-                                const clr = SOCIAL_COLORS[(ch.type || '').toLowerCase()] || '#6b7280';
-                                return (
-                                    <a key={i} href={formatSocialUrl(ch.type, ch.url)} target="_blank" rel="noopener noreferrer"
-                                        style={{ display: 'flex', alignItems: 'center', gap: 10,
-                                            padding: '9px 0', borderBottom: '1px solid #f3f4f6',
-                                            textDecoration: 'none', color: '#374151', fontSize: 13 }}
-                                        onMouseEnter={e => e.currentTarget.style.color = clr}
-                                        onMouseLeave={e => e.currentTarget.style.color = '#374151'}>
-                                        <span style={{ color: clr, display: 'flex', flexShrink: 0 }}>
-                                            <SocialIcon type={ch.type} />
-                                        </span>
-                                        <span>{ch.label || ch.type}</span>
-                                    </a>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
             </div>
-            {/* Powered by — home screen */}
-            {showBranding && (
-                <p style={{ textAlign: 'center', fontSize: 10, color: '#9ca3af',
-                    margin: 0, padding: '4px 0 6px', background: '#f5f6f8',
-                    flexShrink: 0, userSelect: 'none' }}>
-                    Powered by <a href="https://nexova-digital.com" target="_blank" rel="noopener noreferrer"
-                        style={{ color: accentColor, fontWeight: 600, textDecoration: 'none' }}>Nexova Digital Solutions</a>
-                </p>
-            )}
         </div>
     );
 }
@@ -1669,7 +1635,7 @@ function ChannelsScreen({ cfg, accentColor }) {
             display: 'flex', flexDirection: 'column', gap: 8,
             animation: 'nx-fade-up .2s ease-out' }}>
             <p style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase',
-                letterSpacing: '.06em', margin: '0 0 6px' }}>Canales de contacto</p>
+                letterSpacing: '.06em', margin: '0 0 6px' }}>Contacto</p>
             {socials.map((ch, i) => {
                 const clr = SOCIAL_COLORS[(ch.type || '').toLowerCase()] || '#6b7280';
                 return (
@@ -1702,15 +1668,6 @@ function ChannelsScreen({ cfg, accentColor }) {
                 );
             })}
         </div>
-        {/* Powered by — channels screen */}
-        {cfg?.show_branding !== false && (
-            <p style={{ textAlign: 'center', fontSize: 10, color: '#9ca3af',
-                margin: 0, padding: '4px 0 6px', background: '#f5f6f8',
-                flexShrink: 0, userSelect: 'none' }}>
-                Powered by <a href="https://nexova-digital.com" target="_blank" rel="noopener noreferrer"
-                    style={{ color: accentColor, fontWeight: 600, textDecoration: 'none' }}>Nexova Digital Solutions</a>
-            </p>
-        )}
         </>
     );
 }
@@ -2193,6 +2150,7 @@ export default function NexovaChatWidget() {
             setScreen('prechat');
         } else {
             setScreen('chat');
+            if (prefillFaq) pendingFaqSendRef.current = prefillFaq;
             // initSession se llamará en el siguiente render
             setTimeout(() => {
                 fetch(`${API_BASE}/api/chat/start`, {
@@ -2606,7 +2564,7 @@ export default function NexovaChatWidget() {
                 .nx-widget-window a { text-decoration: none !important; }
                 /* Textarea: explicit reset — no width:100% in flex context (pushes siblings out) */
                 .nx-widget-window textarea {
-                    flex: 1 !important; min-width: 0 !important; width: auto !important;
+                    flex: 1 !important; min-width: 0 !important; width: 100% !important;
                     min-height: 0 !important; height: 24px !important; max-height: 96px !important;
                     padding: 0 !important; margin: 0 !important;
                     border: none !important; outline: none !important; box-shadow: none !important;
@@ -3208,14 +3166,18 @@ export default function NexovaChatWidget() {
                                     </div>
                                 )}
 
-                                {showBranding && (
-                                    <p style={{ textAlign: 'center', fontSize: 10, color: '#9ca3af',
-                                        margin: 0, padding: '4px 0 6px', background: '#f5f6f8', userSelect: 'none' }}>
-                                        Powered by <a href="https://nexova-digital.com" target="_blank" rel="noopener noreferrer" style={{ color: accentColor, fontWeight: 600, textDecoration: 'none' }}>Nexova Digital Solutions</a>
-                                    </p>
-                                )}
                             </div>
                         </>
+                    )}
+
+                    {/* ── Powered by — fijo, visible en todas las pantallas ── */}
+                    {showBranding && (
+                        <p style={{ textAlign: 'center', fontSize: 10, color: '#9ca3af',
+                            margin: 0, padding: '4px 0 6px', background: '#f5f6f8',
+                            flexShrink: 0, userSelect: 'none', borderTop: '1px solid #f0f2f5' }}>
+                            Powered by <a href="https://nexova-digital.com" target="_blank" rel="noopener noreferrer"
+                                style={{ color: accentColor, fontWeight: 600, textDecoration: 'none' }}>Nexova Digital Solutions</a>
+                        </p>
                     )}
 
                     {/* ── Bottom navigation ── */}
@@ -3247,7 +3209,7 @@ export default function NexovaChatWidget() {
                                     strokeLinecap="round" width="16" height="16">
                                     <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                                 </svg>
-                                Canales
+                                Contacto
                             </button>
                         </div>
                     )}

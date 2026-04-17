@@ -337,17 +337,17 @@
         @endif
     </div>
 
-    {{-- ── Canales sociales ── --}}
+    {{-- ── Contacto ── --}}
     <div class="wc-card">
         <div class="wc-card-title">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
             </svg>
-            Canales de contacto rápido
+            Contacto rápido
         </div>
 
         <p style="font-size:12px;color:var(--c-sub);margin-bottom:14px;line-height:1.5">
-            Agrega enlaces a WhatsApp, Telegram u otros canales que aparecen en la pantalla de inicio del widget.
+            Agrega enlaces a WhatsApp, Telegram u otros canales que aparecen en la pestaña "Contacto" del widget.
         </p>
 
         <div style="display:flex;flex-direction:column;gap:8px">

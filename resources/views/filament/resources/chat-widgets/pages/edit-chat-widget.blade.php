@@ -629,12 +629,12 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
 </div>
 
 {{-- ══════════════════════════════════════════
-     SECTION 3 — Canales de contacto
+     SECTION 3 — Contacto
 ══════════════════════════════════════════ --}}
 <div class="nx-section" x-data="{ open: {{ count($socialChannels) > 0 ? 'true' : 'false' }} }">
     <div class="nx-section-hd" @click="open = !open">
         <div style="display:flex;align-items:center;gap:10px">
-            <span class="nx-section-title">Canales de contacto rápido</span>
+            <span class="nx-section-title">Contacto rápido</span>
             @if(count($socialChannels))
             <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:rgba(34,197,94,.12);color:#16a34a">{{ count($socialChannels) }}</span>
             @endif
@@ -642,7 +642,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" :style="open ? 'transform:rotate(0deg)' : 'transform:rotate(180deg)'" style="transition:transform .2s;color:var(--c-sub)"><polyline points="18 15 12 9 6 15" stroke-width="2" stroke-linecap="round"/></svg>
     </div>
     <div x-show="open" x-transition style="padding:0 20px 20px">
-        <p style="font-size:11.5px;color:var(--c-sub);margin:12px 0 12px">Aparecen en la pestaña "Canales" del widget</p>
+        <p style="font-size:11.5px;color:var(--c-sub);margin:12px 0 12px">Aparecen en la pestaña "Contacto" del widget</p>
         <div style="display:flex;flex-direction:column;gap:8px">
             @forelse($socialChannels as $i => $ch)
             <div class="wc-item-row">
@@ -858,7 +858,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="9" height="9" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg> Chat
                     </div>
                     <div style="flex:1;padding:5px 0;display:flex;align-items:center;justify-content:center;gap:2px;font-size:8px;font-weight:700;color:var(--c-sub,#9ca3af)">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="9" height="9" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg> Canales
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="9" height="9" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg> Contacto
                     </div>
                 </div>
                 @endif
