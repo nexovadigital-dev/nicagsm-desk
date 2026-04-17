@@ -111,26 +111,22 @@ class NexovaAiService
             }
         }
 
-        // ── Intentar responder desde FAQ del widget (para canales web) ───────────
-        $hasStoreCtx = ! empty($ticket->store_context);
-        // Si hay plugin WP conectado para el org (web channel), tratar como store context
-        // para que FAQ/KB no respondan antes que la IA con el catalogo real
-        $hasWpPlugin = ($ticket->platform === 'web' && $org && WpPluginToken::where('organization_id', $org->id)->exists());
-        if ($hasWpPlugin) $hasStoreCtx = true; // forzar skip FAQ/KB directo
-        if (! $hasStoreCtx) {
-            $faqAnswer = $this->tryFaqAnswer($ticket);
-            if ($faqAnswer !== null) {
-                sleep(random_int(1, 2));
-                $org?->incrementBotMessageCount();
-                Log::info("[NexovaBot] Respondido desde FAQ del widget — ticket #{$ticket->id}");
-                return $faqAnswer;
-            }
+        // ── FAQ siempre primero — respuestas manuales de máxima prioridad ───────
+        $faqAnswer = $this->tryFaqAnswer($ticket);
+        if ($faqAnswer !== null) {
+            sleep(random_int(1, 2));
+            $org?->incrementBotMessageCount();
+            Log::info("[NexovaBot] Respondido desde FAQ del widget — ticket #{$ticket->id}");
+            return $faqAnswer;
         }
 
-        // ── Intentar responder desde la KB (solo si NO hay store_context) ───────
-        $widgetId  = $ticket->widget_id ?: null;
-        $ragContext = $this->buildRagContext($ticket->organization_id, $widgetId);
-        $kbAnswer  = null;
+        // ── Intentar responder desde la KB ────────────────────────────────────
+        // Solo salta KB directa si el ticket trae store_context real (WooCommerce page data),
+        // en ese caso la IA con el catálogo responde mejor sobre productos/precios.
+        $hasStoreCtx = ! empty($ticket->store_context);
+        $widgetId    = $ticket->widget_id ?: null;
+        $ragContext   = $this->buildRagContext($ticket->organization_id, $widgetId);
+        $kbAnswer    = null;
         if ($ragContext && ! $hasStoreCtx) {
             $kbAnswer = $this->tryKbDirectAnswer($ticket, $ragContext, $widgetId);
         }
