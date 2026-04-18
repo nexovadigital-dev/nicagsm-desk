@@ -162,8 +162,8 @@ class NexovaAiService
 
         $messages = $this->buildMessageHistory($ticket, $ragContext);
 
-        // Delay "pensando" cuando se llama a la IA real (3-5 s)
-        sleep(random_int(3, 5));
+        // Delay "pensando" antes de llamar a la IA — espacía llamadas a Groq para evitar rate limit
+        sleep(random_int(5, 8));
 
         foreach ($providers as $provider) {
             ['type' => $type, 'key' => $key] = $provider;
@@ -200,6 +200,8 @@ class NexovaAiService
         }
 
         Log::error("[NexovaBot] Todos los proveedores fallaron para ticket #{$ticket->id}.");
+        // Delay también en fallo — evita que el error llegue instantáneo (se nota artificial)
+        sleep(random_int(3, 5));
         return 'No pude obtener respuesta en este momento.' . self::ESCALATE_FLAG;
     }
 
