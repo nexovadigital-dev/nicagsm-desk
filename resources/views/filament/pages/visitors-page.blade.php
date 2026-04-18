@@ -209,7 +209,7 @@ window._vp_times = @json($visitorTimes);
 
 {{-- ══ Main wrapper ══ --}}
 <div class="vp-page"
-     wire:poll.8000ms="notifyCount"
+     wire:poll.5000ms="notifyCount"
      x-data="{
         soundEnabled: localStorage.getItem('nx_visitor_sound') !== 'false',
         knownIds: new Set({{ json_encode($visitorIds) }}),

@@ -31,7 +31,7 @@ class VisitorsPage extends Page
     public static function getNavigationBadge(): ?string
     {
         $orgId = auth()->user()?->organization_id;
-        $q = ActiveVisitor::where('last_ping_at', '>=', now()->subSeconds(35));
+        $q = ActiveVisitor::where('last_ping_at', '>=', now()->subSeconds(22));
         if ($orgId) $q->where('organization_id', $orgId);
         $count = $q->count();
         return $count > 0 ? (string) $count : null;
@@ -50,7 +50,7 @@ class VisitorsPage extends Page
     public function notifyCount(): void
     {
         $visitors = $this->scopeToOrg(ActiveVisitor::query())
-            ->where('last_ping_at', '>=', now()->subSeconds(35))
+            ->where('last_ping_at', '>=', now()->subSeconds(22))
             ->pluck('id');
         $this->pollTick++;   // triggers Livewire re-render → activeVisitors computed prop re-runs
         $this->dispatch('visitor-count-updated', count: $visitors->count(), ids: $visitors->values()->all());
@@ -72,7 +72,7 @@ class VisitorsPage extends Page
     public function activeVisitors()
     {
         return $this->scopeToOrg(ActiveVisitor::query())
-            ->where('last_ping_at', '>=', now()->subSeconds(35))
+            ->where('last_ping_at', '>=', now()->subSeconds(22))
             ->orderByDesc('last_ping_at')
             ->get();
     }

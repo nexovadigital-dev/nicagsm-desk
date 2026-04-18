@@ -1872,8 +1872,8 @@ export default function NexovaChatWidget() {
         // Initial ping
         sendHeartbeat();
 
-        // Heartbeat every 15 seconds
-        heartbeatRef.current = setInterval(() => sendHeartbeat(), 15000);
+        // Heartbeat every 10 seconds
+        heartbeatRef.current = setInterval(() => sendHeartbeat(), 10000);
 
         // Idle detection — reset on any activity
         const resetIdle = () => {
