@@ -2385,6 +2385,21 @@ export default function NexovaChatWidget() {
         isSendingRef.current = true; // bloquear poll durante envio
         setIsSending(true);
         setInputValue('');
+        // Bloquear input inmediatamente si el bot va a responder
+        if (ticketStatus === 'bot') {
+            typingSinceRef.current = true;
+            setIsTyping(true);
+            botMsgCountAtSend.current = messages.filter(
+                m => m.sender_type !== 'user' && !String(m.id).startsWith('tmp-')
+            ).length;
+            clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = setTimeout(() => {
+                if (typingSinceRef.current !== null) {
+                    setIsTyping(false);
+                    typingSinceRef.current = null;
+                }
+            }, 30000);
+        }
         clearTimeout(sneakPeekTimer.current);
         if (sessionId) {
             fetch(`${API_BASE}/api/chat/typing-preview`, {
@@ -2457,22 +2472,6 @@ export default function NexovaChatWidget() {
                 setTimeout(() => scrollToBottom(true), 30);
             }
 
-            if (ticketStatus === 'bot') {
-                // Snapshot de cuántos msgs de bot hay ahora, para detectar el nuevo
-                botMsgCountAtSend.current = messages.filter(
-                    m => m.sender_type !== 'user' && !String(m.id).startsWith('tmp-')
-                ).length;
-                typingSinceRef.current = true; // flag activo
-                setIsTyping(true);
-                // Safety: clear typing after 30s if no bot response arrives
-                clearTimeout(typingTimeoutRef.current);
-                typingTimeoutRef.current = setTimeout(() => {
-                    if (typingSinceRef.current !== null) {
-                        setIsTyping(false);
-                        typingSinceRef.current = null;
-                    }
-                }, 30000);
-            }
             isSendingRef.current = false; // liberar guard
             await fetchMessages();
         } catch {
