@@ -48,7 +48,16 @@ class LiveInbox extends Page
     public static function getNavigationBadge(): ?string
     {
         $orgId = auth()->user()?->organization_id;
-        // Only count live widget/telegram sessions — NOT formal support tickets
+        // Llamados pendientes sin agente asignado — alerta urgente
+        $pendingQ = Ticket::where('status', 'human')
+            ->whereNotNull('agent_called_at')
+            ->whereNull('assigned_agent')
+            ->where('is_support_ticket', false);
+        if ($orgId) $pendingQ->where('organization_id', $orgId);
+        $pending = $pendingQ->count();
+        if ($pending > 0) return "🔔 {$pending}";
+
+        // Conversaciones activas normales
         $q = Ticket::whereIn('status', ['bot', 'human'])
                    ->where('is_support_ticket', false);
         if ($orgId) $q->where('organization_id', $orgId);
@@ -59,6 +68,14 @@ class LiveInbox extends Page
     public static function getNavigationBadgeColor(): string|array|null
     {
         $orgId = auth()->user()?->organization_id;
+        // Rojo si hay llamados pendientes sin agente
+        $pendingQ = Ticket::where('status', 'human')
+            ->whereNotNull('agent_called_at')
+            ->whereNull('assigned_agent')
+            ->where('is_support_ticket', false);
+        if ($orgId) $pendingQ->where('organization_id', $orgId);
+        if ($pendingQ->exists()) return 'danger';
+
         $q = Ticket::where('status', 'human');
         if ($orgId) $q->where('organization_id', $orgId);
         return $q->exists() ? 'success' : 'warning';

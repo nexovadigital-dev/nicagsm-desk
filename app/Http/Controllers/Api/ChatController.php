@@ -332,6 +332,7 @@ class ChatController extends Controller
         return response()->json([
             'success'           => true,
             'status'            => $ticket->status,
+            'assigned_agent'    => $ticket->assigned_agent,
             'messages'          => $messages,
             'rating'            => $ticket->rating,
             'conversation_name' => $ticket->conversation_name,
