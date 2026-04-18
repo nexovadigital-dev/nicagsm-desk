@@ -536,7 +536,7 @@ function CallingScreen({ accentColor, timeoutMin, noResponse, onAgentJoined, onT
             try {
                 const r = await fetch(`${API_BASE}/api/chat/messages?session_id=${sessionId}`);
                 const d = await r.json();
-                if (d.ticket_status === 'human' && d.messages?.some(m => m.sender_type === 'agent')) {
+                if (d.status === 'human' && d.messages?.some(m => m.sender_type === 'agent')) {
                     clearInterval(pollRef.current);
                     clearInterval(timerRef.current);
                     onAgentJoined();
