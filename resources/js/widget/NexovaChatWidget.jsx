@@ -1719,6 +1719,8 @@ export default function NexovaChatWidget() {
     // screens: 'closed' | 'chat' | 'prechat' | 'rating'
     const [screen,       setScreen]       = useState('chat');
     const [callingAgent, setCallingAgent] = useState(false);  // muestra CallingScreen
+    const callingAgentRef = useRef(false);
+    useEffect(() => { callingAgentRef.current = callingAgent; }, [callingAgent]);
     const [callTimeoutMin, setCallTimeoutMin] = useState(10);
     const [callNoResponse,  setCallNoResponse]  = useState('bot');
 
@@ -2000,6 +2002,12 @@ export default function NexovaChatWidget() {
             setTicketStatus(data.status);
             setTicketRating(data.rating ?? null);
             if (data.conversation_name) setConversationName(data.conversation_name);
+
+            // Detectar que el agente aceptó — transicionar desde CallingScreen inmediatamente
+            if (callingAgentRef.current && data.status === 'human' &&
+                (data.assigned_agent || data.messages?.some(m => m.sender_type === 'agent'))) {
+                setCallingAgent(false);
+            }
 
             // Detectar mensajes nuevos de bot/agente para sonido y burbuja
             const newMsgs = data.messages;

@@ -361,7 +361,7 @@ class ChatController extends Controller
             Message::create([
                 'ticket_id'   => $ticket->id,
                 'sender_type' => 'system',
-                'content'     => 'Cliente solicitÃ³ atenciÃ³n con un agente.',
+                'content'     => 'Cliente solicitó atención con un agente.',
             ]);
         }
 
@@ -397,7 +397,7 @@ class ChatController extends Controller
             Message::create([
                 'ticket_id'   => $ticket->id,
                 'sender_type' => 'system',
-                'content'     => 'No hay agentes disponibles. El asistente IA continuarÃ¡ ayudÃ¡ndote.',
+                'content'     => 'No hay agentes disponibles. El asistente IA continuará ayudándote.',
             ]);
         }
 

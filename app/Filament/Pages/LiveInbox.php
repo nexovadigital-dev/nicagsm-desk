@@ -570,7 +570,7 @@ class LiveInbox extends Page
         Message::create([
             'ticket_id'   => $ticket->id,
             'sender_type' => 'system',
-            'content'     => "{$agentName} se unio a la conversacion.",
+            'content'     => "{$agentName} se unió a la conversación.",
         ]);
 
         // Avisar al usuario en Telegram
@@ -579,7 +579,7 @@ class LiveInbox extends Page
                 TelegramWebhookController::sendMessage(
                     $ticket->organization,
                     $ticket->telegram_id,
-                    "✅ {$agentName} se unio a la conversacion y te respondera en breve."
+                    "✅ {$agentName} se unió a la conversación y te responderá en breve."
                 );
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::error("[AssignToMe] Error enviando mensaje Telegram: {$e->getMessage()}");
@@ -621,7 +621,7 @@ class LiveInbox extends Page
             Message::create([
                 'ticket_id'   => $ticket->id,
                 'sender_type' => 'bot',
-                'content'     => 'En este momento no hay agentes disponibles. Puedo seguir ayudÃ¡ndote. Â¿En quÃ© mÃ¡s puedo asistirte?',
+                'content'     => 'En este momento no hay agentes disponibles. Puedo seguir ayudándote. ¿En qué más puedo asistirte?',
             ]);
         }
 

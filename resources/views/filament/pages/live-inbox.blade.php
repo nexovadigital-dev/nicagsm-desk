@@ -53,45 +53,6 @@ x-init="
     });
 ">
 
-@if($hasIncomingCall)
-<div x-show="ringing && !dismissed" x-transition.opacity.duration.300ms
-     style="position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; align-items:center; gap:12px; background:#fef3c7; border:1px solid #fcd34d; border-radius:16px; padding:10px 16px; box-shadow:0 10px 25px rgba(245,158,11,0.25); animation:nx-ring-pulse 2s ease infinite alternate">
-    <div style="width:34px;height:34px;border-radius:50%;background:#f59e0b22;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" width="18" height="18">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-        </svg>
-    </div>
-    <div style="flex:1;min-width:0;line-height:1.2">
-        <div style="font-size:13px;font-weight:700;color:#92400e">
-            {{ $incomingCalls->count() }} usuario(s) esperando
-        </div>
-        <div style="font-size:11.5px;color:#b45309;margin-top:2px">
-            @foreach($incomingCalls->take(2) as $call)
-                <span>{{ $call->client_name ?: 'Visitante' }}</span>{{ !$loop->last ? ' · ' : '' }}
-            @endforeach
-        </div>
-    </div>
-    {{-- Acción rápida: ir al primer ticket que solicita agente --}}
-    @if($incomingCalls->first())
-        <button wire:click="selectTicket({{ $incomingCalls->first()->id }})" @click="dismiss()"
-                style="background:var(--nx-accent,#22c55e);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px;box-shadow:0 2px 8px rgba(34,197,94,0.3)">
-            Atender
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="12" height="12"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </button>
-    @endif
-    <button @click="dismiss()"
-            style="background:none;border:none;padding:6px;font-size:16px;color:#92400e;opacity:.6;cursor:pointer">
-        ✕
-    </button>
-</div>
-@endif
-
-<style>
-@keyframes nx-ring-pulse {
-    from { box-shadow: 0 0 0 0 rgba(245,158,11,.4); transform: translateX(-50%) translateY(0); }
-    to   { box-shadow: 0 0 0 8px rgba(245,158,11,0); transform: translateX(-50%) translateY(-2px); }
-}
-</style>
 
 </div>
 

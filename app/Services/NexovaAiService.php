@@ -25,13 +25,11 @@ class NexovaAiService
     // -------------------------------------------------------------------------
     // Constantes de configuración por proveedor
     // -------------------------------------------------------------------------
-    private const PROVIDERS = ['groq', 'gemini'];
+    // Solo Groq — múltiples keys rotan automáticamente por prioridad en api_settings
+    private const PROVIDERS = ['groq'];
 
-    private const GROQ_ENDPOINT   = 'https://api.groq.com/openai/v1/chat/completions';
-    private const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s';
-
-    private const GROQ_MODEL   = 'llama-3.3-70b-versatile';
-    private const GEMINI_MODEL = 'gemini-1.5-flash';
+    private const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
+    private const GROQ_MODEL    = 'llama-3.3-70b-versatile';
 
     private const MAX_TOKENS    = 600;
     private const TEMPERATURE   = 0.7;
@@ -169,9 +167,8 @@ class NexovaAiService
             ['type' => $type, 'key' => $key] = $provider;
             try {
                 $reply = match ($type) {
-                    'groq'   => $this->callGroq($key, $messages),
-                    'gemini' => $this->callGemini($key, $messages),
-                    default  => throw new \RuntimeException("Proveedor no soportado: {$type}"),
+                    'groq'  => $this->callGroq($key, $messages),
+                    default => throw new \RuntimeException("Proveedor no soportado: {$type}"),
                 };
 
                 // Strip markdown formatting — bot responses must be plain text
@@ -200,9 +197,8 @@ class NexovaAiService
         }
 
         Log::error("[NexovaBot] Todos los proveedores fallaron para ticket #{$ticket->id}.");
-        // Delay también en fallo — evita que el error llegue instantáneo (se nota artificial)
         sleep(random_int(3, 5));
-        return 'No pude obtener respuesta en este momento.' . self::ESCALATE_FLAG;
+        return 'No logré comprender tu consulta. ¿Puedes reformularla o preguntarme de otra forma?';
     }
 
     /**
