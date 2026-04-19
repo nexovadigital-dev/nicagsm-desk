@@ -8,6 +8,7 @@ use App\Livewire\Auth\ForgotPassword;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\WpConnectController;
+use App\Http\Controllers\WpAuthorizeController;
 
 // ── Auth público ──────────────────────────────────────────────────────────────
 // /register y /login redirigen a Filament — sin middleware guest para evitar loop
@@ -141,8 +142,10 @@ Route::middleware('auth')->prefix('api/panel')->group(function () {
 });
 
 // ── WP Plugin connect (OAuth-like popup) ─────────────────────────────────────
-Route::get('/connect',           [WpConnectController::class, 'show'])->name('wp-connect.show');
-Route::post('/connect/authorize',[WpConnectController::class, 'authorize'])->name('wp-connect.authorize');
+Route::get('/connect',                [WpConnectController::class, 'show'])->name('wp-connect.show');
+Route::post('/connect/authorize',     [WpConnectController::class, 'authorize'])->name('wp-connect.authorize');
+Route::get('/wp-authorize/{token}',   [WpAuthorizeController::class, 'show'])->name('wp-authorize.show');
+Route::post('/wp-authorize/confirm',  [WpAuthorizeController::class, 'confirm'])->name('wp-authorize.confirm');
 
 // MercadoPago return pages
 Route::get('/payment/mp/success', [PaymentController::class, 'mpSuccess']);
