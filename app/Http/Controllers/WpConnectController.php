@@ -62,14 +62,20 @@ class WpConnectController extends Controller
             $pluginToken->update(['site_url' => $origin, 'user_id' => $user->id]);
         }
 
-        $org = $user->organization;
+        $org  = $user->organization;
+        $plan = $org->plan ?? 'free';
+        if ($org->is_partner) {
+            $plan = $org->partner_domain ? 'partner_edge' : 'partner';
+        }
 
         return view('wp-connect.success', [
-            'origin'   => $origin,
-            'token'    => $pluginToken->token,
-            'orgName'  => $org->name,
-            'orgId'    => $org->id,
-            'serverUrl'=> rtrim(config('app.url'), '/'),
+            'origin'    => $origin,
+            'token'     => $pluginToken->token,
+            'orgName'   => $org->name,
+            'orgId'     => $org->id,
+            'orgPlan'   => $plan,
+            'isPartner' => (bool) $org->is_partner,
+            'serverUrl' => rtrim(config('app.url'), '/'),
         ]);
     }
 }

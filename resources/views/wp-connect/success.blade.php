@@ -75,6 +75,8 @@
         server_url: {{ Js::from($serverUrl) }},
         org_name:   {{ Js::from($orgName) }},
         org_id:     {{ Js::from($orgId) }},
+        org_plan:   {{ Js::from($orgPlan) }},
+        is_partner: {{ Js::from($isPartner) }},
     };
 
     if (window.opener && !window.opener.closed) {
