@@ -276,13 +276,26 @@ class AgentProfile extends Page
             $tz = 'America/Managua';
         }
 
+        $newEmail = trim($this->orgSupportEmail) ?: null;
+
         Organization::where('id', $user->organization_id)->update([
             'name'          => $name,
-            'website'       => trim($this->orgWebsite)      ?: null,
-            'support_email' => trim($this->orgSupportEmail) ?: null,
-            'support_name'  => trim($this->orgSupportName)  ?: null,
+            'website'       => trim($this->orgWebsite) ?: null,
+            'support_email' => $newEmail,
+            'support_name'  => trim($this->orgSupportName) ?: null,
             'timezone'      => $tz,
         ]);
+
+        // Sync support_email to main nexovadesk.com license
+        if ($newEmail && config('app.nexova_partner_token')) {
+            try {
+                \Illuminate\Support\Facades\Http::post('https://nexovadesk.com/api/partner/update-email', [
+                    'partner_token' => config('app.nexova_partner_token'),
+                    'email'         => $newEmail,
+                ]);
+            } catch (\Throwable) {}
+        }
+
         $this->dispatch('nexova-toast', type: 'success', message: 'Organización actualizada');
     }
 

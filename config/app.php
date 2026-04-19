@@ -126,5 +126,8 @@ return [
     // Token secreto para endpoints de cron HTTP (/api/cron/*)
     'cron_secret' => env('CRON_SECRET', ''),
 
+    // Partner token para sincronización con nexovadesk.com main
+    'nexova_partner_token' => env('NEXOVA_PARTNER_TOKEN', ''),
+
 ];
 
