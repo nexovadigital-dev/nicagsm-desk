@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import NexovaChatWidget from './NexovaChatWidget';
+import NexovaChatWidget, { WidgetErrorBoundary } from './NexovaChatWidget';
 
 /**
  * Monta el widget en el DOM.
@@ -18,7 +18,11 @@ const mount = () => {
         document.body.appendChild(container);
     }
 
-    createRoot(container).render(<NexovaChatWidget />);
+    createRoot(container).render(
+        <WidgetErrorBoundary>
+            <NexovaChatWidget />
+        </WidgetErrorBoundary>
+    );
 };
 
 if (document.readyState === 'loading') {

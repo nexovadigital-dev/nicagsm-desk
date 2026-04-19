@@ -1,4 +1,16 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Component } from 'react';
+
+// ErrorBoundary — evita que un error de render desmonte todo el widget
+class WidgetErrorBoundary extends Component {
+    constructor(props) { super(props); this.state = { crashed: false }; }
+    static getDerivedStateFromError() { return { crashed: true }; }
+    componentDidCatch(err) { console.warn('[NexovaWidget] render error:', err?.message); }
+    render() {
+        if (this.state.crashed) return null;
+        return this.props.children;
+    }
+}
+export { WidgetErrorBoundary };
 
 // ---------------------------------------------------------------------------
 // Config global — el sitio embebedor puede sobreescribir apiUrl:
@@ -982,7 +994,7 @@ function ClosedScreen({ messages, ticketRating, accentColor, onNewChat, onViewHi
                             <p style={{ fontSize: 11.5, color: '#4b5563', margin: 0, lineHeight: 1.5,
                                 display: '-webkit-box', WebkitLineClamp: 2,
                                 WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                                {lastMsg.content}
+                                {typeof lastMsg.content === 'string' ? lastMsg.content : ''}
                             </p>
                         </div>
                     )}
@@ -1041,7 +1053,7 @@ function ClosedScreen({ messages, ticketRating, accentColor, onNewChat, onViewHi
                         <p style={{ fontSize: 12, color: '#374151', margin: 0, lineHeight: 1.5,
                             display: '-webkit-box', WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                            {lastMsg.content}
+                            {typeof lastMsg.content === 'string' ? lastMsg.content : ''}
                         </p>
                     </div>
                 )}
@@ -2935,7 +2947,7 @@ export default function NexovaChatWidget() {
                                         <div key={msg.id} style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 0' }}>
                                             <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
                                             <span style={{ fontSize: 10, color: '#9ca3af', whiteSpace: 'nowrap', padding: '0 4px' }}>
-                                                {msg.content}
+                                                {typeof msg.content === 'string' ? msg.content : ''}
                                             </span>
                                             <div style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
                                         </div>
@@ -2989,8 +3001,8 @@ export default function NexovaChatWidget() {
                                                         </div>
                                                     )}
                                                     {isUser
-                                                        ? msg.content
-                                                        : renderBotContent(msg.content, accentColor)
+                                                        ? (typeof msg.content === 'string' ? msg.content : '')
+                                                        : renderBotContent(typeof msg.content === 'string' ? msg.content : String(msg.content ?? ''), accentColor)
                                                     }
                                                 </div>
                                                 <span style={{ fontSize: 10, color: '#9ca3af', padding: '0 3px' }}>
