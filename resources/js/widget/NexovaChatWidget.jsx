@@ -2389,10 +2389,104 @@ export default function NexovaChatWidget() {
         }
     };
 
+    // ── Order query detection — zero AI tokens ───────────────────────────────
+
+    const detectOrderQuery = (text) => {
+        const t = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        // Specific order number: "orden #379", "pedido 379", "#379"
+        const numMatch = t.match(/(?:orden|pedido|order)\s*#?\s*(\d{3,})/i)
+                      || t.match(/#(\d{3,})/);
+        if (numMatch) return { type: 'specific', num: numMatch[1] };
+        // Order list queries
+        const listPats = [
+            /mis\s+(pedidos?|ordenes?|compras?)/,
+            /ver\s+(mis\s+)?(pedidos?|ordenes?)/,
+            /historial\s+de\s+(pedidos?|compras?|ordenes?)/,
+            /donde\s+(esta|anda|queda)\s+(mi\s+)?(pedido|orden|paquete|envio)/,
+            /estado\s+de\s+(mi\s+)?(pedido|orden|envio|compra)/,
+            /cuando\s+(llega|llego|viene)\s+(mi\s+)?(pedido|orden|paquete)/,
+            /\bpedidos?\b.*\bcuenta\b/,
+        ];
+        if (listPats.some(p => p.test(t))) return { type: 'list', num: null };
+        return null;
+    };
+
+    const buildOrderResponse = (detected) => {
+        if (!WP_CONFIG) return null; // not a WC store
+        const storeBase = (STORE_CONTEXT?.store_url || '').replace(/\/$/, '');
+        const loginUrl  = storeBase ? `${storeBase}/mi-cuenta`          : null;
+        const ordersUrl = storeBase ? `${storeBase}/mi-cuenta/pedidos/` : null;
+
+        // Not logged in → always show login button
+        if (!WOO_CUSTOMER) {
+            if (!loginUrl) return null;
+            return `Para consultar tus pedidos necesitas iniciar sesión en tu cuenta.\n\n[🔑 Iniciar sesión](${loginUrl})`;
+        }
+
+        const orders = Array.isArray(WOO_ORDERS) ? WOO_ORDERS : [];
+
+        if (detected.type === 'specific') {
+            const o = orders.find(x => String(x.number) === detected.num || String(x.id) === detected.num);
+            if (o) {
+                const items = Array.isArray(o.items) ? o.items.slice(0, 3).join(', ') : '';
+                let msg = `**Pedido #${o.number}**\n`;
+                msg += `📦 Estado: **${o.status}**\n`;
+                if (o.total) msg += `💰 Total: ${o.total}\n`;
+                if (o.date)  msg += `📅 Fecha: ${o.date}\n`;
+                if (items)   msg += `🛍️ Productos: ${items}\n`;
+                if (ordersUrl) msg += `\n[Ver todos mis pedidos](${ordersUrl})`;
+                return msg;
+            }
+            let msg = `No encontré la orden **#${detected.num}** en tu cuenta. Verifica el número de pedido.`;
+            if (ordersUrl) msg += `\n\n[Ver mis pedidos](${ordersUrl})`;
+            return msg;
+        }
+
+        if (detected.type === 'list') {
+            if (!orders.length) {
+                let msg = 'No encontré pedidos recientes en tu cuenta.';
+                if (ordersUrl) msg += `\n\n[Ver mis pedidos](${ordersUrl})`;
+                return msg;
+            }
+            const top = orders.slice(0, 3);
+            let msg = 'Aquí están tus pedidos más recientes:\n\n';
+            for (const o of top) {
+                msg += `**Pedido #${o.number}** — ${o.status}`;
+                if (o.total) msg += ` — ${o.total}`;
+                if (o.date)  msg += ` — ${o.date}`;
+                const items = Array.isArray(o.items) ? o.items.slice(0, 2).join(', ') : '';
+                if (items) msg += `\n🛍️ ${items}`;
+                msg += '\n\n';
+            }
+            if (ordersUrl) msg += `[📋 Ver todos mis pedidos](${ordersUrl})`;
+            return msg;
+        }
+        return null;
+    };
+
     // ── Enviar mensaje ───────────────────────────────────────────────────────
     const sendMessage = async () => {
         const content = inputValue.trim();
         if ((!content && !attachmentFile) || isSending || isClosed || isTyping) return;
+
+        // ── ORDER SHORTCUT: responde sin llamar al AI (cero tokens) ─────────
+        if (content && !attachmentFile && WP_CONFIG) {
+            const detected = detectOrderQuery(content);
+            if (detected) {
+                const reply = buildOrderResponse(detected);
+                if (reply) {
+                    const now = new Date().toISOString();
+                    setInputValue('');
+                    setMessages(prev2 => [...prev2,
+                        { id: `u-${Date.now()}`,   sender_type: 'user', content, created_at: now },
+                        { id: `bot-${Date.now()}`, sender_type: 'bot',  content: reply, created_at: now },
+                    ]);
+                    setTimeout(() => scrollToBottom(true), 50);
+                    return;
+                }
+            }
+        }
+
         // Lazy init: si no hay sesion activa, crearla antes de enviar
         if (!sessionId) {
             setIsSending(true);
