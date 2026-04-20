@@ -903,15 +903,6 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
             }
         }
 
-        // Catalogo WooCommerce via WP plugin para canal web
-        // Si el ticket es web y hay plugin conectado (WpPluginToken), injerta el catalogo completo
-        if (\$ticket->platform === 'web' && \$org && empty(\$ticket->store_context)) {
-            \$wpcatalog = \$this->fetchStoreCatalogContext(\$org->id);
-            if (\$wpcatalog !== '') {
-                \$systemPrompt .= "\n\n" . \$wpcatalog;
-            }
-        }
-
         // Conocimiento (KB manual + web scrape) — se agrega si existe
         if ($ragContext !== '') {
             $systemPrompt .= "\n\n{$ragContext}";
