@@ -839,13 +839,33 @@ class NexovaAiService
         if (! empty($storeCtx)) {
             $systemPrompt .= "\n\n" . $this->buildStoreContextBlock($storeCtx);
 
-            // Indicar si el visitante está identificado como cliente WC o es un guest
+            // Identidad del cliente WooCommerce + reglas de pedidos
             $ticket->loadMissing('contact');
             $wooVerified = $ticket->contact && $ticket->contact->woo_customer_id;
+            $storeBase   = rtrim($storeCtx['store_url'] ?? '', '/');
+            $loginUrl    = $storeBase . '/mi-cuenta';
+            $ordersUrl   = $storeBase . '/mi-cuenta/pedidos/';
+
             if ($wooVerified) {
-                $systemPrompt .= "\n\n**IDENTIDAD DEL CLIENTE:** El cliente está identificado como cliente registrado de la tienda (WooCommerce). Puedes referirte a él por su nombre si lo tienes disponible.";
+                $hasOrders = ! empty($storeCtx['customer_orders']);
+                $systemPrompt .= "\n\n**IDENTIDAD DEL CLIENTE:** El cliente está identificado y tiene sesión activa en la tienda. Puedes referirte a él por su nombre si lo tienes disponible.";
+
+                if ($hasOrders) {
+                    $systemPrompt .= "\n\nREGLAS PARA CONSULTAS DE PEDIDOS (cliente con sesión iniciada):
+- Si pregunta por \"mis pedidos\", su historial o pedidos recientes: muestra los últimos 3 pedidos del bloque PEDIDOS RECIENTES de arriba (número, estado, total, fecha). Cierra con: [Ver todos mis pedidos]({$ordersUrl})
+- Si pregunta por una orden específica (ej. \"estado de la orden #123\"): busca ese número en la lista. Si aparece → muestra su estado, total e ítems. Si NO aparece → responde \"No encontré la orden #[número] en tu cuenta. Verifica el número de pedido.\" y añade: [Ver mis pedidos]({$ordersUrl})
+- Nunca inventes el estado de un pedido. Usa solo la información de la lista.";
+                } else {
+                    $systemPrompt .= "\n\nREGLAS PARA CONSULTAS DE PEDIDOS (cliente con sesión iniciada, sin pedidos recientes cargados):
+- Si pregunta por pedidos: indica que no encontramos pedidos recientes en su cuenta y ofrece el link: [Ver mis pedidos]({$ordersUrl})";
+                }
             } else {
-                $systemPrompt .= "\n\n**IDENTIDAD DEL CLIENTE:** El visitante NO ha iniciado sesión en la tienda. Si pregunta por sus pedidos, historial de compras, estado de envío, cuenta o cualquier información personal de su perfil de cliente, responde explicando que necesitas verificar su identidad y añade el marcador exacto __WOO_VERIFY__ al FINAL de tu respuesta (sin espacios antes ni después). No inventes información de pedidos. Para preguntas generales sobre productos, precios o la tienda, responde con normalidad sin usar el marcador.";
+                $systemPrompt .= "\n\n**IDENTIDAD DEL CLIENTE:** El visitante NO ha iniciado sesión en la tienda.
+
+REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
+- Si pregunta por sus pedidos, historial de compras, estado de un envío, o cualquier información de su cuenta: responde \"Para consultar tus pedidos necesitas iniciar sesión en tu cuenta.\" e incluye SIEMPRE: [Iniciar sesión]({$loginUrl})
+- NO inventes pedidos ni información de cuenta.
+- Para preguntas generales sobre productos, precios o la tienda, responde con normalidad.";
             }
         }
 
