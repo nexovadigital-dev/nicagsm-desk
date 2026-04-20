@@ -21,7 +21,42 @@ use Illuminate\Support\Str;
 
 class ChatController extends Controller
 {
-    // â”€â”€ 0. ConfiguraciÃ³n pÃºblica del widget â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Validates that the request origin matches the widget's allowed_domain.
+     * Returns true if allowed, false if blocked.
+     * If allowed_domain is null/empty, always returns true (no restriction).
+     */
+    private function isOriginAllowed(Request $request, ChatWidget $widget): bool
+    {
+        $allowed = trim($widget->allowed_domain ?? '');
+        if ($allowed === '') return true;
+
+        // Normalize: strip scheme/www so “https://www.example.com” == “example.com”
+        $normalize = fn(string $url): string =>
+            preg_replace('/^www\./', '', strtolower(parse_url($url, PHP_URL_HOST) ?: $url));
+
+        $allowedHost = $normalize($allowed);
+
+        // Check Origin header first, fall back to Referer, then page field
+        foreach (['Origin', 'Referer'] as $header) {
+            $value = $request->header($header);
+            if ($value) {
+                return $normalize($value) === $allowedHost;
+            }
+        }
+        // page field (sent by widget on startSession)
+        $page = $request->input('page') ?? '';
+        if ($page) {
+            return $normalize($page) === $allowedHost;
+        }
+
+        // No origin info → allow (e.g. server-side calls)
+        return true;
+    }
+
+    // ── 0. Configuración pública del widget ───────────────────────────────────
     public function widgetConfig(Request $request): JsonResponse
     {
         // Si viene un token de widget personalizado, usarlo; si no, el global
@@ -34,6 +69,10 @@ class ChatController extends Controller
             // Block widget if org is disabled
             if ($cfg->organization && ! $cfg->organization->is_active) {
                 return response()->json(['error' => 'Widget disabled', 'disabled' => true], 403);
+            }
+            // Block if request comes from an unauthorized domain
+            if (! $this->isOriginAllowed($request, $cfg)) {
+                return response()->json(['error' => 'Domain not authorized', 'disabled' => true], 403);
             }
         } else {
             $cfg = WidgetSetting::instance();
@@ -132,6 +171,10 @@ class ChatController extends Controller
             // Block if org disabled
             if ($org && ! $org->is_active) {
                 return response()->json(['error' => 'Account disabled'], 403);
+            }
+            // Block if request comes from an unauthorized domain
+            if ($widget && ! $this->isOriginAllowed($request, $widget)) {
+                return response()->json(['error' => 'Domain not authorized'], 403);
             }
         }
 

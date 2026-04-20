@@ -72,7 +72,8 @@ class EditChatWidget extends Page
     public $buttonImageFile    = null; // Livewire temp upload (not saved until save())
     public string $buttonImagePreview = ''; // temporary URL for live preview
 
-    public string $widgetToken = '';
+    public string $widgetToken    = '';
+    public string $allowedDomain = '';
 
     public function getTitle(): string|Htmlable
     {
@@ -124,6 +125,8 @@ class EditChatWidget extends Page
         if (empty($this->workingHours)) {
             $this->workingHours = $w->defaultWorkingHours();
         }
+
+        $this->allowedDomain = $w->allowed_domain ?? '';
     }
 
     public function updatedBotAvatarFile(): void
@@ -213,6 +216,7 @@ class EditChatWidget extends Page
             'agent_call_timeout'      => $this->agentCallTimeout,
             'agent_no_response'       => $this->agentNoResponse,
             'department_id'           => $this->defaultDepartmentId,
+            'allowed_domain'          => trim($this->allowedDomain) ?: null,
         ]);
 
         $this->dispatch('nexova-toast', type: 'success', message: 'Widget guardado correctamente');

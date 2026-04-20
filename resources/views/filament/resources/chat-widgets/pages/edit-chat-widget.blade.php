@@ -903,6 +903,30 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         </div>
     </div>
 
+    {{-- ── Domain restriction ── --}}
+    @if($widgetId)
+    <div style="background:var(--c-surface,#fff);border:1px solid var(--c-border,#e3e6ea);border-radius:14px;padding:16px">
+        <div style="font-size:12px;font-weight:700;color:var(--c-text);margin-bottom:4px;display:flex;align-items:center;gap:6px">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2zm0 0V7m0 8h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Dominio autorizado
+        </div>
+        <div style="font-size:11px;color:var(--c-sub,#6b7280);margin-bottom:10px">
+            Solo esta tienda podrá cargar el widget. Deja vacío para permitir cualquier dominio.
+        </div>
+        <input type="url" wire:model.defer="allowedDomain"
+               placeholder="https://mitienda.com"
+               style="width:100%;padding:8px 10px;font-size:12.5px;border:1px solid var(--c-border,#e2e8f0);border-radius:8px;font-family:monospace;background:var(--c-bg,#f8f9fa);color:var(--c-text,#111);outline:none;box-sizing:border-box">
+        @if($allowedDomain)
+        <div style="margin-top:6px;display:flex;align-items:center;gap:5px;font-size:11px;color:#16a34a;font-weight:500">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+            Restringido a: {{ parse_url($allowedDomain, PHP_URL_HOST) ?: $allowedDomain }}
+        </div>
+        @else
+        <div style="margin-top:6px;font-size:11px;color:var(--c-sub,#9ca3af)">Sin restricción — cualquier sitio puede cargar este widget</div>
+        @endif
+    </div>
+    @endif
+
     {{-- ── Install code ── --}}
     @if($widgetId)
     <div style="background:var(--c-surface,#fff);border:1px solid var(--c-border,#e3e6ea);border-radius:14px;padding:16px" x-data>

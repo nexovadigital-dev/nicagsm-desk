@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 class ChatWidget extends Model
 {
     protected $fillable = [
-        'organization_id', 'department_id', 'name', 'token', 'is_active',
+        'organization_id', 'department_id', 'name', 'token', 'allowed_domain', 'is_active',
         'bot_name', 'welcome_message', 'accent_color',
         'widget_position', 'widget_size', 'attention_effect', 'default_screen', 'show_on',
         'preview_message_enabled', 'preview_message',

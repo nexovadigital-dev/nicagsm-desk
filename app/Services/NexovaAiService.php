@@ -118,6 +118,15 @@ class NexovaAiService
             return $faqAnswer;
         }
 
+        // ── Atajo de pedidos WooCommerce (cero tokens de IA) ─────────────────
+        // Solo si el ticket tiene historial de pedidos en store_context.
+        $orderReply = $this->tryOrderQueryReply($ticket);
+        if ($orderReply !== null) {
+            $org?->incrementBotMessageCount();
+            Log::info("[NexovaBot] Respondido con template de pedidos — ticket #{$ticket->id}");
+            return $orderReply;
+        }
+
         // ── Intentar responder desde la KB ────────────────────────────────────
         // Solo salta KB directa si el ticket trae store_context real (WooCommerce page data),
         // en ese caso la IA con el catálogo responde mejor sobre productos/precios.
@@ -894,6 +903,15 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
             }
         }
 
+        // Catalogo WooCommerce via WP plugin para canal web
+        // Si el ticket es web y hay plugin conectado (WpPluginToken), injerta el catalogo completo
+        if (\$ticket->platform === 'web' && \$org && empty(\$ticket->store_context)) {
+            \$wpcatalog = \$this->fetchStoreCatalogContext(\$org->id);
+            if (\$wpcatalog !== '') {
+                \$systemPrompt .= "\n\n" . \$wpcatalog;
+            }
+        }
+
         // Conocimiento (KB manual + web scrape) — se agrega si existe
         if ($ragContext !== '') {
             $systemPrompt .= "\n\n{$ragContext}";
@@ -1053,5 +1071,113 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
         }
 
         return trim($text);
+    }
+
+    // =========================================================================
+    // Atajo de pedidos WooCommerce — respuesta template sin IA
+    // =========================================================================
+
+    /**
+     * Si el cliente pregunta por sus pedidos y el ticket tiene historial en
+     * store_context['customer_orders'], responde con un template formateado.
+     * Retorna null si no aplica (sin pedidos, o el mensaje no es consulta de pedidos).
+     */
+    private function tryOrderQueryReply(Ticket $ticket): ?string
+    {
+        $ctx    = is_array($ticket->store_context) ? $ticket->store_context : [];
+        $orders = $ctx['customer_orders'] ?? [];
+
+        // Solo aplica si el ticket tiene pedidos reales del cliente
+        if (empty($orders) || ! is_array($orders)) return null;
+
+        $lastMsg = $ticket->messages()
+            ->where('sender_type', 'user')
+            ->orderByDesc('created_at')
+            ->value('content') ?? '';
+
+        if (! $this->isOrderQuery($lastMsg)) return null;
+
+        $storeBase = rtrim($ctx['store_url'] ?? '', '/');
+        $ordersUrl = $storeBase ? "{$storeBase}/mi-cuenta/pedidos/" : null;
+
+        // Consulta por pedido específico: "pedido #379", "#379", "orden 379"
+        $specificNum = null;
+        if (preg_match('/(?:orden|pedido|order)\s*#?\s*(\d{3,})/iu', $lastMsg, $m)
+            || preg_match('/#(\d{3,})/', $lastMsg, $m)) {
+            $specificNum = $m[1];
+        }
+
+        if ($specificNum !== null) {
+            $found = null;
+            foreach ($orders as $o) {
+                if ((string) ($o['number'] ?? $o['id'] ?? '') === $specificNum) {
+                    $found = $o;
+                    break;
+                }
+            }
+            if ($found) {
+                $num    = $found['number'] ?? $found['id'] ?? '?';
+                $status = $found['status'] ?? '?';
+                $total  = $found['total']  ?? '';
+                $date   = $found['date']   ?? '';
+                $items  = ! empty($found['items']) && is_array($found['items'])
+                    ? implode(', ', array_slice($found['items'], 0, 3))
+                    : '';
+                $reply  = "**Pedido #{$num}**\n";
+                $reply .= "📦 Estado: **{$status}**\n";
+                if ($total) $reply .= "💰 Total: {$total}\n";
+                if ($date)  $reply .= "📅 Fecha: {$date}\n";
+                if ($items) $reply .= "🛍️ Productos: {$items}\n";
+                if ($ordersUrl) $reply .= "\n[Ver todos mis pedidos]({$ordersUrl})";
+                return $reply;
+            }
+            $reply = "No encontré el pedido **#{$specificNum}** en tu cuenta.";
+            if ($ordersUrl) $reply .= "\n\n[Ver mis pedidos]({$ordersUrl})";
+            return $reply;
+        }
+
+        // Consulta general: listar pedidos recientes
+        $top   = array_slice($orders, 0, 3);
+        $reply = "Aquí están tus pedidos más recientes:\n\n";
+        foreach ($top as $o) {
+            $num    = $o['number'] ?? $o['id'] ?? '?';
+            $status = $o['status'] ?? '?';
+            $total  = $o['total']  ?? '';
+            $date   = $o['date']   ?? '';
+            $items  = ! empty($o['items']) && is_array($o['items'])
+                ? implode(', ', array_slice($o['items'], 0, 2))
+                : '';
+            $reply .= "**Pedido #{$num}** — {$status}";
+            if ($total) $reply .= " — {$total}";
+            if ($date)  $reply .= " — {$date}";
+            if ($items) $reply .= "\n🛍️ {$items}";
+            $reply .= "\n\n";
+        }
+        if ($ordersUrl) $reply .= "[📋 Ver todos mis pedidos]({$ordersUrl})";
+
+        return rtrim($reply);
+    }
+
+    /**
+     * Detecta si el mensaje es una consulta sobre pedidos.
+     */
+    private function isOrderQuery(string $msg): bool
+    {
+        $t = mb_strtolower(trim($msg));
+        $patterns = [
+            '/mis\s+(pedidos?|ordenes?|compras?)/',
+            '/ver\s+(mis\s+)?(pedidos?|ordenes?)/',
+            '/historial\s+de\s+(pedidos?|compras?|ordenes?)/',
+            '/donde\s+(esta|anda|queda)\s+(mi\s+)?(pedido|orden|paquete|env[ií]o)/',
+            '/estado\s+de\s+(mi\s+)?(pedido|orden|env[ií]o|compra)/',
+            '/cu[aá]ndo\s+(llega|lleg[oó]|viene)\s+(mi\s+)?(pedido|orden|paquete)/',
+            '/pedidos?.*cuenta/',
+            '/(?:orden|pedido|order)\s*#?\s*\d{3,}/',
+            '/#\d{3,}/',
+        ];
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $t)) return true;
+        }
+        return false;
     }
 }
