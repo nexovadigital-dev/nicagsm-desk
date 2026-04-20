@@ -1679,7 +1679,15 @@ function OfflineScreen({ cfg, accentColor, botName }) {
 
 // ---------------------------------------------------------------------------
 // Channels Screen
-// ---------------------------------------------------------------------------
+const SOCIAL_CTA = {
+    whatsapp:  'Enviar mensaje',
+    telegram:  'Abrir canal',
+    instagram: 'Ver perfil',
+    facebook:  'Ir a página',
+    email:     'Enviar correo',
+    phone:     'Llamar',
+};
+
 function ChannelsScreen({ cfg, accentColor }) {
     const socials = Array.isArray(cfg?.social_channels) ? cfg.social_channels : [];
     if (socials.length === 0) return (
@@ -1689,45 +1697,61 @@ function ChannelsScreen({ cfg, accentColor }) {
         </div>
     );
     return (
-        <>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 14px',
-            display: 'flex', flexDirection: 'column', gap: 8,
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px',
+            display: 'flex', flexDirection: 'column', gap: 10,
             animation: 'nx-fade-up .2s ease-out' }}>
-            <p style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase',
-                letterSpacing: '.06em', margin: '0 0 6px' }}>Contacto</p>
+
+            <p style={{ margin: '0 0 4px 2px', fontSize: 12, fontWeight: 600, color: '#6b7280' }}>
+                Contáctanos por
+            </p>
+
             {socials.map((ch, i) => {
-                const clr = SOCIAL_COLORS[(ch.type || '').toLowerCase()] || '#6b7280';
+                const clr  = SOCIAL_COLORS[(ch.type || '').toLowerCase()] || '#6b7280';
+                const cta  = SOCIAL_CTA[(ch.type || '').toLowerCase()] || 'Abrir';
                 return (
                     <a key={i} href={formatSocialUrl(ch.type, ch.url)} target="_blank" rel="noopener noreferrer"
-                        style={{ display: 'flex', alignItems: 'center', gap: 12,
-                            padding: '12px 14px', borderRadius: 12,
-                            background: `${clr}0f`, border: `1px solid ${clr}28`,
-                            textDecoration: 'none', color: '#1f2937',
-                            transition: 'background .12s' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = `${clr}1e`; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = `${clr}0f`; }}>
-                        <span style={{ color: clr, background: `${clr}18`, borderRadius: 9,
-                            padding: 8, display: 'flex', flexShrink: 0 }}>
-                            <SocialIcon type={ch.type} />
-                        </span>
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: 14,
+                            padding: '13px 14px', borderRadius: 14,
+                            background: '#fff', border: '1px solid #e5e7eb',
+                            textDecoration: 'none',
+                            transition: 'border-color .15s, box-shadow .15s',
+                            boxShadow: '0 1px 3px rgba(0,0,0,.05)',
+                        }}
+                        onMouseEnter={e => {
+                            e.currentTarget.style.borderColor = clr + '66';
+                            e.currentTarget.style.boxShadow = `0 3px 12px ${clr}22`;
+                        }}
+                        onMouseLeave={e => {
+                            e.currentTarget.style.borderColor = '#e5e7eb';
+                            e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,.05)';
+                        }}>
+
+                        {/* Ícono con color de marca */}
+                        <div style={{
+                            width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+                            background: clr, display: 'flex',
+                            alignItems: 'center', justifyContent: 'center',
+                        }}>
+                            <span style={{ color: '#fff', display: 'flex' }}>
+                                <SocialIcon type={ch.type} />
+                            </span>
+                        </div>
+
+                        {/* Info */}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontWeight: 600, color: '#111827', fontSize: 13 }}>
+                            <div style={{ fontWeight: 600, color: '#111827', fontSize: 13.5, lineHeight: 1.3 }}>
                                 {ch.label || ch.type}
                             </div>
-                            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 1,
-                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {ch.url}
+                            <div style={{ fontSize: 11.5, color: clr, marginTop: 3, fontWeight: 500 }}>
+                                {cta} →
                             </div>
                         </div>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"
-                            width="13" height="13" style={{ flexShrink: 0 }}>
-                            <polyline points="9 18 15 12 9 6"/>
-                        </svg>
+
                     </a>
                 );
             })}
         </div>
-        </>
     );
 }
 
