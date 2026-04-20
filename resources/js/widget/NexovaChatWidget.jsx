@@ -2475,6 +2475,10 @@ export default function NexovaChatWidget() {
             if (detected) {
                 const reply = buildOrderResponse(detected);
                 if (reply) {
+                    // Ensure a session exists so state is consistent (no blank widget after reset)
+                    if (!sessionId) {
+                        try { await initSession(); } catch {}
+                    }
                     const now = new Date().toISOString();
                     setInputValue('');
                     setMessages(prev2 => [...prev2,
