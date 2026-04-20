@@ -2175,19 +2175,9 @@ export default function NexovaChatWidget() {
 
     // ── Nueva conversación ───────────────────────────────────────────────────
     const startNewChat = (prefillFaq = null) => {
-        // Si la sesion actual NO tiene mensajes del usuario, reaprovecharla (no crear otra en backend)
-        const userMsgsCount = messages.filter(m => m.sender_type === 'user').length;
-        if (sessionId && userMsgsCount === 0 && !prefillFaq) {
-            // Solo limpiar UI y volver al estado limpio sin nueva sesion
-            setMessages([]);
-            setTicketStatus('bot');
-            setTicketRating(null);
-            setInputValue('');
-            setError(null);
-            setScreen('chat');
-            setTimeout(() => textareaRef.current?.focus(), 200);
-            return;
-        }
+        // Siempre hacer reset completo — nunca reusar sesión para evitar
+        // que una sesión con mensajes reaparezca si el usuario hizo clic
+        // antes de que terminara la carga de mensajes del servidor.
 
         // Detener poll ANTES de limpiar sessionId
         clearInterval(pollRef.current);
