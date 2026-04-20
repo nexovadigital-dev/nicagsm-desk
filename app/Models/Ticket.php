@@ -93,4 +93,18 @@ class Ticket extends Model
     {
         return $this->belongsToMany(Tag::class, 'tag_ticket');
     }
+
+    /**
+     * Nombre visible del visitante.
+     * Si client_name es real → lo devuelve tal cual.
+     * Si es genérico ("Visitante") o vacío → genera "Visitante XXXXXX" usando el ID del ticket.
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        $name = trim($this->client_name ?? '');
+        if ($name !== '' && strtolower($name) !== 'visitante') {
+            return $name;
+        }
+        return 'Visitante ' . str_pad((string) $this->id, 6, '0', STR_PAD_LEFT);
+    }
 }

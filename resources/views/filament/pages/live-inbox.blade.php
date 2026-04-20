@@ -217,7 +217,7 @@ x-init="
                     $lastMsg    = $ticket->messages->first();
                     $preview    = $lastMsg ? \Illuminate\Support\Str::limit($lastMsg->content, 55) : 'Sin mensajes aún';
                     $palette    = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1'];
-                    $color      = $palette[abs(crc32($ticket->client_name)) % count($palette)];
+                    $color      = $palette[abs(crc32($ticket->display_name)) % count($palette)];
                     $ticketDept = $ticket->department;
                 @endphp
 
@@ -232,7 +232,7 @@ x-init="
                          wire:click.stop="toggleTicketSelection({{ $ticket->id }})"
                          title="{{ $isSelected ? 'Deseleccionar' : 'Seleccionar' }}">
                         <div class="nx-avatar" style="background:{{ $color }}; opacity:1; transform:scale(1);">
-                            {{ strtoupper(substr($ticket->client_name ?? 'V', 0, 1)) }}
+                            {{ strtoupper(substr($ticket->display_name, 0, 1)) }}
                         </div>
                         <div class="nx-avatar-cb {{ $isSelected ? 'nx-avatar-cb--on' : '' }}"
                              :style="(hov || {{ $isSelected ? 'true' : 'false' }}) ? 'opacity:1;transform:scale(1)' : 'opacity:0;transform:scale(.85)'">
@@ -247,7 +247,7 @@ x-init="
                          wire:click="selectTicket({{ $ticket->id }})"
                          style="flex:1;min-width:0;cursor:pointer">
                         <div class="nx-ticket__top">
-                            <span class="nx-ticket__name">{{ $ticket->conversation_name ?? $ticket->client_name }}@if($ticket->is_support_ticket) <span style="font-weight:400;opacity:.6;font-size:.9em">(Ticket #{{ $ticket->ticket_number }})</span>@elseif($ticket->platform === 'telegram') <span style="font-weight:400;opacity:.6;font-size:.9em">(Telegram)</span>@endif</span>
+                            <span class="nx-ticket__name">{{ $ticket->conversation_name ?? $ticket->display_name }}@if($ticket->is_support_ticket) <span style="font-weight:400;opacity:.6;font-size:.9em">(Ticket #{{ $ticket->ticket_number }})</span>@elseif($ticket->platform === 'telegram') <span style="font-weight:400;opacity:.6;font-size:.9em">(Telegram)</span>@endif</span>
                             <span class="nx-ticket__time">{{ $ticket->updated_at->setTimezone($orgTimezone)->diffForHumans(null, true, true) }}</span>
                         </div>
                         <div class="nx-ticket__bottom">
@@ -301,14 +301,14 @@ x-init="
 
                 @php
                     $palette = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1'];
-                    $color   = $palette[abs(crc32($ticket->client_name)) % count($palette)];
+                    $color   = $palette[abs(crc32($ticket->display_name)) % count($palette)];
                 @endphp
                 <div class="nx-chat__header-top">
                     <div class="nx-avatar nx-avatar--lg" style="background:{{ $color }}">
-                        {{ strtoupper(substr($ticket->client_name, 0, 1)) }}
+                        {{ strtoupper(substr($ticket->display_name, 0, 1)) }}
                     </div>
                     <div class="nx-chat__info">
-                        <strong>{{ $ticket->conversation_name ?? $ticket->client_name }}</strong>
+                        <strong>{{ $ticket->conversation_name ?? $ticket->display_name }}</strong>
                         <span>
                             #{{ $ticket->id }}
                             @if($ticket->platform === 'telegram' && $ticket->telegram_id)
@@ -516,7 +516,7 @@ x-init="
                     @php
                         $isUser = $msg->sender_type === 'user';
                         $vcPalette = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#ec4899','#6366f1'];
-                        $vcColor   = $vcPalette[abs(crc32($ticket->client_name ?? 'V')) % 6];
+                        $vcColor   = $vcPalette[abs(crc32($ticket->display_name)) % 6];
 
                         // Date separator
                         $msgDate2    = $msg->created_at->setTimezone($orgTimezone);
@@ -597,7 +597,7 @@ x-init="
                         @if ($isUser)
                             {{-- Visitor avatar — LEFT --}}
                             <div class="nx-msg__avatar" style="background:{{ $vcColor }}">
-                                {{ strtoupper(substr($ticket->client_name ?? 'V', 0, 1)) }}
+                                {{ strtoupper(substr($ticket->display_name, 0, 1)) }}
                             </div>
                         @elseif ($msg->sender_type === 'agent')
                             {{-- Agent avatar — RIGHT --}}
@@ -1030,7 +1030,7 @@ x-init="
 
             <div class="nx-detail__row">
                 <span class="nx-detail__key">Nombre</span>
-                <span class="nx-detail__val">{{ $ticket->client_name }}</span>
+                <span class="nx-detail__val">{{ $ticket->display_name }}</span>
             </div>
             @if($ticket->platform === 'telegram')
             <div class="nx-detail__row">
