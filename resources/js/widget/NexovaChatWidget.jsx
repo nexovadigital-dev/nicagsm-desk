@@ -2470,10 +2470,11 @@ export default function NexovaChatWidget() {
                 const reply = buildOrderResponse(detected);
                 if (reply) {
                     const now = new Date().toISOString();
+                    const ts  = Date.now();
                     setInputValue('');
                     setMessages(prev2 => [...prev2,
-                        { id: `u-${Date.now()}`,   sender_type: 'user', content, created_at: now },
-                        { id: `bot-${Date.now()}`, sender_type: 'bot',  content: reply, created_at: now },
+                        { id: `tmp-sc-u-${ts}`,   sender_type: 'user', content, created_at: now },
+                        { id: `tmp-sc-bot-${ts}`, sender_type: 'bot',  content: reply, created_at: now },
                     ]);
                     setTimeout(() => scrollToBottom(true), 50);
                     return;
