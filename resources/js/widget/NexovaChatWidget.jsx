@@ -2479,8 +2479,9 @@ export default function NexovaChatWidget() {
         const content = inputValue.trim();
         if ((!content && !attachmentFile) || isSending || isClosed || isTyping) return;
 
-        // ── ORDER SHORTCUT: responde sin llamar al AI (cero tokens) ─────────
-        if (content && !attachmentFile && WP_CONFIG) {
+        // ── ORDER SHORTCUT: solo para usuarios NO logueados (login prompt) ────
+        // Usuarios logueados van por la IA: misma respuesta + conversación persistida.
+        if (content && !attachmentFile && WP_CONFIG && !WOO_CUSTOMER) {
             const detected = detectOrderQuery(content);
             if (detected) {
                 const reply = buildOrderResponse(detected);
