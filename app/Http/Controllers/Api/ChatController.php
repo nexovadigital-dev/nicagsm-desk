@@ -112,6 +112,14 @@ class ChatController extends Controller
             'woo_token'      => 'nullable|string|max:128', // HMAC signature
             // Store context inyectado por el plugin WooCommerce
             'store_context'  => 'nullable|array',
+            // Historial de pedidos del cliente (inyectado por el plugin WP)
+            'woo_orders'     => 'nullable|array',
+            'woo_orders.*.id'     => 'nullable|integer',
+            'woo_orders.*.number' => 'nullable|string|max:50',
+            'woo_orders.*.status' => 'nullable|string|max:100',
+            'woo_orders.*.total'  => 'nullable|string|max:100',
+            'woo_orders.*.date'   => 'nullable|string|max:50',
+            'woo_orders.*.items'  => 'nullable|array',
         ]);
 
         // Resolve organization_id from widget token
@@ -207,6 +215,12 @@ class ChatController extends Controller
                 unset($p);
             }
             $storeContext = $raw;
+        }
+
+        // Merge woo_orders into store_context so the AI can see order history
+        if ($request->filled('woo_orders')) {
+            $storeContext = $storeContext ?? [];
+            $storeContext['customer_orders'] = array_slice($request->input('woo_orders'), 0, 5);
         }
 
         $ticket = Ticket::create([

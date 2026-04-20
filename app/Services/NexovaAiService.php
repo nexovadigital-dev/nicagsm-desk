@@ -392,6 +392,27 @@ class NexovaAiService
         }
 
         $lines[] = '';
+        if (! empty($ctx['customer_orders']) && is_array($ctx['customer_orders'])) {
+            $lines[] = '';
+            $lines[] = '--- PEDIDOS RECIENTES DE ESTE CLIENTE ---';
+            foreach ($ctx['customer_orders'] as $order) {
+                $num    = $order['number'] ?? $order['id'] ?? '?';
+                $status = $order['status'] ?? '?';
+                $total  = $order['total']  ?? '';
+                $date   = $order['date']   ?? '';
+                $items  = ! empty($order['items']) && is_array($order['items'])
+                    ? implode(', ', $order['items'])
+                    : '';
+                $line   = "• Pedido #{$num} — Estado: {$status}";
+                if ($total) $line .= " — Total: {$total}";
+                if ($date)  $line .= " — Fecha: {$date}";
+                if ($items) $line .= "\n  Productos: {$items}";
+                $lines[] = $line;
+            }
+            $lines[] = 'Puedes responder preguntas sobre el estado de estos pedidos usando la información de arriba.';
+            $lines[] = 'Si el cliente pregunta por un pedido que no aparece en la lista, indícale que puede consultar su historial completo en la tienda.';
+        }
+
         $lines[] = 'Cuando el cliente pregunte por productos, precios o disponibilidad, usa la información de arriba.';
         $lines[] = 'Si el cliente pregunta por un producto que no aparece en el catálogo, dile que puede verlo en la tienda o hablar con un agente.';
         $lines[] = 'MUY IMPORTANTE SOBRE PRECIOS: Si el precio es 0.00, NO digas que es gratis. Significa que es un servicio variable (ej: depende de la duración o modelo). Dile al cliente que el precio depende de la variación elegida y provéele obligatoriamente el enlace con formato Markdown [Ver Opciones](url).';
