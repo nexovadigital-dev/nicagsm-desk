@@ -32,7 +32,8 @@ const POLL_MS             = 3000;
 const STORAGE_KEY         = 'nexova_sid';
 const SESSIONS_KEY        = 'nexova_sessions' + (WIDGET_TOKEN ? '_' + WIDGET_TOKEN : '');
 const CONTACT_KEY         = 'nexova_contact'  + (WIDGET_TOKEN ? '_' + WIDGET_TOKEN : '');
-const VISITOR_KEY_STORAGE = 'nexova_vk' + (WIDGET_TOKEN ? '_' + WIDGET_TOKEN : '');
+const VISITOR_KEY_STORAGE = 'nexova_vk'     + (WIDGET_TOKEN ? '_' + WIDGET_TOKEN : '');
+const SOUND_MUTED_KEY     = 'nexova_muted'  + (WIDGET_TOKEN ? '_' + WIDGET_TOKEN : '');
 const MAX_STORED_SESSIONS = 15;
 
 // ── Visitor key: persistent anonymous browser identity ──────────────────────
@@ -1501,7 +1502,7 @@ function HomeScreen({ cfg, accentColor, botName, onStartChat, contactName, isRet
     // Greeting logic
     const firstName   = contactName ? contactName.split(' ')[0] : null;
     const greeting    = isReturning && firstName
-        ? `¡Hola de nuevo, ${firstName}! 👋`
+        ? `¡Hola de nuevo, ${firstName}!`
         : (cfg?.welcome_message || '¡Hola! ¿En qué te puedo ayudar?');
     const subGreeting = isReturning && firstName
         ? (cfg?.welcome_message || '¿En qué puedo ayudarte hoy?')
@@ -1559,9 +1560,9 @@ function HomeScreen({ cfg, accentColor, botName, onStartChat, contactName, isRet
                     <div style={{ marginTop: 4 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '0 0 10px' }}>
                             <div style={{ flex: 1, height: 1, background: '#f0f2f5' }}/>
-                            <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase',
-                                letterSpacing: '.08em', whiteSpace: 'nowrap' }}>
-                                ⚡ Preguntas frecuentes
+                            <span style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase',
+                                letterSpacing: '.06em', whiteSpace: 'nowrap' }}>
+                                Preguntas frecuentes
                             </span>
                             <div style={{ flex: 1, height: 1, background: '#f0f2f5' }}/>
                         </div>
@@ -1571,45 +1572,25 @@ function HomeScreen({ cfg, accentColor, botName, onStartChat, contactName, isRet
                                     title={faq.question}
                                     style={{
                                         background: '#fff',
-                                        border: `1.5px solid ${accentColor}28`,
-                                        borderRadius: 12, padding: '11px 14px 11px 12px',
+                                        border: `1px solid #e5e7eb`,
+                                        borderRadius: 10, padding: '10px 12px',
                                         cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
                                         width: '100%', display: 'flex', alignItems: 'center',
-                                        gap: 11, boxShadow: `0 1px 4px ${accentColor}10`,
-                                        transition: 'all .18s cubic-bezier(.4,0,.2,1)',
+                                        gap: 10, transition: 'border-color .15s, background .15s',
                                     }}
                                     onMouseEnter={e => {
-                                        e.currentTarget.style.borderColor = accentColor + '66';
-                                        e.currentTarget.style.background = accentColor + '08';
-                                        e.currentTarget.style.boxShadow = `0 3px 12px ${accentColor}25`;
-                                        e.currentTarget.style.transform = 'translateY(-1px)';
+                                        e.currentTarget.style.borderColor = accentColor + '55';
+                                        e.currentTarget.style.background = accentColor + '06';
                                     }}
                                     onMouseLeave={e => {
-                                        e.currentTarget.style.borderColor = accentColor + '28';
+                                        e.currentTarget.style.borderColor = '#e5e7eb';
                                         e.currentTarget.style.background = '#fff';
-                                        e.currentTarget.style.boxShadow = `0 1px 4px ${accentColor}10`;
-                                        e.currentTarget.style.transform = 'translateY(0)';
                                     }}>
-                                    <div style={{
-                                        width: 32, height: 32, borderRadius: 10, flexShrink: 0,
-                                        background: `linear-gradient(135deg, ${accentColor}25 0%, ${accentColor}12 100%)`,
-                                        border: `1px solid ${accentColor}20`,
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    }}>
-                                        <svg viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2"
-                                            strokeLinecap="round" width="14" height="14">
-                                            <path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                    </div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#1f2937',
+                                        <div style={{ fontSize: 12.5, fontWeight: 500, color: '#374151',
                                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                                            lineHeight: 1.35 }}>
+                                            lineHeight: 1.4 }}>
                                             {faq.question}
-                                        </div>
-                                        <div style={{ fontSize: 10.5, color: '#10b981', marginTop: 2.5,
-                                            display: 'flex', alignItems: 'center', gap: 3, fontWeight: 600 }}>
-                                            ⚡ Respuesta instantánea
                                         </div>
                                     </div>
                                     <div style={{
@@ -1820,8 +1801,10 @@ export default function NexovaChatWidget() {
     const hidden   = showOn === 'desktop' ? isMobile : showOn === 'mobile' ? !isMobile : false;
 
     const [conversationName,  setConversationName]  = useState(null);
-    const [inlineChatOrders,  setInlineChatOrders]  = useState(null); // { orders, email } tras verificar OTP
-    const hasAutoNamed = useRef(false); // evitar renombrar más de una vez por sesión
+    const [inlineChatOrders,  setInlineChatOrders]  = useState(null);
+    const [soundMuted,        setSoundMuted]        = useState(() => { try { return localStorage.getItem(SOUND_MUTED_KEY) === '1'; } catch { return false; } });
+    const [showMenu,          setShowMenu]          = useState(false);
+    const hasAutoNamed = useRef(false);
     const [contactName,      setContactName]      = useState(() => {
         if (WOO_CUSTOMER?.name) return WOO_CUSTOMER.name;
         try { return JSON.parse(localStorage.getItem(CONTACT_KEY) || 'null')?.name ?? null; } catch { return null; }
@@ -1963,6 +1946,16 @@ export default function NexovaChatWidget() {
         };
     }, [sendHeartbeat]);
 
+    // ── Cerrar menú al hacer clic fuera ──────────────────────────────────────
+    useEffect(() => {
+        if (!showMenu) return;
+        const close = (e) => {
+            if (!e.target.closest?.('[data-nx-menu]')) setShowMenu(false);
+        };
+        document.addEventListener('mousedown', close);
+        return () => document.removeEventListener('mousedown', close);
+    }, [showMenu]);
+
     // ── Returning visitor lookup (WooCommerce logueado) ──────────────────────
     // Para visitantes WC logueados, hace lookup en el servidor para detectar
     // si ya tienen historial (sin esperar a iniciar sesión de chat).
@@ -2048,7 +2041,7 @@ export default function NexovaChatWidget() {
                 m => m.sender_type !== 'user' && !String(m.id).startsWith('tmp-')
             );
             if (lastBot && lastBot.id !== lastBotMsgIdRef.current) {
-                if (soundEnabled) playSound('receive');
+                if (soundEnabled && !soundMuted) playSound('receive');
                 lastBotMsgIdRef.current = lastBot.id;
                 // If widget is closed, update bubble with new agent message
                 if (!isOpen) {
@@ -2300,6 +2293,25 @@ export default function NexovaChatWidget() {
         setConversationName(null);
         hasAutoNamed.current = true; // no re-renombrar conversaciones existentes
         setScreen('chat');
+    };
+
+    // ── Menú: sonido e identidad ─────────────────────────────────────────────
+    const toggleSound = () => {
+        setSoundMuted(m => {
+            const next = !m;
+            try { localStorage.setItem(SOUND_MUTED_KEY, next ? '1' : '0'); } catch {}
+            return next;
+        });
+    };
+
+    const resetIdentity = () => {
+        setShowMenu(false);
+        try { localStorage.removeItem(CONTACT_KEY); } catch {}
+        setContactName(null);
+        setIsReturning(false);
+        if (cfg?.pre_chat_enabled && cfg?.pre_chat_fields?.length > 0) {
+            setScreen('prechat');
+        }
     };
 
     // ── Abrir chat ───────────────────────────────────────────────────────────
@@ -2576,7 +2588,7 @@ export default function NexovaChatWidget() {
         const file = attachmentFile;
         const prev = attachmentPrev;
         clearAttachment();
-        if (soundEnabled) playSound('send');
+        if (soundEnabled && !soundMuted) playSound('send');
 
         // Optimistic message
         const tmpMsg = {
@@ -2850,7 +2862,7 @@ export default function NexovaChatWidget() {
 
                     {/* ── Header ── */}
                     <div style={{ background: accentColor, padding: '14px 16px',
-                        display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                        display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, position: 'relative' }}>
 
                         {/* Botón historial de conversaciones */}
                         {screen === 'chat' && (
@@ -2891,7 +2903,7 @@ export default function NexovaChatWidget() {
                             </div>
                         )}
 
-                        {/* Boton expandir */}
+                        {/* Botón expandir */}
                         <button onClick={() => setIsExpanded(e => !e)}
                             title={isExpanded ? 'Minimizar' : 'Expandir'}
                             style={{ background: 'rgba(255,255,255,.15)', border: 'none', borderRadius: 8,
@@ -2903,6 +2915,111 @@ export default function NexovaChatWidget() {
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" width="16" height="16"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
                             )}
                         </button>
+
+                        {/* Menú opciones */}
+                        <div data-nx-menu style={{ position: 'relative', flexShrink: 0 }}>
+                            <button
+                                onClick={() => setShowMenu(m => !m)}
+                                title="Opciones"
+                                style={{ background: showMenu ? 'rgba(255,255,255,.25)' : 'rgba(255,255,255,.15)',
+                                    border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer',
+                                    padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                                    <circle cx="12" cy="5"  r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                                </svg>
+                            </button>
+
+                            {showMenu && (
+                                <div style={{
+                                    position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 9999,
+                                    background: '#fff', borderRadius: 12, minWidth: 210,
+                                    boxShadow: '0 8px 24px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.08)',
+                                    border: '1px solid #f1f5f9', overflow: 'hidden',
+                                    animation: 'nx-fadein .15s ease-out',
+                                }}>
+                                    {/* Identidad del visitante */}
+                                    {contactName && (
+                                        <>
+                                            <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid #f1f5f9' }}>
+                                                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#9ca3af',
+                                                    textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>
+                                                    Identificado como
+                                                </p>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                    <div style={{ width: 28, height: 28, borderRadius: '50%',
+                                                        background: accentColor + '15', border: `1.5px solid ${accentColor}30`,
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        fontSize: 11, fontWeight: 700, color: accentColor, flexShrink: 0 }}>
+                                                        {contactName[0].toUpperCase()}
+                                                    </div>
+                                                    <span style={{ fontSize: 13, fontWeight: 600, color: '#111827',
+                                                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {contactName}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {/* Opción: Sonido */}
+                                    <button onClick={toggleSound}
+                                        style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                                            padding: '11px 16px', display: 'flex', alignItems: 'center', gap: 10,
+                                            textAlign: 'left', fontFamily: 'inherit' }}
+                                        onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                                        <div style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                                            background: soundMuted ? '#fef2f2' : '#f0fdf4',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            {soundMuted ? (
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" width="14" height="14">
+                                                    <path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+                                                </svg>
+                                            ) : (
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" width="14" height="14">
+                                                    <path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: '#111827' }}>
+                                                {soundMuted ? 'Activar sonidos' : 'Silenciar sonidos'}
+                                            </p>
+                                            <p style={{ margin: 0, fontSize: 11, color: '#9ca3af', marginTop: 1 }}>
+                                                {soundMuted ? 'Sonidos desactivados' : 'Sonidos activados'}
+                                            </p>
+                                        </div>
+                                    </button>
+
+                                    {/* Opción: Actualizar datos (solo si pre-chat está activo) */}
+                                    {cfg?.pre_chat_enabled && cfg?.pre_chat_fields?.length > 0 && (
+                                        <button onClick={resetIdentity}
+                                            style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                                                padding: '11px 16px', display: 'flex', alignItems: 'center', gap: 10,
+                                                textAlign: 'left', fontFamily: 'inherit', borderTop: '1px solid #f1f5f9' }}
+                                            onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                                            onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                                            <div style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                                                background: '#f0f9ff',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="#0369a1" strokeWidth="2" strokeLinecap="round" width="14" height="14">
+                                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                                    <path d="M18 8l2 2-6 6H12v-2l6-6z"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: '#111827' }}>
+                                                    Actualizar mis datos
+                                                </p>
+                                                <p style={{ margin: 0, fontSize: 11, color: '#9ca3af', marginTop: 1 }}>
+                                                    Nombre, email, teléfono
+                                                </p>
+                                            </div>
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
 
                         <button onClick={() => setIsOpen(false)}
                             style={{ background: 'rgba(255,255,255,.15)', border: 'none', borderRadius: 8,
