@@ -271,7 +271,7 @@ class NexovaAiService
                     $q->orWhere('widget_id', $widgetId);
                 }
             })
-            ->get(['title', 'content', 'source']);
+            ->get(['title', 'content', 'source', 'reference_id']);
 
         if ($articles->isEmpty()) return null;
 
@@ -322,7 +322,24 @@ class NexovaAiService
 
         // Umbral: 0.45 (más sensible que el 60% anterior, pero combinado)
         if ($bestArticle && $bestScore >= 0.45) {
-            return $this->stripMarkdown($bestArticle->content);
+            $plain   = $this->stripMarkdown($bestArticle->content);
+
+            // Resumen: primer párrafo o máx 280 chars
+            $firstPar = trim(explode("\n\n", $plain)[0]);
+            $summary  = mb_strlen($firstPar) <= 280
+                ? $firstPar
+                : mb_substr($firstPar, 0, 280) . '…';
+
+            // Si el artículo viene de web scrape con URL, añadir botón "Ver más"
+            $sourceUrl = ($bestArticle->source === 'web_scrape' && ! empty($bestArticle->reference_id))
+                ? $bestArticle->reference_id
+                : null;
+
+            if ($sourceUrl) {
+                $summary .= "\n\n[Ver información completa]({$sourceUrl})";
+            }
+
+            return $summary;
         }
 
         return null;
@@ -835,8 +852,8 @@ class NexovaAiService
             $systemPrompt  = "Eres {$botName}, el asistente virtual de {$orgName}.";
             $systemPrompt .= " Responde en el idioma del cliente (español o inglés). Sé amable, directo y conciso.";
             $systemPrompt .= " Tu conocimiento se limita a {$orgName}: sus productos, servicios, precios, políticas e información de la organización.";
-            $systemPrompt .= " Si te consultan algo ajeno a {$orgName}, indica amablemente que solo puedes ayudar con temas de la organización y sugiere hablar con un agente.";
-            $systemPrompt .= " Nunca inventes datos. Si no tienes la información, dilo y ofrece conectar con un agente.";
+            $systemPrompt .= " REGLA CRÍTICA FUERA DE TEMA: Si el cliente pregunta algo completamente ajeno a {$orgName} (recetas, construcción, medicina, tutoriales genéricos, etc.), NO des ninguna información sobre ese tema. Responde únicamente con algo como: 'No tengo la capacidad de ayudarte con eso. Pero si necesitas información sobre {$orgName}, sus servicios o precios, con gusto te asisto.' y ofrece ayuda sobre la organización.";
+            $systemPrompt .= " Nunca inventes datos. Si no tienes la información exacta, dilo y ofrece conectar con un agente.";
             if ($orgWeb) {
                 $systemPrompt .= " Sitio web oficial: {$orgWeb}.";
             }
