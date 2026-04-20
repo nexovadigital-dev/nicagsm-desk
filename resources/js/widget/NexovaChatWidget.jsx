@@ -1560,9 +1560,9 @@ function HomeScreen({ cfg, accentColor, botName, onStartChat, contactName, isRet
                     <div style={{ marginTop: 4 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '0 0 10px' }}>
                             <div style={{ flex: 1, height: 1, background: '#f0f2f5' }}/>
-                            <span style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase',
-                                letterSpacing: '.06em', whiteSpace: 'nowrap' }}>
-                                Preguntas frecuentes
+                            <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase',
+                                letterSpacing: '.08em', whiteSpace: 'nowrap' }}>
+                                ⚡ Preguntas frecuentes
                             </span>
                             <div style={{ flex: 1, height: 1, background: '#f0f2f5' }}/>
                         </div>
@@ -1572,25 +1572,45 @@ function HomeScreen({ cfg, accentColor, botName, onStartChat, contactName, isRet
                                     title={faq.question}
                                     style={{
                                         background: '#fff',
-                                        border: `1px solid #e5e7eb`,
-                                        borderRadius: 10, padding: '10px 12px',
+                                        border: `1.5px solid ${accentColor}28`,
+                                        borderRadius: 12, padding: '11px 14px 11px 12px',
                                         cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
                                         width: '100%', display: 'flex', alignItems: 'center',
-                                        gap: 10, transition: 'border-color .15s, background .15s',
+                                        gap: 11, boxShadow: `0 1px 4px ${accentColor}10`,
+                                        transition: 'all .18s cubic-bezier(.4,0,.2,1)',
                                     }}
                                     onMouseEnter={e => {
-                                        e.currentTarget.style.borderColor = accentColor + '55';
-                                        e.currentTarget.style.background = accentColor + '06';
+                                        e.currentTarget.style.borderColor = accentColor + '66';
+                                        e.currentTarget.style.background = accentColor + '08';
+                                        e.currentTarget.style.boxShadow = `0 3px 12px ${accentColor}25`;
+                                        e.currentTarget.style.transform = 'translateY(-1px)';
                                     }}
                                     onMouseLeave={e => {
-                                        e.currentTarget.style.borderColor = '#e5e7eb';
+                                        e.currentTarget.style.borderColor = accentColor + '28';
                                         e.currentTarget.style.background = '#fff';
+                                        e.currentTarget.style.boxShadow = `0 1px 4px ${accentColor}10`;
+                                        e.currentTarget.style.transform = 'translateY(0)';
                                     }}>
+                                    <div style={{
+                                        width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+                                        background: `linear-gradient(135deg, ${accentColor}25 0%, ${accentColor}12 100%)`,
+                                        border: `1px solid ${accentColor}20`,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    }}>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2"
+                                            strokeLinecap="round" width="14" height="14">
+                                            <path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    </div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontSize: 12.5, fontWeight: 500, color: '#374151',
+                                        <div style={{ fontSize: 12.5, fontWeight: 600, color: '#1f2937',
                                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                                            lineHeight: 1.4 }}>
+                                            lineHeight: 1.35 }}>
                                             {faq.question}
+                                        </div>
+                                        <div style={{ fontSize: 10.5, color: '#10b981', marginTop: 2.5,
+                                            display: 'flex', alignItems: 'center', gap: 3, fontWeight: 600 }}>
+                                            ⚡ Respuesta instantánea
                                         </div>
                                     </div>
                                     <div style={{
