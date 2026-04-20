@@ -307,35 +307,51 @@ const formatDate = iso =>
 // ---------------------------------------------------------------------------
 // Renderiza contenido de mensajes del bot: parsea [label](url) → botones
 // ---------------------------------------------------------------------------
+function renderInlineText(str, keyPrefix) {
+    if (!str) return null;
+    const boldRe = /\*\*([^*\n]+)\*\*/g;
+    const out = [];
+    let last = 0, bm;
+    while ((bm = boldRe.exec(str)) !== null) {
+        if (bm.index > last) out.push(<span key={`${keyPrefix}-t${last}`} style={{ whiteSpace: 'pre-wrap' }}>{str.slice(last, bm.index)}</span>);
+        out.push(<strong key={`${keyPrefix}-b${bm.index}`}>{bm[1]}</strong>);
+        last = bm.index + bm[0].length;
+    }
+    if (last < str.length) out.push(<span key={`${keyPrefix}-t${last}`} style={{ whiteSpace: 'pre-wrap' }}>{str.slice(last)}</span>);
+    return out;
+}
+
 function renderBotContent(text, accentColor) {
     if (!text) return null;
     const linkRe = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
     const parts = [];
-    let last = 0, m;
+    let last = 0, m, idx = 0;
     while ((m = linkRe.exec(text)) !== null) {
-        if (m.index > last) parts.push({ t: 'text', v: text.slice(last, m.index) });
-        parts.push({ t: 'link', label: m[1], url: m[2] });
+        if (m.index > last) {
+            renderInlineText(text.slice(last, m.index), `s${idx++}`).forEach(el => parts.push(el));
+        }
+        parts.push(
+            <a key={`lnk${m.index}`} href={m[2]} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5,
+                    background: accentColor, color: '#fff', borderRadius: 7,
+                    padding: '5px 11px', fontSize: 11.5, fontWeight: 600,
+                    textDecoration: 'none', margin: '5px 0 2px',
+                    verticalAlign: 'middle', lineHeight: 1.3, flexShrink: 0 }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                    strokeLinecap="round" width="11" height="11">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                    <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+                {m[1]}
+            </a>
+        );
         last = m.index + m[0].length;
+        idx++;
     }
-    if (last < text.length) parts.push({ t: 'text', v: text.slice(last) });
-    if (!parts.length || parts.every(p => p.t === 'text')) return text;
-    return parts.map((p, i) => p.t === 'text' ? (
-        <span key={i} style={{ whiteSpace: 'pre-wrap' }}>{p.v}</span>
-    ) : (
-        <a key={i} href={p.url} target="_blank" rel="noopener noreferrer"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 5,
-                background: accentColor, color: '#fff', borderRadius: 7,
-                padding: '5px 11px', fontSize: 11.5, fontWeight: 600,
-                textDecoration: 'none', margin: '5px 0 2px',
-                verticalAlign: 'middle', lineHeight: 1.3, flexShrink: 0 }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-                strokeLinecap="round" width="11" height="11">
-                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
-                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-            </svg>
-            {p.label}
-        </a>
-    ));
+    if (last < text.length) {
+        renderInlineText(text.slice(last), `s${idx}`).forEach(el => parts.push(el));
+    }
+    return parts.length ? parts : <span style={{ whiteSpace: 'pre-wrap' }}>{text}</span>;
 }
 
 // ---------------------------------------------------------------------------
