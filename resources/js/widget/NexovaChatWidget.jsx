@@ -1171,19 +1171,10 @@ function PreChatForm({ fields, onSubmit, accentColor, botName, welcomeMessage, b
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto',
             animation: 'nx-fade-up .2s ease-out' }}>
 
-            {/* Header strip */}
-            <div style={{ background: accentColor, padding: '18px 18px 20px', color: '#fff' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <div style={s.avatar(initial, 'rgba(255,255,255,.25)', 36)}>
-                        {botAvatar ? <img src={botAvatar} style={{ width:'100%', height:'100%', objectFit:'cover' }} alt="" /> : initial}
-                    </div>
-                    <div>
-                        <p style={{ margin: 0, fontWeight: 700, fontSize: 14 }}>{botName || 'Nexova IA'}</p>
-                        <p style={{ margin: 0, fontSize: 11, opacity: .85 }}>En línea · Asistente IA</p>
-                    </div>
-                </div>
-                <p style={{ margin: 0, fontSize: 12.5, opacity: .9, lineHeight: 1.5 }}>
-                    👋 {welcomeMessage || '¡Hola! ¿En qué te puedo ayudar?'}
+            {/* Welcome message strip */}
+            <div style={{ background: accentColor, padding: '14px 18px 16px', color: '#fff', flexShrink: 0 }}>
+                <p style={{ margin: 0, fontSize: 13, opacity: .92, lineHeight: 1.55 }}>
+                    {welcomeMessage || '¡Hola! ¿En qué te puedo ayudar?'}
                 </p>
             </div>
 
