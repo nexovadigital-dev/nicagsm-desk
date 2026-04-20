@@ -2133,11 +2133,23 @@ export default function NexovaChatWidget() {
     const initSession = useCallback(async (preChatData = {}) => {
         if (sessionId) return;
 
+        // Type-based fallback: find value in preChatData using field type from widget config
+        const findByType = (type) => {
+            const f = cfg?.pre_chat_fields?.find(ff => ff.type === type && ff.enabled !== false);
+            if (!f) return null;
+            const key = f.name || (f.label?.toLowerCase().replace(/[^a-z0-9]/gi, '_') || '');
+            return preChatData[key] || null;
+        };
+
+        const resolvedName  = preChatData.name  || preChatData.nombre  || findByType('text')  || (WOO_CUSTOMER?.name  ?? null);
+        const resolvedEmail = preChatData.email || preChatData.correo  || findByType('email') || (WOO_CUSTOMER?.email ?? null);
+        const resolvedPhone = preChatData.phone || preChatData.telefono || findByType('tel')   || (WOO_CUSTOMER?.phone ?? null);
+
         // Build payload — WooCommerce identity takes priority over pre-chat data
         const payload = {
-            client_name:  preChatData.name || preChatData.nombre || (WOO_CUSTOMER?.name ?? 'Visitante'),
-            client_email: preChatData.email || preChatData.correo || (WOO_CUSTOMER?.email ?? null),
-            client_phone: preChatData.phone || preChatData.telefono || (WOO_CUSTOMER?.phone ?? null),
+            client_name:  resolvedName  || 'Visitante',
+            client_email: resolvedEmail,
+            client_phone: resolvedPhone,
             ...preChatData,
             ...(WIDGET_TOKEN ? { token: WIDGET_TOKEN } : {}),
             page:     window.location.href,
@@ -2178,16 +2190,23 @@ export default function NexovaChatWidget() {
                 saveSession(data.session_id);
                 setSessionId(data.session_id);
                 setScreen('chat');
-                if (data.contact_name) {
-                    setContactName(data.contact_name);
-                    try { localStorage.setItem(CONTACT_KEY, JSON.stringify({ name: data.contact_name, returning: true })); } catch {}
+                const savedName = data.contact_name || resolvedName;
+                if (savedName && savedName !== 'Visitante') {
+                    setContactName(savedName);
+                    try {
+                        localStorage.setItem(CONTACT_KEY, JSON.stringify({
+                            name: savedName,
+                            email: resolvedEmail || null,
+                            returning: !!data.contact_name,
+                        }));
+                    } catch {}
                 }
-                if (data.returning_visitor) setIsReturning(true);
+                if (data.returning_visitor || data.contact_name) setIsReturning(!!data.contact_name);
             }
         } catch {
             setError('No se pudo iniciar el chat. Intenta de nuevo.');
         }
-    }, [sessionId]);
+    }, [sessionId, cfg]);
 
     // ── Nueva conversación ───────────────────────────────────────────────────
     const startNewChat = (prefillFaq = null) => {
@@ -2199,9 +2218,8 @@ export default function NexovaChatWidget() {
         clearInterval(pollRef.current);
         pollRef.current = null;
         isSendingRef.current = false;
-        // Limpiar estado completamente
+        // Limpiar sesión pero preservar identidad del visitante
         localStorage.removeItem(STORAGE_KEY);
-        try { localStorage.removeItem(CONTACT_KEY); } catch {}
         setSessionId(null);
         setMessages([]);
         setTicketStatus('bot');
@@ -2216,17 +2234,22 @@ export default function NexovaChatWidget() {
         hasAutoNamed.current = false; // nueva conv → permitir auto-nombre
         sessionUploadCount.current = 0;
 
-        if (cfg?.pre_chat_enabled && cfg?.pre_chat_fields?.length > 0 && !WOO_CUSTOMER?.id) {
+        const savedContact = (() => { try { return JSON.parse(localStorage.getItem(CONTACT_KEY) || 'null'); } catch { return null; } })();
+        const skipPreChat = savedContact?.name && savedContact.name !== 'Visitante';
+        if (cfg?.pre_chat_enabled && cfg?.pre_chat_fields?.length > 0 && !WOO_CUSTOMER?.id && !skipPreChat) {
             setScreen('prechat');
         } else {
             setScreen('chat');
             if (prefillFaq) pendingFaqSendRef.current = prefillFaq;
+            const startPayload = skipPreChat
+                ? { client_name: savedContact.name, client_email: savedContact.email || null }
+                : { client_name: 'Visitante' };
             // initSession se llamará en el siguiente render
             setTimeout(() => {
                 fetch(`${API_BASE}/api/chat/start`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-                    body: JSON.stringify({ client_name: 'Visitante', ...(WIDGET_TOKEN ? { token: WIDGET_TOKEN } : {}), page: window.location.href, referrer: document.referrer || null }),
+                    body: JSON.stringify({ ...startPayload, ...(WIDGET_TOKEN ? { token: WIDGET_TOKEN } : {}), page: window.location.href, referrer: document.referrer || null }),
                 }).then(r => r.json()).then(data => {
                     if (data.session_id) {
                         localStorage.setItem(STORAGE_KEY, data.session_id);
@@ -2292,8 +2315,14 @@ export default function NexovaChatWidget() {
         }
 
         if (!sessionId) {
-            if (cfg?.pre_chat_enabled && cfg?.pre_chat_fields?.length > 0 && !WOO_CUSTOMER?.id) {
+            const savedContact = (() => { try { return JSON.parse(localStorage.getItem(CONTACT_KEY) || 'null'); } catch { return null; } })();
+            const skipPreChat = savedContact?.name && savedContact.name !== 'Visitante';
+            if (cfg?.pre_chat_enabled && cfg?.pre_chat_fields?.length > 0 && !WOO_CUSTOMER?.id && !skipPreChat) {
                 setScreen('prechat');
+            } else if (cfg?.pre_chat_enabled && cfg?.pre_chat_fields?.length > 0 && !WOO_CUSTOMER?.id && skipPreChat) {
+                // Returning visitor — auto-fill identity and skip form
+                setScreen(defaultScreen === 'home' ? 'home' : 'chat');
+                if (defaultScreen !== 'home') initSession({ name: savedContact.name, email: savedContact.email || undefined });
             } else if (defaultScreen === 'home') {
                 setScreen('home');
             } else {
@@ -2317,11 +2346,14 @@ export default function NexovaChatWidget() {
         const isFaqMsg = typeof prefillMessage === 'string' && prefillMessage;
         if (isFaqMsg) { startNewChat(prefillMessage); return; }
         if (!sessionId) {
-            if (cfg?.pre_chat_enabled && cfg?.pre_chat_fields?.length > 0) {
+            const savedContact = (() => { try { return JSON.parse(localStorage.getItem(CONTACT_KEY) || 'null'); } catch { return null; } })();
+            const skipPreChat = savedContact?.name && savedContact.name !== 'Visitante';
+            if (cfg?.pre_chat_enabled && cfg?.pre_chat_fields?.length > 0 && !skipPreChat) {
                 setScreen('prechat');
             } else {
                 setScreen('chat');
-                initSession().then(() => {
+                const preChatArg = skipPreChat ? { name: savedContact.name, email: savedContact.email || undefined } : {};
+                initSession(preChatArg).then(() => {
                     if (typeof prefillMessage === 'string' && prefillMessage) {
                         setInputValue(prefillMessage);
                         setTimeout(() => textareaRef.current?.focus(), 200);
