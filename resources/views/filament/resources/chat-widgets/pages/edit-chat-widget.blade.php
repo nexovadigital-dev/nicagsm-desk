@@ -1053,7 +1053,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
      Livewire actualiza $wooConfirmField en background para el texto
 ── --}}
 @teleport('body')
-<div id="nx-woo-modal" style="position:fixed;inset:0;z-index:9999;display:{{ $wooConfirmModal ? 'flex' : 'none' }};align-items:center;justify-content:center;padding:20px">
+<div id="nx-woo-modal" wire:ignore style="position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px">
     <div class="nx-bd" style="position:absolute;inset:0;background:rgba(0,0,0,.3)"
          wire:click="cancelDisableWoo"></div>
     <div class="nx-card" style="position:relative;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.12),0 1px 3px rgba(0,0,0,.08);width:100%;max-width:420px;overflow:hidden">
@@ -1118,13 +1118,16 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         setTimeout(function () { m.classList.remove('nx-modal-entering'); }, 250);
     }
 
-    /* ── Modal: cerrar con animación, luego Livewire oculta ── */
+    /* ── Modal: cerrar con animación y ocultar antes del re-render ── */
     function hideModal() {
         var m = getModal();
         if (!m) return;
         m.classList.remove('nx-modal-entering');
         m.classList.add('nx-modal-exiting');
-        setTimeout(function () { m.classList.remove('nx-modal-exiting'); }, 180);
+        setTimeout(function () {
+            m.style.display = 'none';
+            m.classList.remove('nx-modal-exiting');
+        }, 160);
     }
 
     /* ── Pill toggles ── */
