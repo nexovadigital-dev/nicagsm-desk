@@ -1028,7 +1028,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
      Livewire actualiza $wooConfirmField en background para el texto
 ── --}}
 @teleport('body')
-<div id="nx-woo-modal" style="position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px">
+<div id="nx-woo-modal" style="position:fixed;inset:0;z-index:9999;display:{{ $wooConfirmModal ? 'flex' : 'none' }};align-items:center;justify-content:center;padding:20px">
     <div style="position:absolute;inset:0;background:rgba(0,0,0,.3)"
          onclick="document.getElementById('nx-woo-modal').style.display='none'"
          wire:click="cancelDisableWoo"></div>
