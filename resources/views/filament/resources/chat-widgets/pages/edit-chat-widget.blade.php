@@ -69,19 +69,11 @@
     box-shadow: none !important;
 }
 
-/* Modal Woo — Alpine x-transition classes */
-.nx-woo-enter       { transition: opacity .2s ease, transform .22s cubic-bezier(.34,1.56,.64,1); }
-.nx-woo-enter-start { opacity: 0; transform: translateY(10px) scale(.95); }
-.nx-woo-enter-end   { opacity: 1; transform: translateY(0) scale(1); }
-.nx-woo-leave       { transition: opacity .15s ease, transform .15s ease; }
-.nx-woo-leave-start { opacity: 1; transform: translateY(0) scale(1); }
-.nx-woo-leave-end   { opacity: 0; transform: translateY(6px) scale(.97); }
-
-/* El backdrop se mueve con el contenedor, la tarjeta tiene su propia transición */
-#nx-woo-modal > .nx-bd {
-    transition: opacity .2s ease;
+/* Modal Woo — keyframe de entrada en la tarjeta */
+@keyframes nxWooIn {
+    from { opacity: 0; transform: translateY(12px) scale(.95); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);   }
 }
-#nx-woo-modal[style*="display: none"] > .nx-bd { opacity: 0; }
 
 /* ── Segmented control ── */
 .wc-seg { display: flex; background: var(--c-bg,#f5f6f8); border: 1.5px solid var(--c-border,#e3e6ea); border-radius: 9px; padding: 3px; gap: 2px; }
@@ -1048,24 +1040,12 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
 </div>{{-- /.wc-right-col --}}
 </div>
 
-{{-- ── Modal: confirmar desactivar WooCommerce ──
-     id="nx-woo-modal" → JS lo muestra INMEDIATAMENTE al click
-     Livewire actualiza $wooConfirmField en background para el texto
-── --}}
-@teleport('body')
-<div x-data="{ open: @entangle('wooConfirmModal') }"
-     x-show="open"
-     x-transition:enter="nx-woo-enter"
-     x-transition:enter-start="nx-woo-enter-start"
-     x-transition:enter-end="nx-woo-enter-end"
-     x-transition:leave="nx-woo-leave"
-     x-transition:leave-start="nx-woo-leave-start"
-     x-transition:leave-end="nx-woo-leave-end"
-     id="nx-woo-modal"
-     style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px">
-    <div class="nx-bd" style="position:absolute;inset:0;background:rgba(0,0,0,.3)"
+{{-- ── Modal: confirmar desactivar WooCommerce ── sin @teleport ni @entangle ── --}}
+<div id="nx-woo-modal"
+     style="position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;display:{{ $wooConfirmModal ? 'flex' : 'none' }}">
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,.35)"
          wire:click="cancelDisableWoo"></div>
-    <div class="nx-card" style="position:relative;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.12),0 1px 3px rgba(0,0,0,.08);width:100%;max-width:420px;overflow:hidden">
+    <div style="position:relative;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.15),0 1px 3px rgba(0,0,0,.08);width:100%;max-width:420px;overflow:hidden;animation:{{ $wooConfirmModal ? 'nxWooIn .22s cubic-bezier(.34,1.56,.64,1) both' : 'none' }}">
 
         <div style="height:3px;background:#ef4444;width:100%"></div>
 
@@ -1094,7 +1074,6 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
 
     </div>
 </div>
-@endteleport
 
 <script>
 (function () {
