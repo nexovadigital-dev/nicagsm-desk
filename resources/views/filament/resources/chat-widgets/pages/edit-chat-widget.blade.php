@@ -1131,11 +1131,21 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
     }
 
     /* ── Pill toggles ── */
+    function getDot(pill) {
+        return pill.querySelector('[style*="border-radius:50%"]');
+    }
+
+    // ON = dot en left:21px, OFF = dot en left:3px
+    function pillIsOn(pill) {
+        var dot = getDot(pill);
+        return dot ? parseInt(dot.style.left || '0', 10) > 10 : false;
+    }
+
     function isPillToggle(el) {
         if (!el || !el.hasAttribute || !el.hasAttribute('wire:click')) return false;
         if (el.dataset.flipping) return false;
         var a = el.getAttribute('wire:click') || '';
-        return a.startsWith('toggle') && !!el.querySelector('[style*="border-radius:50%"]');
+        return a.startsWith('toggle') && !!getDot(el);
     }
 
     function startPillWaiting(pill) {
@@ -1144,12 +1154,11 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
     }
 
     function flipPill(pill) {
-        var dot    = pill.querySelector('[style*="border-radius:50%"]');
-        var bg     = (pill.style.background || '').replace(/\s/g, '');
-        var active = bg.includes('22c55e') || bg.includes('7c3aed');
-        var woo    = (pill.getAttribute('wire:click') || '').toLowerCase().includes('woo');
-        pill.style.background = active ? '#d1d5db' : (woo ? '#7c3aed' : '#22c55e');
-        if (dot) dot.style.left = active ? '3px' : '21px';
+        var dot  = getDot(pill);
+        var isOn = pillIsOn(pill);
+        var woo  = (pill.getAttribute('wire:click') || '').toLowerCase().includes('woo');
+        pill.style.background = isOn ? '#d1d5db' : (woo ? '#7c3aed' : '#22c55e');
+        if (dot) dot.style.left = isOn ? '3px' : '21px';
         pill.style.opacity = '.65';
         pill.dataset.flipping = '1';
     }
@@ -1174,11 +1183,9 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         if (!isPillToggle(el)) return;
 
         var action = el.getAttribute('wire:click') || '';
-        var bg     = (el.style.background || '').replace(/\s/g, '');
-        var isOn   = bg.includes('7c3aed') || bg.includes('22c55e');
+        var isOn   = pillIsOn(el);
 
         if (isOn && action.startsWith('toggleWoo')) {
-            // Spinner de espera + abrir modal con animación
             startPillWaiting(el);
             showModal(action.includes('wooIntegrationEnabled'));
         } else {
