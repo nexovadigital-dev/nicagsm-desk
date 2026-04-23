@@ -58,6 +58,31 @@
 .nx-pill-toggle .nx-pill-dot { transition: left .2s cubic-bezier(.4,0,.2,1); }
 .nx-pill-toggle.nx-saving { opacity: .6; pointer-events: none; }
 
+/* Pill spinner — se activa mientras espera el modal de Woo */
+@keyframes nx-spin { to { transform: rotate(360deg); } }
+.nx-pill-waiting { pointer-events: none; }
+.nx-pill-waiting .nx-pill-dot {
+    background: transparent !important;
+    border: 2px solid rgba(255,255,255,.35) !important;
+    border-top-color: #fff !important;
+    animation: nx-spin .65s linear infinite;
+    box-shadow: none !important;
+}
+
+/* Modal Woo — animaciones entrada/salida */
+@keyframes nx-bd-in  { from { opacity:0 }               to { opacity:1 } }
+@keyframes nx-bd-out { from { opacity:1 }               to { opacity:0 } }
+@keyframes nx-card-in  { from { opacity:0; transform:translateY(10px) scale(.96) } to { opacity:1; transform:translateY(0) scale(1) } }
+@keyframes nx-card-out { from { opacity:1; transform:translateY(0) scale(1) }       to { opacity:0; transform:translateY(6px) scale(.97) } }
+
+#nx-woo-modal > .nx-bd   { transition: opacity .18s ease; }
+#nx-woo-modal > .nx-card { transition: opacity .18s ease, transform .18s cubic-bezier(.4,0,.2,1); }
+
+#nx-woo-modal.nx-modal-entering > .nx-bd   { animation: nx-bd-in   .2s ease both; }
+#nx-woo-modal.nx-modal-entering > .nx-card { animation: nx-card-in .22s cubic-bezier(.34,1.56,.64,1) both; }
+#nx-woo-modal.nx-modal-exiting  > .nx-bd   { animation: nx-bd-out  .15s ease both; }
+#nx-woo-modal.nx-modal-exiting  > .nx-card { animation: nx-card-out .15s ease both; }
+
 /* ── Segmented control ── */
 .wc-seg { display: flex; background: var(--c-bg,#f5f6f8); border: 1.5px solid var(--c-border,#e3e6ea); border-radius: 9px; padding: 3px; gap: 2px; }
 .wc-seg-btn { flex: 1; padding: 7px 10px; border-radius: 7px; font-size: 12px; font-weight: 500; border: none; background: transparent; color: var(--c-sub,#6b7280); cursor: pointer; font-family: inherit; transition: background .12s, color .12s; }
@@ -1029,10 +1054,9 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
 ── --}}
 @teleport('body')
 <div id="nx-woo-modal" style="position:fixed;inset:0;z-index:9999;display:{{ $wooConfirmModal ? 'flex' : 'none' }};align-items:center;justify-content:center;padding:20px">
-    <div style="position:absolute;inset:0;background:rgba(0,0,0,.3)"
-         onclick="document.getElementById('nx-woo-modal').style.display='none'"
+    <div class="nx-bd" style="position:absolute;inset:0;background:rgba(0,0,0,.3)"
          wire:click="cancelDisableWoo"></div>
-    <div style="position:relative;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.12),0 1px 3px rgba(0,0,0,.08);width:100%;max-width:420px;overflow:hidden">
+    <div class="nx-card" style="position:relative;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.12),0 1px 3px rgba(0,0,0,.08);width:100%;max-width:420px;overflow:hidden">
 
         <div style="height:3px;background:#ef4444;width:100%"></div>
 
@@ -1048,12 +1072,12 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;margin-top:20px;border-top:1px solid #f3f4f6">
             <span style="font-size:11.5px;color:#9ca3af">Se sincroniza con el plugin de WordPress</span>
             <div style="display:flex;gap:8px">
-                <button onclick="document.getElementById('nx-woo-modal').style.display='none'"
+                <button id="nx-woo-cancel"
                         wire:click="cancelDisableWoo"
                         style="padding:7px 16px;border-radius:7px;border:1px solid #e5e7eb;background:#fff;color:#374151;font-size:13px;font-weight:500;cursor:pointer;line-height:1">
                     Cancelar
                 </button>
-                <button onclick="document.getElementById('nx-woo-modal').style.display='none'"
+                <button id="nx-woo-confirm"
                         wire:click="confirmDisableWoo"
                         style="padding:7px 16px;border-radius:7px;border:none;background:#ef4444;color:#fff;font-size:13px;font-weight:500;cursor:pointer;line-height:1">
                     Desactivar
@@ -1070,17 +1094,50 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
 (function () {
     'use strict';
 
-    /* ─────────────────────────────────────────────────────────────────
-       Optimistic UI para pill toggles (wire:click="toggle...")
-       Regla: solo flip VISUAL + opacity. NUNCA pointer-events:none,
-       para no cancelar el click que Livewire necesita procesar.
-    ───────────────────────────────────────────────────────────────── */
+    var modal = null;
 
+    function getModal() {
+        return modal || (modal = document.getElementById('nx-woo-modal'));
+    }
+
+    /* ── Modal: abrir con animación ── */
+    function showModal(isIntegration) {
+        var m     = getModal();
+        var title = document.getElementById('nx-woo-modal-title');
+        var desc  = document.getElementById('nx-woo-modal-desc');
+        if (!m) return;
+        if (title) title.textContent = isIntegration
+            ? 'Desactivar productos y precios'
+            : 'Desactivar estado de pedidos';
+        if (desc) desc.textContent = isIntegration
+            ? 'El bot dejará de conocer el catálogo de tu tienda. Las consultas sobre productos, precios y stock se responderán solo con la base de conocimiento.'
+            : 'Los clientes no podrán consultar el estado de sus pedidos a través del bot, aunque tengan sesión activa en la tienda.';
+        m.style.display = 'flex';
+        m.classList.remove('nx-modal-exiting');
+        m.classList.add('nx-modal-entering');
+        setTimeout(function () { m.classList.remove('nx-modal-entering'); }, 250);
+    }
+
+    /* ── Modal: cerrar con animación, luego Livewire oculta ── */
+    function hideModal() {
+        var m = getModal();
+        if (!m) return;
+        m.classList.remove('nx-modal-entering');
+        m.classList.add('nx-modal-exiting');
+        setTimeout(function () { m.classList.remove('nx-modal-exiting'); }, 180);
+    }
+
+    /* ── Pill toggles ── */
     function isPillToggle(el) {
         if (!el || !el.hasAttribute || !el.hasAttribute('wire:click')) return false;
-        if (el.dataset.flipping) return false;                      // ya en vuelo
+        if (el.dataset.flipping) return false;
         var a = el.getAttribute('wire:click') || '';
         return a.startsWith('toggle') && !!el.querySelector('[style*="border-radius:50%"]');
+    }
+
+    function startPillWaiting(pill) {
+        pill.classList.add('nx-pill-waiting');
+        pill.dataset.flipping = '1';
     }
 
     function flipPill(pill) {
@@ -1088,26 +1145,27 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         var bg     = (pill.style.background || '').replace(/\s/g, '');
         var active = bg.includes('22c55e') || bg.includes('7c3aed');
         var woo    = (pill.getAttribute('wire:click') || '').toLowerCase().includes('woo');
-
-        // Flip visual inmediato
         pill.style.background = active ? '#d1d5db' : (woo ? '#7c3aed' : '#22c55e');
         if (dot) dot.style.left = active ? '3px' : '21px';
-
-        // Solo opacidad — NO pointer-events para que el click de Livewire siga
         pill.style.opacity = '.65';
-
-        // Flag anti-doble-click
         pill.dataset.flipping = '1';
     }
 
     function restorePills() {
         document.querySelectorAll('[data-flipping="1"]').forEach(function (pill) {
+            pill.classList.remove('nx-pill-waiting');
             pill.style.opacity = '';
             delete pill.dataset.flipping;
         });
     }
 
-    // Intercepta mousedown: flip visual + abrir modal Woo si corresponde
+    /* ── Intercepta click en botones del modal ── */
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('#nx-woo-cancel, #nx-woo-confirm');
+        if (btn) hideModal();
+    }, true);
+
+    /* ── Intercepta mousedown en toggles ── */
     document.addEventListener('mousedown', function (e) {
         var el = e.target.closest('[wire\\:click]');
         if (!isPillToggle(el)) return;
@@ -1116,28 +1174,17 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         var bg     = (el.style.background || '').replace(/\s/g, '');
         var isOn   = bg.includes('7c3aed') || bg.includes('22c55e');
 
-        // Si el toggle está ON y la acción es toggleWoo → mostrar modal al instante
         if (isOn && action.startsWith('toggleWoo')) {
-            var isIntegration = action.includes('wooIntegrationEnabled');
-            var modal  = document.getElementById('nx-woo-modal');
-            var title  = document.getElementById('nx-woo-modal-title');
-            var desc   = document.getElementById('nx-woo-modal-desc');
-            if (modal) {
-                if (title) title.textContent = isIntegration
-                    ? 'Desactivar productos y precios'
-                    : 'Desactivar estado de pedidos';
-                if (desc) desc.textContent = isIntegration
-                    ? 'El bot dejará de conocer el catálogo de tu tienda. Las consultas sobre productos, precios y stock se responderán solo con la base de conocimiento.'
-                    : 'Los clientes no podrán consultar el estado de sus pedidos a través del bot, aunque tengan sesión activa en la tienda.';
-                modal.style.display = 'flex';
-            }
+            // Spinner de espera + abrir modal con animación
+            startPillWaiting(el);
+            showModal(action.includes('wooIntegrationEnabled'));
+        } else {
+            flipPill(el);
         }
-
-        flipPill(el);
         setTimeout(restorePills, 5000);
     }, true);
 
-    // Restaura después de cada respuesta de Livewire
+    /* ── Restaura tras respuesta de Livewire ── */
     document.addEventListener('livewire:initialized', function () {
         if (!window.Livewire) return;
         try {
@@ -1149,9 +1196,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         } catch(e) {}
     });
 
-    /* ─────────────────────────────────────────────────────────────────
-       .wc-toggle checkboxes: loading state (solo opacity, sin bloqueo)
-    ───────────────────────────────────────────────────────────────── */
+    /* ── Checkboxes .wc-toggle: loading state ── */
     document.addEventListener('change', function (e) {
         if (!e.target.matches || !e.target.matches('.wc-toggle input')) return;
         var wrap = e.target.closest('.wc-toggle');
