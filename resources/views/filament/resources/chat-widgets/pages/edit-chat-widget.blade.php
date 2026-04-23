@@ -1038,10 +1038,10 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
 
         <div style="padding:24px 24px 0">
             <div id="nx-woo-modal-title" style="font-size:15px;font-weight:600;color:#111827;margin-bottom:6px">
-                @if($wooConfirmField === 'wooIntegrationEnabled')Desactivar productos y precios@else Desactivar estado de pedidos@endif
+                {{ $wooConfirmField === 'wooIntegrationEnabled' ? 'Desactivar productos y precios' : 'Desactivar estado de pedidos' }}
             </div>
             <div id="nx-woo-modal-desc" style="font-size:13px;color:#6b7280;line-height:1.6">
-                @if($wooConfirmField === 'wooIntegrationEnabled')El bot dejará de conocer el catálogo de tu tienda. Las consultas sobre productos, precios y stock se responderán solo con la base de conocimiento.@else Los clientes no podrán consultar el estado de sus pedidos a través del bot, aunque tengan sesión activa en la tienda.@endif
+                {{ $wooConfirmField === 'wooIntegrationEnabled' ? 'El bot dejará de conocer el catálogo de tu tienda. Las consultas sobre productos, precios y stock se responderán solo con la base de conocimiento.' : 'Los clientes no podrán consultar el estado de sus pedidos a través del bot, aunque tengan sesión activa en la tienda.' }}
             </div>
         </div>
 
