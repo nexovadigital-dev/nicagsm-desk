@@ -28,7 +28,12 @@ class EditChatWidget extends Page
     public string $name           = '';
     public string $botName        = 'Nexova IA';
     public bool   $botEnabled     = true;
-    public bool   $aiEnabled      = true;
+    public bool   $aiEnabled              = true;
+    public bool   $wooIntegrationEnabled  = false;
+    public bool   $wooOrdersEnabled       = false;
+    public string $wpPluginSiteUrl        = '';
+    public bool   $wooConfirmModal        = false;
+    public string $wooConfirmField        = '';   // 'wooIntegrationEnabled' | 'wooOrdersEnabled'
     public string $telegramBotUsername = "";
     public string $telegramBotName     = "";
     public string $botAvatar      = '';
@@ -88,7 +93,15 @@ class EditChatWidget extends Page
         $this->widgetToken         = $w->token;
         $this->name                = $w->name;
         $this->botName             = $w->bot_name;
-        $this->botEnabled          = (bool) ($w->bot_enabled ?? true);
+        $this->botEnabled              = (bool) ($w->bot_enabled ?? true);
+        $this->wooIntegrationEnabled   = (bool) ($w->woo_integration_enabled ?? false);
+        $this->wooOrdersEnabled        = (bool) ($w->woo_orders_enabled ?? false);
+
+        // Buscar si la organización tiene un plugin WP conectado (site_url puede ser NULL)
+        $wpToken = \App\Models\WpPluginToken::where('organization_id', $w->organization_id)
+            ->latest('last_used_at')
+            ->first();
+        $this->wpPluginSiteUrl = $wpToken?->site_url ?? '';
         $this->botAvatar           = $w->bot_avatar ?? '';
         $this->botSystemPrompt     = $w->bot_system_prompt ?? '';
         $this->welcomeMessage      = $w->welcome_message;
@@ -114,7 +127,7 @@ class EditChatWidget extends Page
         $this->preChatEnabled      = (bool) $w->pre_chat_enabled;
         $this->preChatFields       = $w->pre_chat_fields ?? [];
         $this->agentCallTimeout      = $w->agent_call_timeout  ?? 10;
-        $this->agentNoResponse       = $w->agent_no_response   ?? 'bot';
+        $this->agentNoResponse       = 'bot'; // tickets desde widget no soportados en esta versión
         $this->defaultDepartmentId   = $w->department_id;
         $this->buttonStyle           = $w->button_style        ?? 'icon';
         $this->buttonIcon          = $w->button_icon       ?? 'chat';
@@ -184,6 +197,8 @@ class EditChatWidget extends Page
             'bot_name'                => $this->botName,
             'bot_enabled'             => $this->botEnabled,
             'ai_enabled'              => $this->aiEnabled,
+            'woo_integration_enabled' => $this->wooIntegrationEnabled,
+            'woo_orders_enabled'      => $this->wooOrdersEnabled,
             'bot_avatar'              => $this->botAvatar ?: null,
             'bot_system_prompt'       => trim($this->botSystemPrompt) ?: null,
             'welcome_message'         => $this->welcomeMessage,
@@ -214,7 +229,7 @@ class EditChatWidget extends Page
             'button_text_color'       => $this->buttonTextColor,
             'button_image'            => $this->buttonImage ?: null,
             'agent_call_timeout'      => $this->agentCallTimeout,
-            'agent_no_response'       => $this->agentNoResponse,
+            'agent_no_response'       => 'bot',
             'department_id'           => $this->defaultDepartmentId,
             'allowed_domain'          => trim($this->allowedDomain) ?: null,
         ]);
@@ -238,9 +253,17 @@ class EditChatWidget extends Page
     public function removeFaq(int $i): void { array_splice($this->faqItems, $i, 1); }
 
     // ── Branding modal helpers ────────────────────────────────────────────────
+    public function toggleBranding(): void
+    {
+        if ($this->showBranding) {
+            $this->showBrandingModal = true; // pide confirmación para apagar
+        } else {
+            $this->showBranding = true; // enciende directo
+        }
+    }
+
     public function requestDisableBranding(): void
     {
-        // Si ya está desactivado, solo guardar sin modal
         if (! $this->showBranding) return;
         $this->showBrandingModal = true;
     }
@@ -255,6 +278,40 @@ class EditChatWidget extends Page
     {
         $this->showBranding      = true; // asegurar que queda encendido
         $this->showBrandingModal = false;
+    }
+
+    // ── WooCommerce toggles ───────────────────────────────────────────────────
+    public function toggleWoo(string $field): void
+    {
+        if ($this->{$field}) {
+            $this->wooConfirmField = $field;
+            $this->wooConfirmModal = true;
+        } else {
+            $this->{$field} = true;
+        }
+    }
+
+    public function requestDisableWoo(string $field): void
+    {
+        // Si ya está apagado no hace nada
+        if (! $this->{$field}) return;
+        $this->wooConfirmField = $field;
+        $this->wooConfirmModal = true;
+    }
+
+    public function confirmDisableWoo(): void
+    {
+        if ($this->wooConfirmField) {
+            $this->{$this->wooConfirmField} = false;
+        }
+        $this->wooConfirmModal = false;
+        $this->wooConfirmField = '';
+    }
+
+    public function cancelDisableWoo(): void
+    {
+        $this->wooConfirmModal = false;
+        $this->wooConfirmField = '';
     }
 
     // ── Social helpers ───────────────────────────────────────────────────────
