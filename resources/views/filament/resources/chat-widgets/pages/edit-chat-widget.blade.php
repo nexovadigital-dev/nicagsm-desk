@@ -69,19 +69,19 @@
     box-shadow: none !important;
 }
 
-/* Modal Woo — animaciones entrada/salida */
-@keyframes nx-bd-in  { from { opacity:0 }               to { opacity:1 } }
-@keyframes nx-bd-out { from { opacity:1 }               to { opacity:0 } }
-@keyframes nx-card-in  { from { opacity:0; transform:translateY(10px) scale(.96) } to { opacity:1; transform:translateY(0) scale(1) } }
-@keyframes nx-card-out { from { opacity:1; transform:translateY(0) scale(1) }       to { opacity:0; transform:translateY(6px) scale(.97) } }
+/* Modal Woo — Alpine x-transition classes */
+.nx-woo-enter       { transition: opacity .2s ease, transform .22s cubic-bezier(.34,1.56,.64,1); }
+.nx-woo-enter-start { opacity: 0; transform: translateY(10px) scale(.95); }
+.nx-woo-enter-end   { opacity: 1; transform: translateY(0) scale(1); }
+.nx-woo-leave       { transition: opacity .15s ease, transform .15s ease; }
+.nx-woo-leave-start { opacity: 1; transform: translateY(0) scale(1); }
+.nx-woo-leave-end   { opacity: 0; transform: translateY(6px) scale(.97); }
 
-#nx-woo-modal > .nx-bd   { transition: opacity .18s ease; }
-#nx-woo-modal > .nx-card { transition: opacity .18s ease, transform .18s cubic-bezier(.4,0,.2,1); }
-
-#nx-woo-modal.nx-modal-entering > .nx-bd   { animation: nx-bd-in   .2s ease both; }
-#nx-woo-modal.nx-modal-entering > .nx-card { animation: nx-card-in .22s cubic-bezier(.34,1.56,.64,1) both; }
-#nx-woo-modal.nx-modal-exiting  > .nx-bd   { animation: nx-bd-out  .15s ease both; }
-#nx-woo-modal.nx-modal-exiting  > .nx-card { animation: nx-card-out .15s ease both; }
+/* El backdrop se mueve con el contenedor, la tarjeta tiene su propia transición */
+#nx-woo-modal > .nx-bd {
+    transition: opacity .2s ease;
+}
+#nx-woo-modal[style*="display: none"] > .nx-bd { opacity: 0; }
 
 /* ── Segmented control ── */
 .wc-seg { display: flex; background: var(--c-bg,#f5f6f8); border: 1.5px solid var(--c-border,#e3e6ea); border-radius: 9px; padding: 3px; gap: 2px; }
@@ -826,7 +826,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                     </div>
                     <div wire:click="toggleWoo('wooIntegrationEnabled')"
                          style="width:44px;height:26px;border-radius:12px;background:{{ $wooIntegrationEnabled ? '#7c3aed' : '#d1d5db' }};position:relative;cursor:pointer;flex-shrink:0;transition:background .2s cubic-bezier(.4,0,.2,1)">
-                        <div style="position:absolute;top:3px;{{ $wooIntegrationEnabled ? 'left:21px' : 'left:3px' }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22);transition:left .2s cubic-bezier(.4,0,.2,1)"></div>
+                        <div class="nx-pill-dot" style="position:absolute;top:3px;{{ $wooIntegrationEnabled ? 'left:21px' : 'left:3px' }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22);transition:left .2s cubic-bezier(.4,0,.2,1)"></div>
                     </div>
                 </div>
 
@@ -841,7 +841,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                     </div>
                     <div wire:click="toggleWoo('wooOrdersEnabled')"
                          style="width:44px;height:26px;border-radius:12px;background:{{ $wooOrdersEnabled ? '#7c3aed' : '#d1d5db' }};position:relative;cursor:pointer;flex-shrink:0;transition:background .2s cubic-bezier(.4,0,.2,1)">
-                        <div style="position:absolute;top:3px;{{ $wooOrdersEnabled ? 'left:21px' : 'left:3px' }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22);transition:left .2s cubic-bezier(.4,0,.2,1)"></div>
+                        <div class="nx-pill-dot" style="position:absolute;top:3px;{{ $wooOrdersEnabled ? 'left:21px' : 'left:3px' }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22);transition:left .2s cubic-bezier(.4,0,.2,1)"></div>
                     </div>
                 </div>
 
@@ -1053,7 +1053,16 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
      Livewire actualiza $wooConfirmField en background para el texto
 ── --}}
 @teleport('body')
-<div id="nx-woo-modal" wire:ignore style="position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px">
+<div x-data="{ open: @entangle('wooConfirmModal') }"
+     x-show="open"
+     x-transition:enter="nx-woo-enter"
+     x-transition:enter-start="nx-woo-enter-start"
+     x-transition:enter-end="nx-woo-enter-end"
+     x-transition:leave="nx-woo-leave"
+     x-transition:leave-start="nx-woo-leave-start"
+     x-transition:leave-end="nx-woo-leave-end"
+     id="nx-woo-modal"
+     style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px">
     <div class="nx-bd" style="position:absolute;inset:0;background:rgba(0,0,0,.3)"
          wire:click="cancelDisableWoo"></div>
     <div class="nx-card" style="position:relative;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.12),0 1px 3px rgba(0,0,0,.08);width:100%;max-width:420px;overflow:hidden">
@@ -1061,10 +1070,10 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         <div style="height:3px;background:#ef4444;width:100%"></div>
 
         <div style="padding:24px 24px 0">
-            <div id="nx-woo-modal-title" style="font-size:15px;font-weight:600;color:#111827;margin-bottom:6px">
+            <div style="font-size:15px;font-weight:600;color:#111827;margin-bottom:6px">
                 {{ $wooConfirmField === 'wooIntegrationEnabled' ? 'Desactivar productos y precios' : 'Desactivar estado de pedidos' }}
             </div>
-            <div id="nx-woo-modal-desc" style="font-size:13px;color:#6b7280;line-height:1.6">
+            <div style="font-size:13px;color:#6b7280;line-height:1.6">
                 {{ $wooConfirmField === 'wooIntegrationEnabled' ? 'El bot dejará de conocer el catálogo de tu tienda. Las consultas sobre productos, precios y stock se responderán solo con la base de conocimiento.' : 'Los clientes no podrán consultar el estado de sus pedidos a través del bot, aunque tengan sesión activa en la tienda.' }}
             </div>
         </div>
@@ -1072,13 +1081,11 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;margin-top:20px;border-top:1px solid #f3f4f6">
             <span style="font-size:11.5px;color:#9ca3af">Se sincroniza con el plugin de WordPress</span>
             <div style="display:flex;gap:8px">
-                <button id="nx-woo-cancel"
-                        wire:click="cancelDisableWoo"
+                <button wire:click="cancelDisableWoo"
                         style="padding:7px 16px;border-radius:7px;border:1px solid #e5e7eb;background:#fff;color:#374151;font-size:13px;font-weight:500;cursor:pointer;line-height:1">
                     Cancelar
                 </button>
-                <button id="nx-woo-confirm"
-                        wire:click="confirmDisableWoo"
+                <button wire:click="confirmDisableWoo"
                         style="padding:7px 16px;border-radius:7px;border:none;background:#ef4444;color:#fff;font-size:13px;font-weight:500;cursor:pointer;line-height:1">
                     Desactivar
                 </button>
@@ -1087,59 +1094,15 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
 
     </div>
 </div>
-
 @endteleport
 
 <script>
 (function () {
     'use strict';
 
-    var modal = null;
-
-    function getModal() {
-        return modal || (modal = document.getElementById('nx-woo-modal'));
-    }
-
-    /* ── Modal: abrir con animación ── */
-    function showModal(isIntegration) {
-        var m     = getModal();
-        var title = document.getElementById('nx-woo-modal-title');
-        var desc  = document.getElementById('nx-woo-modal-desc');
-        if (!m) return;
-        if (title) title.textContent = isIntegration
-            ? 'Desactivar productos y precios'
-            : 'Desactivar estado de pedidos';
-        if (desc) desc.textContent = isIntegration
-            ? 'El bot dejará de conocer el catálogo de tu tienda. Las consultas sobre productos, precios y stock se responderán solo con la base de conocimiento.'
-            : 'Los clientes no podrán consultar el estado de sus pedidos a través del bot, aunque tengan sesión activa en la tienda.';
-        m.style.display = 'flex';
-        m.classList.remove('nx-modal-exiting');
-        m.classList.add('nx-modal-entering');
-        setTimeout(function () { m.classList.remove('nx-modal-entering'); }, 250);
-    }
-
-    /* ── Modal: cerrar con animación y ocultar antes del re-render ── */
-    function hideModal() {
-        var m = getModal();
-        if (!m) return;
-        m.classList.remove('nx-modal-entering');
-        m.classList.add('nx-modal-exiting');
-        setTimeout(function () {
-            m.style.display = 'none';
-            m.classList.remove('nx-modal-exiting');
-        }, 160);
-    }
-
-    /* ── Pill toggles ── */
-    function getDot(pill) {
-        return pill.querySelector('[style*="border-radius:50%"]');
-    }
-
-    // ON = dot en left:21px, OFF = dot en left:3px
-    function pillIsOn(pill) {
-        var dot = getDot(pill);
-        return dot ? parseInt(dot.style.left || '0', 10) > 10 : false;
-    }
+    /* ── Pill: detectar ON por posición del dot (left:21px=ON, left:3px=OFF) ── */
+    function getDot(pill) { return pill.querySelector('.nx-pill-dot'); }
+    function pillIsOn(pill) { var d = getDot(pill); return d ? parseInt(d.style.left||'0',10) > 10 : false; }
 
     function isPillToggle(el) {
         if (!el || !el.hasAttribute || !el.hasAttribute('wire:click')) return false;
@@ -1148,60 +1111,41 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         return a.startsWith('toggle') && !!getDot(el);
     }
 
-    function startPillWaiting(pill) {
-        pill.classList.add('nx-pill-waiting');
-        pill.dataset.flipping = '1';
-    }
-
-    function flipPill(pill) {
-        var dot  = getDot(pill);
-        var isOn = pillIsOn(pill);
-        var woo  = (pill.getAttribute('wire:click') || '').toLowerCase().includes('woo');
-        pill.style.background = isOn ? '#d1d5db' : (woo ? '#7c3aed' : '#22c55e');
-        if (dot) dot.style.left = isOn ? '3px' : '21px';
-        pill.style.opacity = '.65';
-        pill.dataset.flipping = '1';
-    }
-
     function restorePills() {
-        document.querySelectorAll('[data-flipping="1"]').forEach(function (pill) {
-            pill.classList.remove('nx-pill-waiting');
-            pill.style.opacity = '';
-            delete pill.dataset.flipping;
+        document.querySelectorAll('[data-flipping="1"]').forEach(function (p) {
+            p.classList.remove('nx-pill-waiting');
+            p.style.opacity = '';
+            delete p.dataset.flipping;
         });
     }
 
-    /* ── Intercepta click en botones del modal ── */
-    document.addEventListener('click', function (e) {
-        var btn = e.target.closest('#nx-woo-cancel, #nx-woo-confirm');
-        if (btn) hideModal();
-    }, true);
-
-    /* ── Intercepta mousedown en toggles ── */
+    /* ── mousedown: spinner en woo ON, flip visual en el resto ── */
     document.addEventListener('mousedown', function (e) {
         var el = e.target.closest('[wire\\:click]');
         if (!isPillToggle(el)) return;
-
         var action = el.getAttribute('wire:click') || '';
         var isOn   = pillIsOn(el);
-
         if (isOn && action.startsWith('toggleWoo')) {
-            startPillWaiting(el);
-            showModal(action.includes('wooIntegrationEnabled'));
+            el.classList.add('nx-pill-waiting');
         } else {
-            flipPill(el);
+            var dot = getDot(el);
+            var woo = action.toLowerCase().includes('woo');
+            el.style.background = isOn ? '#d1d5db' : (woo ? '#7c3aed' : '#22c55e');
+            if (dot) dot.style.left = isOn ? '3px' : '21px';
+            el.style.opacity = '.65';
         }
+        el.dataset.flipping = '1';
         setTimeout(restorePills, 5000);
     }, true);
 
-    /* ── Restaura tras respuesta de Livewire ── */
+    /* ── Restaura tras respuesta Livewire ── */
     document.addEventListener('livewire:initialized', function () {
         if (!window.Livewire) return;
         try {
             Livewire.hook('commit', function (_ref) {
-                var succeed = _ref.succeed; var fail = _ref.fail;
-                if (succeed) succeed(restorePills);
-                if (fail)    fail(restorePills);
+                var ok = _ref.succeed; var fail = _ref.fail;
+                if (ok)   ok(restorePills);
+                if (fail) fail(restorePills);
             });
         } catch(e) {}
     });
@@ -1212,13 +1156,12 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         var wrap = e.target.closest('.wc-toggle');
         if (wrap) wrap.classList.add('nx-saving');
     }, true);
-
     document.addEventListener('livewire:initialized', function () {
         if (!window.Livewire) return;
         try {
             Livewire.hook('commit', function (_ref) {
-                var succeed = _ref.succeed;
-                if (succeed) succeed(function () {
+                var ok = _ref.succeed;
+                if (ok) ok(function () {
                     document.querySelectorAll('.wc-toggle.nx-saving')
                         .forEach(function (t) { t.classList.remove('nx-saving'); });
                 });
