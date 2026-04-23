@@ -45,12 +45,18 @@
 .nx-swatch-custom input[type=color] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; border: none; padding: 0; }
 
 /* ── Toggle ── */
-.wc-toggle { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
-.wc-toggle input { opacity: 0; width: 0; height: 0; }
-.wc-slider { position: absolute; cursor: pointer; inset: 0; background: var(--c-border,#d1d5db); border-radius: 99px; transition: background .2s; }
-.wc-slider:before { content:''; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: transform .2s; }
-.wc-toggle input:checked + .wc-slider { background: #22c55e; }
+.wc-toggle { position: relative; display: inline-block; width: 44px; height: 26px; flex-shrink: 0; cursor: pointer; }
+.wc-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.wc-slider { position: absolute; cursor: pointer; inset: 0; background: var(--c-border,#d1d5db); border-radius: 99px; transition: background .2s cubic-bezier(.4,0,.2,1); }
+.wc-slider:before { content:''; position: absolute; height: 20px; width: 20px; left: 3px; top: 3px; background: #fff; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,.2); transition: transform .2s cubic-bezier(.4,0,.2,1); }
+.wc-toggle:hover .wc-slider:before { box-shadow: 0 2px 8px rgba(0,0,0,.28); }
+.wc-toggle input:checked + .wc-slider { background: var(--c-accent,#22c55e); }
 .wc-toggle input:checked + .wc-slider:before { transform: translateX(18px); }
+.wc-toggle.nx-saving { opacity: .6; pointer-events: none; }
+/* Pill toggles (WooCommerce/branding custom divs) */
+.nx-pill-toggle { transition: background .2s cubic-bezier(.4,0,.2,1), opacity .15s; }
+.nx-pill-toggle .nx-pill-dot { transition: left .2s cubic-bezier(.4,0,.2,1); }
+.nx-pill-toggle.nx-saving { opacity: .6; pointer-events: none; }
 
 /* ── Segmented control ── */
 .wc-seg { display: flex; background: var(--c-bg,#f5f6f8); border: 1.5px solid var(--c-border,#e3e6ea); border-radius: 9px; padding: 3px; gap: 2px; }
@@ -231,9 +237,9 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                     <div style="font-size:13px;font-weight:600;color:#111827">Inteligencia Artificial (IA)</div>
                     <div style="font-size:11.5px;color:var(--c-sub);margin-top:3px;line-height:1.5">
                         @if($aiEnabled)
-                            <span style="color:#059669;font-weight:500">&#x2705; Activada</span> &mdash; El bot usa IA como ultimo recurso si FAQ y KB no responden.
+                            <span style="display:inline-flex;align-items:center;gap:4px;color:#059669;font-weight:500"><span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block"></span>Activada</span> &mdash; Último recurso si FAQ y KB no responden.
                         @else
-                            <span style="color:#dc2626;font-weight:500">&#x1F6AB; Desactivada</span> &mdash; El bot solo responde con FAQ y base de conocimiento. Si no encuentra respuesta, escala a un agente.
+                            <span style="display:inline-flex;align-items:center;gap:4px;color:#dc2626;font-weight:500"><span style="width:6px;height:6px;border-radius:50%;background:#ef4444;display:inline-block"></span>Desactivada</span> &mdash; Solo FAQ y base de conocimiento. Sin respuesta, escala a agente.
                         @endif
                     </div>
                 </div>
@@ -245,12 +251,8 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                          style="position:absolute;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></div>
                 </div>
             </div>
-            <div style="margin-top:10px;padding:9px 12px;background:{{ $aiEnabled ? 'rgba(5,150,105,.07)' : 'rgba(239,68,68,.06)' }};border:1px solid {{ $aiEnabled ? 'rgba(5,150,105,.2)' : 'rgba(239,68,68,.15)' }};border-radius:7px;font-size:11px;color:{{ $aiEnabled ? '#065f46' : '#7f1d1d' }}">
-                @if($aiEnabled)
-                    &#x1F4DA; <strong>Flujo:</strong> Botones FAQ &rarr; Respuesta FAQ exacta &rarr; Base de conocimiento &rarr; <span style="font-weight:600">IA Generativa</span>
-                @else
-                    &#x1F4DA; <strong>Flujo:</strong> Botones FAQ &rarr; Respuesta FAQ exacta &rarr; Base de conocimiento &rarr; <span style="font-weight:600">Escalar a agente</span>
-                @endif
+            <div style="margin-top:10px;padding:8px 12px;background:{{ $aiEnabled ? 'rgba(5,150,105,.06)' : 'rgba(239,68,68,.05)' }};border:1px solid {{ $aiEnabled ? 'rgba(5,150,105,.18)' : 'rgba(239,68,68,.12)' }};border-radius:7px;font-size:11px;color:{{ $aiEnabled ? '#065f46' : '#7f1d1d' }};font-family:monospace;letter-spacing:.01em">
+                Flujo: FAQ &rarr; Base de conocimiento &rarr; {{ $aiEnabled ? 'IA Generativa' : 'Escalar a agente' }}
             </div>
         </div>
         </div>
@@ -716,7 +718,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
 {{-- ══════════════════════════════════════════
      SECTION 5 — Comportamiento
 ══════════════════════════════════════════ --}}
-<div class="nx-section" x-data="{ open: {{ $showBrandingModal ? 'true' : 'false' }} }">
+<div class="nx-section" x-data="{ open: true }">
     <div class="nx-section-hd" @click="open = !open">
         <span class="nx-section-title">Comportamiento</span>
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" :style="open ? 'transform:rotate(0deg)' : 'transform:rotate(180deg)'" style="transition:transform .2s;color:var(--c-sub)"><polyline points="18 15 12 9 6 15" stroke-width="2" stroke-linecap="round"/></svg>
@@ -728,7 +730,6 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                     <div style="font-size:13px;font-weight:500;color:var(--c-text)">Mostrar marca de agua</div>
                     <div style="font-size:11.5px;color:var(--c-sub)">Muestra "Powered by Nexova Digital Solutions"</div>
                 </div>
-                {{-- Toggle branding — simple wire:model.live, sin modal por ahora --}}
                 <label class="wc-toggle"><input type="checkbox" wire:model.live="showBranding"><span class="wc-slider"></span></label>
 
             </div>
@@ -738,16 +739,95 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                 <div><div style="font-size:13px;font-weight:500;color:var(--c-text)">Sonidos de notificación</div><div style="font-size:11.5px;color:var(--c-sub)">Reproduce sonido al recibir mensajes</div></div>
                 <label class="wc-toggle"><input type="checkbox" wire:model.live="soundEnabled"><span class="wc-slider"></span></label>
             </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--c-border,#e3e6ea)">
                 <div><div style="font-size:13px;font-weight:500;color:var(--c-text)">Pedir calificación al cerrar</div><div style="font-size:11.5px;color:var(--c-sub)">El usuario puede valorar de 1 a 5 estrellas</div></div>
                 <label class="wc-toggle"><input type="checkbox" wire:model.live="requireRating"><span class="wc-slider"></span></label>
             </div>
             @if($requireRating)
-            <div class="wc-field" style="margin-top:12px">
+            <div class="wc-field" style="margin-top:12px;margin-bottom:4px">
                 <label class="wc-label">Mensaje de calificación</label>
                 <input type="text" class="wc-input" wire:model="ratingMessage" placeholder="¿Cómo fue tu experiencia?">
             </div>
             @endif
+
+            {{-- ── WooCommerce Integration ── --}}
+            @php
+                $wpConnected    = ! empty($wpPluginSiteUrl);
+                $wpHasToken     = $wpConnected || \App\Models\WpPluginToken::where('organization_id', auth()->user()?->organization_id)->exists();
+                $wooStoreDomain = $wpConnected ? parse_url($wpPluginSiteUrl, PHP_URL_HOST) : '';
+            @endphp
+            <div style="margin-top:16px;border-radius:10px;overflow:hidden;border:1px solid {{ $wpHasToken ? 'rgba(124,58,237,.18)' : '#e5e7eb' }}">
+
+                {{-- Header --}}
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:{{ $wpHasToken ? 'rgba(124,58,237,.04)' : '#f9fafb' }}">
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="{{ $wpHasToken ? '#7c3aed' : '#9ca3af' }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        <span style="font-size:13px;font-weight:700;color:#111827">Integración WooCommerce</span>
+                    </div>
+                    @if($wpHasToken)
+                        <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#15803d;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.22);padding:3px 9px;border-radius:99px">
+                            <span style="width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;animation:nexova-pulse 2s ease-in-out infinite"></span>
+                            Tienda conectada{{ $wooStoreDomain ? ' · '.$wooStoreDomain : '' }}
+                        </span>
+                    @else
+                        <span style="font-size:11px;color:#9ca3af;background:#f3f4f6;border:1px solid #e5e7eb;padding:3px 9px;border-radius:99px">Sin plugin WP</span>
+                    @endif
+                </div>
+
+                @if($wpHasToken)
+
+                {{-- Explicación del flujo --}}
+                <div style="padding:10px 14px;background:#fff;border-top:1px solid rgba(124,58,237,.1);border-bottom:1px solid #f3f4f6">
+                    <div style="font-size:11.5px;color:#6b7280;line-height:1.6">
+                        Cuando un cliente escribe, el bot busca la respuesta en este orden:
+                        <span style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;flex-wrap:wrap">
+                            <span style="background:#ede9fe;color:#5b21b6;font-size:11px;font-weight:600;padding:2px 7px;border-radius:5px">1. Tu tienda WooCommerce</span>
+                            <span style="color:#9ca3af;font-size:11px">&rarr;</span>
+                            <span style="background:#f3f4f6;color:#374151;font-size:11px;font-weight:500;padding:2px 7px;border-radius:5px">2. Base de conocimiento</span>
+                            <span style="color:#9ca3af;font-size:11px">&rarr;</span>
+                            <span style="background:#f3f4f6;color:#374151;font-size:11px;font-weight:500;padding:2px 7px;border-radius:5px">3. IA general</span>
+                        </span>
+                    </div>
+                </div>
+
+                {{-- Toggle: Productos y precios --}}
+                <div style="display:flex;align-items:center;gap:14px;padding:13px 14px;background:#fff;border-top:1px solid #f3f4f6">
+                    <div style="width:34px;height:34px;border-radius:8px;background:{{ $wooIntegrationEnabled ? 'rgba(124,58,237,.1)' : '#f5f6f8' }};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="{{ $wooIntegrationEnabled ? '#7c3aed' : '#9ca3af' }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    </div>
+                    <div style="flex:1">
+                        <div style="font-size:13px;font-weight:600;color:#111827">Productos y precios</div>
+                        <div style="font-size:11.5px;color:#6b7280;margin-top:1px">El bot conoce tu catálogo: nombres, precios, stock y variantes</div>
+                    </div>
+                    <div wire:click="toggleWoo('wooIntegrationEnabled')"
+                         style="width:44px;height:26px;border-radius:12px;background:{{ $wooIntegrationEnabled ? '#7c3aed' : '#d1d5db' }};position:relative;cursor:pointer;flex-shrink:0;transition:background .2s cubic-bezier(.4,0,.2,1)">
+                        <div style="position:absolute;top:3px;{{ $wooIntegrationEnabled ? 'left:21px' : 'left:3px' }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22);transition:left .2s cubic-bezier(.4,0,.2,1)"></div>
+                    </div>
+                </div>
+
+                {{-- Toggle: Estado de pedidos --}}
+                <div style="display:flex;align-items:center;gap:14px;padding:13px 14px;background:#fff;border-top:1px solid #f3f4f6">
+                    <div style="width:34px;height:34px;border-radius:8px;background:{{ $wooOrdersEnabled ? 'rgba(124,58,237,.1)' : '#f5f6f8' }};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="{{ $wooOrdersEnabled ? '#7c3aed' : '#9ca3af' }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    </div>
+                    <div style="flex:1">
+                        <div style="font-size:13px;font-weight:600;color:#111827">Estado de pedidos</div>
+                        <div style="font-size:11.5px;color:#6b7280;margin-top:1px">Clientes autenticados pueden consultar sus pedidos directamente al bot</div>
+                    </div>
+                    <div wire:click="toggleWoo('wooOrdersEnabled')"
+                         style="width:44px;height:26px;border-radius:12px;background:{{ $wooOrdersEnabled ? '#7c3aed' : '#d1d5db' }};position:relative;cursor:pointer;flex-shrink:0;transition:background .2s cubic-bezier(.4,0,.2,1)">
+                        <div style="position:absolute;top:3px;{{ $wooOrdersEnabled ? 'left:21px' : 'left:3px' }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22);transition:left .2s cubic-bezier(.4,0,.2,1)"></div>
+                    </div>
+                </div>
+
+                @else
+                <div style="padding:14px;background:#fff;border-top:1px solid #f3f4f6">
+                    <div style="font-size:12.5px;color:#6b7280;line-height:1.7">
+                        Para activar esta sección, instalá el plugin <strong style="color:#374151">Nexova Desk Chat</strong> en tu tienda WooCommerce y conectalo desde el panel en <strong style="color:#374151">Ajustes → Instalación</strong>.
+                    </div>
+                </div>
+                @endif
+            </div>
         </div>
     </div>
 </div>
@@ -774,18 +854,11 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         <div class="wc-field">
             <label class="wc-label">Si no hay respuesta del agente…</label>
             <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
-                <label style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1.5px solid {{ $agentNoResponse === 'bot' ? 'var(--c-accent,#7c3aed)' : 'var(--c-border,#e3e6ea)' }};border-radius:8px;cursor:pointer">
-                    <input type="radio" wire:model.live="agentNoResponse" value="bot" style="margin-top:2px;accent-color:var(--c-accent,#7c3aed)">
+                <label style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1.5px solid var(--c-accent,#22c55e);border-radius:8px;cursor:default">
+                    <input type="radio" checked disabled style="margin-top:2px;accent-color:var(--c-accent,#22c55e)">
                     <div>
                         <div style="font-size:13px;font-weight:600;color:var(--c-text)">Volver al bot</div>
                         <div style="font-size:11.5px;color:var(--c-sub)">El chat regresa al asistente IA automáticamente</div>
-                    </div>
-                </label>
-                <label style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1.5px solid {{ $agentNoResponse === 'ticket' ? 'var(--c-accent,#7c3aed)' : 'var(--c-border,#e3e6ea)' }};border-radius:8px;cursor:pointer">
-                    <input type="radio" wire:model.live="agentNoResponse" value="ticket" style="margin-top:2px;accent-color:var(--c-accent,#7c3aed)">
-                    <div>
-                        <div style="font-size:13px;font-weight:600;color:var(--c-text)">Solicitar datos y crear ticket</div>
-                        <div style="font-size:11.5px;color:var(--c-sub)">El usuario deja nombre, email y mensaje. Se crea un ticket de soporte.</div>
                     </div>
                 </label>
             </div>
@@ -903,30 +976,6 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         </div>
     </div>
 
-    {{-- ── Domain restriction ── --}}
-    @if($widgetId)
-    <div style="background:var(--c-surface,#fff);border:1px solid var(--c-border,#e3e6ea);border-radius:14px;padding:16px">
-        <div style="font-size:12px;font-weight:700;color:var(--c-text);margin-bottom:4px;display:flex;align-items:center;gap:6px">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2zm0 0V7m0 8h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Dominio autorizado
-        </div>
-        <div style="font-size:11px;color:var(--c-sub,#6b7280);margin-bottom:10px">
-            Solo esta tienda podrá cargar el widget. Deja vacío para permitir cualquier dominio.
-        </div>
-        <input type="url" wire:model.defer="allowedDomain"
-               placeholder="https://mitienda.com"
-               style="width:100%;padding:8px 10px;font-size:12.5px;border:1px solid var(--c-border,#e2e8f0);border-radius:8px;font-family:monospace;background:var(--c-bg,#f8f9fa);color:var(--c-text,#111);outline:none;box-sizing:border-box">
-        @if($allowedDomain)
-        <div style="margin-top:6px;display:flex;align-items:center;gap:5px;font-size:11px;color:#16a34a;font-weight:500">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            Restringido a: {{ parse_url($allowedDomain, PHP_URL_HOST) ?: $allowedDomain }}
-        </div>
-        @else
-        <div style="margin-top:6px;font-size:11px;color:var(--c-sub,#9ca3af)">Sin restricción — cualquier sitio puede cargar este widget</div>
-        @endif
-    </div>
-    @endif
-
     {{-- ── Install code ── --}}
     @if($widgetId)
     <div style="background:var(--c-surface,#fff);border:1px solid var(--c-border,#e3e6ea);border-radius:14px;padding:16px" x-data>
@@ -973,4 +1022,156 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
 
 </div>{{-- /.wc-right-col --}}
 </div>
+
+{{-- ── Modal: confirmar desactivar WooCommerce ──
+     id="nx-woo-modal" → JS lo muestra INMEDIATAMENTE al click
+     Livewire actualiza $wooConfirmField en background para el texto
+── --}}
+@teleport('body')
+<div id="nx-woo-modal" style="position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px">
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,.3)"
+         onclick="document.getElementById('nx-woo-modal').style.display='none'"
+         wire:click="cancelDisableWoo"></div>
+    <div style="position:relative;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.12),0 1px 3px rgba(0,0,0,.08);width:100%;max-width:420px;overflow:hidden">
+
+        <div style="height:3px;background:#ef4444;width:100%"></div>
+
+        <div style="padding:24px 24px 0">
+            <div id="nx-woo-modal-title" style="font-size:15px;font-weight:600;color:#111827;margin-bottom:6px">
+                @if($wooConfirmField === 'wooIntegrationEnabled')Desactivar productos y precios@else Desactivar estado de pedidos@endif
+            </div>
+            <div id="nx-woo-modal-desc" style="font-size:13px;color:#6b7280;line-height:1.6">
+                @if($wooConfirmField === 'wooIntegrationEnabled')El bot dejará de conocer el catálogo de tu tienda. Las consultas sobre productos, precios y stock se responderán solo con la base de conocimiento.@else Los clientes no podrán consultar el estado de sus pedidos a través del bot, aunque tengan sesión activa en la tienda.@endif
+            </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;margin-top:20px;border-top:1px solid #f3f4f6">
+            <span style="font-size:11.5px;color:#9ca3af">Se sincroniza con el plugin de WordPress</span>
+            <div style="display:flex;gap:8px">
+                <button onclick="document.getElementById('nx-woo-modal').style.display='none'"
+                        wire:click="cancelDisableWoo"
+                        style="padding:7px 16px;border-radius:7px;border:1px solid #e5e7eb;background:#fff;color:#374151;font-size:13px;font-weight:500;cursor:pointer;line-height:1">
+                    Cancelar
+                </button>
+                <button onclick="document.getElementById('nx-woo-modal').style.display='none'"
+                        wire:click="confirmDisableWoo"
+                        style="padding:7px 16px;border-radius:7px;border:none;background:#ef4444;color:#fff;font-size:13px;font-weight:500;cursor:pointer;line-height:1">
+                    Desactivar
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@endteleport
+
+<script>
+(function () {
+    'use strict';
+
+    /* ─────────────────────────────────────────────────────────────────
+       Optimistic UI para pill toggles (wire:click="toggle...")
+       Regla: solo flip VISUAL + opacity. NUNCA pointer-events:none,
+       para no cancelar el click que Livewire necesita procesar.
+    ───────────────────────────────────────────────────────────────── */
+
+    function isPillToggle(el) {
+        if (!el || !el.hasAttribute || !el.hasAttribute('wire:click')) return false;
+        if (el.dataset.flipping) return false;                      // ya en vuelo
+        var a = el.getAttribute('wire:click') || '';
+        return a.startsWith('toggle') && !!el.querySelector('[style*="border-radius:50%"]');
+    }
+
+    function flipPill(pill) {
+        var dot    = pill.querySelector('[style*="border-radius:50%"]');
+        var bg     = (pill.style.background || '').replace(/\s/g, '');
+        var active = bg.includes('22c55e') || bg.includes('7c3aed');
+        var woo    = (pill.getAttribute('wire:click') || '').toLowerCase().includes('woo');
+
+        // Flip visual inmediato
+        pill.style.background = active ? '#d1d5db' : (woo ? '#7c3aed' : '#22c55e');
+        if (dot) dot.style.left = active ? '3px' : '21px';
+
+        // Solo opacidad — NO pointer-events para que el click de Livewire siga
+        pill.style.opacity = '.65';
+
+        // Flag anti-doble-click
+        pill.dataset.flipping = '1';
+    }
+
+    function restorePills() {
+        document.querySelectorAll('[data-flipping="1"]').forEach(function (pill) {
+            pill.style.opacity = '';
+            delete pill.dataset.flipping;
+        });
+    }
+
+    // Intercepta mousedown: flip visual + abrir modal Woo si corresponde
+    document.addEventListener('mousedown', function (e) {
+        var el = e.target.closest('[wire\\:click]');
+        if (!isPillToggle(el)) return;
+
+        var action = el.getAttribute('wire:click') || '';
+        var bg     = (el.style.background || '').replace(/\s/g, '');
+        var isOn   = bg.includes('7c3aed') || bg.includes('22c55e');
+
+        // Si el toggle está ON y la acción es toggleWoo → mostrar modal al instante
+        if (isOn && action.startsWith('toggleWoo')) {
+            var isIntegration = action.includes('wooIntegrationEnabled');
+            var modal  = document.getElementById('nx-woo-modal');
+            var title  = document.getElementById('nx-woo-modal-title');
+            var desc   = document.getElementById('nx-woo-modal-desc');
+            if (modal) {
+                if (title) title.textContent = isIntegration
+                    ? 'Desactivar productos y precios'
+                    : 'Desactivar estado de pedidos';
+                if (desc) desc.textContent = isIntegration
+                    ? 'El bot dejará de conocer el catálogo de tu tienda. Las consultas sobre productos, precios y stock se responderán solo con la base de conocimiento.'
+                    : 'Los clientes no podrán consultar el estado de sus pedidos a través del bot, aunque tengan sesión activa en la tienda.';
+                modal.style.display = 'flex';
+            }
+        }
+
+        flipPill(el);
+        setTimeout(restorePills, 5000);
+    }, true);
+
+    // Restaura después de cada respuesta de Livewire
+    document.addEventListener('livewire:initialized', function () {
+        if (!window.Livewire) return;
+        try {
+            Livewire.hook('commit', function (_ref) {
+                var succeed = _ref.succeed; var fail = _ref.fail;
+                if (succeed) succeed(restorePills);
+                if (fail)    fail(restorePills);
+            });
+        } catch(e) {}
+    });
+
+    /* ─────────────────────────────────────────────────────────────────
+       .wc-toggle checkboxes: loading state (solo opacity, sin bloqueo)
+    ───────────────────────────────────────────────────────────────── */
+    document.addEventListener('change', function (e) {
+        if (!e.target.matches || !e.target.matches('.wc-toggle input')) return;
+        var wrap = e.target.closest('.wc-toggle');
+        if (wrap) wrap.classList.add('nx-saving');
+    }, true);
+
+    document.addEventListener('livewire:initialized', function () {
+        if (!window.Livewire) return;
+        try {
+            Livewire.hook('commit', function (_ref) {
+                var succeed = _ref.succeed;
+                if (succeed) succeed(function () {
+                    document.querySelectorAll('.wc-toggle.nx-saving')
+                        .forEach(function (t) { t.classList.remove('nx-saving'); });
+                });
+            });
+        } catch(e) {}
+    });
+
+}());
+</script>
+
 </x-filament-panels::page>
