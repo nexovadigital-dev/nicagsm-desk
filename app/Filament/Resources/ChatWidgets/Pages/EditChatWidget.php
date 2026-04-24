@@ -32,7 +32,6 @@ class EditChatWidget extends Page
     public bool   $wooIntegrationEnabled  = false;
     public bool   $wooOrdersEnabled       = false;
     public string $wpPluginSiteUrl        = '';
-    public string $wooConfirmField        = '';   // 'wooIntegrationEnabled' | 'wooOrdersEnabled'
     public string $telegramBotUsername = "";
     public string $telegramBotName     = "";
     public string $botAvatar      = '';
@@ -280,27 +279,18 @@ class EditChatWidget extends Page
     }
 
     // ── WooCommerce toggles ───────────────────────────────────────────────────
-    public function toggleWoo(string $field): void
+    public function enableWoo(string $field): void
     {
-        if ($this->{$field}) {
-            $this->wooConfirmField = $field;
-            $this->dispatch('woo-modal-open', field: $field);
-        } else {
+        if (in_array($field, ['wooIntegrationEnabled', 'wooOrdersEnabled'], true)) {
             $this->{$field} = true;
         }
     }
 
-    public function confirmDisableWoo(): void
+    public function disableWoo(string $field): void
     {
-        if ($this->wooConfirmField) {
-            $this->{$this->wooConfirmField} = false;
+        if (in_array($field, ['wooIntegrationEnabled', 'wooOrdersEnabled'], true)) {
+            $this->{$field} = false;
         }
-        $this->wooConfirmField = '';
-    }
-
-    public function cancelDisableWoo(): void
-    {
-        $this->wooConfirmField = '';
     }
 
     // ── Social helpers ───────────────────────────────────────────────────────

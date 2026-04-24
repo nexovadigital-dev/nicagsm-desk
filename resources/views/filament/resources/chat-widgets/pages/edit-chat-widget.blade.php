@@ -816,7 +816,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                         <div style="font-size:13px;font-weight:600;color:#111827">Productos y precios</div>
                         <div style="font-size:11.5px;color:#6b7280;margin-top:1px">El bot conoce tu catálogo: nombres, precios, stock y variantes</div>
                     </div>
-                    <div wire:click="toggleWoo('wooIntegrationEnabled')"
+                    <div onclick="nxWooToggle(this,'wooIntegrationEnabled',{{ $wooIntegrationEnabled ? 'true' : 'false' }})"
                          style="width:44px;height:26px;border-radius:12px;background:{{ $wooIntegrationEnabled ? '#7c3aed' : '#d1d5db' }};position:relative;cursor:pointer;flex-shrink:0;transition:background .2s cubic-bezier(.4,0,.2,1)">
                         <div class="nx-pill-dot" style="position:absolute;top:3px;{{ $wooIntegrationEnabled ? 'left:21px' : 'left:3px' }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22);transition:left .2s cubic-bezier(.4,0,.2,1)"></div>
                     </div>
@@ -831,7 +831,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                         <div style="font-size:13px;font-weight:600;color:#111827">Estado de pedidos</div>
                         <div style="font-size:11.5px;color:#6b7280;margin-top:1px">Clientes autenticados pueden consultar sus pedidos directamente al bot</div>
                     </div>
-                    <div wire:click="toggleWoo('wooOrdersEnabled')"
+                    <div onclick="nxWooToggle(this,'wooOrdersEnabled',{{ $wooOrdersEnabled ? 'true' : 'false' }})"
                          style="width:44px;height:26px;border-radius:12px;background:{{ $wooOrdersEnabled ? '#7c3aed' : '#d1d5db' }};position:relative;cursor:pointer;flex-shrink:0;transition:background .2s cubic-bezier(.4,0,.2,1)">
                         <div class="nx-pill-dot" style="position:absolute;top:3px;{{ $wooOrdersEnabled ? 'left:21px' : 'left:3px' }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22);transition:left .2s cubic-bezier(.4,0,.2,1)"></div>
                     </div>
@@ -1041,60 +1041,33 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
 </div>
 
 {{-- ── Modal: confirmar desactivar WooCommerce ──
-     wire:ignore  → Livewire nunca morfea este elemento
-     x-data/x-on → Alpine captura el evento del servidor directamente
-     $wire        → llama métodos Livewire sin wire:click
+     JS puro: nxWooToggle muestra esto cuando isOn=true.
+     No wire:click, no Alpine, no dispatch — cero interferencia Livewire.
 ── --}}
-<div wire:ignore
-     x-data="{
-         show: false,
-         field: '',
-         get title() {
-             return this.field === 'wooIntegrationEnabled'
-                 ? 'Desactivar productos y precios'
-                 : 'Desactivar estado de pedidos';
-         },
-         get desc() {
-             return this.field === 'wooIntegrationEnabled'
-                 ? 'El bot dejará de conocer el catálogo de tu tienda. Las consultas sobre productos, precios y stock se responderán solo con la base de conocimiento.'
-                 : 'Los clientes no podrán consultar el estado de sus pedidos a través del bot, aunque tengan sesión activa en la tienda.';
-         },
-         open(e) { this.field = e.detail.field || ''; this.show = true; },
-         cancel() { this.show = false; $wire.cancelDisableWoo(); },
-         confirm() { this.show = false; $wire.confirmDisableWoo(); }
-     }"
-     x-on:woo-modal-open.window="open($event)"
-     x-bind:style="{ display: show ? 'flex' : 'none' }"
-     style="position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;display:none">
-
+<div id="nx-woo-modal"
+     style="position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px">
     <div style="position:absolute;inset:0;background:rgba(0,0,0,.35)"
-         @click="cancel()"></div>
-
-    <div style="position:relative;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.15),0 1px 3px rgba(0,0,0,.08);width:100%;max-width:420px;overflow:hidden"
-         x-show="show" x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
-
+         onclick="nxWooCancel()"></div>
+    <div id="nx-woo-card"
+         style="position:relative;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.15),0 1px 3px rgba(0,0,0,.08);width:100%;max-width:420px;overflow:hidden">
         <div style="height:3px;background:#ef4444;width:100%"></div>
-
         <div style="padding:24px 24px 0">
-            <div x-text="title" style="font-size:15px;font-weight:600;color:#111827;margin-bottom:6px"></div>
-            <div x-text="desc"  style="font-size:13px;color:#6b7280;line-height:1.6"></div>
+            <div id="nx-woo-title" style="font-size:15px;font-weight:600;color:#111827;margin-bottom:6px"></div>
+            <div id="nx-woo-desc"  style="font-size:13px;color:#6b7280;line-height:1.6"></div>
         </div>
-
         <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;margin-top:20px;border-top:1px solid #f3f4f6">
             <span style="font-size:11.5px;color:#9ca3af">Se sincroniza con el plugin de WordPress</span>
             <div style="display:flex;gap:8px">
-                <button @click="cancel()"
+                <button onclick="nxWooCancel()"
                         style="padding:7px 16px;border-radius:7px;border:1px solid #e5e7eb;background:#fff;color:#374151;font-size:13px;font-weight:500;cursor:pointer;line-height:1">
                     Cancelar
                 </button>
-                <button @click="confirm()"
+                <button onclick="nxWooConfirm()"
                         style="padding:7px 16px;border-radius:7px;border:none;background:#ef4444;color:#fff;font-size:13px;font-weight:500;cursor:pointer;line-height:1">
                     Desactivar
                 </button>
             </div>
         </div>
-
     </div>
 </div>
 
@@ -1139,6 +1112,78 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         el.dataset.flipping = '1';
         setTimeout(restorePills, 5000);
     }, true);
+
+    /* ── Modal Woo: 100% JS, sin Livewire dispatch ── */
+    var nxWooPendingField = '';
+    var nxWooPendingPill  = null;
+
+    var NX_WOO_COPY = {
+        wooIntegrationEnabled: {
+            title: 'Desactivar productos y precios',
+            desc:  'El bot dejará de conocer el catálogo de tu tienda. Las consultas sobre productos, precios y stock se responderán solo con la base de conocimiento.'
+        },
+        wooOrdersEnabled: {
+            title: 'Desactivar estado de pedidos',
+            desc:  'Los clientes no podrán consultar el estado de sus pedidos a través del bot, aunque tengan sesión activa en la tienda.'
+        }
+    };
+
+    function nxGetWire() {
+        var el = document.querySelector('[wire\\:id]');
+        return el ? window.Livewire.find(el.getAttribute('wire:id')) : null;
+    }
+
+    /* Llamado desde onclick del toggle pill */
+    window.nxWooToggle = function (pill, field, isOn) {
+        if (isOn) {
+            /* Apagar → mostrar modal */
+            nxWooPendingField = field;
+            nxWooPendingPill  = pill;
+            var copy = NX_WOO_COPY[field] || { title: 'Desactivar', desc: '' };
+            document.getElementById('nx-woo-title').textContent = copy.title;
+            document.getElementById('nx-woo-desc').textContent  = copy.desc;
+            /* Animación de entrada en la tarjeta */
+            var card = document.getElementById('nx-woo-card');
+            card.style.animation = 'none';
+            card.offsetHeight;
+            card.style.animation = 'nxWooIn .22s cubic-bezier(.34,1.56,.64,1) both';
+            document.getElementById('nx-woo-modal').style.display = 'flex';
+        } else {
+            /* Encender → llamar Livewire directamente */
+            pill.style.opacity = '.65';
+            var dot = getDot(pill);
+            pill.style.background = '#7c3aed';
+            if (dot) dot.style.left = '21px';
+            pill.dataset.flipping = '1';
+            setTimeout(restorePills, 5000);
+            var w = nxGetWire(); if (w) w.call('enableWoo', field);
+        }
+    };
+
+    window.nxWooCancel = function () {
+        document.getElementById('nx-woo-modal').style.display = 'none';
+        nxWooPendingField = '';
+        nxWooPendingPill  = null;
+    };
+
+    window.nxWooConfirm = function () {
+        var field = nxWooPendingField;
+        var pill  = nxWooPendingPill;
+        document.getElementById('nx-woo-modal').style.display = 'none';
+        nxWooPendingField = '';
+        nxWooPendingPill  = null;
+        if (!field) return;
+        /* Animación visual del pill hacia OFF mientras Livewire responde */
+        if (pill) {
+            var dot = getDot(pill);
+            pill.style.background = '#d1d5db';
+            if (dot) dot.style.left = '3px';
+            pill.style.opacity = '.65';
+            pill.dataset.flipping = '1';
+            setTimeout(restorePills, 5000);
+        }
+        var w = nxGetWire(); if (w) w.call('disableWoo', field);
+    };
 
     /* ── Restaura pills tras respuesta Livewire ── */
     document.addEventListener('livewire:initialized', function () {
