@@ -1041,31 +1041,54 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
 </div>
 
 {{-- ── Modal: confirmar desactivar WooCommerce ──
-     wire:ignore → Livewire nunca toca este elemento. JS controla display.
-     Botones llaman Livewire via nxWooCancel() / nxWooConfirm() en el script.
+     wire:ignore  → Livewire nunca morfea este elemento
+     x-data/x-on → Alpine captura el evento del servidor directamente
+     $wire        → llama métodos Livewire sin wire:click
 ── --}}
-<div id="nx-woo-modal" wire:ignore
-     style="position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px">
+<div wire:ignore
+     x-data="{
+         show: false,
+         field: '',
+         get title() {
+             return this.field === 'wooIntegrationEnabled'
+                 ? 'Desactivar productos y precios'
+                 : 'Desactivar estado de pedidos';
+         },
+         get desc() {
+             return this.field === 'wooIntegrationEnabled'
+                 ? 'El bot dejará de conocer el catálogo de tu tienda. Las consultas sobre productos, precios y stock se responderán solo con la base de conocimiento.'
+                 : 'Los clientes no podrán consultar el estado de sus pedidos a través del bot, aunque tengan sesión activa en la tienda.';
+         },
+         open(e) { this.field = e.detail.field || ''; this.show = true; },
+         cancel() { this.show = false; $wire.cancelDisableWoo(); },
+         confirm() { this.show = false; $wire.confirmDisableWoo(); }
+     }"
+     x-on:woo-modal-open.window="open($event)"
+     x-bind:style="{ display: show ? 'flex' : 'none' }"
+     style="position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;display:none">
+
     <div style="position:absolute;inset:0;background:rgba(0,0,0,.35)"
-         onclick="nxWooCancel()"></div>
-    <div id="nx-woo-card"
-         style="position:relative;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.15),0 1px 3px rgba(0,0,0,.08);width:100%;max-width:420px;overflow:hidden">
+         @click="cancel()"></div>
+
+    <div style="position:relative;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.15),0 1px 3px rgba(0,0,0,.08);width:100%;max-width:420px;overflow:hidden"
+         x-show="show" x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
 
         <div style="height:3px;background:#ef4444;width:100%"></div>
 
         <div style="padding:24px 24px 0">
-            <div id="nx-woo-title" style="font-size:15px;font-weight:600;color:#111827;margin-bottom:6px"></div>
-            <div id="nx-woo-desc"  style="font-size:13px;color:#6b7280;line-height:1.6"></div>
+            <div x-text="title" style="font-size:15px;font-weight:600;color:#111827;margin-bottom:6px"></div>
+            <div x-text="desc"  style="font-size:13px;color:#6b7280;line-height:1.6"></div>
         </div>
 
         <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;margin-top:20px;border-top:1px solid #f3f4f6">
             <span style="font-size:11.5px;color:#9ca3af">Se sincroniza con el plugin de WordPress</span>
             <div style="display:flex;gap:8px">
-                <button onclick="nxWooCancel()"
+                <button @click="cancel()"
                         style="padding:7px 16px;border-radius:7px;border:1px solid #e5e7eb;background:#fff;color:#374151;font-size:13px;font-weight:500;cursor:pointer;line-height:1">
                     Cancelar
                 </button>
-                <button onclick="nxWooConfirm()"
+                <button @click="confirm()"
                         style="padding:7px 16px;border-radius:7px;border:none;background:#ef4444;color:#fff;font-size:13px;font-weight:500;cursor:pointer;line-height:1">
                     Desactivar
                 </button>
@@ -1117,59 +1140,10 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         setTimeout(restorePills, 5000);
     }, true);
 
-    /* ── Modal Woo: controlado 100% por JS via eventos Livewire ── */
-    var nxWooField = '';
-
-    var NX_WOO_TEXTS = {
-        wooIntegrationEnabled: {
-            title: 'Desactivar productos y precios',
-            desc:  'El bot dejará de conocer el catálogo de tu tienda. Las consultas sobre productos, precios y stock se responderán solo con la base de conocimiento.'
-        },
-        wooOrdersEnabled: {
-            title: 'Desactivar estado de pedidos',
-            desc:  'Los clientes no podrán consultar el estado de sus pedidos a través del bot, aunque tengan sesión activa en la tienda.'
-        }
-    };
-
-    function nxWooOpen(field) {
-        nxWooField = field || '';
-        var t = NX_WOO_TEXTS[field] || { title: 'Desactivar', desc: '' };
-        document.getElementById('nx-woo-title').textContent = t.title;
-        document.getElementById('nx-woo-desc').textContent  = t.desc;
-        var m = document.getElementById('nx-woo-modal');
-        m.style.display = 'flex';
-        var card = document.getElementById('nx-woo-card');
-        card.style.animation = 'none';
-        card.offsetHeight; // reflow
-        card.style.animation = 'nxWooIn .22s cubic-bezier(.34,1.56,.64,1) both';
-    }
-
-    function nxWooHide() {
-        document.getElementById('nx-woo-modal').style.display = 'none';
-    }
-
-    function nxGetWire() {
-        var el = document.querySelector('[wire\\:id]');
-        return el ? window.Livewire.find(el.getAttribute('wire:id')) : null;
-    }
-
-    window.nxWooCancel = function () {
-        nxWooHide();
-        var w = nxGetWire(); if (w) w.call('cancelDisableWoo');
-    };
-
-    window.nxWooConfirm = function () {
-        nxWooHide();
-        var w = nxGetWire(); if (w) w.call('confirmDisableWoo');
-    };
-
-    /* ── Restaura tras respuesta Livewire ── */
+    /* ── Restaura pills tras respuesta Livewire ── */
     document.addEventListener('livewire:initialized', function () {
         if (!window.Livewire) return;
         try {
-            Livewire.on('woo-modal-open', function (data) {
-                nxWooOpen(data && data.field ? data.field : (Array.isArray(data) && data[0] ? data[0].field : ''));
-            });
             Livewire.hook('commit', function (_ref) {
                 var ok = _ref.succeed; var fail = _ref.fail;
                 if (ok)   ok(restorePills);
