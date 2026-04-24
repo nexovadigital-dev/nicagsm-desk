@@ -20,7 +20,7 @@ class ChatWidget extends Model
         'pre_chat_enabled', 'pre_chat_fields',
         'button_style', 'button_icon', 'button_text', 'button_text_color', 'button_image',
         'agent_call_timeout', 'agent_no_response', 'bot_enabled', 'bot_avatar', 'bot_system_prompt',
-        'ai_enabled', 'faq_direct',
+        'ai_enabled', 'faq_direct', 'woo_integration_enabled', 'woo_orders_enabled',
     ];
 
     protected $casts = [
@@ -37,8 +37,10 @@ class ChatWidget extends Model
         'pre_chat_enabled'        => 'boolean',
         'pre_chat_fields'  => 'array',
         'bot_enabled'      => 'boolean',
-        'ai_enabled'       => 'boolean',
-        'faq_direct'       => 'boolean',
+        'ai_enabled'              => 'boolean',
+        'faq_direct'              => 'boolean',
+        'woo_integration_enabled' => 'boolean',
+        'woo_orders_enabled'      => 'boolean',
     ];
 
     protected static function booted(): void
