@@ -816,7 +816,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                         <div style="font-size:13px;font-weight:600;color:#111827">Productos y precios</div>
                         <div style="font-size:11.5px;color:#6b7280;margin-top:1px">El bot conoce tu catálogo: nombres, precios, stock y variantes</div>
                     </div>
-                    <div onclick="nxWooToggle(this,'wooIntegrationEnabled',{{ $wooIntegrationEnabled ? 'true' : 'false' }})"
+                    <div onclick="nxWooToggle(this,'wooIntegrationEnabled')"
                          style="width:44px;height:26px;border-radius:12px;background:{{ $wooIntegrationEnabled ? '#7c3aed' : '#d1d5db' }};position:relative;cursor:pointer;flex-shrink:0;transition:background .2s cubic-bezier(.4,0,.2,1)">
                         <div class="nx-pill-dot" style="position:absolute;top:3px;{{ $wooIntegrationEnabled ? 'left:21px' : 'left:3px' }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22);transition:left .2s cubic-bezier(.4,0,.2,1)"></div>
                     </div>
@@ -831,7 +831,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                         <div style="font-size:13px;font-weight:600;color:#111827">Estado de pedidos</div>
                         <div style="font-size:11.5px;color:#6b7280;margin-top:1px">Clientes autenticados pueden consultar sus pedidos directamente al bot</div>
                     </div>
-                    <div onclick="nxWooToggle(this,'wooOrdersEnabled',{{ $wooOrdersEnabled ? 'true' : 'false' }})"
+                    <div onclick="nxWooToggle(this,'wooOrdersEnabled')"
                          style="width:44px;height:26px;border-radius:12px;background:{{ $wooOrdersEnabled ? '#7c3aed' : '#d1d5db' }};position:relative;cursor:pointer;flex-shrink:0;transition:background .2s cubic-bezier(.4,0,.2,1)">
                         <div class="nx-pill-dot" style="position:absolute;top:3px;{{ $wooOrdersEnabled ? 'left:21px' : 'left:3px' }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22);transition:left .2s cubic-bezier(.4,0,.2,1)"></div>
                     </div>
@@ -1133,27 +1133,33 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         return el ? window.Livewire.find(el.getAttribute('wire:id')) : null;
     }
 
-    /* Llamado desde onclick del toggle pill */
-    window.nxWooToggle = function (pill, field, isOn) {
+    /* Llamado desde onclick del toggle pill.
+       isOn se lee del DOM (posición del dot) — nunca del parámetro Blade,
+       para evitar que morphdom deje el atributo desactualizado. */
+    window.nxWooToggle = function (pill, field) {
+        var isOn = pillIsOn(pill);   // true = encendido, false = apagado
         if (isOn) {
-            /* Apagar → mostrar modal */
+            /* Apagar → mostrar modal de confirmación */
             nxWooPendingField = field;
             nxWooPendingPill  = pill;
             var copy = NX_WOO_COPY[field] || { title: 'Desactivar', desc: '' };
             document.getElementById('nx-woo-title').textContent = copy.title;
             document.getElementById('nx-woo-desc').textContent  = copy.desc;
+            /* Mover modal a <body> para escapar de cualquier transform de Filament */
+            var modal = document.getElementById('nx-woo-modal');
+            if (modal.parentNode !== document.body) document.body.appendChild(modal);
             /* Animación de entrada en la tarjeta */
             var card = document.getElementById('nx-woo-card');
             card.style.animation = 'none';
             card.offsetHeight;
             card.style.animation = 'nxWooIn .22s cubic-bezier(.34,1.56,.64,1) both';
-            document.getElementById('nx-woo-modal').style.display = 'flex';
+            modal.style.display = 'flex';
         } else {
-            /* Encender → llamar Livewire directamente */
-            pill.style.opacity = '.65';
+            /* Encender → llamar Livewire directamente, sin modal */
             var dot = getDot(pill);
             pill.style.background = '#7c3aed';
             if (dot) dot.style.left = '21px';
+            pill.style.opacity = '.65';
             pill.dataset.flipping = '1';
             setTimeout(restorePills, 5000);
             var w = nxGetWire(); if (w) w.call('enableWoo', field);
