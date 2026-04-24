@@ -119,8 +119,9 @@ class NexovaAiService
         }
 
         // ── Atajo de pedidos WooCommerce (cero tokens de IA) ─────────────────
-        // Solo si el ticket tiene historial de pedidos en store_context.
-        $orderReply = $this->tryOrderQueryReply($ticket);
+        // Solo si el widget tiene woo_orders_enabled y hay customer_orders en store_context.
+        $wooOrdersOn = $widget ? (bool) ($widget->woo_orders_enabled ?? false) : false;
+        $orderReply  = $wooOrdersOn ? $this->tryOrderQueryReply($ticket) : null;
         if ($orderReply !== null) {
             $org?->incrementBotMessageCount();
             Log::info("[NexovaBot] Respondido con template de pedidos — ticket #{$ticket->id}");
@@ -130,7 +131,9 @@ class NexovaAiService
         // ── Intentar responder desde la KB ────────────────────────────────────
         // Solo salta KB directa si el ticket trae store_context real (WooCommerce page data),
         // en ese caso la IA con el catálogo responde mejor sobre productos/precios.
-        $hasStoreCtx = ! empty($ticket->store_context);
+        // Si el widget tiene woo_integration_enabled = false, tratar store_context como vacío.
+        $wooEnabled  = $widget ? (bool) ($widget->woo_integration_enabled ?? false) : false;
+        $hasStoreCtx = $wooEnabled && ! empty($ticket->store_context);
         $widgetId    = $ticket->widget_id ?: null;
         $ragContext   = $this->buildRagContext($ticket->organization_id, $widgetId);
         $kbAnswer    = null;
@@ -408,18 +411,47 @@ class NexovaAiService
             $lines[] = '--- CATÁLOGO DE PRODUCTOS ---';
             foreach ($ctx['products'] as $p) {
                 $entry = "• {$p['name']}";
-                if (! empty($p['price']))       $entry .= " — {$p['price']} {$ctx['currency']}";
+
+                // Precio: simple o rango (productos variables)
+                if (! empty($p['price']))       $entry .= " — {$p['price']}";
+                elseif (! empty($p['price_range'])) $entry .= " — {$p['price_range']}";
+
                 if (! empty($p['sku']))         $entry .= " (SKU: {$p['sku']})";
                 if (! empty($p['stock']))       $entry .= " | Stock: {$p['stock']}";
+                if (! empty($p['categories']))  $entry .= " | Cat: {$p['categories']}";
+
+                // Descripción corta
                 if (! empty($p['description'])) $entry .= "\n  {$p['description']}";
+
+                // Variantes de producto variable
+                if (! empty($p['variants']) && is_array($p['variants'])) {
+                    foreach ($p['variants'] as $v) {
+                        $vLine = "    - {$v['variant']}: {$v['price']}";
+                        if (! empty($v['url'])) $vLine .= " → {$v['url']}";
+                        $entry .= "\n{$vLine}";
+                    }
+                }
+
                 if (! empty($p['url']))         $entry .= "\n  Enlace: {$p['url']}";
                 $lines[] = $entry;
             }
         }
 
+        // Páginas del sitio (T&C, envíos, cuenta, etc.)
+        if (! empty($ctx['pages']) && is_array($ctx['pages'])) {
+            $lines[] = '';
+            $lines[] = '--- PÁGINAS DEL SITIO ---';
+            foreach ($ctx['pages'] as $pg) {
+                if (empty($pg['title'])) continue;
+                $pgLine = "• {$pg['title']}";
+                if (! empty($pg['url'])) $pgLine .= " → {$pg['url']}";
+                $lines[] = $pgLine;
+            }
+            $lines[] = 'Cuando el cliente pregunte por políticas, envíos, devoluciones, términos o información del sitio, usa los enlaces de arriba y ofrécelos en formato Markdown.';
+        }
+
         $lines[] = '';
         if (! empty($ctx['customer_orders']) && is_array($ctx['customer_orders'])) {
-            $lines[] = '';
             $lines[] = '--- PEDIDOS RECIENTES DE ESTE CLIENTE ---';
             foreach ($ctx['customer_orders'] as $order) {
                 $num    = $order['number'] ?? $order['id'] ?? '?';
@@ -442,9 +474,9 @@ class NexovaAiService
         $lines[] = 'Cuando el cliente pregunte por productos, precios o disponibilidad, usa la información de arriba.';
         $lines[] = 'Si el cliente pregunta por un producto que no aparece en el catálogo, dile que puede verlo en la tienda o hablar con un agente.';
         $lines[] = 'MUY IMPORTANTE SOBRE PRECIOS: Si el precio es 0.00, NO digas que es gratis. Significa que es un servicio variable (ej: depende de la duración o modelo). Dile al cliente que el precio depende de la variación elegida y provéele obligatoriamente el enlace con formato Markdown [Ver Opciones](url).';
-        
-        $urls = !empty($ctx['store_url']) ? $ctx['store_url'] : 'la página web';
-        $lines[] = "REGLA EXTREMA DE SATURACIÓN: Si hay muchos productos similares o la lista es muy redundante, NO enumeres todos. Menciona solo 2 o 3 opciones destacadas e indícale al cliente que para encontrar el correcto debe ir a la tienda, usando SIEMPRE el formato Markdown: [Visitar Tienda]({$urls}).";
+
+        $storeUrl = ! empty($ctx['shop_url']) ? $ctx['shop_url'] : (! empty($ctx['store_url']) ? $ctx['store_url'] : 'la página web');
+        $lines[] = "REGLA EXTREMA DE SATURACIÓN: Si hay muchos productos similares o la lista es muy redundante, NO enumeres todos. Menciona solo 2 o 3 opciones destacadas e indícale al cliente que para encontrar el correcto debe ir a la tienda, usando SIEMPRE el formato Markdown: [Visitar Tienda]({$storeUrl}).";
 
         return implode("\n", $lines);
     }
@@ -721,11 +753,19 @@ class NexovaAiService
             $lines[] = '--- PRODUCTOS Y SERVICIOS ---';
             foreach ($data['products'] as $p) {
                 $entry = "• {$p['name']}";
-                if (! empty($p['price']))       $entry .= " — {$p['price']}" . ($currency ? " {$currency}" : '');
-                if (! empty($p['stock']))       $entry .= " | {$p['stock']}";
-                if (! empty($p['categories'])) $entry .= " | Cat: {$p['categories']}";
-                if (! empty($p['description'])) $entry .= "\n  {$p['description']}";
-                if (! empty($p['url']))         $entry .= "\n  URL: [Ver / Ordenar]({$p['url']})";
+                if (! empty($p['price']))            $entry .= " — {$p['price']}" . ($currency ? " {$currency}" : '');
+                elseif (! empty($p['price_range']))  $entry .= " — {$p['price_range']}";
+                if (! empty($p['stock']))            $entry .= " | {$p['stock']}";
+                if (! empty($p['categories']))       $entry .= " | Cat: {$p['categories']}";
+                if (! empty($p['description']))      $entry .= "\n  {$p['description']}";
+                if (! empty($p['variants']) && is_array($p['variants'])) {
+                    foreach ($p['variants'] as $v) {
+                        $vLine = "    - {$v['variant']}: {$v['price']}";
+                        if (! empty($v['url'])) $vLine .= " → {$v['url']}";
+                        $entry .= "\n{$vLine}";
+                    }
+                }
+                if (! empty($p['url']))              $entry .= "\n  URL: [Ver / Ordenar]({$p['url']})";
                 $lines[] = $entry;
             }
         }
@@ -860,8 +900,9 @@ class NexovaAiService
             $systemPrompt .= $formatRule;
         }
 
-        // Contexto de tienda WooCommerce (inyectado por el plugin, prioridad alta)
-        $storeCtx = $ticket->store_context;
+        // Contexto de tienda WooCommerce — solo si el widget tiene la integración habilitada
+        $wooIntEnabled = $widget ? (bool) ($widget->woo_integration_enabled ?? false) : false;
+        $storeCtx = ($wooIntEnabled && ! empty($ticket->store_context)) ? $ticket->store_context : [];
         if (! empty($storeCtx)) {
             $systemPrompt .= "\n\n" . $this->buildStoreContextBlock($storeCtx);
 
