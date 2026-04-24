@@ -32,7 +32,6 @@ class EditChatWidget extends Page
     public bool   $wooIntegrationEnabled  = false;
     public bool   $wooOrdersEnabled       = false;
     public string $wpPluginSiteUrl        = '';
-    public bool   $wooConfirmModal        = false;
     public string $wooConfirmField        = '';   // 'wooIntegrationEnabled' | 'wooOrdersEnabled'
     public string $telegramBotUsername = "";
     public string $telegramBotName     = "";
@@ -285,18 +284,10 @@ class EditChatWidget extends Page
     {
         if ($this->{$field}) {
             $this->wooConfirmField = $field;
-            $this->wooConfirmModal = true;
+            $this->dispatch('woo-modal-open', field: $field);
         } else {
             $this->{$field} = true;
         }
-    }
-
-    public function requestDisableWoo(string $field): void
-    {
-        // Si ya está apagado no hace nada
-        if (! $this->{$field}) return;
-        $this->wooConfirmField = $field;
-        $this->wooConfirmModal = true;
     }
 
     public function confirmDisableWoo(): void
@@ -304,13 +295,11 @@ class EditChatWidget extends Page
         if ($this->wooConfirmField) {
             $this->{$this->wooConfirmField} = false;
         }
-        $this->wooConfirmModal = false;
         $this->wooConfirmField = '';
     }
 
     public function cancelDisableWoo(): void
     {
-        $this->wooConfirmModal = false;
         $this->wooConfirmField = '';
     }
 
