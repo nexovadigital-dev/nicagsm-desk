@@ -97,7 +97,7 @@ class WpApiController extends Controller
 
     /**
      * GET /api/wp/widgets/{id}
-     * Datos de un widget específico.
+     * Datos de un widget específico incluyendo toggles de integración WooCommerce.
      */
     public function widget(Request $request, int $id): JsonResponse
     {
@@ -109,7 +109,6 @@ class WpApiController extends Controller
 
         $widget = $token->organization
             ->chatWidgets()
-            ->select('id', 'name', 'token', 'is_active')
             ->find($id);
 
         if (! $widget) {
@@ -118,11 +117,37 @@ class WpApiController extends Controller
 
         return response()->json([
             'widget' => [
-                'id'        => $widget->id,
-                'name'      => $widget->name,
-                'token'     => $widget->token,
-                'is_active' => (bool) $widget->is_active,
+                'id'                      => $widget->id,
+                'name'                    => $widget->name,
+                'token'                   => $widget->token,
+                'is_active'               => (bool) $widget->is_active,
+                'woo_integration_enabled' => (bool) ($widget->woo_integration_enabled ?? false),
+                'woo_orders_enabled'      => (bool) ($widget->woo_orders_enabled ?? false),
             ],
         ]);
+    }
+
+    /**
+     * PATCH /api/wp/widgets/{id}
+     * El plugin WP sincroniza sus toggles de WooCommerce al servidor.
+     */
+    public function updateWidget(Request $request, int $id): JsonResponse
+    {
+        $token = $this->resolveToken($request);
+
+        if (! $token) {
+            return response()->json(['message' => 'Token inválido.'], 401);
+        }
+
+        $widget = $token->organization->chatWidgets()->find($id);
+
+        if (! $widget) {
+            return response()->json(['message' => 'Widget no encontrado.'], 404);
+        }
+
+        // Los toggles woo_integration_enabled / woo_orders_enabled se controlan
+        // exclusivamente desde el panel Nexova — el plugin WP no puede sobreescribirlos.
+
+        return response()->json(['ok' => true]);
     }
 }
