@@ -17,6 +17,9 @@ Schedule::command('partner:check-license')->dailyAt('03:00');
 // Revertir llamados a agente que expiraron sin respuesta
 Schedule::command('chat:expire-agent-calls')->everyTwoMinutes()->withoutOverlapping();
 
+// Cerrar conversaciones de bot sin actividad en las últimas 24 horas (nunca toca tickets con agente)
+Schedule::command('tickets:auto-close')->hourly()->withoutOverlapping();
+
 // Re-indexar URLs (source='url') en la base de conocimiento cada semana
 Schedule::call(function () {
     \App\Models\KnowledgeBase::where('source', 'url')
