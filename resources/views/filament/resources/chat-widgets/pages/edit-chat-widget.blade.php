@@ -91,6 +91,7 @@
 .wc-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1.5px solid transparent; font-family: inherit; transition: all .12s; }
 .wc-btn-primary { background: #22c55e; color:#fff; border-color: #22c55e; }
 .wc-btn-primary:hover { background: #16a34a; border-color: #16a34a; }
+.wc-btn--saving { opacity: .8; cursor: default; }
 .wc-btn-ghost { background: transparent; color: var(--c-sub,#6b7280); border-color: var(--c-border,#e3e6ea); }
 .wc-btn-ghost:hover { background: var(--c-bg,#f5f6f8); }
 .wc-color-row { display: flex; align-items: center; gap: 10px; }
@@ -1014,13 +1015,16 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
 
     {{-- ── Save button ── --}}
     <div style="background:var(--c-surface,#fff);border:1px solid var(--c-border,#e3e6ea);border-radius:14px;padding:14px">
-        <button class="wc-btn wc-btn-primary" wire:click="save" wire:loading.attr="disabled" style="width:100%;justify-content:center;font-size:14px;padding:11px 0">
+        <button class="wc-btn wc-btn-primary" wire:click="save" wire:loading.attr="disabled" wire:loading.class="wc-btn--saving" style="width:100%;justify-content:center;font-size:14px;padding:11px 0;transition:opacity .15s">
             <span wire:loading.remove wire:target="save" style="display:flex;align-items:center;gap:6px">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 {{ $widgetId ? 'Guardar cambios' : 'Crear widget' }}
             </span>
-            <span wire:loading wire:target="save" style="display:none;align-items:center;gap:6px">
-                <svg style="animation:spin 1s linear infinite" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            <span wire:loading wire:target="save" style="display:none;align-items:center;gap:7px">
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" style="animation:spin .7s linear infinite;flex-shrink:0">
+                    <circle cx="7.5" cy="7.5" r="6" stroke="rgba(255,255,255,.3)" stroke-width="2"/>
+                    <path d="M7.5 1.5a6 6 0 0 1 6 6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                </svg>
                 Guardando...
             </span>
         </button>
