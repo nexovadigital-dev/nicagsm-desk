@@ -92,6 +92,7 @@ class EditChatWidget extends Page
         $this->name                = $w->name;
         $this->botName             = $w->bot_name;
         $this->botEnabled              = (bool) ($w->bot_enabled ?? true);
+        $this->aiEnabled               = (bool) ($w->ai_enabled ?? true);
         $this->wooIntegrationEnabled   = (bool) ($w->woo_integration_enabled ?? false);
         $this->wooOrdersEnabled        = (bool) ($w->woo_orders_enabled ?? false);
 

@@ -810,7 +810,7 @@ html.dark *::-webkit-scrollbar-thumb { background: #2a2f3a; }
 html.dark *::-webkit-scrollbar-thumb:hover { background: #3a4255; }
 
 /* Spinner dark */
-html.dark #nx-page-loader .nx-spinner { border-top-color: #22c55e; border-color: rgba(255,255,255,.08); border-top-color: #22c55e; }
+html.dark #nx-page-loader .nx-spinner { border-color: rgba(255,255,255,.08); border-top-color: #22c55e; }
 
 /* ═══════════════════════════════════════════════════════════════════
    CUSTOM PAGES — dark mode overrides (pages with hardcoded light colors)
@@ -1056,6 +1056,21 @@ html.dark .nx-ts-option.nx-ts-on .nx-ts-icon { background: rgba(34,197,94,.13); 
 .nx-ts-option.nx-ts-on .nx-ts-check {
     opacity: 1;
     transform: scale(1);
+}
+
+/* ── Widget config page — info boxes (wc-info-box) ── */
+html.dark .wc-info-box {
+    background: var(--nx-surf2) !important;
+    border-color: var(--nx-border) !important;
+}
+html.dark .wc-info-box,
+html.dark .wc-info-box * {
+    color: var(--nx-text);
+}
+html.dark .wc-info-box .wc-label,
+html.dark .wc-info-box [style*="color:#6b7280"],
+html.dark .wc-info-box [style*="color: #6b7280"] {
+    color: var(--nx-muted) !important;
 }
 
 /* ── Installation page (inst-*) ── */

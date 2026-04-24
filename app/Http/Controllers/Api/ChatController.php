@@ -125,6 +125,8 @@ class ChatController extends Controller
             'pre_chat_enabled'        => $cfg->pre_chat_enabled ?? false,
             'pre_chat_fields'         => $cfg->pre_chat_fields ?? [],
             'bot_enabled'             => $cfg->bot_enabled ?? true,
+            'woo_integration_enabled' => $cfg->woo_integration_enabled ?? false,
+            'woo_orders_enabled'      => $cfg->woo_orders_enabled ?? false,
             'bot_avatar'              => $cfg->bot_avatar
                 ? (str_starts_with($cfg->bot_avatar, 'http') ? $cfg->bot_avatar : \Illuminate\Support\Facades\Storage::disk('public')->url(ltrim(str_replace('/storage/', '', $cfg->bot_avatar), '/')))
                 : null,
@@ -453,8 +455,8 @@ class ChatController extends Controller
             ]);
             Message::create([
                 'ticket_id'   => $ticket->id,
-                'sender_type' => 'system',
-                'content'     => 'No hay agentes disponibles. El asistente IA continuará ayudándote.',
+                'sender_type' => 'bot',
+                'content'     => 'No hay agentes disponibles en este momento. Sin embargo, tu llamado fue enviado y es probable que un agente se conecte en cualquier momento. 💬 Te recomiendo dejar tus datos de contacto (email, número de WhatsApp o Telegram) en este chat — así los agentes podrán comunicarse contigo directamente.',
             ]);
         }
 
@@ -669,6 +671,7 @@ class ChatController extends Controller
         }
 
         $tickets = Ticket::whereIn('session_id', $ids)
+            ->withCount(['messages as message_count' => fn ($q) => $q->whereNotIn('sender_type', ['system'])])
             ->with(['messages' => function ($q) {
                 $q->whereNotIn('sender_type', ['system'])
                   ->orderBy('created_at', 'desc')
@@ -687,7 +690,7 @@ class ChatController extends Controller
                 'session_id'      => $t->session_id,
                 'status'          => $t->status,
                 'conversation_name' => $t->conversation_name,
-                'message_count'   => $t->messages()->whereNotIn('sender_type', ['system'])->count(),
+                'message_count'   => $t->message_count ?? 0,
                 'last_message'    => $lastMsg?->content,
                 'last_message_at' => $lastMsg?->created_at?->toISOString(),
                 'started_at'      => $t->created_at->toISOString(),

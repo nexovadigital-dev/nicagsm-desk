@@ -30,30 +30,15 @@ class ExpireAgentCalls extends Command
                 continue;
             }
 
-            $noResponse = $ticket->widget?->agent_no_response ?? 'bot';
-
-            if ($noResponse === 'ticket') {
-                $ticket->update([
-                    'status'          => 'closed',
-                    'agent_called_at' => null,
-                ]);
-                Message::create([
-                    'ticket_id'   => $ticket->id,
-                    'sender_type' => 'system',
-                    'content'     => 'No hay agentes disponibles en este momento. Tu consulta ha sido registrada y un agente te contactará pronto.',
-                ]);
-            } else {
-                // Default: revert to bot
-                $ticket->update([
-                    'status'          => 'bot',
-                    'agent_called_at' => null,
-                ]);
-                Message::create([
-                    'ticket_id'   => $ticket->id,
-                    'sender_type' => 'system',
-                    'content'     => 'No hay agentes disponibles. El asistente IA continuará ayudándote.',
-                ]);
-            }
+            $ticket->update([
+                'status'          => 'bot',
+                'agent_called_at' => null,
+            ]);
+            Message::create([
+                'ticket_id'   => $ticket->id,
+                'sender_type' => 'bot',
+                'content'     => 'No hay agentes disponibles en este momento. Sin embargo, tu llamado fue enviado y es probable que un agente se conecte en cualquier momento. 💬 Te recomiendo dejar tus datos de contacto (email, número de WhatsApp o Telegram) en este chat — así los agentes podrán comunicarse contigo directamente.',
+            ]);
 
             $reverted++;
         }

@@ -45,6 +45,7 @@ Route::prefix('wp')->group(function () {
     Route::get('/verify',          [WpApiController::class, 'verify']);
     Route::get('/widgets',         [WpApiController::class, 'widgets']);
     Route::get('/widgets/{id}',    [WpApiController::class, 'widget']);
+    Route::patch('/widgets/{id}',  [WpApiController::class, 'updateWidget']);
 });
 
 // â”€â”€ Cron HTTP â€” para Hostinger hPanel, cron-job.org, EasyCron, etc. â”€â”€â”€â”€â”€â”€â”€â”€â”€

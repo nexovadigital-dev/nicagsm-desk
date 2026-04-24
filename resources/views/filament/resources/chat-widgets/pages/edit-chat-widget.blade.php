@@ -199,7 +199,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
             $botMsgLimit = $planModel?->max_bot_messages_monthly ?? 0;
             $planLabel   = ['free'=>'Gratuito','trial'=>'Prueba','pro'=>'Pro','enterprise'=>'Enterprise'][$plan] ?? ucfirst($plan);
         @endphp
-        <div style="margin-top:16px;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px">
+        <div class="wc-info-box" style="margin-top:16px;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
                 <div>
                     <div style="font-size:13px;font-weight:600;color:#111827">Bot de IA</div>
@@ -244,7 +244,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         @endif
 
         {{-- Toggle IA --}}
-        <div style="margin-top:14px;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px">
+        <div class="wc-info-box" style="margin-top:14px;padding:14px 16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
                 <div>
                     <div style="font-size:13px;font-weight:600;color:#111827">Inteligencia Artificial (IA)</div>

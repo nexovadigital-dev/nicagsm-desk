@@ -49,11 +49,11 @@ class NexovaAiService
         if ($ticket->platform === 'telegram' && $org) {
             $telegramConfig = $org->telegram_config ?? [];
             if (empty($telegramConfig['ai_enabled'])) {
-                Log::info("[NexovaBot] IA deshabilitada en Telegram — ticket #{$ticket->id}");
+                Log::debug("[NexovaBot] IA deshabilitada en Telegram — ticket #{$ticket->id}");
                 return 'El asistente automático está desactivado en este canal. Un agente te atenderá pronto.' . self::ESCALATE_FLAG;
             }
         } elseif ($widget && ! $widget->bot_enabled) {
-            Log::info("[NexovaBot] Bot deshabilitado en widget #{$ticket->widget_id} — ticket #{$ticket->id}");
+            Log::debug("[NexovaBot] Bot deshabilitado en widget #{$ticket->widget_id} — ticket #{$ticket->id}");
             return 'El asistente automático está desactivado. Un agente te atenderá pronto.' . self::ESCALATE_FLAG;
         }
 
@@ -64,14 +64,14 @@ class NexovaAiService
                 ->where('sender_type', 'bot')
                 ->count();
             if ($botMsgCount >= $maxPerSession) {
-                Log::info("[NexovaBot] Límite de mensajes por sesión alcanzado — ticket #{$ticket->id}");
+                Log::debug("[NexovaBot] Límite de mensajes por sesión alcanzado — ticket #{$ticket->id}");
                 return 'Has alcanzado el límite de mensajes con el asistente.' . self::ESCALATE_FLAG;
             }
         }
 
         // ── Verificar cuota mensual de mensajes del bot ───────────────────────
         if ($org && ! $org->hasMonthlyBotQuota()) {
-            Log::info("[NexovaBot] Cuota mensual alcanzada — ticket #{$ticket->id}");
+            Log::debug("[NexovaBot] Cuota mensual alcanzada — ticket #{$ticket->id}");
             return 'Has alcanzado el límite de mensajes del bot para este mes. Por favor contacta soporte o actualiza tu plan.' . self::ESCALATE_FLAG;
         }
 
@@ -79,7 +79,7 @@ class NexovaAiService
         $greetingReply = $this->tryGreetingReply($ticket, $org);
         if ($greetingReply !== null) {
             $org?->incrementBotMessageCount();
-            Log::info("[NexovaBot] Respondido con saludo — ticket #{$ticket->id}");
+            Log::debug("[NexovaBot] Respondido con saludo — ticket #{$ticket->id}");
             return $greetingReply;
         }
 
@@ -94,7 +94,7 @@ class NexovaAiService
                 if ($kbAnswerTelegram !== null) {
                     sleep(random_int(1, 2));
                     $org->incrementBotMessageCount();
-                    Log::info("[NexovaBot] Respondido desde KB Global (Telegram) — ticket #{$ticket->id}");
+                    Log::debug("[NexovaBot] Respondido desde KB Global (Telegram) — ticket #{$ticket->id}");
                     return $kbAnswerTelegram;
                 }
             }
@@ -104,7 +104,7 @@ class NexovaAiService
             if ($localAnswer !== null) {
                 sleep(random_int(1, 2));
                 $org->incrementBotMessageCount();
-                Log::info("[NexovaBot] Respondido desde memoria texto Telegram (legacy) — ticket #{$ticket->id}");
+                Log::debug("[NexovaBot] Respondido desde memoria texto Telegram (legacy) — ticket #{$ticket->id}");
                 return $localAnswer;
             }
         }
@@ -114,7 +114,7 @@ class NexovaAiService
         if ($faqAnswer !== null) {
             sleep(random_int(1, 2));
             $org?->incrementBotMessageCount();
-            Log::info("[NexovaBot] Respondido desde FAQ del widget — ticket #{$ticket->id}");
+            Log::debug("[NexovaBot] Respondido desde FAQ del widget — ticket #{$ticket->id}");
             return $faqAnswer;
         }
 
@@ -124,7 +124,7 @@ class NexovaAiService
         $orderReply  = $wooOrdersOn ? $this->tryOrderQueryReply($ticket) : null;
         if ($orderReply !== null) {
             $org?->incrementBotMessageCount();
-            Log::info("[NexovaBot] Respondido con template de pedidos — ticket #{$ticket->id}");
+            Log::debug("[NexovaBot] Respondido con template de pedidos — ticket #{$ticket->id}");
             return $orderReply;
         }
 
@@ -143,14 +143,14 @@ class NexovaAiService
         if ($kbAnswer !== null) {
             sleep(random_int(1, 2));
             $org?->incrementBotMessageCount();
-            Log::info("[NexovaBot] Respondido desde KB local — ticket #{$ticket->id}");
+            Log::debug("[NexovaBot] Respondido desde KB local — ticket #{$ticket->id}");
             return $kbAnswer;
         }
 
 
         // --- IA deshabilitada en el widget (ai_enabled = false) ---
         if ($widget && $widget->ai_enabled === false) {
-            Log::info("[NexovaBot] IA deshabilitada en widget - escalando ticket #{$ticket->id}");
+            Log::debug("[NexovaBot] IA deshabilitada en widget - escalando ticket #{$ticket->id}");
             return 'No tengo informacion sobre eso. Te pongo en contacto con un agente.' . self::ESCALATE_FLAG;
         }
 
@@ -158,7 +158,7 @@ class NexovaAiService
         // Excepción: si hay store_context (plugin WooCommerce), permitir IA para
         // responder sobre el catálogo de la tienda aunque el plan sea Free.
         if ($org && $org->isAiBlocked() && ! $hasStoreCtx) {
-            Log::info("[NexovaBot] IA bloqueada por plan Free — ticket #{$ticket->id}");
+            Log::debug("[NexovaBot] IA bloqueada por plan Free — ticket #{$ticket->id}");
             return 'No encontré información en nuestra base de conocimiento para tu consulta. ¿Te gustaría hablar con un agente?' . self::ESCALATE_FLAG;
         }
 
@@ -189,7 +189,7 @@ class NexovaAiService
                 // WOO_VERIFY_FLAG already embedded by the AI — don't double-add ESCALATE
                 if (str_contains($reply, self::WOO_VERIFY_FLAG)) {
                     $org?->incrementBotMessageCount();
-                    Log::info("[NexovaBot] Respuesta con WOO_VERIFY via {$type} — ticket #{$ticket->id}");
+                    Log::debug("[NexovaBot] Respuesta con WOO_VERIFY via {$type} — ticket #{$ticket->id}");
                     return $reply;
                 }
 
@@ -200,7 +200,7 @@ class NexovaAiService
                 }
 
                 $org?->incrementBotMessageCount();
-                Log::info("[NexovaBot] Respuesta OK via {$type} — ticket #{$ticket->id}");
+                Log::debug("[NexovaBot] Respuesta OK via {$type} — ticket #{$ticket->id}");
                 return $aiSuggestsEscalation ? $reply . self::ESCALATE_FLAG : $reply;
 
             } catch (\Throwable $e) {
@@ -815,30 +815,34 @@ class NexovaAiService
      */
     private function buildRagContext(?int $orgId = null, ?int $widgetId = null): string
     {
-        $articles = KnowledgeBase::query()
-            ->where('is_active', true)
-            ->when($orgId, fn ($q) => $q->where('organization_id', $orgId))
-            ->where(function ($q) use ($widgetId) {
-                $q->whereNull('widget_id');   // artículos globales siempre
-                if ($widgetId) {
-                    $q->orWhere('widget_id', $widgetId); // + los del widget específico
-                }
-            })
-            ->get(['title', 'content', 'source', 'reference_id']);
+        $cacheKey = "nexova_rag_{$orgId}_{$widgetId}";
 
-        if ($articles->isEmpty()) {
-            return '';
-        }
+        return Cache::remember($cacheKey, 300, function () use ($orgId, $widgetId) {
+            $articles = KnowledgeBase::query()
+                ->where('is_active', true)
+                ->when($orgId, fn ($q) => $q->where('organization_id', $orgId))
+                ->where(function ($q) use ($widgetId) {
+                    $q->whereNull('widget_id');
+                    if ($widgetId) {
+                        $q->orWhere('widget_id', $widgetId);
+                    }
+                })
+                ->get(['title', 'content', 'source', 'reference_id']);
 
-        $body = $articles->map(function ($a) {
-            $header = "### {$a->title}";
-            if ($a->source === 'web_scrape' && $a->reference_id) {
-                $header .= " ({$a->reference_id})";
+            if ($articles->isEmpty()) {
+                return '';
             }
-            return $header . "\n" . $a->content;
-        })->implode("\n\n");
 
-        return "=== BASE DE CONOCIMIENTOS DEL SITIO (usa SOLO esta información para responder) ===\n\n{$body}\n\n";
+            $body = $articles->map(function ($a) {
+                $header = "### {$a->title}";
+                if ($a->source === 'web_scrape' && $a->reference_id) {
+                    $header .= " ({$a->reference_id})";
+                }
+                return $header . "\n" . $a->content;
+            })->implode("\n\n");
+
+            return "=== BASE DE CONOCIMIENTOS DEL SITIO (usa SOLO esta información para responder) ===\n\n{$body}\n\n";
+        });
     }
 
     // =========================================================================

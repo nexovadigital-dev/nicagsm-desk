@@ -20,6 +20,9 @@ Schedule::command('chat:expire-agent-calls')->everyTwoMinutes()->withoutOverlapp
 // Cerrar conversaciones de bot sin actividad en las últimas 24 horas (nunca toca tickets con agente)
 Schedule::command('tickets:auto-close')->hourly()->withoutOverlapping();
 
+// Limpiar visitantes sin heartbeat en los últimos 30 segundos
+Schedule::command('chat:purge-visitors')->everyMinute()->withoutOverlapping();
+
 // Re-indexar URLs (source='url') en la base de conocimiento cada semana
 Schedule::call(function () {
     \App\Models\KnowledgeBase::where('source', 'url')
