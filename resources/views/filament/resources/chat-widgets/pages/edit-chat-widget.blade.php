@@ -1113,9 +1113,10 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         setTimeout(restorePills, 5000);
     }, true);
 
-    /* ── Modal Woo: 100% JS, sin Livewire dispatch ── */
-    var nxWooPendingField = '';
-    var nxWooPendingPill  = null;
+    /* ── Modal Woo: 100% JS, $set de Livewire v3 para actualizar propiedades ── */
+    var nxWooPendingField  = '';
+    var nxWooPendingPill   = null;
+    var nxWireCachedId     = null;   // wire:id capturado del componente correcto
 
     var NX_WOO_COPY = {
         wooIntegrationEnabled: {
@@ -1128,41 +1129,43 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         }
     };
 
-    function nxGetWire() {
-        var el = document.querySelector('[wire\\:id]');
-        return el ? window.Livewire.find(el.getAttribute('wire:id')) : null;
+    /* Encuentra el componente Livewire correcto usando el wire:id del ancestro del pill.
+       Se cachea la primera vez para no buscarlo de nuevo cuando el modal está en <body>. */
+    function nxGetWire(pill) {
+        if (!nxWireCachedId && pill) {
+            var comp = pill.closest('[wire\\:id]');
+            if (comp) nxWireCachedId = comp.getAttribute('wire:id');
+        }
+        return nxWireCachedId ? window.Livewire.find(nxWireCachedId) : null;
     }
 
-    /* Llamado desde onclick del toggle pill.
-       isOn se lee del DOM (posición del dot) — nunca del parámetro Blade,
-       para evitar que morphdom deje el atributo desactualizado. */
     window.nxWooToggle = function (pill, field) {
-        var isOn = pillIsOn(pill);   // true = encendido, false = apagado
+        var isOn = pillIsOn(pill);
         if (isOn) {
             /* Apagar → mostrar modal de confirmación */
             nxWooPendingField = field;
             nxWooPendingPill  = pill;
+            nxGetWire(pill);   // cachea el wire:id ahora, antes de mover el modal
             var copy = NX_WOO_COPY[field] || { title: 'Desactivar', desc: '' };
             document.getElementById('nx-woo-title').textContent = copy.title;
             document.getElementById('nx-woo-desc').textContent  = copy.desc;
-            /* Mover modal a <body> para escapar de cualquier transform de Filament */
+            /* Mover modal a <body> escapa cualquier transform de Filament */
             var modal = document.getElementById('nx-woo-modal');
             if (modal.parentNode !== document.body) document.body.appendChild(modal);
-            /* Animación de entrada en la tarjeta */
             var card = document.getElementById('nx-woo-card');
-            card.style.animation = 'none';
-            card.offsetHeight;
+            card.style.animation = 'none'; card.offsetHeight;
             card.style.animation = 'nxWooIn .22s cubic-bezier(.34,1.56,.64,1) both';
             modal.style.display = 'flex';
         } else {
-            /* Encender → llamar Livewire directamente, sin modal */
+            /* Encender → $set directo, sin modal */
             var dot = getDot(pill);
             pill.style.background = '#7c3aed';
             if (dot) dot.style.left = '21px';
             pill.style.opacity = '.65';
             pill.dataset.flipping = '1';
             setTimeout(restorePills, 5000);
-            var w = nxGetWire(); if (w) w.call('enableWoo', field);
+            var w = nxGetWire(pill);
+            if (w) w.$set(field, true);
         }
     };
 
@@ -1179,7 +1182,6 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         nxWooPendingField = '';
         nxWooPendingPill  = null;
         if (!field) return;
-        /* Animación visual del pill hacia OFF mientras Livewire responde */
         if (pill) {
             var dot = getDot(pill);
             pill.style.background = '#d1d5db';
@@ -1188,7 +1190,9 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
             pill.dataset.flipping = '1';
             setTimeout(restorePills, 5000);
         }
-        var w = nxGetWire(); if (w) w.call('disableWoo', field);
+        /* $set actualiza la propiedad en el estado Livewire — save() la leerá correctamente */
+        var w = nxGetWire(null);
+        if (w) w.$set(field, false);
     };
 
     /* ── Restaura pills tras respuesta Livewire ── */

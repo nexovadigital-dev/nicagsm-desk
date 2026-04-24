@@ -278,20 +278,7 @@ class EditChatWidget extends Page
         $this->showBrandingModal = false;
     }
 
-    // ── WooCommerce toggles ───────────────────────────────────────────────────
-    public function enableWoo(string $field): void
-    {
-        if (in_array($field, ['wooIntegrationEnabled', 'wooOrdersEnabled'], true)) {
-            $this->{$field} = true;
-        }
-    }
-
-    public function disableWoo(string $field): void
-    {
-        if (in_array($field, ['wooIntegrationEnabled', 'wooOrdersEnabled'], true)) {
-            $this->{$field} = false;
-        }
-    }
+    // Woo toggles manejados desde JS con $wire.$set() — sin métodos PHP
 
     // ── Social helpers ───────────────────────────────────────────────────────
     public function addSocialChannel(): void    { $this->socialChannels[] = ['type' => 'whatsapp', 'label' => '', 'url' => '']; }
