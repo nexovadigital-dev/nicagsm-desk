@@ -190,6 +190,8 @@ class EditChatWidget extends Page
             $this->buttonImagePreview = '';
         }
 
+        \Log::info('[SaveWidget] woo_integration_enabled=' . ($this->wooIntegrationEnabled ? 'TRUE' : 'FALSE') . ' woo_orders_enabled=' . ($this->wooOrdersEnabled ? 'TRUE' : 'FALSE'));
+
         ChatWidget::findOrFail($this->widgetId)->update([
             'name'                    => $this->name,
             'bot_name'                => $this->botName,
