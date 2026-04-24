@@ -278,7 +278,18 @@ class EditChatWidget extends Page
         $this->showBrandingModal = false;
     }
 
-    // Woo toggles manejados desde JS con $wire.$set() — sin métodos PHP
+    // ── WooCommerce toggles ───────────────────────────────────────────────────
+    public function toggleWoo(string $field): void
+    {
+        if (! in_array($field, ['wooIntegrationEnabled', 'wooOrdersEnabled'], true)) return;
+        $this->{$field} = ! $this->{$field};
+        if (! $this->{$field}) {
+            $msg = $field === 'wooIntegrationEnabled'
+                ? 'Productos y precios desactivados. Guarda los cambios para aplicar.'
+                : 'Estado de pedidos desactivado. Guarda los cambios para aplicar.';
+            $this->dispatch('nexova-toast', type: 'warning', message: $msg);
+        }
+    }
 
     // ── Social helpers ───────────────────────────────────────────────────────
     public function addSocialChannel(): void    { $this->socialChannels[] = ['type' => 'whatsapp', 'label' => '', 'url' => '']; }

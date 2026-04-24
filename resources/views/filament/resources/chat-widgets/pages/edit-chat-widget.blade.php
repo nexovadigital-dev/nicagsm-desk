@@ -69,11 +69,6 @@
     box-shadow: none !important;
 }
 
-/* Modal Woo — keyframe de entrada en la tarjeta */
-@keyframes nxWooIn {
-    from { opacity: 0; transform: translateY(12px) scale(.95); }
-    to   { opacity: 1; transform: translateY(0)    scale(1);   }
-}
 
 /* ── Segmented control ── */
 .wc-seg { display: flex; background: var(--c-bg,#f5f6f8); border: 1.5px solid var(--c-border,#e3e6ea); border-radius: 9px; padding: 3px; gap: 2px; }
@@ -816,7 +811,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                         <div style="font-size:13px;font-weight:600;color:#111827">Productos y precios</div>
                         <div style="font-size:11.5px;color:#6b7280;margin-top:1px">El bot conoce tu catálogo: nombres, precios, stock y variantes</div>
                     </div>
-                    <div onclick="nxWooToggle(this,'wooIntegrationEnabled')"
+                    <div wire:click="toggleWoo('wooIntegrationEnabled')"
                          style="width:44px;height:26px;border-radius:12px;background:{{ $wooIntegrationEnabled ? '#7c3aed' : '#d1d5db' }};position:relative;cursor:pointer;flex-shrink:0;transition:background .2s cubic-bezier(.4,0,.2,1)">
                         <div class="nx-pill-dot" style="position:absolute;top:3px;{{ $wooIntegrationEnabled ? 'left:21px' : 'left:3px' }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22);transition:left .2s cubic-bezier(.4,0,.2,1)"></div>
                     </div>
@@ -831,7 +826,7 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                         <div style="font-size:13px;font-weight:600;color:#111827">Estado de pedidos</div>
                         <div style="font-size:11.5px;color:#6b7280;margin-top:1px">Clientes autenticados pueden consultar sus pedidos directamente al bot</div>
                     </div>
-                    <div onclick="nxWooToggle(this,'wooOrdersEnabled')"
+                    <div wire:click="toggleWoo('wooOrdersEnabled')"
                          style="width:44px;height:26px;border-radius:12px;background:{{ $wooOrdersEnabled ? '#7c3aed' : '#d1d5db' }};position:relative;cursor:pointer;flex-shrink:0;transition:background .2s cubic-bezier(.4,0,.2,1)">
                         <div class="nx-pill-dot" style="position:absolute;top:3px;{{ $wooOrdersEnabled ? 'left:21px' : 'left:3px' }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22);transition:left .2s cubic-bezier(.4,0,.2,1)"></div>
                     </div>
@@ -1040,36 +1035,6 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
 </div>{{-- /.wc-right-col --}}
 </div>
 
-{{-- ── Modal: confirmar desactivar WooCommerce ──
-     JS puro: nxWooToggle muestra esto cuando isOn=true.
-     No wire:click, no Alpine, no dispatch — cero interferencia Livewire.
-── --}}
-<div id="nx-woo-modal"
-     style="position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px">
-    <div style="position:absolute;inset:0;background:rgba(0,0,0,.35)"
-         onclick="nxWooCancel()"></div>
-    <div id="nx-woo-card"
-         style="position:relative;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.15),0 1px 3px rgba(0,0,0,.08);width:100%;max-width:420px;overflow:hidden">
-        <div style="height:3px;background:#ef4444;width:100%"></div>
-        <div style="padding:24px 24px 0">
-            <div id="nx-woo-title" style="font-size:15px;font-weight:600;color:#111827;margin-bottom:6px"></div>
-            <div id="nx-woo-desc"  style="font-size:13px;color:#6b7280;line-height:1.6"></div>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;margin-top:20px;border-top:1px solid #f3f4f6">
-            <span style="font-size:11.5px;color:#9ca3af">Se sincroniza con el plugin de WordPress</span>
-            <div style="display:flex;gap:8px">
-                <button onclick="nxWooCancel()"
-                        style="padding:7px 16px;border-radius:7px;border:1px solid #e5e7eb;background:#fff;color:#374151;font-size:13px;font-weight:500;cursor:pointer;line-height:1">
-                    Cancelar
-                </button>
-                <button onclick="nxWooConfirm()"
-                        style="padding:7px 16px;border-radius:7px;border:none;background:#ef4444;color:#fff;font-size:13px;font-weight:500;cursor:pointer;line-height:1">
-                    Desactivar
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <script>
 (function () {
@@ -1094,106 +1059,20 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
         });
     }
 
-    /* ── mousedown: spinner en woo ON, flip visual en el resto ── */
+    /* ── mousedown: flip visual optimista en todos los toggles ── */
     document.addEventListener('mousedown', function (e) {
         var el = e.target.closest('[wire\\:click]');
         if (!isPillToggle(el)) return;
         var action = el.getAttribute('wire:click') || '';
         var isOn   = pillIsOn(el);
-        if (isOn && action.startsWith('toggleWoo')) {
-            el.classList.add('nx-pill-waiting');
-        } else {
-            var dot = getDot(el);
-            var woo = action.toLowerCase().includes('woo');
-            el.style.background = isOn ? '#d1d5db' : (woo ? '#7c3aed' : '#22c55e');
-            if (dot) dot.style.left = isOn ? '3px' : '21px';
-            el.style.opacity = '.65';
-        }
+        var dot    = getDot(el);
+        var woo    = action.toLowerCase().includes('woo');
+        el.style.background = isOn ? '#d1d5db' : (woo ? '#7c3aed' : '#22c55e');
+        if (dot) dot.style.left = isOn ? '3px' : '21px';
+        el.style.opacity = '.65';
         el.dataset.flipping = '1';
         setTimeout(restorePills, 5000);
     }, true);
-
-    /* ── Modal Woo: 100% JS, $set de Livewire v3 para actualizar propiedades ── */
-    var nxWooPendingField  = '';
-    var nxWooPendingPill   = null;
-    var nxWireCachedId     = null;   // wire:id capturado del componente correcto
-
-    var NX_WOO_COPY = {
-        wooIntegrationEnabled: {
-            title: 'Desactivar productos y precios',
-            desc:  'El bot dejará de conocer el catálogo de tu tienda. Las consultas sobre productos, precios y stock se responderán solo con la base de conocimiento.'
-        },
-        wooOrdersEnabled: {
-            title: 'Desactivar estado de pedidos',
-            desc:  'Los clientes no podrán consultar el estado de sus pedidos a través del bot, aunque tengan sesión activa en la tienda.'
-        }
-    };
-
-    /* Encuentra el componente Livewire correcto usando el wire:id del ancestro del pill.
-       Se cachea la primera vez para no buscarlo de nuevo cuando el modal está en <body>. */
-    function nxGetWire(pill) {
-        if (!nxWireCachedId && pill) {
-            var comp = pill.closest('[wire\\:id]');
-            if (comp) nxWireCachedId = comp.getAttribute('wire:id');
-        }
-        return nxWireCachedId ? window.Livewire.find(nxWireCachedId) : null;
-    }
-
-    window.nxWooToggle = function (pill, field) {
-        var isOn = pillIsOn(pill);
-        if (isOn) {
-            /* Apagar → mostrar modal de confirmación */
-            nxWooPendingField = field;
-            nxWooPendingPill  = pill;
-            nxGetWire(pill);   // cachea el wire:id ahora, antes de mover el modal
-            var copy = NX_WOO_COPY[field] || { title: 'Desactivar', desc: '' };
-            document.getElementById('nx-woo-title').textContent = copy.title;
-            document.getElementById('nx-woo-desc').textContent  = copy.desc;
-            /* Mover modal a <body> escapa cualquier transform de Filament */
-            var modal = document.getElementById('nx-woo-modal');
-            if (modal.parentNode !== document.body) document.body.appendChild(modal);
-            var card = document.getElementById('nx-woo-card');
-            card.style.animation = 'none'; card.offsetHeight;
-            card.style.animation = 'nxWooIn .22s cubic-bezier(.34,1.56,.64,1) both';
-            modal.style.display = 'flex';
-        } else {
-            /* Encender → $set directo, sin modal */
-            var dot = getDot(pill);
-            pill.style.background = '#7c3aed';
-            if (dot) dot.style.left = '21px';
-            pill.style.opacity = '.65';
-            pill.dataset.flipping = '1';
-            setTimeout(restorePills, 5000);
-            var w = nxGetWire(pill);
-            if (w) w.$set(field, true);
-        }
-    };
-
-    window.nxWooCancel = function () {
-        document.getElementById('nx-woo-modal').style.display = 'none';
-        nxWooPendingField = '';
-        nxWooPendingPill  = null;
-    };
-
-    window.nxWooConfirm = function () {
-        var field = nxWooPendingField;
-        var pill  = nxWooPendingPill;
-        document.getElementById('nx-woo-modal').style.display = 'none';
-        nxWooPendingField = '';
-        nxWooPendingPill  = null;
-        if (!field) return;
-        if (pill) {
-            var dot = getDot(pill);
-            pill.style.background = '#d1d5db';
-            if (dot) dot.style.left = '3px';
-            pill.style.opacity = '.65';
-            pill.dataset.flipping = '1';
-            setTimeout(restorePills, 5000);
-        }
-        /* $set actualiza la propiedad en el estado Livewire — save() la leerá correctamente */
-        var w = nxGetWire(null);
-        if (w) w.$set(field, false);
-    };
 
     /* ── Restaura pills tras respuesta Livewire ── */
     document.addEventListener('livewire:initialized', function () {
