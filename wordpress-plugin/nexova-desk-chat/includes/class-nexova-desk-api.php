@@ -33,46 +33,6 @@ class Nexova_Desk_API {
         return ! is_wp_error( $response ) && isset( $response['ok'] ) && $response['ok'];
     }
 
-    /**
-     * Obtiene el estado completo de la licencia desde el servidor.
-     * Resultado cacheado 1 hora con transient de WP.
-     *
-     * @return array{ok:bool, active:bool, org_name:string, org_plan:string, is_partner:bool, is_edge:bool}|null
-     *         null = no conectado; array con active=false = licencia desactivada.
-     */
-    public function get_license_status(): ?array {
-        if ( ! $this->is_connected() ) return null;
-
-        $cache_key = 'nexova_desk_license_' . md5( $this->token );
-        $cached    = get_transient( $cache_key );
-        if ( $cached !== false ) return $cached;
-
-        $response = $this->get( '/api/wp/verify' );
-        if ( is_wp_error( $response ) ) return null;
-
-        $status = [
-            'ok'         => (bool) ( $response['ok']         ?? false ),
-            'active'     => (bool) ( $response['active']      ?? false ),
-            'org_name'   => (string) ( $response['org_name']  ?? '' ),
-            'org_plan'   => (string) ( $response['org_plan']  ?? 'free' ),
-            'is_partner' => (bool) ( $response['is_partner'] ?? false ),
-            'is_edge'    => (bool) ( $response['is_edge']    ?? false ),
-        ];
-
-        $ttl = $status['ok'] ? HOUR_IN_SECONDS : ( 5 * MINUTE_IN_SECONDS );
-        set_transient( $cache_key, $status, $ttl );
-
-        return $status;
-    }
-
-    /**
-     * Fuerza refresco del caché de licencia (llama al conectar/desconectar).
-     */
-    public function flush_license_cache(): void {
-        $cache_key = 'nexova_desk_license_' . md5( $this->token );
-        delete_transient( $cache_key );
-    }
-
     // ── Widgets ───────────────────────────────────────────────────────────────
 
     /**
@@ -101,48 +61,64 @@ class Nexova_Desk_API {
      * El servidor hace el lookup en la base de datos de WC usando los datos del contacto.
      */
     public function get_customer_orders( string $customer_email ): array {
-        // Los pedidos se consultan localmente en WC (no via Nexova Desk)
-        // Este método es un helper para el frontend JS
         if ( ! function_exists( 'wc_get_orders' ) ) return [];
 
         $orders = wc_get_orders( [
             'billing_email' => $customer_email,
-            'limit'         => 5,
+            'limit'         => 3,
             'orderby'       => 'date',
             'order'         => 'DESC',
-            'status'        => [ 'processing', 'completed', 'on-hold', 'pending' ],
+            'status'        => [ 'processing', 'completed', 'on-hold', 'pending', 'cancelled' ],
         ] );
 
         $result = [];
         foreach ( $orders as $order ) {
-            $result[] = [
-                'id'     => $order->get_id(),
-                'number' => $order->get_order_number(),
+            $items = [];
+            foreach ( $order->get_items() as $item ) {
+                /** @var WC_Order_Item_Product $item */
+                $item_data = [
+                    'name'     => $item->get_name(),
+                    'qty'      => $item->get_quantity(),
+                    'subtotal' => wc_price( $item->get_subtotal() ),
+                ];
+
+                // Variantes y metadatos del ítem
+                $meta_data = $item->get_formatted_meta_data( '_', true );
+                if ( ! empty( $meta_data ) ) {
+                    $attrs = [];
+                    foreach ( $meta_data as $meta ) {
+                        $key   = wp_strip_all_tags( (string) $meta->display_key );
+                        $value = wp_strip_all_tags( (string) $meta->display_value );
+                        if ( $key && $value ) {
+                            $attrs[] = "{$key}: {$value}";
+                        }
+                    }
+                    if ( $attrs ) {
+                        $item_data['variant'] = implode( ', ', $attrs );
+                    }
+                }
+
+                $items[] = $item_data;
+            }
+
+            // Nota del cliente (si existe)
+            $note = $order->get_customer_note();
+
+            $entry = [
+                'number' => '#' . $order->get_order_number(),
                 'status' => wc_get_order_status_name( $order->get_status() ),
-                'total'  => $order->get_formatted_order_total(),
                 'date'   => $order->get_date_created()?->date_i18n( get_option( 'date_format' ) ),
-                'items'  => array_map( fn( $item ) => $item->get_name(), array_values( $order->get_items() ) ),
+                'total'  => html_entity_decode( wp_strip_all_tags( $order->get_formatted_order_total() ) ),
+                'items'  => $items,
             ];
+
+            if ( $note ) {
+                $entry['customer_note'] = sanitize_text_field( $note );
+            }
+
+            $result[] = $entry;
         }
         return $result;
-    }
-
-    // ── WooCommerce widget toggles ────────────────────────────────────────────
-
-    /**
-     * Sincroniza los toggles de WooCommerce al servidor Nexova Desk.
-     * Llama PATCH /api/wp/widgets/{id} con woo_integration_enabled + woo_orders_enabled.
-     * El servidor aplica la regla "one-woo-per-org" automáticamente.
-     */
-    public function sync_woo_toggles( int $widget_id, bool $woo_context_enabled, bool $orders_enabled ): bool {
-        if ( ! $widget_id ) return false;
-
-        $response = $this->patch( "/api/wp/widgets/{$widget_id}", [
-            'woo_integration_enabled' => $woo_context_enabled,
-            'woo_orders_enabled'      => $orders_enabled,
-        ] );
-
-        return ! is_wp_error( $response ) && ! empty( $response['ok'] );
     }
 
     // ── HTTP Helpers ──────────────────────────────────────────────────────────
@@ -183,31 +159,11 @@ class Nexova_Desk_API {
         return $this->parse_response( $response );
     }
 
-    private function patch( string $endpoint, array $body = [] ): array|\WP_Error {
-        if ( empty( $this->base_url ) || empty( $this->token ) ) {
-            return new \WP_Error( 'not_connected', __( 'Plugin no conectado a Nexova Desk.', 'nexova-desk-chat' ) );
-        }
-
-        $response = wp_remote_request( $this->base_url . $endpoint, [
-            'method'      => 'PATCH',
-            'timeout'     => 15,
-            'headers'     => [
-                'Authorization' => 'Bearer ' . $this->token,
-                'Content-Type'  => 'application/json',
-                'Accept'        => 'application/json',
-                'X-WP-Plugin'   => 'nexova-desk-chat/' . NEXOVA_DESK_VERSION,
-            ],
-            'body'        => wp_json_encode( $body ),
-        ] );
-
-        return $this->parse_response( $response );
-    }
-
     private function parse_response( $response ): array|\WP_Error {
         if ( is_wp_error( $response ) ) return $response;
 
         $code = wp_remote_retrieve_response_code( $response );
-        $body = ltrim( wp_remote_retrieve_body( $response ), "\xEF\xBB\xBF" );
+        $body = wp_remote_retrieve_body( $response );
         $data = json_decode( $body, true );
 
         if ( $code >= 400 ) {
@@ -216,6 +172,29 @@ class Nexova_Desk_API {
         }
 
         return is_array( $data ) ? $data : [];
+    }
+
+    /**
+     * Sincroniza los toggles de WooCommerce del plugin al servidor.
+     * Llamada fire-and-forget: si falla no bloquea al usuario.
+     */
+    public function sync_woo_toggles( int $widget_id, bool $woo_context, bool $orders ): void {
+        if ( empty( $this->base_url ) || empty( $this->token ) ) return;
+
+        wp_remote_request( $this->base_url . "/api/wp/widgets/{$widget_id}", [
+            'method'  => 'PATCH',
+            'timeout' => 8,
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->token,
+                'Content-Type'  => 'application/json',
+                'Accept'        => 'application/json',
+                'X-WP-Plugin'   => 'nexova-desk-chat/' . NEXOVA_DESK_VERSION,
+            ],
+            'body' => wp_json_encode( [
+                'woo_integration_enabled' => $woo_context,
+                'woo_orders_enabled'      => $orders,
+            ] ),
+        ] );
     }
 
     public function get_base_url(): string { return $this->base_url; }

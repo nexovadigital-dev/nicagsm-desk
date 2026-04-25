@@ -247,7 +247,7 @@ JS;
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private function orders_enabled_js(): string {
-        return ( $this->cfg['orders_enabled'] ?? false ) ? 'true' : 'false';
+        return function_exists( 'WC' ) ? 'true' : 'false';
     }
 
     private function get_version(): string {
