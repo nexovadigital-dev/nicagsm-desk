@@ -82,14 +82,16 @@ class WpApiController extends Controller
 
         $widgets = $token->organization
             ->chatWidgets()
-            ->select('id', 'name', 'token', 'is_active')
+            ->select('id', 'name', 'token', 'is_active', 'woo_integration_enabled', 'woo_orders_enabled')
             ->orderBy('name')
             ->get()
             ->map(fn ($w) => [
-                'id'        => $w->id,
-                'name'      => $w->name,
-                'token'     => $w->token,
-                'is_active' => (bool) $w->is_active,
+                'id'                      => $w->id,
+                'name'                    => $w->name,
+                'token'                   => $w->token,
+                'is_active'               => (bool) $w->is_active,
+                'woo_integration_enabled' => (bool) ($w->woo_integration_enabled ?? false),
+                'woo_orders_enabled'      => (bool) ($w->woo_orders_enabled ?? false),
             ]);
 
         return response()->json(['widgets' => $widgets]);
@@ -145,8 +147,31 @@ class WpApiController extends Controller
             return response()->json(['message' => 'Widget no encontrado.'], 404);
         }
 
-        // Los toggles woo_integration_enabled / woo_orders_enabled se controlan
-        // exclusivamente desde el panel Nexova — el plugin WP no puede sobreescribirlos.
+        // Plugin can set which widget gets WooCommerce (one per org).
+        // When enabling woo_integration_enabled, disable it on all other widgets first.
+        if ($request->has('woo_integration_enabled')) {
+            $enable = (bool) $request->input('woo_integration_enabled');
+
+            if ($enable) {
+                // Enforce one-woo-per-org: disable all others first
+                $token->organization->chatWidgets()
+                    ->where('id', '!=', $id)
+                    ->where('woo_integration_enabled', true)
+                    ->update(['woo_integration_enabled' => false, 'woo_orders_enabled' => false]);
+            }
+
+            $update = ['woo_integration_enabled' => $enable];
+
+            if ($request->has('woo_orders_enabled')) {
+                $update['woo_orders_enabled'] = $enable && (bool) $request->input('woo_orders_enabled');
+            }
+
+            if (! $enable) {
+                $update['woo_orders_enabled'] = false;
+            }
+
+            $widget->update($update);
+        }
 
         return response()->json(['ok' => true]);
     }

@@ -810,6 +810,42 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                     </div>
                 </div>
 
+                @if($wooOtherName)
+                {{-- Otro widget ya tiene WooCommerce: mostrar bloqueado --}}
+                <div style="padding:12px 14px;background:#fafafa;border-top:1px solid #f3f4f6">
+                    <div style="display:flex;align-items:center;gap:10px;padding:11px 13px;background:#fdf4ff;border:1.5px solid #e9d5ff;border-radius:8px">
+                        <svg viewBox="0 0 50 30" width="36" height="22" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect width="50" height="30" rx="5" fill="#96588a"/><text x="25" y="21" font-family="Arial,sans-serif" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">Woo</text></svg>
+                        <div style="flex:1">
+                            <div style="font-size:12.5px;font-weight:600;color:#4c1d95">Integración asignada a otro widget</div>
+                            <div style="font-size:11.5px;color:#7c3aed;margin-top:2px;line-height:1.45">
+                                WooCommerce está activo en <strong>{{ $wooOtherName }}</strong>.<br>
+                                Para asignarlo aqui, selecciona este widget desde el plugin de tu tienda WooCommerce.
+                            </div>
+                        </div>
+                    </div>
+                    {{-- Toggles grayed out --}}
+                    @foreach([
+                        ['label'=>'Productos y precios','sub'=>'El bot conoce tu catálogo: nombres, precios, stock y variantes'],
+                        ['label'=>'Estado de pedidos','sub'=>'Clientes autenticados pueden consultar sus pedidos al bot'],
+                    ] as $tog)
+                    <div style="display:flex;align-items:center;gap:14px;padding:11px 0;opacity:.4;pointer-events:none">
+                        <div style="width:34px;height:34px;border-radius:8px;background:#f5f6f8;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                        </div>
+                        <div style="flex:1">
+                            <div style="font-size:13px;font-weight:600;color:#111827">{{ $tog['label'] }}</div>
+                            <div style="font-size:11.5px;color:#6b7280;margin-top:1px">{{ $tog['sub'] }}</div>
+                        </div>
+                        <div style="width:44px;height:26px;border-radius:12px;background:#d1d5db;position:relative;flex-shrink:0">
+                            <div style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22)"></div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+
+                @else
+                {{-- Este widget tiene o puede tener WooCommerce --}}
+
                 {{-- Toggle: Productos y precios --}}
                 <div style="display:flex;align-items:center;gap:14px;padding:13px 14px;background:#fff;border-top:1px solid #f3f4f6">
                     <div style="width:34px;height:34px;border-radius:8px;background:{{ $wooIntegrationEnabled ? 'rgba(124,58,237,.1)' : '#f5f6f8' }};display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -839,6 +875,8 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                         <div class="nx-pill-dot" style="position:absolute;top:3px;{{ $wooOrdersEnabled ? 'left:21px' : 'left:3px' }};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.22);transition:left .2s cubic-bezier(.4,0,.2,1)"></div>
                     </div>
                 </div>
+
+                @endif {{-- end wooOtherName check --}}
 
                 @else
                 <div style="padding:14px;background:#fff;border-top:1px solid #f3f4f6">

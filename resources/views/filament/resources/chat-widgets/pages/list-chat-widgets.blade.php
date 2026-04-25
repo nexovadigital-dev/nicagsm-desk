@@ -89,7 +89,14 @@
                 </svg>
             </div>
             <div class="wl-card-info">
-                <div class="wl-card-name">{{ $w->name }}</div>
+                <div class="wl-card-name">
+                    {{ $w->name }}
+                    @if($w->woo_integration_enabled)
+                    <span style="display:inline-flex;align-items:center;gap:3px;margin-left:6px;vertical-align:middle;background:#fdf4ff;border:1px solid #e9d5ff;border-radius:5px;padding:1px 6px" title="WooCommerce activo en este widget">
+                        <svg viewBox="0 0 50 30" width="28" height="16" xmlns="http://www.w3.org/2000/svg"><rect width="50" height="30" rx="5" fill="#96588a"/><text x="25" y="21" font-family="Arial,sans-serif" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">Woo</text></svg>
+                    </span>
+                    @endif
+                </div>
                 <div class="wl-card-token">Token: {{ $w->token }}</div>
                 <span class="wl-card-badge {{ $w->is_active ? 'wl-badge-on' : 'wl-badge-off' }}">
                     <span style="width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block"></span>
