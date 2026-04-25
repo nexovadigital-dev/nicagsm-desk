@@ -64,8 +64,11 @@ class EditChatWidget extends Page
 
     public ?int   $defaultDepartmentId = null;
 
-    public int    $agentCallTimeout = 10;       // 5 | 10 | 15 minutos
-    public string $agentNoResponse  = 'bot';   // 'bot' | 'ticket'
+    public int    $agentCallTimeout = 10;
+    public string $agentNoResponse  = 'bot';
+
+    // Name of the other widget in this org that currently has woo enabled (empty = none)
+    public string $wooOtherWidgetName = '';
 
     public string $buttonStyle     = 'icon';   // 'icon' | 'image'
     public string $buttonIcon      = 'chat';   // 'chat' | 'chat_dots' | 'headset' | 'help'
@@ -139,6 +142,13 @@ class EditChatWidget extends Page
         }
 
         $this->allowedDomain = $w->allowed_domain ?? '';
+
+        // Detect if another widget in this org already has WooCommerce enabled
+        $other = ChatWidget::where('organization_id', $w->organization_id)
+            ->where('id', '!=', $w->id)
+            ->where('woo_integration_enabled', true)
+            ->value('name');
+        $this->wooOtherWidgetName = $other ?? '';
     }
 
     public function updatedBotAvatarFile(): void
@@ -285,11 +295,28 @@ class EditChatWidget extends Page
     public function toggleWoo(string $field): void
     {
         if (! in_array($field, ['wooIntegrationEnabled', 'wooOrdersEnabled'], true)) return;
-        $this->{$field} = ! $this->{$field};
-        if (! $this->{$field}) {
+
+        $enabling = ! $this->{$field};
+        $this->{$field} = $enabling;
+
+        if ($enabling && $field === 'wooIntegrationEnabled') {
+            // Enforce one-widget-per-org: disable woo on all other widgets immediately
+            $widget = ChatWidget::find($this->widgetId);
+            if ($widget) {
+                ChatWidget::where('organization_id', $widget->organization_id)
+                    ->where('id', '!=', $this->widgetId)
+                    ->where('woo_integration_enabled', true)
+                    ->update(['woo_integration_enabled' => false, 'woo_orders_enabled' => false]);
+            }
+            $this->wooOtherWidgetName = '';
+            $this->dispatch('nexova-toast', type: 'info', message: 'WooCommerce movido a este widget. Guarda para aplicar.');
+        } elseif (! $enabling) {
             $msg = $field === 'wooIntegrationEnabled'
                 ? 'Productos y precios desactivados. Guarda los cambios para aplicar.'
                 : 'Estado de pedidos desactivado. Guarda los cambios para aplicar.';
+            if ($field === 'wooIntegrationEnabled') {
+                $this->wooOrdersEnabled = false; // turn off orders too when disabling integration
+            }
             $this->dispatch('nexova-toast', type: 'warning', message: $msg);
         }
     }

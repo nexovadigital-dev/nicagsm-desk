@@ -768,7 +768,14 @@ $fabPx = $fabPxMap[$widgetSize] ?? 44;
                 $wpConnected    = ! empty($wpPluginSiteUrl);
                 $wpHasToken     = $wpConnected || \App\Models\WpPluginToken::where('organization_id', auth()->user()?->organization_id)->exists();
                 $wooStoreDomain = $wpConnected ? parse_url($wpPluginSiteUrl, PHP_URL_HOST) : '';
+                $wooOtherName   = $wooOtherWidgetName ?? '';
             @endphp
+            @if($wooOtherName && !$wooIntegrationEnabled)
+            <div style="margin-top:16px;padding:10px 13px;background:#fefce8;border:1px solid #fde68a;border-radius:8px;display:flex;align-items:center;gap:8px">
+                <svg fill="none" stroke="#d97706" viewBox="0 0 24 24" width="14" height="14" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span style="font-size:12px;color:#92400e">WooCommerce solo puede estar activo en <strong>un widget por organizacion</strong>. Actualmente activo en: <strong>{{ $wooOtherName }}</strong>. Activarlo aqui lo desactivara en ese widget.</span>
+            </div>
+            @endif
             <div style="margin-top:16px;border-radius:10px;overflow:hidden;border:1px solid {{ $wpHasToken ? 'rgba(124,58,237,.18)' : '#e5e7eb' }}">
 
                 {{-- Header --}}

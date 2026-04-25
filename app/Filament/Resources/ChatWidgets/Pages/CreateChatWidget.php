@@ -22,6 +22,17 @@ class CreateChatWidget extends Page
     // ── Form fields ──────────────────────────────────────────────────────────
     public string $name           = '';
     public string $botName        = 'Nexova IA';
+    public bool   $botEnabled     = true;
+    public bool   $aiEnabled      = true;
+    public bool   $wooIntegrationEnabled = false;
+    public bool   $wooOrdersEnabled      = false;
+    public string $wpPluginSiteUrl       = '';
+    public string $botAvatar      = '';
+    public string $botAvatarPreview = '';
+    public        $botAvatarFile   = null;
+    public string $botSystemPrompt = '';
+    public string $telegramBotUsername = '';
+    public string $telegramBotName     = '';
     public string $welcomeMessage = 'Hola, ¿en qué te puedo ayudar?';
     public string $accentColor    = '#7c3aed';
     public string $widgetPosition = 'right';
@@ -32,6 +43,7 @@ class CreateChatWidget extends Page
     public bool   $previewMessageEnabled = false;
     public string $previewMessage  = '';
     public bool   $faqEnabled      = true;
+    public bool   $faqQuickReply   = true;
     public array  $faqItems        = [
         ['question' => '¿Cuál es el horario de atención?',      'answer' => 'Nuestro horario de atención es de lunes a viernes de 9:00 a 18:00 hrs.'],
         ['question' => '¿Cómo puedo hacer un pedido?',          'answer' => 'Puedes hacer tu pedido directamente desde nuestra tienda en línea o contactarnos por este chat.'],
@@ -44,11 +56,16 @@ class CreateChatWidget extends Page
     public array  $workingHours    = [];
     public string $offlineMessage  = 'Estamos fuera de horario. Te responderemos pronto.';
     public bool   $showBranding    = true;
+    public bool   $showBrandingModal = false;
     public bool   $soundEnabled    = true;
     public bool   $requireRating   = false;
     public string $ratingMessage   = '¿Cómo fue tu experiencia?';
     public bool   $preChatEnabled  = false;
     public array  $preChatFields   = [];
+
+    public ?int   $defaultDepartmentId = null;
+    public int    $agentCallTimeout    = 10;
+    public string $agentNoResponse     = 'bot';
 
     // ── Botón / icono del FAB ────────────────────────────────────────────────
     public string $buttonStyle        = 'icon';
@@ -59,7 +76,9 @@ class CreateChatWidget extends Page
     public string $buttonImagePreview = '';
     public        $buttonImageFile    = null;
 
-    public ?int $widgetId = null; // null = creating
+    public ?int   $widgetId      = null; // null = creating
+    public string $widgetToken   = '';   // empty until widget is created
+    public string $allowedDomain = '';
 
     public function getTitle(): string|Htmlable
     {
@@ -82,6 +101,8 @@ class CreateChatWidget extends Page
             'organization_id'         => auth()->user()?->organization_id,
             'name'                    => $this->name,
             'bot_name'                => $this->botName,
+            'bot_enabled'             => $this->botEnabled,
+            'ai_enabled'              => $this->aiEnabled,
             'welcome_message'         => $this->welcomeMessage,
             'accent_color'            => $this->accentColor,
             'widget_position'         => $this->widgetPosition,
@@ -92,6 +113,7 @@ class CreateChatWidget extends Page
             'preview_message_enabled' => $this->previewMessageEnabled,
             'preview_message'         => $this->previewMessage,
             'faq_enabled'             => $this->faqEnabled,
+            'faq_quick_reply'         => $this->faqQuickReply,
             'faq_items'               => $this->faqItems,
             'social_channels'         => $this->socialChannels,
             'working_hours_enabled'   => $this->workingHoursEnabled,
@@ -108,11 +130,21 @@ class CreateChatWidget extends Page
             'button_text'             => $this->buttonText,
             'button_text_color'       => $this->buttonTextColor,
             'button_image'            => $this->buttonImage ?: null,
+            'agent_call_timeout'      => $this->agentCallTimeout,
+            'agent_no_response'       => 'bot',
         ]);
 
         $this->dispatch('nexova-toast', type: 'success', message: 'Widget creado correctamente');
 
         $this->redirect(ChatWidgetResource::getUrl('edit', ['record' => $widget->id]));
+    }
+
+    // ── Bot avatar upload ─────────────────────────────────────────────────────
+    public function updatedBotAvatarFile(): void
+    {
+        if ($this->botAvatarFile) {
+            $this->botAvatarPreview = $this->botAvatarFile->temporaryUrl();
+        }
     }
 
     // ── Button image upload ───────────────────────────────────────────────────
@@ -121,6 +153,34 @@ class CreateChatWidget extends Page
         if (! $this->buttonImageFile) return;
         $this->buttonImagePreview = $this->buttonImageFile->temporaryUrl();
         $this->buttonStyle        = 'image';
+    }
+
+    // ── Branding modal helpers ────────────────────────────────────────────────
+    public function toggleBranding(): void
+    {
+        if ($this->showBranding) {
+            $this->showBrandingModal = true;
+        } else {
+            $this->showBranding = true;
+        }
+    }
+
+    public function confirmDisableBranding(): void
+    {
+        $this->showBranding      = false;
+        $this->showBrandingModal = false;
+    }
+
+    public function cancelDisableBranding(): void
+    {
+        $this->showBranding      = true;
+        $this->showBrandingModal = false;
+    }
+
+    // ── WooCommerce (disabled on create — no token yet) ───────────────────────
+    public function toggleWoo(string $field): void
+    {
+        // Woo not available on new widgets — user must save first then configure
     }
 
     // ── FAQ helpers ──────────────────────────────────────────────────────────
@@ -132,6 +192,17 @@ class CreateChatWidget extends Page
     public function removeSocialChannel(int $i): void { array_splice($this->socialChannels, $i, 1); }
 
     // ── Pre-chat helpers ─────────────────────────────────────────────────────
-    public function addField(): void    { $this->preChatFields[] = ['label' => '', 'type' => 'text', 'required' => false, 'enabled' => true]; }
+    public function addField(): void {
+        $this->preChatFields[] = ['name' => 'campo_' . (count($this->preChatFields) + 1), 'label' => '', 'type' => 'text', 'required' => false, 'enabled' => true];
+    }
+
+    public function addDefaultFields(): void {
+        $this->preChatFields = [
+            ['name' => 'name',  'label' => 'Nombre',   'type' => 'text',  'required' => true,  'enabled' => true, 'placeholder' => 'Tu nombre completo'],
+            ['name' => 'email', 'label' => 'Email',    'type' => 'email', 'required' => false, 'enabled' => true, 'placeholder' => 'correo@ejemplo.com'],
+            ['name' => 'phone', 'label' => 'Teléfono', 'type' => 'tel',   'required' => false, 'enabled' => true, 'placeholder' => '+57 300 000 0000'],
+        ];
+    }
+
     public function removeField(int $i): void { array_splice($this->preChatFields, $i, 1); }
 }
