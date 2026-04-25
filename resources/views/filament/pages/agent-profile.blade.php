@@ -786,10 +786,13 @@ input:checked + .ap-slider:before { transform: translateX(16px); }
             <div>
                 <div class="ap-section-title">Tareas automaticas</div>
                 <div class="ap-section-desc">
-                    Nexova Desk necesita ejecutar ciertas tareas en segundo plano:<br><br>
-                    📧 <strong>Revisar tu buzon</strong> para capturar respuestas de clientes a tickets<br>
-                    🔑 <strong>Verificar la licencia</strong> una vez al dia<br><br>
-                    Configurarlas en tu hosting o usa un servicio externo gratuito.
+                    Nexova Desk necesita ejecutar estas tareas en segundo plano:<br><br>
+                    📧 <strong>Revisar tu buzon IMAP</strong> — captura respuestas de clientes a tickets<br>
+                    🤖 <strong>Expirar llamados a agente</strong> — revierte al bot si nadie atiende<br>
+                    🧹 <strong>Limpiar visitantes inactivos</strong> — mantiene el rastreo en vivo preciso<br>
+                    🔒 <strong>Cerrar tickets inactivos</strong> — cierra bots sin actividad en 24h<br>
+                    🔑 <strong>Verificar la licencia</strong> — una vez al dia<br><br>
+                    El endpoint <code>/api/cron/worker</code> ejecuta <strong>todas las tareas</strong> de una sola llamada. Usalo si puedes configurar un solo cron.
                 </div>
             </div>
             <div>
@@ -825,9 +828,9 @@ input:checked + .ap-slider:before { transform: translateX(16px); }
                         Entra a <a href="https://cron-job.org" target="_blank" style="color:#16a34a">cron-job.org</a> → New Cron Job → pega la URL → elige la frecuencia → Guardar. Tipo: <strong>GET</strong>.
                     </p>
                     @foreach([
-                        ['icon'=>'📧','color'=>'#3b82f6','name'=>'Revisar correo (IMAP)','desc'=>'Detecta respuestas de clientes y las agrega al ticket','url'=>$appUrl.'/api/cron/imap','freq'=>'Cada 1 minuto'],
-                        ['icon'=>'⚡','color'=>'#8b5cf6','name'=>'Worker general','desc'=>'Alternativa: ejecuta todas las tareas de una vez','url'=>$appUrl.'/api/cron/worker','freq'=>'Cada 1 minuto'],
-                        ['icon'=>'🔑','color'=>'#f59e0b','name'=>'Verificar licencia','desc'=>'Confirma que la licencia sigue activa','url'=>$appUrl.'/api/cron/license','freq'=>'1 vez al dia'],
+                        ['icon'=>'⚡','color'=>'#8b5cf6','name'=>'Worker general (recomendado)','desc'=>'Ejecuta TODAS las tareas: IMAP, bot, visitantes, licencia','url'=>$appUrl.'/api/cron/worker','freq'=>'Cada 1 minuto'],
+                        ['icon'=>'📧','color'=>'#3b82f6','name'=>'Solo IMAP','desc'=>'Alternativa: solo captura respuestas de clientes por correo','url'=>$appUrl.'/api/cron/imap','freq'=>'Cada 1 minuto'],
+                        ['icon'=>'🔑','color'=>'#f59e0b','name'=>'Verificar licencia','desc'=>'Si no usas Worker general, agrega este tambien','url'=>$appUrl.'/api/cron/license','freq'=>'1 vez al dia'],
                     ] as $ep)
                     <div class="cron-endpoint-card">
                         <div class="cron-endpoint-head">
@@ -858,9 +861,9 @@ input:checked + .ap-slider:before { transform: translateX(16px); }
                         <strong>cPanel:</strong> Cron Jobs → Add New Cron Job
                     </p>
                     @foreach([
-                        ['icon'=>'📧','color'=>'#3b82f6','name'=>'Revisar correo (IMAP)','desc'=>'Detecta y agrega respuestas de clientes','url'=>$appUrl.'/api/cron/imap','freq'=>'*/1 * * * *'],
-                        ['icon'=>'⚡','color'=>'#8b5cf6','name'=>'Worker general','desc'=>'Ejecuta todas las tareas automaticas','url'=>$appUrl.'/api/cron/worker','freq'=>'*/1 * * * *'],
-                        ['icon'=>'🔑','color'=>'#f59e0b','name'=>'Verificar licencia','desc'=>'Confirma la licencia del sistema','url'=>$appUrl.'/api/cron/license','freq'=>'0 3 * * *'],
+                        ['icon'=>'⚡','color'=>'#8b5cf6','name'=>'Worker general (recomendado)','desc'=>'Ejecuta TODAS las tareas: IMAP, bot, visitantes, licencia','url'=>$appUrl.'/api/cron/worker','freq'=>'* * * * *'],
+                        ['icon'=>'📧','color'=>'#3b82f6','name'=>'Solo IMAP','desc'=>'Solo detecta respuestas de clientes por correo','url'=>$appUrl.'/api/cron/imap','freq'=>'* * * * *'],
+                        ['icon'=>'🔑','color'=>'#f59e0b','name'=>'Verificar licencia','desc'=>'Confirma la licencia del sistema (si no usas Worker general)','url'=>$appUrl.'/api/cron/license','freq'=>'0 3 * * *'],
                     ] as $ep)
                     <div class="cron-endpoint-card">
                         <div class="cron-endpoint-head">
@@ -887,20 +890,53 @@ input:checked + .ap-slider:before { transform: translateX(16px); }
                 {{-- VPS --}}
                 <div x-show="cronTab === 'vps'">
                     <div class="ap-notice ap-notice-info" style="margin-bottom:14px">
-                        Conectate por SSH → escribe <code>crontab -e</code> → agrega estas lineas → guarda:
+                        <strong>Opcion A — curl (simple):</strong> un solo cron llama al worker que ejecuta todas las tareas.<br>
+                        <strong>Opcion B — artisan (recomendada en VPS):</strong> usa el scheduler de Laravel directamente.
                     </div>
-                    <div class="cron-endpoint-card">
+
+                    {{-- Opcion A: curl --}}
+                    <div style="font-size:12.5px;font-weight:700;color:var(--c-text,#111);margin-bottom:8px">Opcion A — via curl (crontab -e)</div>
+                    <div class="cron-endpoint-card" style="margin-bottom:16px">
                         <div class="cron-endpoint-body">
-                            <div style="background:var(--c-bg,#f5f6f8);border:1px solid var(--c-border,#e3e6ea);border-radius:7px;padding:14px 16px;font-family:monospace;font-size:12px;color:var(--c-text,#111);line-height:1.8;overflow-x:auto">
-                                # Revisar correo cada minuto<br>
-                                * * * * * curl -s {{ $appUrl }}/api/cron/imap >/dev/null 2>&1<br><br>
-                                # Verificar licencia a las 3:00 AM<br>
-                                0 3 * * * curl -s {{ $appUrl }}/api/cron/license >/dev/null 2>&1
+                            <div style="background:var(--c-bg,#f5f6f8);border:1px solid var(--c-border,#e3e6ea);border-radius:7px;padding:14px 16px;font-family:monospace;font-size:12px;color:var(--c-text,#111);line-height:1.9;overflow-x:auto">
+                                # Todas las tareas automaticas (IMAP, bot, visitantes, licencia)<br>
+                                * * * * * curl -sk {{ $appUrl }}/api/cron/worker &gt;/dev/null 2&gt;&amp;1
                             </div>
                             <button class="cron-copy-btn" style="margin-top:8px"
-                                onclick="navigator.clipboard.writeText(`* * * * * curl -s {{ $appUrl }}/api/cron/imap >/dev/null 2>&1\n0 3 * * * curl -s {{ $appUrl }}/api/cron/license >/dev/null 2>&1`).then(()=>{this.textContent='Copiado';setTimeout(()=>this.textContent='Copiar todo',1500)})">
-                                Copiar todo
+                                onclick="navigator.clipboard.writeText('* * * * * curl -sk {{ $appUrl }}/api/cron/worker >/dev/null 2>&1').then(()=>{this.textContent='Copiado';setTimeout(()=>this.textContent='Copiar',1500)})">
+                                Copiar
                             </button>
+                        </div>
+                    </div>
+
+                    {{-- Opcion B: artisan --}}
+                    <div style="font-size:12.5px;font-weight:700;color:var(--c-text,#111);margin-bottom:8px">Opcion B — artisan directo (recomendada)</div>
+                    <div class="ap-notice ap-notice-success" style="margin-bottom:10px;font-size:12px">
+                        Crea un archivo <code>cron-scheduler.sh</code> en la raiz del proyecto y dale permisos con <code>chmod 755</code>.
+                    </div>
+                    <div class="cron-endpoint-card" style="margin-bottom:8px">
+                        <div class="cron-endpoint-head" style="padding:10px 16px">
+                            <div><div class="cron-endpoint-name">cron-scheduler.sh</div></div>
+                        </div>
+                        <div class="cron-endpoint-body">
+                            <div style="background:var(--c-bg,#f5f6f8);border:1px solid var(--c-border,#e3e6ea);border-radius:7px;padding:14px 16px;font-family:monospace;font-size:11.5px;color:var(--c-text,#111);line-height:1.9;overflow-x:auto">
+                                #!/bin/bash<br>
+                                PHP="/ruta/bin/php"<br>
+                                BASE="/ruta-al-proyecto"<br>
+                                cd "$BASE" || exit 1<br>
+                                "$PHP" "$BASE/artisan" schedule:run &gt;&gt; /dev/null 2&gt;&amp;1
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cron-endpoint-card">
+                        <div class="cron-endpoint-head" style="padding:10px 16px">
+                            <div><div class="cron-endpoint-name">Entrada en crontab -e</div></div>
+                        </div>
+                        <div class="cron-endpoint-body">
+                            <div style="background:var(--c-bg,#f5f6f8);border:1px solid var(--c-border,#e3e6ea);border-radius:7px;padding:14px 16px;font-family:monospace;font-size:12px;color:var(--c-text,#111);line-height:1.9;overflow-x:auto">
+                                # Ejecuta todas las tareas programadas cada minuto<br>
+                                * * * * * /bin/bash /ruta-al-proyecto/cron-scheduler.sh &gt;&gt; /ruta/cron.log 2&gt;&amp;1
+                            </div>
                         </div>
                     </div>
                 </div>
