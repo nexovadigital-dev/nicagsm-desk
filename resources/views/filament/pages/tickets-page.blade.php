@@ -544,7 +544,7 @@
     {{-- ══════════════════════
          MAIN — Panel de chat
     ═══════════════════════════ --}}
-    <main class="tk-main">
+    <main class="tk-main" @if($selectedTicketId) wire:poll.4s @endif>
 
         @if(! $selTicket)
             {{-- Empty state --}}
@@ -715,7 +715,7 @@
 
             {{-- Composer or closed notice --}}
             @if($selTicket->status !== 'closed')
-                <footer class="tk-composer">
+                <footer class="tk-composer" x-data="{ reply: '' }">
                     <div class="tk-composer-row">
                         <textarea
                             class="tk-composer-input"
@@ -724,11 +724,15 @@
                             wire:target="sendReply"
                             rows="1"
                             placeholder="Escribe tu respuesta… (se enviará por email al cliente)"
-                            @keydown.ctrl.enter.prevent="$wire.sendReply()"
+                            x-model="reply"
+                            @keydown.ctrl.enter.prevent="if(reply.trim()) { $wire.sendReply(); reply = ''; }"
                             @input="$event.target.style.height='auto'; $event.target.style.height=Math.min($event.target.scrollHeight,120)+'px'"
                         ></textarea>
-                        <button class="tk-composer-send" wire:click="sendReply" wire:loading.attr="disabled" wire:target="sendReply"
-                                title="Enviar respuesta (Ctrl+Enter)" {{ !trim($replyContent) ? 'disabled' : '' }}>
+                        <button class="tk-composer-send"
+                                wire:click="sendReply" wire:loading.attr="disabled" wire:target="sendReply"
+                                title="Enviar respuesta (Ctrl+Enter)"
+                                :disabled="!reply.trim()"
+                                @click="$nextTick(() => reply = '')">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                         </button>
                     </div>
