@@ -110,12 +110,26 @@ class ProcessInboundEmails extends Command
      */
     private function processMessage($inbox, int $uid, int $orgId, SmtpSetting $smtp): bool
     {
-        $rawSubject = imap_fetchheader($inbox, $uid, FT_UID);
-        $header     = imap_rfc822_parse_headers($rawSubject);
+        $rawHeader  = imap_fetchheader($inbox, $uid, FT_UID);
+        $header     = imap_rfc822_parse_headers($rawHeader);
+
+        // Extract RFC 2822 Message-ID for DB-level deduplication (survives cache:clear).
+        $emailMessageId = null;
+        if (preg_match('/^Message-ID:\s*(.+)$/mi', $rawHeader, $mid)) {
+            $emailMessageId = trim($mid[1]);
+        }
 
         // Decodificar subject: primero imap_utf8(), luego mb_decode_mimeheader() como refuerzo.
         // Los clientes de correo (Gmail, Outlook) encodifican caracteres especiales ([, ], —, ñ)
         // como MIME encoded-words: =?UTF-8?Q?Re=3A_=5BTKT=2D00003=5D...?=
+        // DB-level dedup: Message-ID is globally unique (RFC 2822).
+        // This check survives cache:clear, preventing duplicates after deploys.
+        if ($emailMessageId && Message::where('email_message_id', $emailMessageId)->exists()) {
+            Log::info("[IMAP] uid={$uid} org=#{$orgId}: Message-ID ya en DB — skip");
+            Cache::put("imap_uid_{$orgId}_{$uid}", 'ticket', now()->addHours(72));
+            return true;
+        }
+
         $rawSub  = isset($header->subject) ? $header->subject : '';
         $subject = imap_utf8($rawSub);
         // Si aún quedan secuencias MIME sin decodificar, aplicar mb_decode_mimeheader
@@ -192,9 +206,10 @@ class ProcessInboundEmails extends Command
 
         // Crear el mensaje en el ticket
         Message::create([
-            'ticket_id'   => $ticket->id,
-            'sender_type' => 'user',   // 'user' = cliente
-            'content'     => trim($body),
+            'ticket_id'      => $ticket->id,
+            'sender_type'    => 'user',   // 'user' = cliente
+            'content'        => trim($body),
+            'email_message_id' => $emailMessageId,
         ]);
 
         // Subir el ticket al tope del Live Inbox
