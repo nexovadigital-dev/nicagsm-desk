@@ -145,7 +145,10 @@ class Nexova_Desk_Admin {
             $cfg['widget_token']  = sanitize_text_field( $_POST['widget_token'] );
             $cfg['widget_id']     = absint( $_POST['widget_id'] ?? 0 );
             $cfg['widget_name']   = sanitize_text_field( $_POST['widget_name'] ?? '' );
-            $cfg['orders_enabled'] = ! empty( $_POST['orders_enabled'] );
+            // WooCommerce widget (may be different from the display widget)
+            $cfg['woo_widget_id']      = absint( $_POST['woo_widget_id'] ?? 0 );
+            $cfg['orders_enabled']     = ! empty( $_POST['orders_enabled'] );
+            $cfg['woo_context_enabled'] = ! empty( $_POST['woo_context_enabled'] );
         }
 
         // Pestaña Visibilidad
@@ -156,6 +159,19 @@ class Nexova_Desk_Admin {
         }
 
         update_option( NEXOVA_DESK_OPTION_CFG, $cfg );
+
+        // Sincronizar WooCommerce al servidor: usa el woo_widget_id si está definido,
+        // sino el widget de display.
+        if ( isset( $_POST['widget_token'] ) ) {
+            $woo_id = ! empty( $cfg['woo_widget_id'] ) ? (int) $cfg['woo_widget_id'] : (int) $cfg['widget_id'];
+            if ( $woo_id ) {
+                $this->api->sync_woo_toggles(
+                    $woo_id,
+                    (bool) $cfg['woo_context_enabled'],
+                    (bool) $cfg['orders_enabled']
+                );
+            }
+        }
 
         wp_send_json_success( [ 'message' => __( 'Configuración guardada.', 'nexova-desk-chat' ) ] );
     }

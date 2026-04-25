@@ -3,7 +3,7 @@
  * Plugin Name:  Nexova Desk Chat para WooCommerce
  * Plugin URI:   https://nexova.digital
  * Description:  Conecta tu tienda WooCommerce con Nexova Desk. Inyecta el widget de chat, identifica automáticamente a clientes logueados y permite consultar el estado de sus pedidos desde el chat.
- * Version:      1.0.0
+ * Version:      1.1.0
  * Author:       Nexova Digital Solutions
  * Author URI:   https://nexova.digital
  * Text Domain:  nexova-desk-chat
@@ -13,10 +13,14 @@
  * WC requires at least: 6.0
  * WC tested up to: 9.0
  *
+ * License:      GPL-2.0+
+ * License URI:  https://www.gnu.org/licenses/gpl-2.0.html
+ *
  * Copyright (C) 2024-2026 Nexova Digital Solutions.
- * Todos los derechos reservados. Este plugin es software propietario
- * desarrollado y distribuido por Nexova Digital Solutions.
- * No está permitida su redistribución o modificación sin autorización expresa.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // ── Constantes ────────────────────────────────────────────────────────────────
-define( 'NEXOVA_DESK_VERSION',     '1.0.0' );
+define( 'NEXOVA_DESK_VERSION',     '1.1.0' );
 define( 'NEXOVA_DESK_PATH',        plugin_dir_path( __FILE__ ) );
 define( 'NEXOVA_DESK_URL',         plugin_dir_url( __FILE__ ) );
 define( 'NEXOVA_DESK_BASENAME',    plugin_basename( __FILE__ ) );
@@ -32,6 +36,7 @@ define( 'NEXOVA_DESK_OPTION_URL',  'nexova_desk_server_url' );
 define( 'NEXOVA_DESK_OPTION_TOKEN','nexova_desk_plugin_token' );
 define( 'NEXOVA_DESK_OPTION_ORG',  'nexova_desk_org_data' );
 define( 'NEXOVA_DESK_OPTION_CFG',  'nexova_desk_config' );
+define( 'NEXOVA_DESK_OPTION_MODE', 'nexova_desk_connection_mode' ); // 'saas' | 'partner'
 
 /**
  * Clase principal — singleton.
@@ -150,6 +155,7 @@ function nexova_desk_uninstall(): void {
     delete_option( NEXOVA_DESK_OPTION_TOKEN );
     delete_option( NEXOVA_DESK_OPTION_ORG );
     delete_option( NEXOVA_DESK_OPTION_CFG );
+    delete_option( NEXOVA_DESK_OPTION_MODE );
     delete_option( 'nexova_desk_version' );
 }
 

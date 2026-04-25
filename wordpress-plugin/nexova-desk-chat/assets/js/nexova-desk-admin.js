@@ -45,24 +45,154 @@
 
     /* ── Tab: Conexión ───────────────────────────────────────────────────── */
 
-    var $connectBtn    = $('#nexova-desk-connect-btn');
-    var $disconnectBtn = $('#nexova-desk-disconnect-btn');
-    var $serverInput   = $('#nexova-desk-server-url');
-    var $connectNotice = $('#nexova-desk-connect-notice');
-    var connectPopup   = null;
+    var $connectBtn      = $('#nexova-desk-connect-btn');
+    var $disconnectBtn   = $('#nexova-desk-disconnect-btn');
+    var $serverInput     = $('#nexova-desk-server-url');
+    var $connectNotice   = $('#nexova-desk-connect-notice');
+    var connectPopup     = null;
+    var edgePartnerDomain = null;
 
-    // Abre popup de autenticación
-    $connectBtn.on('click', function () {
-        var serverUrl = $.trim($serverInput.val());
-        if (!serverUrl) {
-            showNotice($connectNotice, 'Ingresa la URL del servidor.', 'error');
+    // ── Selector de tipo (Estándar / Edge) ──
+    $('#nexova-desk-select-standard').on('click', function () {
+        $(this).css({ border: '1.5px solid #22c55e', background: '#f0fdf4' })
+               .find('span:first').css('color', '#166534');
+        $(this).find('svg').attr('stroke', '#22c55e');
+        $('#nexova-desk-select-edge').css({ border: '1.5px solid #e5e7eb', background: '#fff' })
+               .find('span:first').css('color', '#374151');
+        $('#nexova-desk-select-edge').find('svg').attr('stroke', '#6b7280');
+        $('#nexova-desk-panel-standard').show();
+        $('#nexova-desk-panel-edge').hide();
+        $connectNotice.hide();
+    });
+
+    $('#nexova-desk-select-edge').on('click', function () {
+        $(this).css({ border: '1.5px solid #22c55e', background: '#f0fdf4' })
+               .find('span:first').css('color', '#166534');
+        $(this).find('svg').attr('stroke', '#22c55e');
+        $('#nexova-desk-select-standard').css({ border: '1.5px solid #e5e7eb', background: '#fff' })
+               .find('span:first').css('color', '#374151');
+        $('#nexova-desk-select-standard').find('svg').attr('stroke', '#6b7280');
+        $('#nexova-desk-panel-edge').show();
+        $('#nexova-desk-panel-standard').hide();
+        $connectNotice.hide();
+    });
+
+    // ── Flujo Edge: buscar por email y enviar enlace ──
+    var edgePollInterval = null;
+    var edgeRequestId    = null;
+
+    function stopEdgePoll() {
+        if (edgePollInterval) { clearInterval(edgePollInterval); edgePollInterval = null; }
+    }
+
+    $('#nexova-desk-edge-find-btn').on('click', function () {
+        var email   = $.trim($('#nexova-desk-edge-email').val());
+        var $notice = $('#nexova-desk-edge-find-notice');
+        var $btn    = $(this);
+
+        if (!email) {
+            showNotice($notice, 'Ingresa tu correo electrónico.', 'error');
+            $notice.show();
             return;
         }
 
-        // Normalizar URL
-        serverUrl = serverUrl.replace(/\/+$/, '');
+        setBtn($btn, 'Enviando…', true);
+        $notice.hide();
+        $('#nexova-desk-edge-step-confirm').hide();
+        stopEdgePoll();
+        edgeRequestId    = null;
+        edgePartnerDomain = null;
 
-        var popupUrl  = serverUrl + '/connect?origin=' + encodeURIComponent(window.location.origin);
+        $.ajax({
+            url: 'https://nexovadesk.com/api/partner/request-wp-connect',
+            method: 'POST',
+            data: { email: email },
+            dataType: 'json',
+        })
+        .done(function (res) {
+            setBtn($btn, 'Buscar', false);
+            if (res.sent && res.request_id) {
+                edgeRequestId = res.request_id;
+                // Mostrar panel "revisa tu email"
+                $('#nexova-desk-edge-step-confirm').show();
+                $('#nexova-desk-edge-org-name').text('');
+                $('#nexova-desk-edge-org-domain').text('Revisa tu bandeja de entrada y haz clic en el enlace del email.');
+                $('#nexova-desk-edge-connect-btn').hide();
+                $('#nexova-desk-edge-back-btn').show();
+                // Cambiar ícono a email
+                showNotice($notice, '¡Email enviado! Tienes 15 minutos para autorizar desde tu email.', 'success');
+                $notice.show();
+                startEdgePoll();
+            } else {
+                showNotice($notice, res.message || 'No se encontró una cuenta Partner Edge con ese email.', 'error');
+                $notice.show();
+            }
+        })
+        .fail(function (xhr) {
+            setBtn($btn, 'Buscar', false);
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Error al enviar. Intenta de nuevo.';
+            showNotice($notice, msg, 'error');
+            $notice.show();
+        });
+    });
+
+    function startEdgePoll() {
+        stopEdgePoll();
+        edgePollInterval = setInterval(function () {
+            if (!edgeRequestId) { stopEdgePoll(); return; }
+
+            $.getJSON('https://nexovadesk.com/api/partner/connect-status', { request_id: edgeRequestId })
+                .done(function (res) {
+                    if (res.status === 'completed') {
+                        stopEdgePoll();
+                        // Guardar conexión igual que popup flow
+                        ajax(
+                            'nexova_desk_save_connection',
+                            {
+                                server_url: res.server_url,
+                                token:      res.plugin_token,
+                                org_name:   res.org_name  || '',
+                                org_id:     res.org_id    || 0,
+                                org_plan:   res.org_plan  || 'partner',
+                                is_partner: 1,
+                                is_edge:    (res.org_plan === 'partner_edge') ? 1 : 0,
+                            },
+                            function () { window.location.reload(); },
+                            function (msg) {
+                                showNotice($connectNotice, msg, 'error');
+                                $connectNotice.show();
+                            }
+                        );
+                    } else if (res.status === 'expired' || res.status === 'not_found') {
+                        stopEdgePoll();
+                        showNotice($('#nexova-desk-edge-find-notice'), 'El enlace expiró. Vuelve a intentarlo.', 'error');
+                        $('#nexova-desk-edge-find-notice').show();
+                        $('#nexova-desk-edge-step-confirm').hide();
+                    }
+                });
+        }, 4000);
+    }
+
+    // Buscar también al presionar Enter
+    $('#nexova-desk-edge-email').on('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); $('#nexova-desk-edge-find-btn').trigger('click'); }
+    });
+
+    // Volver a escribir otro email
+    $('#nexova-desk-edge-back-btn').on('click', function () {
+        stopEdgePoll();
+        $('#nexova-desk-edge-step-confirm').hide();
+        $('#nexova-desk-edge-find-notice').hide();
+        $('#nexova-desk-edge-connect-btn').show();
+        $('#nexova-desk-edge-email').val('').focus();
+        edgeRequestId    = null;
+        edgePartnerDomain = null;
+    });
+
+    // ── Helper: abrir popup de conexión ──
+    function openConnectPopup(serverUrl, $triggerBtn) {
+        serverUrl = serverUrl.replace(/\/+$/, '');
+        var popupUrl  = serverUrl + '/connect';
         var popupW    = 520;
         var popupH    = 620;
         var popupLeft = Math.round(window.screenX + (window.outerWidth - popupW) / 2);
@@ -78,21 +208,27 @@
 
         if (!connectPopup || connectPopup.closed || typeof connectPopup.closed === 'undefined') {
             showNotice($connectNotice, cfg.i18n.popupBlocked, 'error');
+            $connectNotice.show();
             return;
         }
 
-        setBtn($connectBtn, cfg.i18n.connecting, true);
+        if ($triggerBtn) setBtn($triggerBtn, cfg.i18n.connecting, true);
         $connectNotice.hide();
 
-        // Cerrar si el usuario cierra el popup sin completar
         var checkClosed = setInterval(function () {
             if (connectPopup && connectPopup.closed) {
                 clearInterval(checkClosed);
-                if ($connectBtn.is(':disabled')) {
-                    setBtn($connectBtn, 'Conectar con Nexova Desk', false);
+                if ($triggerBtn && $triggerBtn.is(':disabled')) {
+                    setBtn($triggerBtn, $triggerBtn.data('original-label') || 'Conectar', false);
                 }
             }
         }, 800);
+    }
+
+    // Abre popup estándar
+    $connectBtn.on('click', function () {
+        var serverUrl = $.trim($serverInput.val()) || 'https://nexovadesk.com';
+        openConnectPopup(serverUrl, $connectBtn);
     });
 
     // Recibe token por postMessage desde el popup
@@ -111,14 +247,16 @@
                     org_name:   data.org_name  || '',
                     org_id:     data.org_id    || 0,
                     org_plan:   data.org_plan  || 'free',
+                    is_partner: data.is_partner ? 1 : 0,
+                    is_edge:    (data.org_plan === 'partner_edge') ? 1 : 0,
                 },
                 function () {
-                    // Reload para mostrar estado conectado
                     window.location.reload();
                 },
                 function (msg) {
                     setBtn($connectBtn, 'Conectar con Nexova Desk', false);
                     showNotice($connectNotice, msg, 'error');
+                    $connectNotice.show();
                 }
             );
         }
@@ -142,14 +280,15 @@
 
     /* ── Tab: Widgets ────────────────────────────────────────────────────── */
 
-    var $widgetsList   = $('#nexova-desk-widgets-list');
-    var $refreshBtn    = $('#nexova-desk-refresh-widgets');
-    var $tokenInput    = $('#nexova-desk-widget-token');
-    var $widgetIdInput = $('#nexova-desk-widget-id');
-    var $widgetNameIn  = $('#nexova-desk-widget-name');
-    var $widgetNotice  = $('#nexova-desk-widgets-notice');
-    var $saveWidgetBtn = $('#nexova-desk-save-widget');
-    var $saveWidgetMsg = $('#nexova-desk-save-widget-notice');
+    var $widgetsList    = $('#nexova-desk-widgets-list');
+    var $refreshBtn     = $('#nexova-desk-refresh-widgets');
+    var $tokenInput     = $('#nexova-desk-widget-token');
+    var $widgetIdInput  = $('#nexova-desk-widget-id');
+    var $widgetNameIn   = $('#nexova-desk-widget-name');
+    var $wooWidgetIdIn  = $('#nexova-desk-woo-widget-id');
+    var $widgetNotice   = $('#nexova-desk-widgets-notice');
+    var $saveWidgetBtn  = $('#nexova-desk-save-widget');
+    var $saveWidgetMsg  = $('#nexova-desk-save-widget-notice');
 
     // Cargar/refrescar lista de widgets desde el servidor
     $refreshBtn.on('click', function () {
@@ -178,14 +317,36 @@
             return;
         }
 
-        var currentToken = $tokenInput.val();
+        var currentToken  = $tokenInput.val();
+        var currentWooId  = parseInt($wooWidgetIdIn.val() || '0', 10);
+        // If no woo widget stored yet, detect from API data
+        if (!currentWooId) {
+            widgets.forEach(function (w) { if (w.woo_integration_enabled) currentWooId = w.id; });
+        }
         var html = '';
+
+        var wooLogoSvg =
+            '<svg viewBox="0 0 50 30" width="36" height="22" xmlns="http://www.w3.org/2000/svg">' +
+            '<rect width="50" height="30" rx="5" fill="#96588a"/>' +
+            '<text x="25" y="21" font-family="Arial,sans-serif" font-size="13" font-weight="700" ' +
+            'fill="#fff" text-anchor="middle">Woo</text>' +
+            '</svg>';
 
         widgets.forEach(function (w) {
             var isSelected = (w.token === currentToken);
+            var isWoo      = (w.id === currentWooId || w.woo_integration_enabled);
             var statusBadge = w.is_active
                 ? '<span class="nexova-desk-badge nexova-desk-badge--active">Activo</span>'
                 : '<span class="nexova-desk-badge nexova-desk-badge--inactive">Inactivo</span>';
+            var wooBadge = isWoo
+                ? '<span class="nexova-desk-badge nexova-desk-badge--woo" title="Widget con integración WooCommerce">' + wooLogoSvg + '</span>'
+                : '';
+            var wooBtn =
+                '<button type="button" class="nexova-desk-woo-btn' + (isWoo ? ' is-woo' : '') + '"' +
+                ' data-id="' + escAttr(w.id) + '"' +
+                ' title="' + (isWoo ? 'WooCommerce activo en este widget' : 'Activar WooCommerce en este widget') + '">' +
+                wooLogoSvg +
+                '</button>';
 
             html += '<div class="nexova-desk-widget-card' + (isSelected ? ' is-selected' : '') + '"' +
                     ' data-token="' + escAttr(w.token) + '"' +
@@ -200,6 +361,7 @@
                     '<div class="nexova-desk-widget-card__body">' +
                     '<strong>' + escHtml(w.name) + '</strong>' + statusBadge +
                     '</div>' +
+                    wooBtn +
                     '<div class="nexova-desk-widget-card__check">' +
                     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"' +
                     ' stroke="currentColor" stroke-width="2.5" width="16" height="16">' +
@@ -208,16 +370,30 @@
         });
 
         $widgetsList.html(html);
+        if (currentWooId) $wooWidgetIdIn.val(currentWooId);
     }
 
-    // Seleccionar widget
-    $(document).on('click', '.nexova-desk-widget-card', function () {
+    // Seleccionar widget de display
+    $(document).on('click', '.nexova-desk-widget-card', function (e) {
+        if ($(e.target).closest('.nexova-desk-woo-btn').length) return; // handled separately
         var $card = $(this);
         $('.nexova-desk-widget-card').removeClass('is-selected');
         $card.addClass('is-selected');
         $tokenInput.val($card.data('token'));
         $widgetIdInput.val($card.data('id'));
         $widgetNameIn.val($card.data('name'));
+    });
+
+    // Seleccionar widget de WooCommerce
+    $(document).on('click', '.nexova-desk-woo-btn', function (e) {
+        e.stopPropagation();
+        var wooId = parseInt($(this).data('id'), 10);
+        $wooWidgetIdIn.val(wooId);
+        // Update visual state
+        $('.nexova-desk-woo-btn').removeClass('is-woo')
+            .attr('title', 'Activar WooCommerce en este widget');
+        $(this).addClass('is-woo')
+            .attr('title', 'WooCommerce activo en este widget');
     });
 
     // Guardar widget + pedidos
@@ -233,10 +409,12 @@
         ajax(
             'nexova_desk_save_config',
             {
-                widget_token:   token,
-                widget_id:      $widgetIdInput.val(),
-                widget_name:    $widgetNameIn.val(),
-                orders_enabled: $('#nexova-desk-orders-enabled').is(':checked') ? '1' : '',
+                widget_token:        token,
+                widget_id:           $widgetIdInput.val(),
+                widget_name:         $widgetNameIn.val(),
+                woo_widget_id:       $wooWidgetIdIn.val() || $widgetIdInput.val(),
+                orders_enabled:      $('#nexova-desk-orders-enabled').is(':checked') ? '1' : '',
+                woo_context_enabled: $('#nexova-desk-woo-context-enabled').is(':checked') ? '1' : '',
             },
             function () {
                 setBtn($saveWidgetBtn, 'Guardar configuración', false);

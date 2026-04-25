@@ -22,16 +22,20 @@ $org_data   = (array) get_option( NEXOVA_DESK_OPTION_ORG, [] );
 $server_url = rtrim( get_option( NEXOVA_DESK_OPTION_URL, '' ), '/' );
 $plan       = $org_data['plan'] ?? 'free';
 $plan_label = [
-    'free'       => __( 'Gratuito', 'nexova-desk-chat' ),
-    'trial'      => __( 'Prueba', 'nexova-desk-chat' ),
-    'pro'        => 'Pro',
-    'enterprise' => 'Enterprise',
+    'free'         => __( 'Gratuito', 'nexova-desk-chat' ),
+    'trial'        => __( 'Prueba', 'nexova-desk-chat' ),
+    'pro'          => 'NexovaDesk PRO',
+    'enterprise'   => 'Enterprise',
+    'partner'      => 'NexovaDesk Edge',
+    'partner_edge' => 'NexovaDesk Edge',
 ][ $plan ] ?? ucfirst( $plan );
 $plan_colors = [
-    'free'       => [ 'bg' => '#f3f4f6', 'color' => '#6b7280' ],
-    'trial'      => [ 'bg' => '#fef3c7', 'color' => '#92400e' ],
-    'pro'        => [ 'bg' => '#dcfce7', 'color' => '#166534' ],
-    'enterprise' => [ 'bg' => '#ede9fe', 'color' => '#5b21b6' ],
+    'free'         => [ 'bg' => '#f3f4f6', 'color' => '#6b7280' ],
+    'trial'        => [ 'bg' => '#fef3c7', 'color' => '#92400e' ],
+    'pro'          => [ 'bg' => '#dcfce7', 'color' => '#166534' ],
+    'enterprise'   => [ 'bg' => '#ede9fe', 'color' => '#5b21b6' ],
+    'partner'      => [ 'bg' => '#fef3c7', 'color' => '#92400e' ],
+    'partner_edge' => [ 'bg' => '#fef3c7', 'color' => '#92400e' ],
 ][ $plan ] ?? [ 'bg' => '#f3f4f6', 'color' => '#6b7280' ];
 
 $edit_widget_url = $selected_id && $server_url
@@ -43,7 +47,7 @@ $edit_widget_url = $selected_id && $server_url
     <div class="nexova-desk-plan-strip">
         <span class="nexova-desk-plan-badge"
               style="background:<?php echo esc_attr( $plan_colors['bg'] ); ?>;color:<?php echo esc_attr( $plan_colors['color'] ); ?>">
-            <?php if ( $plan === 'pro' || $plan === 'enterprise' ) : ?>
+            <?php if ( $plan === 'pro' || $plan === 'enterprise' || $plan === 'partner' || $plan === 'partner_edge' ) : ?>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="12" height="12">
                     <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
                 </svg>
@@ -114,32 +118,27 @@ $edit_widget_url = $selected_id && $server_url
         <?php endif; ?>
     </div>
 
-    <input type="hidden" id="nexova-desk-widget-token" value="<?php echo esc_attr( $selected_token ); ?>" />
-    <input type="hidden" id="nexova-desk-widget-id"    value="<?php echo esc_attr( $selected_id ); ?>" />
-    <input type="hidden" id="nexova-desk-widget-name"  value="<?php echo esc_attr( $selected_name ); ?>" />
+    <input type="hidden" id="nexova-desk-widget-token"   value="<?php echo esc_attr( $selected_token ); ?>" />
+    <input type="hidden" id="nexova-desk-widget-id"     value="<?php echo esc_attr( $selected_id ); ?>" />
+    <input type="hidden" id="nexova-desk-widget-name"   value="<?php echo esc_attr( $selected_name ); ?>" />
+    <input type="hidden" id="nexova-desk-woo-widget-id" value="<?php echo esc_attr( $cfg['woo_widget_id'] ?? $selected_id ); ?>" />
+    <p style="font-size:12px;color:#6b7280;margin-top:10px;line-height:1.5">
+        <?php esc_html_e( 'Haz clic en el logo WooCommerce de un widget para asignarle la integración con tu tienda.', 'nexova-desk-chat' ); ?>
+    </p>
 
     <div id="nexova-desk-widgets-notice" class="nexova-desk-notice" style="display:none;"></div>
 </div>
 
 <div class="nexova-desk-card">
-    <h2><?php esc_html_e( 'Pedidos WooCommerce', 'nexova-desk-chat' ); ?></h2>
+    <h2><?php esc_html_e( 'Integración WooCommerce', 'nexova-desk-chat' ); ?></h2>
     <p class="nexova-desk-description">
-        <?php esc_html_e( 'Permite que el bot consulte el historial de pedidos del cliente desde el chat.', 'nexova-desk-chat' ); ?>
+        <?php esc_html_e( 'La tienda está conectada. El plugin envía automáticamente el catálogo y los pedidos al widget cuando WooCommerce está activo.', 'nexova-desk-chat' ); ?>
     </p>
-
-    <label class="nexova-desk-toggle">
-        <input type="checkbox" id="nexova-desk-orders-enabled"
-               <?php checked( $orders_enabled ); ?> />
-        <span class="nexova-desk-toggle__track"></span>
-        <span class="nexova-desk-toggle__label">
-            <?php esc_html_e( 'Activar consulta de pedidos', 'nexova-desk-chat' ); ?>
-        </span>
-    </label>
-
-    <p class="description">
-        <?php esc_html_e( 'Solo aplica a clientes con sesión activa en WooCommerce.', 'nexova-desk-chat' ); ?>
+    <p class="description" style="background:#f0fdf4;color:#166534;padding:10px 14px;border-radius:8px;border:1px solid #bbf7d0;margin-top:8px">
+        ✓ <?php esc_html_e( 'Para activar o desactivar la IA de WooCommerce, ve a tu panel Nexova Desk → Mis Widgets → Editar widget → Integración WooCommerce.', 'nexova-desk-chat' ); ?>
     </p>
 </div>
+
 
 <div class="nexova-desk-actions nexova-desk-actions--sticky">
     <button id="nexova-desk-save-widget" class="nexova-desk-btn nexova-desk-btn--primary">
