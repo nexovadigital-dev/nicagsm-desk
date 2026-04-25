@@ -79,16 +79,31 @@ input:checked + .ap-slider:before { transform: translateX(16px); }
 .cron-subtab:hover { color: var(--c-text,#111); }
 .cron-subtab.active { color: var(--c-primary,#16a34a); border-bottom-color: var(--c-primary,#16a34a); font-weight: 700; }
 .cron-endpoint-card { border: 1.5px solid var(--c-border,#e3e6ea); border-radius: 10px; margin-bottom: 12px; overflow: hidden; background: var(--c-surface,#fff); }
+.cron-endpoint-card.featured { border-color: var(--c-primary,#16a34a); }
 .cron-endpoint-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--c-border,#e3e6ea); }
-.cron-endpoint-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cron-endpoint-icon { width: 32px; height: 32px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .cron-endpoint-name { font-size: 13px; font-weight: 700; color: var(--c-text,#111); }
 .cron-endpoint-desc { font-size: 11.5px; color: var(--c-sub,#6b7280); margin-top: 2px; }
 .cron-endpoint-body { padding: 12px 16px; }
 .cron-url-row { display: flex; align-items: center; gap: 8px; background: var(--c-bg,#f5f6f8); border: 1px solid var(--c-border,#e3e6ea); border-radius: 7px; padding: 8px 12px; }
 .cron-url-text { font-family: monospace; font-size: 12px; color: var(--c-text,#111); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cron-copy-btn { font-size: 11.5px; font-weight: 600; color: var(--c-primary,#16a34a); background: none; border: none; cursor: pointer; white-space: nowrap; padding: 2px 6px; }
+.cron-copy-btn { font-size: 11.5px; font-weight: 600; color: var(--c-primary,#16a34a); background: none; border: none; cursor: pointer; white-space: nowrap; padding: 2px 6px; flex-shrink: 0; }
 .cron-copy-btn:hover { text-decoration: underline; }
 .cron-freq { font-size: 11.5px; color: var(--c-sub,#6b7280); margin-top: 8px; }
+.cron-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px; font-size: 10.5px; font-weight: 700; }
+.cron-badge-green { background: #dcfce7; color: #166534; }
+.cron-badge-purple { background: #ede9fe; color: #6d28d9; }
+.cron-badge-gray { background: var(--c-bg,#f5f6f8); color: var(--c-sub,#6b7280); border: 1px solid var(--c-border,#e3e6ea); }
+.cron-task-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 0; }
+.cron-task-item { display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px; background: var(--c-surface,#fff); border: 1px solid var(--c-border,#e3e6ea); border-radius: 8px; }
+.cron-task-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.cron-task-name { font-size: 12px; font-weight: 600; color: var(--c-text,#111); line-height: 1.4; }
+.cron-task-freq { font-size: 11px; color: var(--c-sub,#6b7280); margin-top: 2px; }
+.cron-code-block { background: #1e293b; border-radius: 8px; padding: 14px 16px; font-family: monospace; font-size: 12px; color: #e2e8f0; line-height: 1.8; overflow-x: auto; }
+.cron-code-block .cc { color: #64748b; }
+.cron-code-block .ck { color: #7dd3fc; }
+.cron-code-block .cv { color: #86efac; }
+@media (max-width: 640px) { .cron-task-grid { grid-template-columns: 1fr; } }
 
 @media (max-width: 900px) {
     .ap-tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
@@ -782,26 +797,54 @@ input:checked + .ap-slider:before { transform: translateX(16px); }
     @if(auth()->user()->organization_id && in_array(auth()->user()->role, ['owner','admin']))
     <div x-show="tab === 'cron'" x-transition.opacity>
 
+        {{-- Intro: tareas --}}
         <div class="ap-section no-top">
             <div>
-                <div class="ap-section-title">Tareas automaticas</div>
+                <div class="ap-section-title">Tareas programadas</div>
                 <div class="ap-section-desc">
-                    Nexova Desk necesita ejecutar estas tareas en segundo plano:<br><br>
-                    📧 <strong>Revisar tu buzon IMAP</strong> — captura respuestas de clientes a tickets<br>
-                    🤖 <strong>Expirar llamados a agente</strong> — revierte al bot si nadie atiende<br>
-                    🧹 <strong>Limpiar visitantes inactivos</strong> — mantiene el rastreo en vivo preciso<br>
-                    🔒 <strong>Cerrar tickets inactivos</strong> — cierra bots sin actividad en 24h<br>
-                    🔑 <strong>Verificar la licencia</strong> — una vez al dia<br><br>
-                    El endpoint <code>/api/cron/worker</code> ejecuta <strong>todas las tareas</strong> de una sola llamada. Usalo si puedes configurar un solo cron.
+                    Nexova Desk ejecuta estas tareas automaticamente en segundo plano.
+                    Configura un unico cron con <strong>/api/cron/worker</strong> para cubrirlas todas.
                 </div>
             </div>
             <div>
-                <div class="ap-notice ap-notice-info">
-                    Para que las respuestas lleguen rapido, el cron de IMAP debe ejecutarse <strong>cada 1 minuto</strong>. Si tu hosting solo permite cada 5 minutos, seguira funcionando con un poco mas de demora.
+                <div class="cron-task-grid">
+                    @foreach([
+                        ['name'=>'Revisar buzon IMAP','freq'=>'Cada minuto','color'=>'#3b82f6','desc'=>'Captura respuestas de clientes a tickets'],
+                        ['name'=>'Expirar llamados a agente','freq'=>'Cada 2 min','color'=>'#f59e0b','desc'=>'Revierte al bot si nadie atiende'],
+                        ['name'=>'Limpiar visitantes','freq'=>'Cada minuto','color'=>'#10b981','desc'=>'Mantiene el rastreo en vivo preciso'],
+                        ['name'=>'Cerrar tickets inactivos','freq'=>'Cada hora','color'=>'#8b5cf6','desc'=>'Bots sin actividad en 24h'],
+                        ['name'=>'Verificar licencia','freq'=>'Diario 03:00','color'=>'#6b7280','desc'=>'Confirma el estado del soporte'],
+                    ] as $task)
+                    <div class="cron-task-item">
+                        <div class="cron-task-dot" style="background:{{ $task['color'] }}"></div>
+                        <div>
+                            <div class="cron-task-name">{{ $task['name'] }}</div>
+                            <div class="cron-task-freq">{{ $task['desc'] }}</div>
+                            <div style="margin-top:4px">
+                                <span class="cron-badge cron-badge-gray">{{ $task['freq'] }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                    {{-- Worker all-in-one --}}
+                    <div class="cron-task-item" style="border-color:var(--c-primary,#16a34a);background:linear-gradient(135deg,#f0fdf4,#fff)">
+                        <div class="cron-task-dot" style="background:#16a34a"></div>
+                        <div>
+                            <div class="cron-task-name" style="color:var(--c-primary,#16a34a)">/api/cron/worker</div>
+                            <div class="cron-task-freq">Ejecuta las 5 tareas anteriores en una sola llamada</div>
+                            <div style="margin-top:4px">
+                                <span class="cron-badge cron-badge-green">Todo en uno</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                <p style="font-size:11.5px;color:var(--c-sub,#6b7280);margin-top:12px;line-height:1.55">
+                    Si tu hosting permite un solo cron, usa <strong>/api/cron/worker</strong> cada minuto — es suficiente para todo.
+                </p>
             </div>
         </div>
 
+        {{-- Configuracion --}}
         <div class="ap-section">
             <div>
                 <div class="ap-section-title">Como configurarlo</div>
@@ -809,133 +852,156 @@ input:checked + .ap-slider:before { transform: translateX(16px); }
             </div>
             <div>
                 <div class="cron-subtab-row">
-                    <button class="cron-subtab" :class="{ active: cronTab === 'cronjob' }" @click="cronTab = 'cronjob'">🌐 Servicio gratuito</button>
-                    <button class="cron-subtab" :class="{ active: cronTab === 'hosting' }" @click="cronTab = 'hosting'">🖥️ Mi Hosting</button>
-                    <button class="cron-subtab" :class="{ active: cronTab === 'vps' }" @click="cronTab = 'vps'">⚙️ VPS / Servidor</button>
+                    <button class="cron-subtab" :class="{ active: cronTab === 'cronjob' }" @click="cronTab = 'cronjob'">Servicio gratuito</button>
+                    <button class="cron-subtab" :class="{ active: cronTab === 'hosting' }" @click="cronTab = 'hosting'">Hosting compartido</button>
+                    <button class="cron-subtab" :class="{ active: cronTab === 'vps' }" @click="cronTab = 'vps'">VPS / Servidor</button>
                     <button class="cron-subtab" :class="{ active: cronTab === 'nexova' }" @click="cronTab = 'nexova'" style="position:relative">
-                        ⚡ Nexova Fast-Cron
-                        <span style="position:absolute;top:-8px;right:-4px;background:#f59e0b;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px">Pronto</span>
+                        Nexova Fast-Cron
+                        <span style="position:absolute;top:-7px;right:-2px;background:#f59e0b;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px">Pronto</span>
                     </button>
                 </div>
 
                 {{-- CRON-JOB.ORG --}}
                 <div x-show="cronTab === 'cronjob'">
-                    <div class="ap-notice ap-notice-success" style="margin-bottom:14px">
-                        <strong>Opcion recomendada si no tienes VPS.</strong><br>
-                        <a href="https://cron-job.org" target="_blank" style="color:#059669;font-weight:600">Cron-Job.org</a> es gratuito y llama a estas URLs automaticamente.
+                    <div class="ap-notice ap-notice-success" style="margin-bottom:16px">
+                        <strong>Recomendado si no tienes VPS.</strong> Cron-Job.org es gratuito y llama a estas URLs automaticamente. Metodo: <strong>GET</strong>.
                     </div>
-                    <p style="font-size:12.5px;color:var(--c-sub,#6b7280);margin-bottom:14px;line-height:1.6">
-                        Entra a <a href="https://cron-job.org" target="_blank" style="color:#16a34a">cron-job.org</a> → New Cron Job → pega la URL → elige la frecuencia → Guardar. Tipo: <strong>GET</strong>.
-                    </p>
+
                     @foreach([
-                        ['icon'=>'⚡','color'=>'#8b5cf6','name'=>'Worker general (recomendado)','desc'=>'Ejecuta TODAS las tareas: IMAP, bot, visitantes, licencia','url'=>$appUrl.'/api/cron/worker','freq'=>'Cada 1 minuto'],
-                        ['icon'=>'📧','color'=>'#3b82f6','name'=>'Solo IMAP','desc'=>'Alternativa: solo captura respuestas de clientes por correo','url'=>$appUrl.'/api/cron/imap','freq'=>'Cada 1 minuto'],
-                        ['icon'=>'🔑','color'=>'#f59e0b','name'=>'Verificar licencia','desc'=>'Si no usas Worker general, agrega este tambien','url'=>$appUrl.'/api/cron/license','freq'=>'1 vez al dia'],
+                        ['featured'=>true,'name'=>'Worker general','badge'=>'Recomendado','desc'=>'Ejecuta las 5 tareas: IMAP, bot, visitantes, licencia — todo en una sola llamada','url'=>$appUrl.'/api/cron/worker','freq'=>'Cada 1 minuto','icon_bg'=>'#dcfce7','icon_color'=>'#16a34a'],
+                        ['featured'=>false,'name'=>'Solo IMAP','badge'=>'Alternativa','desc'=>'Solo captura respuestas de clientes por correo','url'=>$appUrl.'/api/cron/imap','freq'=>'Cada 1 minuto','icon_bg'=>'#dbeafe','icon_color'=>'#3b82f6'],
+                        ['featured'=>false,'name'=>'Solo licencia','badge'=>'Si no usas Worker','desc'=>'Verificacion diaria del estado de soporte','url'=>$appUrl.'/api/cron/license','freq'=>'1 vez al dia','icon_bg'=>'#fef3c7','icon_color'=>'#d97706'],
                     ] as $ep)
-                    <div class="cron-endpoint-card">
+                    <div class="cron-endpoint-card {{ $ep['featured'] ? 'featured' : '' }}" style="margin-bottom:10px">
                         <div class="cron-endpoint-head">
-                            <div class="cron-endpoint-icon" style="background:{{ $ep['color'] }}20;font-size:16px">{{ $ep['icon'] }}</div>
-                            <div>
-                                <div class="cron-endpoint-name">{{ $ep['name'] }}</div>
+                            <div class="cron-endpoint-icon" style="background:{{ $ep['icon_bg'] }}">
+                                <svg fill="none" stroke="{{ $ep['icon_color'] }}" viewBox="0 0 24 24" width="15" height="15">
+                                    @if($ep['featured'])
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    @elseif($ep['name']==='Solo IMAP')
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                    @else
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                    @endif
+                                </svg>
+                            </div>
+                            <div style="flex:1">
+                                <div style="display:flex;align-items:center;gap:8px">
+                                    <span class="cron-endpoint-name">{{ $ep['name'] }}</span>
+                                    <span class="cron-badge {{ $ep['featured'] ? 'cron-badge-green' : 'cron-badge-gray' }}">{{ $ep['badge'] }}</span>
+                                </div>
                                 <div class="cron-endpoint-desc">{{ $ep['desc'] }}</div>
                             </div>
+                            <span style="font-size:11px;color:var(--c-sub,#6b7280);white-space:nowrap;font-weight:500">{{ $ep['freq'] }}</span>
                         </div>
                         <div class="cron-endpoint-body">
                             <div class="cron-url-row">
                                 <span class="cron-url-text">{{ $ep['url'] }}</span>
                                 <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('{{ $ep['url'] }}').then(()=>{this.textContent='Copiado';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar</button>
                             </div>
-                            <div class="cron-freq">Frecuencia: <strong>{{ $ep['freq'] }}</strong></div>
                         </div>
                     </div>
                     @endforeach
+                    <p style="font-size:11.5px;color:var(--c-sub,#6b7280);margin-top:10px;line-height:1.55">
+                        Entra a <a href="https://cron-job.org" target="_blank" style="color:#16a34a;font-weight:600">cron-job.org</a> → New Cron Job → pega la URL → frecuencia → Guardar.
+                    </p>
                 </div>
 
                 {{-- HOSTING --}}
                 <div x-show="cronTab === 'hosting'">
-                    <div class="ap-notice ap-notice-info" style="margin-bottom:14px">
-                        Hostings como <strong>Hostinger</strong>, <strong>cPanel</strong>, <strong>Plesk</strong> tienen Cron Jobs en su panel. Agrega cada tarea con el comando de abajo.
+                    <div class="ap-notice ap-notice-info" style="margin-bottom:16px">
+                        Hostinger, cPanel y Plesk tienen Cron Jobs en su panel. Usa el comando <code>curl</code> de abajo o la URL directa con metodo <strong>GET</strong>.
                     </div>
-                    <p style="font-size:12.5px;color:var(--c-sub,#6b7280);margin-bottom:14px;line-height:1.6">
-                        <strong>Hostinger:</strong> Panel → Avanzado → Cron Jobs<br>
-                        <strong>cPanel:</strong> Cron Jobs → Add New Cron Job
+                    <p style="font-size:12px;color:var(--c-sub,#6b7280);margin-bottom:14px;line-height:1.6">
+                        <strong>Hostinger:</strong> Panel → Avanzado → Cron Jobs &nbsp;|&nbsp; <strong>cPanel:</strong> Cron Jobs → Add New Cron Job
                     </p>
                     @foreach([
-                        ['icon'=>'⚡','color'=>'#8b5cf6','name'=>'Worker general (recomendado)','desc'=>'Ejecuta TODAS las tareas: IMAP, bot, visitantes, licencia','url'=>$appUrl.'/api/cron/worker','freq'=>'* * * * *'],
-                        ['icon'=>'📧','color'=>'#3b82f6','name'=>'Solo IMAP','desc'=>'Solo detecta respuestas de clientes por correo','url'=>$appUrl.'/api/cron/imap','freq'=>'* * * * *'],
-                        ['icon'=>'🔑','color'=>'#f59e0b','name'=>'Verificar licencia','desc'=>'Confirma la licencia del sistema (si no usas Worker general)','url'=>$appUrl.'/api/cron/license','freq'=>'0 3 * * *'],
+                        ['featured'=>true,'name'=>'Worker general','badge'=>'Recomendado','desc'=>'Ejecuta las 5 tareas en una sola llamada','url'=>$appUrl.'/api/cron/worker','freq'=>'* * * * *','icon_bg'=>'#dcfce7','icon_color'=>'#16a34a'],
+                        ['featured'=>false,'name'=>'Solo IMAP','badge'=>'Alternativa','desc'=>'Solo captura respuestas de clientes por correo','url'=>$appUrl.'/api/cron/imap','freq'=>'* * * * *','icon_bg'=>'#dbeafe','icon_color'=>'#3b82f6'],
+                        ['featured'=>false,'name'=>'Solo licencia','badge'=>'Si no usas Worker','desc'=>'Verificacion diaria del soporte','url'=>$appUrl.'/api/cron/license','freq'=>'0 3 * * *','icon_bg'=>'#fef3c7','icon_color'=>'#d97706'],
                     ] as $ep)
-                    <div class="cron-endpoint-card">
+                    <div class="cron-endpoint-card {{ $ep['featured'] ? 'featured' : '' }}" style="margin-bottom:10px">
                         <div class="cron-endpoint-head">
-                            <div class="cron-endpoint-icon" style="background:{{ $ep['color'] }}20;font-size:16px">{{ $ep['icon'] }}</div>
-                            <div>
-                                <div class="cron-endpoint-name">{{ $ep['name'] }}</div>
+                            <div class="cron-endpoint-icon" style="background:{{ $ep['icon_bg'] }}">
+                                <svg fill="none" stroke="{{ $ep['icon_color'] }}" viewBox="0 0 24 24" width="15" height="15">
+                                    @if($ep['featured'])
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    @elseif($ep['name']==='Solo IMAP')
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                    @else
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                    @endif
+                                </svg>
+                            </div>
+                            <div style="flex:1">
+                                <div style="display:flex;align-items:center;gap:8px">
+                                    <span class="cron-endpoint-name">{{ $ep['name'] }}</span>
+                                    <span class="cron-badge {{ $ep['featured'] ? 'cron-badge-green' : 'cron-badge-gray' }}">{{ $ep['badge'] }}</span>
+                                </div>
                                 <div class="cron-endpoint-desc">{{ $ep['desc'] }}</div>
                             </div>
+                            <code style="font-size:11px;color:var(--c-sub,#6b7280);background:var(--c-bg,#f5f6f8);padding:2px 7px;border-radius:5px;white-space:nowrap">{{ $ep['freq'] }}</code>
                         </div>
                         <div class="cron-endpoint-body">
                             <div class="cron-url-row">
-                                <span class="cron-url-text">curl {{ $ep['url'] }}</span>
-                                <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('curl {{ $ep['url'] }}').then(()=>{this.textContent='Copiado';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar</button>
+                                <span class="cron-url-text">curl -sk {{ $ep['url'] }} &gt;/dev/null</span>
+                                <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('curl -sk {{ $ep['url'] }} >/dev/null').then(()=>{this.textContent='Copiado';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar</button>
                             </div>
-                            <div class="cron-freq">Expresion: <strong><code>{{ $ep['freq'] }}</code></strong></div>
                         </div>
                     </div>
                     @endforeach
                     <div class="ap-notice ap-notice-warn" style="margin-top:10px">
-                        Tu panel no acepta <code>curl</code>? Usa la URL directa con metodo <strong>GET</strong>.
+                        Si tu panel no acepta <code>curl</code>, ingresa la URL directamente con metodo GET.
                     </div>
                 </div>
 
                 {{-- VPS --}}
                 <div x-show="cronTab === 'vps'">
-                    <div class="ap-notice ap-notice-info" style="margin-bottom:14px">
-                        <strong>Opcion A — curl (simple):</strong> un solo cron llama al worker que ejecuta todas las tareas.<br>
-                        <strong>Opcion B — artisan (recomendada en VPS):</strong> usa el scheduler de Laravel directamente.
-                    </div>
+                    <p style="font-size:12px;color:var(--c-sub,#6b7280);margin-bottom:16px;line-height:1.6">
+                        Dos opciones: <strong>curl simple</strong> (un cron llama al worker HTTP) o <strong>artisan directo</strong> (Laravel scheduler nativo, recomendado en VPS con acceso SSH).
+                    </p>
 
                     {{-- Opcion A: curl --}}
-                    <div style="font-size:12.5px;font-weight:700;color:var(--c-text,#111);margin-bottom:8px">Opcion A — via curl (crontab -e)</div>
-                    <div class="cron-endpoint-card" style="margin-bottom:16px">
+                    <div style="font-size:12px;font-weight:700;color:var(--c-sub,#6b7280);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Opcion A — curl (crontab -e)</div>
+                    <div class="cron-endpoint-card featured" style="margin-bottom:20px">
                         <div class="cron-endpoint-body">
-                            <div style="background:var(--c-bg,#f5f6f8);border:1px solid var(--c-border,#e3e6ea);border-radius:7px;padding:14px 16px;font-family:monospace;font-size:12px;color:var(--c-text,#111);line-height:1.9;overflow-x:auto">
-                                # Todas las tareas automaticas (IMAP, bot, visitantes, licencia)<br>
-                                * * * * * curl -sk {{ $appUrl }}/api/cron/worker &gt;/dev/null 2&gt;&amp;1
+                            <div class="cron-code-block">
+                                <span class="cc"># Todas las tareas: IMAP, bot, visitantes, licencia</span><br>
+                                <span class="ck">* * * * *</span> curl -sk {{ $appUrl }}/api/cron/worker <span class="cc">&gt;/dev/null 2&gt;&amp;1</span>
                             </div>
-                            <button class="cron-copy-btn" style="margin-top:8px"
-                                onclick="navigator.clipboard.writeText('* * * * * curl -sk {{ $appUrl }}/api/cron/worker >/dev/null 2>&1').then(()=>{this.textContent='Copiado';setTimeout(()=>this.textContent='Copiar',1500)})">
-                                Copiar
-                            </button>
+                            <div style="margin-top:8px;display:flex;justify-content:flex-end">
+                                <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('* * * * * curl -sk {{ $appUrl }}/api/cron/worker >/dev/null 2>&1').then(()=>{this.textContent='Copiado';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar linea</button>
+                            </div>
                         </div>
                     </div>
 
                     {{-- Opcion B: artisan --}}
-                    <div style="font-size:12.5px;font-weight:700;color:var(--c-text,#111);margin-bottom:8px">Opcion B — artisan directo (recomendada)</div>
-                    <div class="ap-notice ap-notice-success" style="margin-bottom:10px;font-size:12px">
-                        Crea un archivo <code>cron-scheduler.sh</code> en la raiz del proyecto y dale permisos con <code>chmod 755</code>.
-                    </div>
+                    <div style="font-size:12px;font-weight:700;color:var(--c-sub,#6b7280);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Opcion B — artisan directo (recomendada en VPS)</div>
                     <div class="cron-endpoint-card" style="margin-bottom:8px">
-                        <div class="cron-endpoint-head" style="padding:10px 16px">
-                            <div><div class="cron-endpoint-name">cron-scheduler.sh</div></div>
+                        <div class="cron-endpoint-head" style="padding:10px 16px;background:var(--c-bg,#f8fafc)">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" style="color:var(--c-sub)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            <span class="cron-endpoint-name" style="font-size:12px">cron-scheduler.sh</span>
+                            <span style="font-size:11px;color:var(--c-sub,#6b7280);margin-left:auto">chmod 755 cron-scheduler.sh</span>
                         </div>
                         <div class="cron-endpoint-body">
-                            <div style="background:var(--c-bg,#f5f6f8);border:1px solid var(--c-border,#e3e6ea);border-radius:7px;padding:14px 16px;font-family:monospace;font-size:11.5px;color:var(--c-text,#111);line-height:1.9;overflow-x:auto">
-                                #!/bin/bash<br>
-                                PHP="/ruta/bin/php"<br>
-                                BASE="/ruta-al-proyecto"<br>
-                                cd "$BASE" || exit 1<br>
-                                "$PHP" "$BASE/artisan" schedule:run &gt;&gt; /dev/null 2&gt;&amp;1
+                            <div class="cron-code-block">
+                                <span class="cv">#!/bin/bash</span><br>
+                                <span class="ck">PHP</span>=<span class="cv">"/ruta/bin/php"</span><br>
+                                <span class="ck">BASE</span>=<span class="cv">"/ruta-al-proyecto"</span><br>
+                                cd <span class="cv">"$BASE"</span> || exit 1<br>
+                                <span class="cv">"$PHP"</span> <span class="cv">"$BASE/artisan"</span> schedule:run <span class="cc">&gt;&gt; /dev/null 2&gt;&amp;1</span>
                             </div>
                         </div>
                     </div>
                     <div class="cron-endpoint-card">
-                        <div class="cron-endpoint-head" style="padding:10px 16px">
-                            <div><div class="cron-endpoint-name">Entrada en crontab -e</div></div>
+                        <div class="cron-endpoint-head" style="padding:10px 16px;background:var(--c-bg,#f8fafc)">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" style="color:var(--c-sub)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <span class="cron-endpoint-name" style="font-size:12px">crontab -e</span>
                         </div>
                         <div class="cron-endpoint-body">
-                            <div style="background:var(--c-bg,#f5f6f8);border:1px solid var(--c-border,#e3e6ea);border-radius:7px;padding:14px 16px;font-family:monospace;font-size:12px;color:var(--c-text,#111);line-height:1.9;overflow-x:auto">
-                                # Ejecuta todas las tareas programadas cada minuto<br>
-                                * * * * * /bin/bash /ruta-al-proyecto/cron-scheduler.sh &gt;&gt; /ruta/cron.log 2&gt;&amp;1
+                            <div class="cron-code-block">
+                                <span class="cc"># Ejecuta todas las tareas programadas cada minuto</span><br>
+                                <span class="ck">* * * * *</span> /bin/bash /ruta-al-proyecto/cron-scheduler.sh <span class="cc">&gt;&gt; /ruta/cron.log 2&gt;&amp;1</span>
                             </div>
                         </div>
                     </div>
@@ -943,38 +1009,40 @@ input:checked + .ap-slider:before { transform: translateX(16px); }
 
                 {{-- NEXOVA FAST-CRON --}}
                 <div x-show="cronTab === 'nexova'">
-                    <div style="text-align:center;padding:48px 24px">
-                        <div style="font-size:40px;margin-bottom:16px">⚡</div>
-                        <div style="font-size:20px;font-weight:800;color:var(--c-text,#111);margin-bottom:8px">Nexova Fast-Cron</div>
-                        <div style="font-size:13px;color:var(--c-sub,#6b7280);max-width:420px;margin:0 auto 20px;line-height:1.7">
-                            Nuestro servicio nativo: alta frecuencia, monitoreo automatico, reintentos ante fallos y alertas si una tarea deja de funcionar.
+                    <div style="text-align:center;padding:52px 24px">
+                        <div style="width:52px;height:52px;border-radius:14px;background:#1e293b;display:flex;align-items:center;justify-content:center;margin:0 auto 18px">
+                            <svg fill="none" stroke="#f8fafc" viewBox="0 0 24 24" width="24" height="24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                         </div>
-                        <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:28px">
-                            @foreach(['Sin configuracion manual','Cada 30 segundos','Reintentos automaticos','Alertas por email','Historial'] as $feat)
-                            <span style="background:var(--c-bg,#f5f6f8);border:1px solid var(--c-border,#e3e6ea);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:500">✓ {{ $feat }}</span>
+                        <div style="font-size:18px;font-weight:800;color:var(--c-text,#111);margin-bottom:6px">Nexova Fast-Cron</div>
+                        <div style="font-size:12.5px;color:var(--c-sub,#6b7280);max-width:380px;margin:0 auto 20px;line-height:1.7">
+                            Servicio nativo de alta frecuencia con monitoreo automatico, reintentos y alertas si una tarea falla.
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:24px">
+                            @foreach(['Sin configuracion','Cada 30 seg','Reintentos automaticos','Alertas email','Historial'] as $feat)
+                            <span style="background:var(--c-bg,#f5f6f8);border:1px solid var(--c-border,#e3e6ea);border-radius:6px;padding:5px 12px;font-size:11.5px;font-weight:500;color:var(--c-text,#111)">{{ $feat }}</span>
                             @endforeach
                         </div>
-                        <a href="#" style="display:inline-flex;align-items:center;gap:8px;background:#1e293b;color:#f8fafc;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;opacity:.6;cursor:not-allowed">
+                        <div style="display:inline-flex;align-items:center;gap:8px;background:#1e293b;color:#f8fafc;padding:9px 20px;border-radius:8px;font-size:12.5px;font-weight:600;opacity:.55;cursor:not-allowed">
                             Disponible proximamente
-                        </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Verificar estado IMAP --}}
+        {{-- Estado IMAP --}}
         <div class="ap-section">
             <div>
-                <div class="ap-section-title">Verificar estado del correo</div>
-                <div class="ap-section-desc">Comprueba en cualquier momento si la conexion IMAP esta funcionando.</div>
+                <div class="ap-section-title">Diagnostico IMAP</div>
+                <div class="ap-section-desc">Verifica si la conexion IMAP esta activa sin esperar al siguiente cron.</div>
             </div>
             <div>
                 <div class="cron-url-row">
                     <span class="cron-url-text">{{ $appUrl }}/api/cron/imap-status</span>
                     <button class="cron-copy-btn" onclick="navigator.clipboard.writeText('{{ $appUrl }}/api/cron/imap-status').then(()=>{this.textContent='Copiado';setTimeout(()=>this.textContent='Copiar',1500)})">Copiar</button>
                 </div>
-                <p style="font-size:11.5px;color:var(--c-sub,#6b7280);margin-top:8px;line-height:1.5">
-                    Abre esta URL en tu navegador — si ves "Conexion IMAP activa" el buzon esta correctamente configurado.
+                <p style="font-size:11.5px;color:var(--c-sub,#6b7280);margin-top:8px;line-height:1.55">
+                    Abre esta URL en el navegador. Si ves <strong>"ok": true</strong> el buzon esta correctamente conectado.
                 </p>
             </div>
         </div>
