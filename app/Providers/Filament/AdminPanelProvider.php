@@ -676,22 +676,19 @@ HTML
 </script>
 <script>
 (function(){
-    var ORG = '{$orgName}';
-    var APP = 'Nexova Desk Edge';
-    var SEP = ' \u2014 ';
+    var APP_NEW = 'NicaGSM ChatBox by Nexova Desk';
     var busy = false;
 
     function fmt() {
         if (busy) return;
         var t = document.title;
-        if (!t || t.indexOf(APP) === -1) return; // Filament aún no lo añadió
-        if (ORG && t.indexOf(ORG) !== -1) return; // Ya tiene el org name
+        if (!t) return;
+        if (t.indexOf(APP_NEW) !== -1) return;
         busy = true;
-        // Filament pone: "Página - Nexova Desk Edge"
-        // Queremos:      "Página — Nexova Desk Edge — OrgName"
-        document.title = t
-            .replace(' - ' + APP, SEP + APP)  // normaliza separador
-            .replace(SEP + APP, SEP + APP + (ORG ? SEP + ORG : ''));
+        document.title = t.replace(/\s*[-—]\s*Nexova Desk Edge.*$/, ' | ' + APP_NEW);
+        if (document.title === t && !t.includes('|')) {
+            document.title = t + ' | ' + APP_NEW;
+        }
         busy = false;
     }
 
