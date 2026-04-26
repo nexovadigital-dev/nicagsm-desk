@@ -1328,33 +1328,58 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
         if (! $this->isProductQuery($lastMsg)) return null;
 
         $msgLower  = mb_strtolower($lastMsg);
+
+        // Normalizador de acentos: la comparacion sera consistente en ambos lados
+        $normStr = fn(string $s): string => strtr(mb_strtolower($s), [
+            'á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','ü'=>'u','ñ'=>'n',
+            'à'=>'a','è'=>'e','ì'=>'i','ò'=>'o','ù'=>'u',
+        ]);
+
         $stopwords = [
-            'precio', 'precios', 'costo', 'cuanto', 'cuánto', 'tienes', 'tienen',
+            'precio', 'precios', 'costo', 'cuanto', 'tienes', 'tienen',
             'venden', 'vende', 'como', 'cual', 'que', 'esta', 'hay', 'disponible',
-            'info', 'información', 'informacion', 'busco', 'necesito', 'quiero',
-            'comprar', 'saber', 'sobre', 'del', 'los', 'las', 'una', 'para',
+            'info', 'informacion', 'busco', 'necesito', 'quiero',
+            'comprar', 'saber', 'sobre', 'del', 'los', 'las', 'una', 'para', 'de', 'si',
         ];
-        $words = array_filter(
-            explode(' ', preg_replace('/[^a-záéíóúüñ0-9\s]/u', '', $msgLower)),
-            fn ($w) => mb_strlen($w) > 2 && ! in_array($w, $stopwords)
-        );
+        // Normalizar mensaje antes de extraer palabras (quitar acentos Y signos)
+        $msgNorm = $normStr($msgLower);
+        $words   = array_values(array_filter(
+            explode(' ', preg_replace('/[^a-z0-9\s]/', '', $msgNorm)),
+            fn ($w) => mb_strlen($w) > 1 && ! in_array($w, $stopwords)
+        ));
 
         if (empty($words)) return null;
 
+        // Expandir palabras concatenadas: "unlocktools" => ["unlock","tool","tools","unlocktools"]
+        $expanded = $words;
+        foreach ($words as $w) {
+            if (mb_strlen($w) >= 7) {
+                for ($c = 3; $c <= (int)(mb_strlen($w) * 0.6); $c++) {
+                    $l = mb_substr($w, 0, $c);
+                    $r = mb_substr($w, $c);
+                    if (mb_strlen($l) >= 3 && mb_strlen($r) >= 3) {
+                        $expanded[] = $l;
+                        $expanded[] = $r;
+                    }
+                }
+            }
+        }
+        $searchWords = array_unique($expanded);
+
         $matches = [];
         foreach ($products as $p) {
-            $nameLower = mb_strtolower($p['name'] ?? '');
-            $descLower = mb_strtolower($p['description'] ?? '');
-            $score = 0;
-            foreach ($words as $w) {
-                if (str_contains($nameLower, $w))     $score += 3; // nombre: mayor peso
-                if (str_contains($descLower, $w))     $score += 1; // descripcion: peso bajo
+            $nameLower = $normStr($p['name'] ?? '');
+            $descLower = $normStr($p['description'] ?? '');
+            $score     = 0;
+            foreach ($searchWords as $w) {
+                if (str_contains($nameLower, $w)) $score += 3; // nombre: mayor peso
+                if (str_contains($descLower, $w)) $score += 1; // descripcion: peso bajo
             }
-            // Buscar tambien en nombres de variantes ("3 meses", "6 meses", "12 meses")
+            // Buscar en nombres de variantes normalizados
             if (! empty($p['variants']) && is_array($p['variants'])) {
                 foreach ($p['variants'] as $v) {
-                    $varLower = mb_strtolower($v['variant'] ?? '');
-                    foreach ($words as $w) {
+                    $varLower = $normStr($v['variant'] ?? '');
+                    foreach ($searchWords as $w) {
                         if (str_contains($varLower, $w)) $score += 2; // variante: peso medio
                     }
                 }
@@ -1370,11 +1395,13 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
 
         $storeUrl = rtrim($storeCtx['store_url'] ?? '', '/');
 
-        // Demasiados resultados → redirigir a la tienda
-        if (count($matches) > 4) {
-            $reply = 'Encontré varios productos que podrían interesarte. Te recomiendo buscar directamente en nuestra tienda para ver todos los detalles y variantes disponibles.';
+        // Redirigir a la tienda solo si hay MUCHOS productos de alta relevancia
+        // (evitar redirigir cuando hay 4 matches de poca calidad)
+        $highScore = array_filter($matches, fn($m) => $m['score'] >= 6);
+        if (count($highScore) > 4 || count($matches) > 8) {
+            $reply = 'Encontré varios productos relacionados. Te recomiendo buscar en nuestra tienda para ver todos los detalles:';
             if ($storeUrl) {
-                $reply .= "\n\n[🛒 Buscar en la tienda]({$storeUrl})";
+                $reply .= "\n\n[🛒 Ver catálogo completo]({$storeUrl}/tienda)";
             }
             return $reply;
         }
