@@ -31,8 +31,8 @@ class NexovaAiService
     private const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
     private const GROQ_MODEL    = 'llama-3.3-70b-versatile';
 
-    private const MAX_TOKENS    = 600;
-    private const TEMPERATURE   = 0.7;
+    private const MAX_TOKENS    = 800;
+    private const TEMPERATURE   = 0.5;
     private const HTTP_TIMEOUT  = 45; // segundos
 
     /**
@@ -233,15 +233,18 @@ class NexovaAiService
             }
         }
 
-        // Platform keys (fallback)
+        // Platform keys — Groq keys se mezclan aleatoriamente (load balance entre múltiples keys)
         $platform = ApiSetting::query()
             ->where('is_active', true)
             ->whereIn('provider', self::PROVIDERS)
             ->orderBy('priority')
             ->get();
 
-        foreach ($platform as $p) {
-            // Avoid duplicating if org already added the same provider
+        // Separar keys Groq para mezclarlas y distribuir carga
+        $groqKeys  = $platform->where('provider', 'groq')->shuffle();
+        $otherKeys = $platform->where('provider', '!=', 'groq');
+
+        foreach ($groqKeys->merge($otherKeys) as $p) {
             if ($org?->ai_use_own_keys && $list->contains('type', $p->provider)) continue;
             $list->push(['type' => $p->provider, 'key' => $p->api_key]);
         }
@@ -510,16 +513,33 @@ class NexovaAiService
         $userMsgCount = $ticket->messages()->where('sender_type', 'user')->count();
         if ($userMsgCount > 1) return null;
 
+        $normalized = mb_strtolower(trim($lastMsg));
+        $normalized = preg_replace('/[^a-záéíóúüñ\s]/u', '', $normalized);
+        $normalized = trim($normalized);
+
+        // Si el mensaje tiene más de 6 palabras, contiene una pregunta real — no interceptar
+        $wordCount = str_word_count($normalized);
+        if ($wordCount > 6) return null;
+
+        // Si contiene palabras de intención específica, la IA debe responder
+        $intentKeywords = [
+            'pedido', 'pedidos', 'orden', 'ordenes', 'compra', 'compras',
+            'precio', 'precios', 'producto', 'productos', 'stock',
+            'envio', 'envío', 'entrega', 'pago', 'factura',
+            'cuenta', 'contraseña', 'sesion', 'sesión',
+            'ayuda', 'info', 'informacion', 'información',
+            'costo', 'disponible', 'tutorial', 'como', 'cómo',
+        ];
+        foreach ($intentKeywords as $kw) {
+            if (str_contains($normalized, $kw)) return null;
+        }
+
         $greetings = [
             'hola', 'hi', 'hello', 'hey', 'buenas', 'buenos dias', 'buenos días',
             'buenas tardes', 'buenas noches', 'good morning', 'good afternoon',
             'saludos', 'qué tal', 'que tal', 'cómo estás', 'como estas',
             'ola', 'alo', 'aló',
         ];
-
-        $normalized = mb_strtolower(trim($lastMsg));
-        $normalized = preg_replace('/[^a-záéíóúüñ\s]/u', '', $normalized);
-        $normalized = trim($normalized);
 
         $isGreeting = false;
         foreach ($greetings as $g) {
@@ -903,7 +923,8 @@ class NexovaAiService
             $systemPrompt  = "Eres {$botName}, el asistente virtual de {$orgName}.";
             $systemPrompt .= " Responde en el idioma del cliente (español o inglés). Sé amable, directo y conciso.";
             $systemPrompt .= " Tu conocimiento se limita a {$orgName}: sus productos, servicios, precios, políticas e información de la organización.";
-            $systemPrompt .= " REGLA CRÍTICA FUERA DE TEMA: Si el cliente pregunta algo completamente ajeno a {$orgName} (recetas, construcción, medicina, tutoriales genéricos, etc.), NO des ninguna información sobre ese tema. Responde únicamente con algo como: 'No tengo la capacidad de ayudarte con eso. Pero si necesitas información sobre {$orgName}, sus servicios o precios, con gusto te asisto.' y ofrece ayuda sobre la organización.";
+            $systemPrompt .= " RAZONAMIENTO: Analiza la intención completa del mensaje del cliente aunque esté mezclada con un saludo. Si pregunta por pedidos, productos, precios, páginas o cualquier información, responde directamente al tema — no solo al saludo.";
+            $systemPrompt .= " REGLA CRÍTICA FUERA DE TEMA: Si el cliente pregunta algo completamente ajeno a {$orgName} (recetas, construcción, medicina, tutoriales genéricos, etc.), NO des ninguna información sobre ese tema. Responde únicamente con: 'No tengo la capacidad de ayudarte con eso. Pero si necesitas información sobre {$orgName}, con gusto te asisto.' y ofrece ayuda sobre la organización.";
             $systemPrompt .= " Nunca inventes datos. Si no tienes la información exacta, dilo y ofrece conectar con un agente.";
             if ($orgWeb) {
                 $systemPrompt .= " Sitio web oficial: {$orgWeb}.";
