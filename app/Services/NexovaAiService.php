@@ -1477,8 +1477,9 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
     // =========================================================================
 
     /**
-     * Si el cliente pregunta por una página informativa (envíos, políticas, etc.),
-     * busca en storeContext.pages por título y excerpt y retorna un botón de enlace.
+     * Busca en storeContext.pages para responder preguntas informativas.
+     * Sin gate de isPageQuery — busca contra ALL messages dinamicamente.
+     * Incluye busqueda por titulo, snippet de URL (slug) y excerpt.
      */
     private function tryPageQueryReply(Ticket $ticket, array $storeCtx): ?string
     {
@@ -1491,29 +1492,39 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
             ->value('content') ?? '';
 
         if (strlen($lastMsg) < 3) return null;
-        if (! $this->isPageQuery($lastMsg)) return null;
 
-        $msgLower  = mb_strtolower($lastMsg);
+        // Normalizador de acentos — igual que tryProductQueryReply
+        $normStr = fn(string $s): string => strtr(mb_strtolower($s), [
+            'á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','ü'=>'u','ñ'=>'n',
+            'à'=>'a','è'=>'e','ì'=>'i','ò'=>'o','ù'=>'u',
+        ]);
+
+        $msgNorm   = $normStr($lastMsg);
         $stopwords = [
-            'como', 'donde', 'que', 'hay', 'tienen', 'tienes', 'sus', 'ver',
-            'quiero', 'puedo', 'necesito', 'saber', 'sobre', 'cual', 'cuales',
-            'informacion', 'información', 'pagina', 'página', 'la', 'el', 'los', 'las',
+            'como','donde','que','hay','tienen','tienes','sus','ver',
+            'quiero','puedo','necesito','saber','sobre','cual','cuales',
+            'informacion','pagina','la','el','los','las','de','se','con',
+            'hacer','para','una','sobre','del',
         ];
-        $words = array_filter(
-            explode(' ', preg_replace('/[^a-záéíóúüñ\s]/u', '', $msgLower)),
+        $words = array_values(array_filter(
+            explode(' ', preg_replace('/[^a-z0-9\s]/', '', $msgNorm)),
             fn ($w) => mb_strlen($w) > 2 && ! in_array($w, $stopwords)
-        );
+        ));
 
         if (empty($words)) return null;
 
         $matches = [];
         foreach ($pages as $pg) {
-            $titleLow   = mb_strtolower($pg['title'] ?? '');
-            $excerptLow = mb_strtolower($pg['excerpt'] ?? '');
+            $titleLow   = $normStr($pg['title'] ?? '');
+            $excerptLow = $normStr($pg['excerpt'] ?? '');
+            // Convertir slug de URL a palabras: "pagar-con-binance" -> "pagar con binance"
+            $urlSlug    = $normStr(str_replace(['-', '_', '/'], ' ',
+                basename(rtrim($pg['url'] ?? '/', '/'))));
             $score = 0;
             foreach ($words as $w) {
-                if (str_contains($titleLow, $w))   $score += 3;
-                if (str_contains($excerptLow, $w)) $score += 1;
+                if (str_contains($titleLow, $w))   $score += 4; // titulo: maxima prioridad
+                if (str_contains($urlSlug, $w))    $score += 3; // slug URL: alta prioridad
+                if (str_contains($excerptLow, $w)) $score += 1; // excerpt: baja
             }
             if ($score > 0) {
                 $matches[] = ['page' => $pg, 'score' => $score];
@@ -1523,31 +1534,32 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
         if (empty($matches)) return null;
 
         usort($matches, fn ($a, $b) => $b['score'] <=> $a['score']);
-        $top = array_slice($matches, 0, 2);
 
-        if (count($top) === 1) {
-            $pg    = $top[0]['page'];
-            $reply = '';
-            if (! empty($pg['excerpt'])) {
-                $reply .= mb_substr($pg['excerpt'], 0, 200) . "\n\n";
-            }
-            if (! empty($pg['url'])) {
-                $reply .= "[📄 {$pg['title']}]({$pg['url']})";
-            }
-            return rtrim($reply) ?: null;
-        }
+        $top   = array_slice($matches, 0, 3);
+        $count = count($top);
+        $reply = ($count === 1)
+            ? 'Encontré información relacionada:'
+            : 'Aquí algunas páginas que pueden ayudarte:';
+        $reply .= "\n\n";
 
-        $reply = "Encontré estas páginas relacionadas:\n\n";
         foreach ($top as $m) {
             $pg     = $m['page'];
-            $reply .= "• [📄 {$pg['title']}]({$pg['url']})";
-            if (! empty($pg['excerpt'])) {
-                $reply .= "\n  " . mb_substr($pg['excerpt'], 0, 120);
+            $title  = $pg['title'] ?? 'Ver página';
+            $url    = $pg['url']   ?? '#';
+            $reply .= "• [📄 {$title}]({$url})";
+            // Mostrar excerpt solo si es texto real (no shortcode ni URL de YouTube)
+            $ex = $pg['excerpt'] ?? '';
+            if (strlen($ex) > 10
+                && ! str_starts_with($ex, 'http')
+                && ! str_starts_with($ex, 'youtube')
+                && ! str_starts_with($ex, '[')) {
+                $reply .= "\n  " . mb_substr($ex, 0, 120);
             }
             $reply .= "\n\n";
         }
         return rtrim($reply);
     }
+
 
     /**
      * Detecta si el mensaje es una consulta sobre páginas informativas del sitio.
