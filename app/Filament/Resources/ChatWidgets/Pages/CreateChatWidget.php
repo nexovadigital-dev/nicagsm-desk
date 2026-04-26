@@ -6,6 +6,7 @@ namespace App\Filament\Resources\ChatWidgets\Pages;
 
 use App\Filament\Resources\ChatWidgetResource;
 use App\Models\ChatWidget;
+use App\Models\Department;
 use Filament\Resources\Pages\Page;
 use Filament\Support\Enums\Width;
 use Illuminate\Contracts\Support\Htmlable;
@@ -88,6 +89,18 @@ class CreateChatWidget extends Page
     public function mount(): void
     {
         $this->workingHours = (new ChatWidget)->defaultWorkingHours();
+    }
+
+    // ── Departments (computed property — requerida por blade compartido) ──────
+    public function getAvailableDepartmentsProperty()
+    {
+        $orgId = auth()->user()?->organization_id;
+        if (! $orgId) return collect();
+        return Department::where('organization_id', $orgId)
+            ->where('is_active', true)
+            ->orderBy('sort')
+            ->orderBy('name')
+            ->get();
     }
 
     public function save(): void
