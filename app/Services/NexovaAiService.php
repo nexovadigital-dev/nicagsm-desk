@@ -1173,10 +1173,12 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
                 $status = $found['status'] ?? '?';
                 $total  = $found['total']  ?? '';
                 $date   = $found['date']   ?? '';
-                $items  = ! empty($found['items']) && is_array($found['items'])
-                    ? implode(', ', array_slice($found['items'], 0, 3))
-                    : '';
-                $reply  = "**Pedido #{$num}**\n";
+                $itemNames = array_map(
+                    fn($i) => is_array($i) ? ($i['name'] ?? '') : (string) $i,
+                    array_slice($found['items'] ?? [], 0, 3)
+                );
+                $items  = implode(', ', array_filter($itemNames));
+                $reply  = "**Pedido {$num}**\n";
                 $reply .= "📦 Estado: **{$status}**\n";
                 if ($total) $reply .= "💰 Total: {$total}\n";
                 if ($date)  $reply .= "📅 Fecha: {$date}\n";
@@ -1197,9 +1199,11 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
             $status = $o['status'] ?? '?';
             $total  = $o['total']  ?? '';
             $date   = $o['date']   ?? '';
-            $items  = ! empty($o['items']) && is_array($o['items'])
-                ? implode(', ', array_slice($o['items'], 0, 2))
-                : '';
+            $rawItems  = ! empty($o['items']) && is_array($o['items'])
+                ? array_slice($o['items'], 0, 2)
+                : [];
+            $itemNames = array_map(fn($i) => is_array($i) ? ($i['name'] ?? '') : (string) $i, $rawItems);
+            $items     = implode(', ', array_filter($itemNames));
             $reply .= "**Pedido #{$num}** — {$status}";
             if ($total) $reply .= " — {$total}";
             if ($date)  $reply .= " — {$date}";
