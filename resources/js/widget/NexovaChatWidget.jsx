@@ -1485,10 +1485,21 @@ function OrdersOtpScreen({ accentColor, onBack, onVerified }) {
 // ---------------------------------------------------------------------------
 // Home Screen (default_screen = 'home')
 // ---------------------------------------------------------------------------
-function HomeScreen({ cfg, accentColor, botName, onStartChat, contactName, isReturning, hasSession, onContinue, onOrdersOtp, showBranding }) {
+function HomeScreen({ cfg, accentColor, botName, onStartChat, contactName, isReturning, hasSession, onContinue, onOrdersOtp, showBranding, onSelect, currentSessionId }) {
     const initial = (botName || 'N')[0].toUpperCase();
     const faqs    = cfg?.faq_enabled && Array.isArray(cfg?.faq_items) ? cfg.faq_items : [];
     const socials = Array.isArray(cfg?.social_channels) ? cfg.social_channels : [];
+    const [convs, setConvs] = useState(null);
+    useEffect(() => {
+        const ids = storedSessions().map(s => s.id);
+        if (!ids.length) { setConvs([]); return; }
+        fetch(`${API_BASE}/api/chat/conversations/bulk`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ session_ids: ids }),
+        }).then(r => r.json()).then(d => setConvs(d.conversations || [])).catch(() => setConvs([]));
+    }, []);
+    const statusColor = s => s === 'closed' ? '#9ca3af' : s === 'human' ? '#f59e0b' : '#10b981';
 
     // Greeting logic
     const firstName   = contactName ? contactName.split(' ')[0] : null;
@@ -1514,35 +1525,54 @@ function HomeScreen({ cfg, accentColor, botName, onStartChat, contactName, isRet
 
             <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
 
-                {/* Continuar conversación activa */}
-                {hasSession && (
-                    <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10,
-                        padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#15803d' }}>Conversación activa</p>
-                            <p style={{ margin: '2px 0 0', fontSize: 12, color: '#166534', opacity: .8 }}>
-                                Tienes un chat en curso
-                            </p>
-                        </div>
-                        <button onClick={onContinue}
-                            style={{ background: accentColor, color: '#fff', border: 'none', borderRadius: 7,
-                                padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                                fontFamily: 'inherit', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                            Continuar →
-                        </button>
+                {/* Historial de conversaciones */}
+                {convs && convs.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, color: '#9ca3af',
+                            textTransform: 'uppercase', letterSpacing: '.06em' }}>Conversaciones recientes</p>
+                        {convs.slice(0, 5).map(c => (
+                            <button key={c.session_id}
+                                onClick={() => onSelect ? onSelect(c.session_id) : onContinue()}
+                                style={{ background: c.session_id === currentSessionId ? accentColor + '12' : '#fff',
+                                    border: `1px solid ${c.session_id === currentSessionId ? accentColor + '40' : '#e5e7eb'}`,
+                                    borderRadius: 9, padding: '9px 12px', cursor: 'pointer',
+                                    fontFamily: 'inherit', textAlign: 'left', width: '100%',
+                                    display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <span style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+                                    background: statusColor(c.status) }} />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#1f2937',
+                                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {c.conversation_name || 'Conversación'}
+                                        {c.session_id === currentSessionId && (
+                                            <span style={{ marginLeft: 5, fontSize: 10, color: accentColor, fontWeight: 700 }}>· actual</span>
+                                        )}
+                                    </p>
+                                    {c.last_message && (
+                                        <p style={{ margin: '1px 0 0', fontSize: 11, color: '#6b7280',
+                                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {c.last_message}
+                                        </p>
+                                    )}
+                                </div>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2.5" width="12" height="12" style={{ flexShrink: 0 }}>
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                            </button>
+                        ))}
                     </div>
                 )}
 
-                {/* Start new chat */}
+                {/* Nueva conversación */}
                 <button onClick={() => onStartChat(null)}
-                    style={{ background: hasSession ? 'transparent' : accentColor,
-                        color: hasSession ? accentColor : '#fff',
-                        border: hasSession ? `1px solid ${accentColor}` : 'none',
+                    style={{ background: convs && convs.length > 0 ? 'transparent' : accentColor,
+                        color: convs && convs.length > 0 ? accentColor : '#fff',
+                        border: convs && convs.length > 0 ? `1px solid ${accentColor}` : 'none',
                         borderRadius: 8, padding: '10px 16px', fontSize: 13, fontWeight: 600,
                         cursor: 'pointer', fontFamily: 'inherit', width: '100%', textAlign: 'center' }}
                     onMouseEnter={e => e.currentTarget.style.opacity = '.85'}
                     onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
-                    {hasSession ? 'Nueva conversación' : 'Iniciar conversación'}
+                    {convs && convs.length > 0 ? 'Nueva conversación' : 'Iniciar conversación'}
                 </button>
 
 
@@ -2899,14 +2929,14 @@ export default function NexovaChatWidget() {
                     <div style={{ background: accentColor, padding: '14px 16px',
                         display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, position: 'relative' }}>
 
-                        {/* Botón historial de conversaciones */}
+                        {/* Botón volver al inicio */}
                         {screen === 'chat' && (
-                            <button onClick={() => setScreen('conversations')}
-                                title="Ver conversaciones"
+                            <button onClick={() => setScreen('home')}
+                                title="Volver al inicio"
                                 style={{ background: 'rgba(255,255,255,.15)', border: 'none',
                                     borderRadius: 7, color: '#fff', cursor: 'pointer', padding: '4px 6px',
                                     display: 'flex', alignItems: 'center', marginRight: -4 }}>
-                                <IconHistory />
+                                <IconArrowLeft />
                             </button>
                         )}
 
@@ -3082,7 +3112,9 @@ export default function NexovaChatWidget() {
                             hasSession={!!sessionId}
                             onContinue={() => setScreen('chat')}
                             showBranding={showBranding}
-                            onOrdersOtp={WP_CONFIG?.otpEnabled ? () => setScreen('orders_otp') : null} />
+                            onOrdersOtp={WP_CONFIG?.otpEnabled ? () => setScreen('orders_otp') : null}
+                            onSelect={sid => { setSessionId(sid); setScreen('chat'); }}
+                            currentSessionId={sessionId} />
                     )}
 
                     {/* ── Pantalla: Pedidos con OTP ── */}
