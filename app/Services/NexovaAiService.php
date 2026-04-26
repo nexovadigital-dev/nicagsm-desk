@@ -1389,7 +1389,49 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
             }
         }
 
-        if (empty($matches)) return null;
+        // Fallback: si no hay matches en top-50, buscar en producto_index (todos los prod)
+        if (empty($matches)) {
+            $productIndex = $storeCtx['product_index'] ?? [];
+            if (! empty($productIndex)) {
+                $normStr2 = fn(string $s): string => strtr(mb_strtolower($s), [
+                    'á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','ü'=>'u','ñ'=>'n',
+                    'à'=>'a','è'=>'e','ì'=>'i','ò'=>'o','ù'=>'u',
+                ]);
+                $indexMatches = [];
+                foreach ($productIndex as $ip) {
+                    $nameLow = $normStr2($ip['name'] ?? '');
+                    $skuLow  = $normStr2($ip['sku'] ?? '');
+                    $score   = 0;
+                    foreach ($searchWords as $w) {
+                        if (str_contains($nameLow, $w)) $score += 3;
+                        if ($skuLow && str_contains($skuLow, $w)) $score += 2;
+                    }
+                    if ($score > 0) {
+                        $indexMatches[] = ['name' => $ip['name'], 'url' => $ip['url'], 'score' => $score];
+                    }
+                }
+                if (! empty($indexMatches)) {
+                    usort($indexMatches, fn($a, $b) => $b['score'] <=> $a['score']);
+                    $topIdx = array_slice($indexMatches, 0, 3);
+                    $storeUrl2 = rtrim($storeCtx['store_url'] ?? '', '/');
+                    if (count($topIdx) === 1) {
+                        $ip    = $topIdx[0];
+                        $reply = "Encontré el producto **{$ip['name']}**. Puedes ver todos los detalles y precios aquí:\n";
+                        $reply .= "[🛒 Ver producto / Ordenar]({$ip['url']})";
+                    } else {
+                        $reply = "Encontré estos productos relacionados:\n\n";
+                        foreach ($topIdx as $ip) {
+                            $reply .= "• **{$ip['name']}**  [🛒 Ver / Ordenar]({$ip['url']})\n";
+                        }
+                        if ($storeUrl2) {
+                            $reply .= "\n[🛒 Ver catálogo completo]({$storeUrl2}/tienda)";
+                        }
+                    }
+                    return $reply;
+                }
+            }
+            return null;
+        }
 
         usort($matches, fn ($a, $b) => $b['score'] <=> $a['score']);
 
