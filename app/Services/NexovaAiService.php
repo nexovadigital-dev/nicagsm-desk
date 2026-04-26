@@ -128,6 +128,21 @@ class NexovaAiService
             return $orderReply;
         }
 
+        // ── Atajo de productos WooCommerce (cero tokens de IA) ────────────────
+        // Busca en storeContext.products directamente para preguntas de precio/producto.
+        // Evita depender de Groq para consultas simples de catálogo.
+        $storeCtxRaw  = is_array($ticket->store_context) ? $ticket->store_context : [];
+        $wooEnabled   = $widget ? (bool) ($widget->woo_integration_enabled ?? false) : false;
+        $productReply = ($wooEnabled && ! empty($storeCtxRaw['products']))
+            ? $this->tryProductQueryReply($ticket, $storeCtxRaw)
+            : null;
+        if ($productReply !== null) {
+            $org?->incrementBotMessageCount();
+            Log::debug("[NexovaBot] Respondido con template de producto — ticket #{$ticket->id}");
+            return $productReply;
+        }
+
+
         // ── Intentar responder desde la KB ────────────────────────────────────
         // Solo salta KB directa si el ticket trae store_context real (WooCommerce page data),
         // en ese caso la IA con el catálogo responde mejor sobre productos/precios.
@@ -1273,6 +1288,122 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
             '/pedidos?.*cuenta/',
             '/(?:orden|pedido|order)\s*#?\s*\d{3,}/',
             '/#\d{3,}/',
+        ];
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $t)) return true;
+        }
+        return false;
+    }
+    // =========================================================================
+    // Product Catalog — respuesta directa desde storeContext sin llamar a la IA
+    // =========================================================================
+
+    /**
+     * Si el cliente pregunta por un producto/precio y el ticket tiene storeContext
+     * con productos del catálogo WooCommerce, busca y responde directamente.
+     * Retorna null si no aplica, dejando que la IA lo maneje.
+     */
+    private function tryProductQueryReply(Ticket $ticket, array $storeCtx): ?string
+    {
+        $products = $storeCtx['products'] ?? [];
+        if (empty($products)) return null;
+
+        $lastMsg = $ticket->messages()
+            ->where('sender_type', 'user')
+            ->orderByDesc('created_at')
+            ->value('content') ?? '';
+
+        if (strlen($lastMsg) < 2) return null;
+        if (! $this->isProductQuery($lastMsg)) return null;
+
+        $msgLower  = mb_strtolower($lastMsg);
+        $stopwords = [
+            'precio', 'precios', 'costo', 'cuanto', 'cuánto', 'tienes', 'tienen',
+            'venden', 'vende', 'como', 'cual', 'que', 'esta', 'hay', 'disponible',
+            'info', 'información', 'informacion', 'busco', 'necesito', 'quiero',
+            'comprar', 'saber', 'sobre', 'del', 'los', 'las', 'una', 'para',
+        ];
+        $words = array_filter(
+            explode(' ', preg_replace('/[^a-záéíóúüñ0-9\s]/u', '', $msgLower)),
+            fn ($w) => mb_strlen($w) > 2 && ! in_array($w, $stopwords)
+        );
+
+        if (empty($words)) return null;
+
+        $matches = [];
+        foreach ($products as $p) {
+            $nameLower = mb_strtolower($p['name'] ?? '');
+            $descLower = mb_strtolower($p['description'] ?? '');
+            $score = 0;
+            foreach ($words as $w) {
+                if (str_contains($nameLower, $w))      $score += 3; // nombre: mayor peso
+                elseif (str_contains($descLower, $w))  $score += 1;
+            }
+            if ($score > 0) {
+                $matches[] = ['product' => $p, 'score' => $score];
+            }
+        }
+
+        if (empty($matches)) return null;
+
+        usort($matches, fn ($a, $b) => $b['score'] <=> $a['score']);
+
+        $storeUrl = rtrim($storeCtx['store_url'] ?? '', '/');
+
+        // Demasiados resultados → redirigir a la tienda
+        if (count($matches) > 4) {
+            $reply = 'Encontré varios productos que podrían interesarte. Te recomiendo buscar directamente en nuestra tienda para ver todos los detalles y variantes disponibles.';
+            if ($storeUrl) {
+                $reply .= "\n\n[🛒 Buscar en la tienda]({$storeUrl})";
+            }
+            return $reply;
+        }
+
+        $top = array_slice($matches, 0, 3);
+
+        // Un solo resultado — mostrarlo con detalle
+        if (count($top) === 1) {
+            $p     = $top[0]['product'];
+            $reply = '**' . ($p['name'] ?? 'Producto') . "**\n";
+            if (! empty($p['price']))       $reply .= "💰 Precio: **{$p['price']}**\n";
+            if (! empty($p['stock']))       $reply .= "📦 Stock: {$p['stock']}\n";
+            if (! empty($p['description'])) $reply .= "\n" . mb_substr($p['description'], 0, 160) . "\n";
+            if (! empty($p['url']))         $reply .= "\n[🛒 Ver producto / Ordenar]({$p['url']})";
+            return rtrim($reply);
+        }
+
+        // Varios resultados — listado breve
+        $reply = "Encontré estos productos relacionados:\n\n";
+        foreach ($top as $m) {
+            $p      = $m['product'];
+            $reply .= '• **' . ($p['name'] ?? '') . '**';
+            if (! empty($p['price'])) $reply .= " — {$p['price']}";
+            if (! empty($p['url']))   $reply .= "\n  [Ver producto]({$p['url']})";
+            $reply .= "\n\n";
+        }
+        if ($storeUrl) {
+            $reply .= "[🛒 Ver toda la tienda]({$storeUrl})";
+        }
+        return rtrim($reply);
+    }
+
+    /**
+     * Detecta si el mensaje es una consulta sobre productos, precios o disponibilidad.
+     */
+    private function isProductQuery(string $msg): bool
+    {
+        $t = mb_strtolower(trim($msg));
+        $patterns = [
+            '/precio\s+de\s+/u',
+            '/precio\s+del?\s+/u',
+            '/cu[aá]nto\s+(cuesta|vale|sale|cobran)/u',
+            '/tiene[ns]?\s+.{3,}/u',
+            '/vende[ns]?\s+.{3,}/u',
+            '/busco\s+.{3,}/u',
+            '/quiero\s+(comprar|ordenar|pedir)\s+/u',
+            '/info\s+(de|del?|sobre)\s+/u',
+            '/informaci[oó]n\s+(de|del?|sobre)\s+/u',
+            '/disponib(le|ilidad)/u',
         ];
         foreach ($patterns as $pattern) {
             if (preg_match($pattern, $t)) return true;
