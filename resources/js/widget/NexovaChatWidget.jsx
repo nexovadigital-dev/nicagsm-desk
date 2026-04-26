@@ -2231,8 +2231,17 @@ export default function NexovaChatWidget() {
             payload.store_context = STORE_CONTEXT;
         }
 
-        // Attach customer order history (last 5 orders, injected by WP plugin)
-        if (WOO_ORDERS?.length) {
+        // Fetch real order history via WP AJAX when user is logged in
+        if (WOO_CUSTOMER?.id && WP_CONFIG?.ajaxUrl && WP_CONFIG?.ordersEnabled) {
+            try {
+                const body = new URLSearchParams({ action: 'nexova_desk_orders', nonce: WP_CONFIG.nonce });
+                const r = await fetch(WP_CONFIG.ajaxUrl, { method: 'POST', body });
+                const d = await r.json();
+                if (d.success && Array.isArray(d.data?.orders) && d.data.orders.length) {
+                    payload.woo_orders = d.data.orders;
+                }
+            } catch { /* silent — no orders if AJAX fails */ }
+        } else if (WOO_ORDERS?.length) {
             payload.woo_orders = WOO_ORDERS;
         }
 

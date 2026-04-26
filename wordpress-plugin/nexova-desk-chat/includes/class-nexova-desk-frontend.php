@@ -233,8 +233,8 @@ JS;
             wp_send_json_error( [ 'message' => 'No autenticado' ], 401 );
         }
 
-        if ( ! ( $this->cfg['orders_enabled'] ?? false ) ) {
-            wp_send_json_error( [ 'message' => 'Consulta de pedidos deshabilitada' ], 403 );
+        if ( ! function_exists( 'WC' ) ) {
+            wp_send_json_error( [ 'message' => 'WooCommerce no activo' ], 403 );
         }
 
         $api    = new Nexova_Desk_API();
