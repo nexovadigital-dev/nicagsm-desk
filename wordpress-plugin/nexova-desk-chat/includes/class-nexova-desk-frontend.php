@@ -160,6 +160,21 @@ JS;
             wp_reset_postdata();
         }
 
+        // Páginas del sitio publicadas (tutoriales, políticas, cuenta, etc.) — máx 30
+        $pages = get_pages( [
+            'post_status'    => 'publish',
+            'number'         => 30,
+            'sort_column'    => 'menu_order',
+            'sort_order'     => 'ASC',
+        ] );
+        if ( ! empty( $pages ) ) {
+            $ctx['pages'] = array_map( fn( $p ) => [
+                'title' => $p->post_title,
+                'url'   => get_permalink( $p->ID ),
+                'slug'  => $p->post_name,
+            ], $pages );
+        }
+
         if ( empty( $ctx ) ) return '';
 
         $json = wp_json_encode( $ctx, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );

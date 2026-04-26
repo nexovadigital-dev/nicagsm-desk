@@ -437,7 +437,7 @@ class NexovaAiService
             }
         }
 
-        // Páginas del sitio (T&C, envíos, cuenta, etc.)
+        // Páginas del sitio (T&C, envíos, cuenta, tutoriales, etc.)
         if (! empty($ctx['pages']) && is_array($ctx['pages'])) {
             $lines[] = '';
             $lines[] = '--- PÁGINAS DEL SITIO ---';
@@ -447,36 +447,43 @@ class NexovaAiService
                 if (! empty($pg['url'])) $pgLine .= " → {$pg['url']}";
                 $lines[] = $pgLine;
             }
-            $lines[] = 'Cuando el cliente pregunte por políticas, envíos, devoluciones, términos o información del sitio, usa los enlaces de arriba y ofrécelos en formato Markdown.';
+            $lines[] = 'REGLA DE PÁGINAS: Si el cliente pregunta sobre políticas, envíos, devoluciones, tutoriales, cómo hacer algo, o cualquier procedimiento del sitio: busca la página más relevante de la lista y SIEMPRE incluye su enlace como botón Markdown [Título de la página](url). Si hay varias páginas relacionadas, incluye máximo 2 botones. Si no encuentras coincidencia, indica que no tienes esa información y ofrece contacto con un agente.';
         }
 
         $lines[] = '';
         if (! empty($ctx['customer_orders']) && is_array($ctx['customer_orders'])) {
             $lines[] = '--- PEDIDOS RECIENTES DE ESTE CLIENTE ---';
             foreach ($ctx['customer_orders'] as $order) {
-                $num    = $order['number'] ?? $order['id'] ?? '?';
-                $status = $order['status'] ?? '?';
-                $total  = $order['total']  ?? '';
-                $date   = $order['date']   ?? '';
-                $items  = ! empty($order['items']) && is_array($order['items'])
-                    ? implode(', ', $order['items'])
-                    : '';
-                $line   = "• Pedido #{$num} — Estado: {$status}";
-                if ($total) $line .= " — Total: {$total}";
-                if ($date)  $line .= " — Fecha: {$date}";
-                if ($items) $line .= "\n  Productos: {$items}";
+                $num     = $order['number'] ?? $order['id'] ?? '?';
+                $status  = $order['status'] ?? '?';
+                $total   = $order['total']  ?? '';
+                $date    = $order['date']   ?? '';
+                $payment = $order['payment_method'] ?? '';
+                $note    = $order['customer_note'] ?? '';
+                $rawOrderItems = ! empty($order['items']) && is_array($order['items'])
+                    ? array_slice($order['items'], 0, 3)
+                    : [];
+                $orderItemNames = array_map(
+                    fn($i) => is_array($i) ? ($i['name'] ?? '') : (string) $i,
+                    $rawOrderItems
+                );
+                $items = implode(', ', array_filter($orderItemNames));
+                $line  = "• Pedido {$num} — Estado: {$status}";
+                if ($total)   $line .= " — Total: {$total}";
+                if ($date)    $line .= " — Fecha: {$date}";
+                if ($payment) $line .= " — Pago: {$payment}";
+                if ($items)   $line .= "\n  Productos: {$items}";
+                if ($note)    $line .= "\n  Nota del cliente: {$note}";
                 $lines[] = $line;
             }
             $lines[] = 'Puedes responder preguntas sobre el estado de estos pedidos usando la información de arriba.';
             $lines[] = 'Si el cliente pregunta por un pedido que no aparece en la lista, indícale que puede consultar su historial completo en la tienda.';
         }
 
-        $lines[] = 'Cuando el cliente pregunte por productos, precios o disponibilidad, usa la información de arriba.';
-        $lines[] = 'Si el cliente pregunta por un producto que no aparece en el catálogo, dile que puede verlo en la tienda o hablar con un agente.';
-        $lines[] = 'MUY IMPORTANTE SOBRE PRECIOS: Si el precio es 0.00, NO digas que es gratis. Significa que es un servicio variable (ej: depende de la duración o modelo). Dile al cliente que el precio depende de la variación elegida y provéele obligatoriamente el enlace con formato Markdown [Ver Opciones](url).';
-
         $storeUrl = ! empty($ctx['shop_url']) ? $ctx['shop_url'] : (! empty($ctx['store_url']) ? $ctx['store_url'] : 'la página web');
-        $lines[] = "REGLA EXTREMA DE SATURACIÓN: Si hay muchos productos similares o la lista es muy redundante, NO enumeres todos. Menciona solo 2 o 3 opciones destacadas e indícale al cliente que para encontrar el correcto debe ir a la tienda, usando SIEMPRE el formato Markdown: [Visitar Tienda]({$storeUrl}).";
+
+        $lines[] = 'REGLA DE PRODUCTOS: Si el cliente menciona un producto específico o pregunta por precio/disponibilidad: (1) Muestra nombre, precio y stock. (2) Si tiene variantes, muéstralas con su precio individual. (3) SIEMPRE incluye el botón [Ver Producto](url) con el enlace directo del producto. (4) Si hay precio 0.00, NO digas gratis — es precio variable, indica que depende de la variante y provee el enlace obligatoriamente.';
+        $lines[] = "REGLA DE SATURACIÓN: Si hay muchos productos similares, menciona solo 2-3 opciones destacadas y añade [Ver todos en la tienda]({$storeUrl}). No enumeres el catálogo completo.";
 
         return implode("\n", $lines);
     }
@@ -883,7 +890,7 @@ class NexovaAiService
         }
 
         // Instrucción de formato que aplica SIEMPRE (custom prompt o no)
-        $formatRule = " IMPORTANTE: Responde SIEMPRE en texto plano sin formato Markdown. No uses **, *, #, __, backticks ni ningún símbolo de formato. No uses emojis salvo que el usuario los use primero. Las listas deben ir con guiones simples o numeradas con punto.";
+        $formatRule = " FORMATO: Puedes usar **negrita** para resaltar datos importantes (nombres, precios, estados) y *cursiva* para énfasis. NO uses # para títulos ni backticks para código. Para enlaces SIEMPRE usa el formato Markdown exacto [texto del botón](url) — esto crea botones interactivos para el usuario. No uses emojis salvo que el usuario los use primero. Las listas deben ir con guiones o numeradas.";
 
         if ($customPrompt !== '') {
             // El admin configuró un prompt personalizado — usarlo como base
@@ -999,11 +1006,7 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
      */
     private function stripMarkdown(string $text): string
     {
-        // Negritas e itálicas: **texto**, *texto*, __texto__, _texto_
-        $text = preg_replace('/\*{1,3}(.+?)\*{1,3}/u', '$1', $text);
-        $text = preg_replace('/_{1,3}(.+?)_{1,3}/u', '$1', $text);
-
-        // Encabezados: ## Texto → Texto
+        // Encabezados: ## Texto → Texto (negritas/cursivas se MANTIENEN — el widget las renderiza)
         $text = preg_replace('/^#{1,6}\s+/mu', '', $text);
 
         // Código inline: `texto` → texto
@@ -1012,12 +1015,11 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
         // Bloques de código: ```...``` → solo el contenido
         $text = preg_replace('/```[\w]*\n?(.*?)```/su', '$1', $text);
 
-        // Links: [texto](url) → texto
-        // ATENCION MANTENER ENLACES! NO QUITAR, se usan para generar botones (Telegram inline / Web ui)
+        // Links: [texto](url) — MANTENER, se usan para generar botones
         // $text = preg_replace('/\[([^\]]+)\]\([^\)]+\)/', '$1', $text);
 
-        // Viñetas markdown: - item o * item al inicio de línea
-        $text = preg_replace('/^[\*\-]\s+/mu', '• ', $text);
+        // Viñetas markdown: - item o * item al inicio de línea (solo si no es negrita)
+        $text = preg_replace('/^- /mu', '• ', $text);
 
         // Líneas horizontales: ---
         $text = preg_replace('/^---+$/mu', '', $text);
@@ -1163,27 +1165,41 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
         if ($specificNum !== null) {
             $found = null;
             foreach ($orders as $o) {
-                if ((string) ($o['number'] ?? $o['id'] ?? '') === $specificNum) {
+                $oNum = ltrim((string) ($o['number'] ?? $o['id'] ?? ''), '#');
+                if ($oNum === $specificNum) {
                     $found = $o;
                     break;
                 }
             }
             if ($found) {
-                $num    = $found['number'] ?? $found['id'] ?? '?';
-                $status = $found['status'] ?? '?';
-                $total  = $found['total']  ?? '';
-                $date   = $found['date']   ?? '';
-                $itemNames = array_map(
-                    fn($i) => is_array($i) ? ($i['name'] ?? '') : (string) $i,
-                    array_slice($found['items'] ?? [], 0, 3)
-                );
-                $items  = implode(', ', array_filter($itemNames));
+                $num     = $found['number'] ?? $found['id'] ?? '?';
+                $status  = $found['status'] ?? '?';
+                $total   = $found['total']  ?? '';
+                $date    = $found['date']   ?? '';
+                $payment = $found['payment_method'] ?? '';
+                $note    = $found['customer_note']  ?? '';
+                $itemLines = [];
+                foreach (array_slice($found['items'] ?? [], 0, 5) as $i) {
+                    if (is_array($i)) {
+                        $iLine = '• ' . ($i['name'] ?? '');
+                        if (! empty($i['qty']))      $iLine .= ' × ' . $i['qty'];
+                        if (! empty($i['subtotal'])) $iLine .= ' — ' . $i['subtotal'];
+                        if (! empty($i['variant']))  $iLine .= ' *(' . $i['variant'] . ')*';
+                        $itemLines[] = $iLine;
+                    } else {
+                        $itemLines[] = '• ' . (string) $i;
+                    }
+                }
                 $reply  = "**Pedido {$num}**\n";
                 $reply .= "📦 Estado: **{$status}**\n";
-                if ($total) $reply .= "💰 Total: {$total}\n";
-                if ($date)  $reply .= "📅 Fecha: {$date}\n";
-                if ($items) $reply .= "🛍️ Productos: {$items}\n";
-                if ($ordersUrl) $reply .= "\n[Ver todos mis pedidos]({$ordersUrl})";
+                if ($total)   $reply .= "💰 Total: **{$total}**\n";
+                if ($date)    $reply .= "📅 Fecha: {$date}\n";
+                if ($payment) $reply .= "💳 Método de pago: {$payment}\n";
+                if ($itemLines) {
+                    $reply .= "\n🛍️ *Productos:*\n" . implode("\n", $itemLines) . "\n";
+                }
+                if ($note) $reply .= "\n📝 *Nota:* {$note}\n";
+                if ($ordersUrl) $reply .= "\n[📋 Ver todos mis pedidos]({$ordersUrl})";
                 return $reply;
             }
             $reply = "No encontré el pedido **#{$specificNum}** en tu cuenta.";
@@ -1195,19 +1211,24 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
         $top   = array_slice($orders, 0, 3);
         $reply = "Aquí están tus pedidos más recientes:\n\n";
         foreach ($top as $o) {
-            $num    = $o['number'] ?? $o['id'] ?? '?';
-            $status = $o['status'] ?? '?';
-            $total  = $o['total']  ?? '';
-            $date   = $o['date']   ?? '';
+            $num     = $o['number'] ?? $o['id'] ?? '?';
+            $status  = $o['status'] ?? '?';
+            $total   = $o['total']  ?? '';
+            $date    = $o['date']   ?? '';
+            $payment = $o['payment_method'] ?? '';
+            $note    = $o['customer_note']  ?? '';
             $rawItems  = ! empty($o['items']) && is_array($o['items'])
                 ? array_slice($o['items'], 0, 2)
                 : [];
             $itemNames = array_map(fn($i) => is_array($i) ? ($i['name'] ?? '') : (string) $i, $rawItems);
             $items     = implode(', ', array_filter($itemNames));
-            $reply .= "**Pedido #{$num}** — {$status}";
-            if ($total) $reply .= " — {$total}";
-            if ($date)  $reply .= " — {$date}";
-            if ($items) $reply .= "\n🛍️ {$items}";
+
+            $reply .= "**Pedido {$num}** — **{$status}**";
+            if ($total)   $reply .= " — {$total}";
+            if ($date)    $reply .= " — {$date}";
+            if ($payment) $reply .= "\n💳 {$payment}";
+            if ($items)   $reply .= "\n🛍️ {$items}";
+            if ($note)    $reply .= "\n📝 *{$note}*";
             $reply .= "\n\n";
         }
         if ($ordersUrl) $reply .= "[📋 Ver todos mis pedidos]({$ordersUrl})";

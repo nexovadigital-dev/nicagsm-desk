@@ -104,12 +104,17 @@ class Nexova_Desk_API {
             // Nota del cliente (si existe)
             $note = $order->get_customer_note();
 
+            $currency_symbol = html_entity_decode( get_woocommerce_currency_symbol( $order->get_currency() ) );
+            $raw_total       = html_entity_decode( wp_strip_all_tags( $order->get_formatted_order_total() ) );
+
             $entry = [
-                'number' => '#' . $order->get_order_number(),
-                'status' => wc_get_order_status_name( $order->get_status() ),
-                'date'   => $order->get_date_created()?->date_i18n( get_option( 'date_format' ) ),
-                'total'  => html_entity_decode( wp_strip_all_tags( $order->get_formatted_order_total() ) ),
-                'items'  => $items,
+                'number'         => '#' . $order->get_order_number(),
+                'status'         => wc_get_order_status_name( $order->get_status() ),
+                'date'           => $order->get_date_created()?->date_i18n( get_option( 'date_format' ) ),
+                'total'          => $raw_total,
+                'currency'       => $currency_symbol,
+                'payment_method' => $order->get_payment_method_title(),
+                'items'          => $items,
             ];
 
             if ( $note ) {
