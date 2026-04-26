@@ -1292,29 +1292,7 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
         $patterns = [
             '/mis\s+(pedidos?|ordenes?|compras?)/',
             '/ver\s+(mis\s+)?(pedidos?|ordenes?)/',
-            '/historial\s+de\s+(pedidos?|compras?|ordenes?)/',
-            '/donde\s+(esta|anda|queda)\s+(mi\s+)?(pedido|orden|paquete|env[ií]o)/',
-            '/estado\s+de\s+(mi\s+)?(pedido|orden|env[ií]o|compra)/',
-            '/cu[aá]ndo\s+(llega|lleg[oó]|viene)\s+(mi\s+)?(pedido|orden|paquete)/',
-            '/pedidos?.*cuenta/',
-            '/(?:orden|pedido|order)\s*#?\s*\d{3,}/',
-            '/#\d{3,}/',
-        ];
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $t)) return true;
-        }
-        return false;
-    }
-    // =========================================================================
-    // Product Catalog — respuesta directa desde storeContext sin llamar a la IA
-    // =========================================================================
-
-    /**
-     * Si el cliente pregunta por un producto/precio y el ticket tiene storeContext
-     * con productos del catálogo WooCommerce, busca y responde directamente.
-     * Retorna null si no aplica, dejando que la IA lo maneje.
-     */
-    private function tryProductQueryReply(Ticket $ticket, array $storeCtx): ?string
+            '/historial\s+de\s+(pedidos?|comp    private function tryProductQueryReply(Ticket $ticket, array $storeCtx): ?string
     {
         $products = $storeCtx['products'] ?? [];
         if (empty($products)) return null;
@@ -1329,15 +1307,16 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
 
         $msgLower  = mb_strtolower($lastMsg);
         $stopwords = [
-            'precio', 'precios', 'costo', 'cuanto', 'cuánto', 'tienes', 'tienen',
+            'precio', 'precios', 'costo', 'cuanto', 'tienes', 'tienen',
             'venden', 'vende', 'como', 'cual', 'que', 'esta', 'hay', 'disponible',
-            'info', 'información', 'informacion', 'busco', 'necesito', 'quiero',
-            'comprar', 'saber', 'sobre', 'del', 'los', 'las', 'una', 'para',
+            'info', 'informacion', 'busco', 'necesito', 'quiero',
+            'comprar', 'saber', 'sobre', 'del', 'los', 'las', 'una', 'para', 'de',
         ];
-        $words = array_filter(
-            explode(' ', preg_replace('/[^a-záéíóúüñ0-9\s]/u', '', $msgLower)),
-            fn ($w) => mb_strlen($w) > 2 && ! in_array($w, $stopwords)
-        );
+        // Permitir palabras de 2+ chars (captura "de", "3") sin perder "3 meses"
+        $words = array_values(array_filter(
+            explode(' ', preg_replace('/[^a-z0-9\s]/u', '', $msgLower)),
+            fn ($w) => mb_strlen($w) > 1 && ! in_array($w, $stopwords)
+        ));
 
         if (empty($words)) return null;
 
@@ -1345,11 +1324,23 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
         foreach ($products as $p) {
             $nameLower = mb_strtolower($p['name'] ?? '');
             $descLower = mb_strtolower($p['description'] ?? '');
-            $score = 0;
+            $score     = 0;
+
             foreach ($words as $w) {
-                if (str_contains($nameLower, $w))      $score += 3; // nombre: mayor peso
-                elseif (str_contains($descLower, $w))  $score += 1;
+                if (str_contains($nameLower, $w)) $score += 3;  // nombre: peso alto
+                if (str_contains($descLower, $w)) $score += 1;  // descripcion: peso bajo
             }
+
+            // Buscar tambien en nombres de variantes ("3 meses", "6 meses", "12 meses")
+            if (! empty($p['variants']) && is_array($p['variants'])) {
+                foreach ($p['variants'] as $v) {
+                    $varLower = mb_strtolower($v['variant'] ?? '');
+                    foreach ($words as $w) {
+                        if (str_contains($varLower, $w)) $score += 2; // variante: peso medio
+                    }
+                }
+            }
+
             if ($score > 0) {
                 $matches[] = ['product' => $p, 'score' => $score];
             }
@@ -1361,38 +1352,77 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
 
         $storeUrl = rtrim($storeCtx['store_url'] ?? '', '/');
 
-        // Demasiados resultados → redirigir a la tienda
+        // Demasiados resultados: redirigir a la tienda
         if (count($matches) > 4) {
-            $reply = 'Encontré varios productos que podrían interesarte. Te recomiendo buscar directamente en nuestra tienda para ver todos los detalles y variantes disponibles.';
-            if ($storeUrl) {
-                $reply .= "\n\n[🛒 Buscar en la tienda]({$storeUrl})";
-            }
+            $reply = 'Encontre varios productos que podrian interesarte. Te recomiendo buscar directamente en nuestra tienda:';
+            if ($storeUrl) $reply .= "\n\n[\xF0\x9F\x9B\x92 Buscar en la tienda]({$storeUrl})";
             return $reply;
         }
 
         $top = array_slice($matches, 0, 3);
 
-        // Un solo resultado — mostrarlo con detalle
+        // Ordenar variantes: las que coinciden con palabras buscadas van primero
+        $sortVariants = function (array $variants, array $words): array {
+            usort($variants, function ($a, $b) use ($words) {
+                $aScore = 0; $bScore = 0;
+                $aLow   = mb_strtolower($a['variant'] ?? '');
+                $bLow   = mb_strtolower($b['variant'] ?? '');
+                foreach ($words as $w) {
+                    if (str_contains($aLow, $w)) $aScore++;
+                    if (str_contains($bLow, $w)) $bScore++;
+                }
+                return $bScore <=> $aScore;
+            });
+            return $variants;
+        };
+
+        // Un solo resultado: detalle completo con variantes ordenadas
         if (count($top) === 1) {
             $p     = $top[0]['product'];
             $reply = '**' . ($p['name'] ?? 'Producto') . "**\n";
-            if (! empty($p['price']))       $reply .= "💰 Precio: **{$p['price']}**\n";
-            if (! empty($p['stock']))       $reply .= "📦 Stock: {$p['stock']}\n";
+            if (! empty($p['price']))       $reply .= "\xF0\x9F\x92\xB0 Precio: **{$p['price']}**\n";
+            if (! empty($p['stock']))       $reply .= "\xF0\x9F\x93\xA6 Stock: {$p['stock']}\n";
             if (! empty($p['description'])) $reply .= "\n" . mb_substr($p['description'], 0, 160) . "\n";
 
-            // Variantes con botones de compra individuales
             if (! empty($p['variants']) && is_array($p['variants'])) {
+                $sortedVars = $sortVariants($p['variants'], $words);
                 $reply .= "\n**Variantes disponibles:**\n";
-                foreach ($p['variants'] as $v) {
-                    $reply .= "• {$v['variant']} — **{$v['price']}**";
-                    if (! empty($v['url'])) $reply .= " [🛒 Ordenar]({$v['url']})";
+                foreach ($sortedVars as $v) {
+                    $reply .= "\xE2\x80\xA2 {$v['variant']} \xe2\x80\x94 **{$v['price']}**";
+                    if (! empty($v['url'])) $reply .= "  [\xF0\x9F\x9B\x92 Ordenar]({$v['url']})";
                     $reply .= "\n";
                 }
             } elseif (! empty($p['url'])) {
-                $reply .= "\n[🛒 Ver producto / Ordenar]({$p['url']})";
+                $reply .= "\n[\xF0\x9F\x9B\x92 Ver producto / Ordenar]({$p['url']})";
             }
             return rtrim($reply);
         }
+
+        // Varios resultados: listado breve con variantes mas relevantes primero
+        $reply = "Encontre estos productos relacionados:\n\n";
+        foreach ($top as $m) {
+            $p      = $m['product'];
+            $reply .= '\xE2\x80\xA2 **' . ($p['name'] ?? '') . '**';
+            if (! empty($p['price'])) $reply .= " \xe2\x80\x94 {$p['price']}";
+
+            if (! empty($p['variants']) && is_array($p['variants'])) {
+                $sortedVars = $sortVariants($p['variants'], $words);
+                $reply     .= "\n";
+                foreach (array_slice($sortedVars, 0, 3) as $v) {
+                    $reply .= "  \xE2\x80\xA2 {$v['variant']} \xe2\x80\x94 {$v['price']}";
+                    if (! empty($v['url'])) $reply .= "  [\xF0\x9F\x9B\x92 Ordenar]({$v['url']})";
+                    $reply .= "\n";
+                }
+            } elseif (! empty($p['url'])) {
+                $reply .= "\n  [Ver producto]({$p['url']})";
+            }
+            $reply .= "\n\n";
+        }
+        if ($storeUrl) {
+            $reply .= "[\xF0\x9F\x9B\x92 Ver toda la tienda]({$storeUrl})";
+        }
+        return rtrim($reply);
+    }
 
         // Varios resultados — listado breve
         $reply = "Encontré estos productos relacionados:\n\n";

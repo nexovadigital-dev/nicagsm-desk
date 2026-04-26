@@ -19,7 +19,7 @@ class ProcessBotReply implements ShouldQueue
 
     /**
      * Sin reintentos: NexovaAiService ya gestiona el fallback entre proveedores
-     * internamente. Si todos fallan, el método failed() guarda un mensaje de error.
+     * internamente. Si todos fallan, el catch interno guarda un mensaje amigable.
      */
     public int $tries   = 1;
     public int $timeout = 90; // segundos máximos para que la IA responda
@@ -37,7 +37,19 @@ class ProcessBotReply implements ShouldQueue
             return;
         }
 
-        $rawReply = $aiService->generateReply($ticket);
+        // Wrappeamos generateReply en try/catch para que cualquier excepción interna
+        // muestre un mensaje amigable al usuario en vez de matar el job silenciosamente.
+        try {
+            $rawReply = $aiService->generateReply($ticket);
+        } catch (\Throwable $e) {
+            Log::error("[NexovaBot] Excepción en generateReply ticket #{$ticket->id}: {$e->getMessage()} @ {$e->getFile()}:{$e->getLine()}");
+            Message::create([
+                'ticket_id'   => $ticket->id,
+                'sender_type' => 'bot',
+                'content'     => 'En este momento estamos teniendo dificultades para atenderte. 😔 Te recomendamos **abrir un nuevo chat** para recibir asistencia correctamente.',
+            ]);
+            return;
+        }
 
         // Detect WOO_VERIFY flag (identity verification needed)
         $needsWooVerify = str_contains($rawReply, \App\Services\NexovaAiService::WOO_VERIFY_FLAG);
@@ -86,8 +98,8 @@ class ProcessBotReply implements ShouldQueue
     }
 
     /**
-     * Solo se ejecuta si el job lanza una excepción no capturada
-     * (error de infraestructura, no de la IA).
+     * Solo se ejecuta si el job lanza una excepción que escapa al try/catch interno
+     * (error de infraestructura del sistema de colas, fuera de nuestro código).
      */
     public function failed(\Throwable $exception): void
     {
@@ -96,7 +108,7 @@ class ProcessBotReply implements ShouldQueue
         Message::create([
             'ticket_id'   => $this->ticket->id,
             'sender_type' => 'bot',
-            'content'     => 'Lo siento, ocurrió un error inesperado. Un agente revisará tu consulta.',
+            'content'     => 'En este momento estamos teniendo dificultades para atenderte. 😔 Te recomendamos **abrir un nuevo chat** para recibir asistencia correctamente.',
         ]);
     }
 }
