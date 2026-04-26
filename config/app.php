@@ -28,6 +28,8 @@ return [
 
     'env' => env('APP_ENV', 'production'),
 
+    'spa_mode' => env('APP_SPA_MODE', true),
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode

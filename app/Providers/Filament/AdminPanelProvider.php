@@ -43,7 +43,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->font('Inter')
             ->defaultThemeMode(ThemeMode::System)
-            ->spa()
+            ->when(config('app.spa_mode', true), fn (Panel $p) => $p->spa())
             ->sidebarCollapsibleOnDesktop()
             ->topNavigation(false)
             ->viteTheme('resources/css/filament/admin/theme.css')
