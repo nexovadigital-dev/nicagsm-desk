@@ -1502,27 +1502,36 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
     private function isPageQuery(string $msg): bool
     {
         $t = mb_strtolower(trim($msg));
-        $patterns = [
-            '/env[\u00edí]o/u',
-            '/devoluci[oó]n/u',
-            '/pol[ií]tica[s]?/u',
-            '/condiciones/u',
-            '/t[eé]rminos/u',
-            '/nosotros/u',
-            '/contacto/u',
-            '/acerca\s+de/u',
-            '/tutorial/u',
-            '/c[oó]mo\s+(hacer|pedir|ordenar|comprar|pagar|verificar|activar|usar)/u',
-            '/tiempo\s+de\s+(entrega|env[ií]o|llegada)/u',
-            '/garant[ií]a/u',
-            '/privacidad/u',
-            '/reglamento/u',
-            '/sobre\s+(la\s+)?tienda/u',
-            '/informaci[oó]n\s+(de|del?|sobre)\s+env/u',
-            '/p[aá]gina\s+de/u',
+
+        // Keywords directos - sin PCRE para evitar ValueError en PHP8/PCRE2
+        // mb_strtolower normaliza el input, se buscan formas sin acento tambien
+        $keywords = [
+            // Envios
+            "envio", "envios", "despacho", "envío", "envíos",
+            // Devoluciones
+            "devolucion", "devoluciones", "devolver", "reembolso",
+            "devolución", "devoluciónes",
+            // Politicas / terminos
+            "politica", "politicas", "condiciones",
+            "política", "políticas",
+            "terminos", "términos",
+            // Info empresa
+            "nosotros", "quienes somos",
+            // Contacto
+            "contacto", "contactanos",
+            // Tutoriales
+            "tutorial", "tutoriales",
+            // Garantia
+            "garantia", "garantía",
+            // Privacidad
+            "privacidad", "reglamento",
+            // Metodos de pago especificos
+            "lafise", "transferencia",
+            // Frases comunes
+            "como hacer pagos", "como pagar",
         ];
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $t)) return true;
+        foreach ($keywords as $kw) {
+            if (str_contains($t, $kw)) return true;
         }
         return false;
     }
@@ -1530,17 +1539,24 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
     private function isProductQuery(string $msg): bool
     {
         $t = mb_strtolower(trim($msg));
+
+        // Caso 1: empieza con "precio" + al menos una palabra mas
+        // Captura: "precio unlocktools", "precio unlocktools 3 meses", "precio Xiaomi Mi"
+        if (str_starts_with($t, "precio ") && mb_strlen($t) > 8) {
+            return true;
+        }
+
+        // Caso 2: patrones PCRE solo con caracteres ASCII-safe
         $patterns = [
-            '/precio\s+de\s+/u',
-            '/precio\s+del?\s+/u',
-            '/cu[aá]nto\s+(cuesta|vale|sale|cobran)/u',
-            '/tiene[ns]?\s+.{3,}/u',
-            '/vende[ns]?\s+.{3,}/u',
-            '/busco\s+.{3,}/u',
-            '/quiero\s+(comprar|ordenar|pedir)\s+/u',
-            '/info\s+(de|del?|sobre)\s+/u',
-            '/informaci[oó]n\s+(de|del?|sobre)\s+/u',
-            '/disponib(le|ilidad)/u',
+            "/precio\s+de\s+/",
+            "/precio\s+del?\s+/",
+            "/cuanto\s+(cuesta|vale|sale|cobran)/",
+            "/tiene[ns]?\s+.{3,}/",
+            "/vende[ns]?\s+.{3,}/",
+            "/busco\s+.{3,}/",
+            "/quiero\s+(comprar|ordenar|pedir)\s+/",
+            "/info\s+(de|del?)\s+/",
+            "/disponib(le|ilidad)/",
         ];
         foreach ($patterns as $pattern) {
             if (preg_match($pattern, $t)) return true;
