@@ -48,37 +48,42 @@ class LiveInbox extends Page
     public static function getNavigationBadge(): ?string
     {
         $orgId = auth()->user()?->organization_id;
-        // Llamados pendientes sin agente asignado — alerta urgente
-        $pendingQ = Ticket::where('status', 'human')
+
+        // Base: mismo filtro que la vista "En Vivo" — solo chats con al menos un mensaje de usuario
+        $base = Ticket::whereIn('status', ['bot', 'human'])
+            ->where('is_support_ticket', false)
+            ->where(function ($q) {
+                $q->where('platform', 'telegram')
+                  ->orWhereHas('messages', fn ($m) => $m->where('sender_type', 'user'));
+            });
+        if ($orgId) $base->where('organization_id', $orgId);
+
+        // Urgente: alguien pidió agente y nadie lo ha tomado
+        $pending = (clone $base)
+            ->where('status', 'human')
             ->whereNotNull('agent_called_at')
             ->whereNull('assigned_agent')
-            ->where('is_support_ticket', false);
-        if ($orgId) $pendingQ->where('organization_id', $orgId);
-        $pending = $pendingQ->count();
+            ->count();
         if ($pending > 0) return "🔔 {$pending}";
 
-        // Conversaciones activas normales
-        $q = Ticket::whereIn('status', ['bot', 'human'])
-                   ->where('is_support_ticket', false);
-        if ($orgId) $q->where('organization_id', $orgId);
-        $count = $q->count();
+        $count = $base->count();
         return $count > 0 ? (string) $count : null;
     }
 
     public static function getNavigationBadgeColor(): string|array|null
     {
         $orgId = auth()->user()?->organization_id;
-        // Rojo si hay llamados pendientes sin agente
+
         $pendingQ = Ticket::where('status', 'human')
+            ->where('is_support_ticket', false)
             ->whereNotNull('agent_called_at')
-            ->whereNull('assigned_agent')
-            ->where('is_support_ticket', false);
+            ->whereNull('assigned_agent');
         if ($orgId) $pendingQ->where('organization_id', $orgId);
         if ($pendingQ->exists()) return 'danger';
 
-        $q = Ticket::where('status', 'human');
-        if ($orgId) $q->where('organization_id', $orgId);
-        return $q->exists() ? 'success' : 'warning';
+        $humanQ = Ticket::where('status', 'human')->where('is_support_ticket', false);
+        if ($orgId) $humanQ->where('organization_id', $orgId);
+        return $humanQ->exists() ? 'success' : 'warning';
     }
 
     public function getTitle(): string|Htmlable
