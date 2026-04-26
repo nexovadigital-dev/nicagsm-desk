@@ -142,6 +142,17 @@ class NexovaAiService
             return $productReply;
         }
 
+        // ── Atajo de páginas WordPress (cero tokens de IA) ───────────────────
+        // Busca en storeContext.pages por título/descripción para queries informativas.
+        $pageReply = (! empty($storeCtxRaw['pages']))
+            ? $this->tryPageQueryReply($ticket, $storeCtxRaw)
+            : null;
+        if ($pageReply !== null) {
+            $org?->incrementBotMessageCount();
+            Log::debug("[NexovaBot] Respondido con template de página — ticket #{$ticket->id}");
+            return $pageReply;
+        }
+
 
         // ── Intentar responder desde la KB ────────────────────────────────────
         // Solo salta KB directa si el ticket trae store_context real (WooCommerce page data),
@@ -1368,7 +1379,18 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
             if (! empty($p['price']))       $reply .= "💰 Precio: **{$p['price']}**\n";
             if (! empty($p['stock']))       $reply .= "📦 Stock: {$p['stock']}\n";
             if (! empty($p['description'])) $reply .= "\n" . mb_substr($p['description'], 0, 160) . "\n";
-            if (! empty($p['url']))         $reply .= "\n[🛒 Ver producto / Ordenar]({$p['url']})";
+
+            // Variantes con botones de compra individuales
+            if (! empty($p['variants']) && is_array($p['variants'])) {
+                $reply .= "\n**Variantes disponibles:**\n";
+                foreach ($p['variants'] as $v) {
+                    $reply .= "• {$v['variant']} — **{$v['price']}**";
+                    if (! empty($v['url'])) $reply .= " [🛒 Ordenar]({$v['url']})";
+                    $reply .= "\n";
+                }
+            } elseif (! empty($p['url'])) {
+                $reply .= "\n[🛒 Ver producto / Ordenar]({$p['url']})";
+            }
             return rtrim($reply);
         }
 
@@ -1378,7 +1400,17 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
             $p      = $m['product'];
             $reply .= '• **' . ($p['name'] ?? '') . '**';
             if (! empty($p['price'])) $reply .= " — {$p['price']}";
-            if (! empty($p['url']))   $reply .= "\n  [Ver producto]({$p['url']})";
+            // Si tiene variantes mostrar las 2 primeras con botones
+            if (! empty($p['variants']) && is_array($p['variants'])) {
+                $reply .= "\n";
+                foreach (array_slice($p['variants'], 0, 2) as $v) {
+                    $reply .= "  • {$v['variant']} — {$v['price']}";
+                    if (! empty($v['url'])) $reply .= " [🛒 Ordenar]({$v['url']})";
+                    $reply .= "\n";
+                }
+            } elseif (! empty($p['url'])) {
+                $reply .= "\n  [Ver producto]({$p['url']})";
+            }
             $reply .= "\n\n";
         }
         if ($storeUrl) {
@@ -1387,9 +1419,114 @@ REGLAS PARA CONSULTAS DE PEDIDOS (cliente sin sesión):
         return rtrim($reply);
     }
 
+    // =========================================================================
+    // Page Search — respuesta directa desde storeContext.pages sin IA
+    // =========================================================================
+
     /**
-     * Detecta si el mensaje es una consulta sobre productos, precios o disponibilidad.
+     * Si el cliente pregunta por una página informativa (envíos, políticas, etc.),
+     * busca en storeContext.pages por título y excerpt y retorna un botón de enlace.
      */
+    private function tryPageQueryReply(Ticket $ticket, array $storeCtx): ?string
+    {
+        $pages = $storeCtx['pages'] ?? [];
+        if (empty($pages)) return null;
+
+        $lastMsg = $ticket->messages()
+            ->where('sender_type', 'user')
+            ->orderByDesc('created_at')
+            ->value('content') ?? '';
+
+        if (strlen($lastMsg) < 3) return null;
+        if (! $this->isPageQuery($lastMsg)) return null;
+
+        $msgLower  = mb_strtolower($lastMsg);
+        $stopwords = [
+            'como', 'donde', 'que', 'hay', 'tienen', 'tienes', 'sus', 'ver',
+            'quiero', 'puedo', 'necesito', 'saber', 'sobre', 'cual', 'cuales',
+            'informacion', 'información', 'pagina', 'página', 'la', 'el', 'los', 'las',
+        ];
+        $words = array_filter(
+            explode(' ', preg_replace('/[^a-záéíóúüñ\s]/u', '', $msgLower)),
+            fn ($w) => mb_strlen($w) > 2 && ! in_array($w, $stopwords)
+        );
+
+        if (empty($words)) return null;
+
+        $matches = [];
+        foreach ($pages as $pg) {
+            $titleLow   = mb_strtolower($pg['title'] ?? '');
+            $excerptLow = mb_strtolower($pg['excerpt'] ?? '');
+            $score = 0;
+            foreach ($words as $w) {
+                if (str_contains($titleLow, $w))   $score += 3;
+                if (str_contains($excerptLow, $w)) $score += 1;
+            }
+            if ($score > 0) {
+                $matches[] = ['page' => $pg, 'score' => $score];
+            }
+        }
+
+        if (empty($matches)) return null;
+
+        usort($matches, fn ($a, $b) => $b['score'] <=> $a['score']);
+        $top = array_slice($matches, 0, 2);
+
+        if (count($top) === 1) {
+            $pg    = $top[0]['page'];
+            $reply = '';
+            if (! empty($pg['excerpt'])) {
+                $reply .= mb_substr($pg['excerpt'], 0, 200) . "\n\n";
+            }
+            if (! empty($pg['url'])) {
+                $reply .= "[📄 {$pg['title']}]({$pg['url']})";
+            }
+            return rtrim($reply) ?: null;
+        }
+
+        $reply = "Encontré estas páginas relacionadas:\n\n";
+        foreach ($top as $m) {
+            $pg     = $m['page'];
+            $reply .= "• [📄 {$pg['title']}]({$pg['url']})";
+            if (! empty($pg['excerpt'])) {
+                $reply .= "\n  " . mb_substr($pg['excerpt'], 0, 120);
+            }
+            $reply .= "\n\n";
+        }
+        return rtrim($reply);
+    }
+
+    /**
+     * Detecta si el mensaje es una consulta sobre páginas informativas del sitio.
+     */
+    private function isPageQuery(string $msg): bool
+    {
+        $t = mb_strtolower(trim($msg));
+        $patterns = [
+            '/env[\u00edí]o/u',
+            '/devoluci[oó]n/u',
+            '/pol[ií]tica[s]?/u',
+            '/condiciones/u',
+            '/t[eé]rminos/u',
+            '/nosotros/u',
+            '/contacto/u',
+            '/acerca\s+de/u',
+            '/tutorial/u',
+            '/c[oó]mo\s+(hacer|pedir|ordenar|comprar|pagar|verificar|activar|usar)/u',
+            '/tiempo\s+de\s+(entrega|env[ií]o|llegada)/u',
+            '/garant[ií]a/u',
+            '/privacidad/u',
+            '/reglamento/u',
+            '/sobre\s+(la\s+)?tienda/u',
+            '/informaci[oó]n\s+(de|del?|sobre)\s+env/u',
+            '/p[aá]gina\s+de/u',
+        ];
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $t)) return true;
+        }
+        return false;
+    }
+
     private function isProductQuery(string $msg): bool
     {
         $t = mb_strtolower(trim($msg));
