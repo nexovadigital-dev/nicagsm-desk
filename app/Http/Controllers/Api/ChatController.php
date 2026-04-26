@@ -208,12 +208,26 @@ class ChatController extends Controller
 
         // 1. WooCommerce identity (verified via HMAC)
         $woo = $request->input('woo_customer');
+        \Illuminate\Support\Facades\Log::info('[WOO_DEBUG] initSession', [
+            'has_woo'   => !empty($woo),
+            'woo_id'    => $woo['id'] ?? null,
+            'woo_email' => $woo['email'] ?? null,
+            'has_token' => $request->filled('woo_token'),
+            'woo_token_preview' => $request->woo_token ? substr($request->woo_token, 0, 12) : null,
+            'client_email' => $request->client_email,
+        ]);
         if ($woo && isset($woo['id']) && $request->filled('woo_token') && isset($widget)) {
             $expected = hash_hmac(
                 'sha256',
                 $woo['id'] . '|' . ($woo['email'] ?? ''),
                 $widget->token
             );
+            \Illuminate\Support\Facades\Log::info('[WOO_DEBUG] HMAC check', [
+                'expected_preview' => substr($expected, 0, 12),
+                'received_preview' => substr($request->woo_token, 0, 12),
+                'match' => hash_equals($expected, $request->woo_token),
+                'payload_str' => $woo['id'] . '|' . ($woo['email'] ?? ''),
+            ]);
             if (hash_equals($expected, $request->woo_token)) {
                 $contact = Contact::findOrCreateFromWooCommerce(
                     orgId:  $orgId,
