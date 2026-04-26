@@ -245,6 +245,7 @@ x-init="
                     {{-- Body: abre ticket o toggle selección si hay seleccionadas --}}
                     <div class="nx-ticket__body"
                          wire:click="selectTicket({{ $ticket->id }})"
+                         @click="openChat()"
                          style="flex:1;min-width:0;cursor:pointer">
                         <div class="nx-ticket__top">
                             <span class="nx-ticket__name">{{ $ticket->conversation_name ?? $ticket->display_name }}@if($ticket->is_support_ticket) <span style="font-weight:400;opacity:.6;font-size:.9em">(Ticket #{{ $ticket->ticket_number }})</span>@elseif($ticket->platform === 'telegram') <span style="font-weight:400;opacity:.6;font-size:.9em">(Telegram)</span>@endif</span>
