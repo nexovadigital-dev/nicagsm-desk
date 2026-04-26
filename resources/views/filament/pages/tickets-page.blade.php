@@ -408,12 +408,21 @@
     .tk-filters { grid-template-columns: 1fr; }
 }
 
-/* ─── Additional mobile fixes ─── */
+/* ─── Mobile toggle (Alpine) ─── */
 @media (max-width: 768px) {
-    /* Stack sidebar + main vertically */
     .tk-root { flex-direction: column !important; height: auto !important; min-height: 100dvh; overflow: visible !important; }
-    .tk-sidebar { width: 100% !important; max-width: 100% !important; border-right: none !important; border-bottom: 1px solid var(--nx-border, rgba(128,128,128,.18)) !important; max-height: 45vh; overflow-y: auto; }
-    .tk-main { min-height: 55vh; }
+    .tk-mob-hidden { display: none !important; }
+    .tk-sidebar { width: 100% !important; max-width: 100% !important; border-right: none !important; max-height: none !important; }
+    .tk-main { min-height: 100dvh; }
+
+    /* Back button (visible only on mobile) */
+    .tk-mob-back {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: transparent; border: none; cursor: pointer;
+        color: var(--nx-muted, #6b7280); font-size: 13px; font-weight: 600;
+        padding: 4px 6px 4px 0; font-family: inherit;
+    }
+    .tk-mob-back:hover { color: var(--nx-text, #0f172a); }
 
     /* Chat header: stack on mobile */
     .tk-chat-header { padding: 10px 14px; }
@@ -421,8 +430,6 @@
     .tk-chat-header-sub { font-size: 11px; flex-wrap: wrap; }
     .tk-chat-header-name { font-size: 14px; }
     .tk-chat-header-actions { width: 100%; justify-content: flex-end; flex-wrap: wrap; gap: 4px; }
-
-    /* Hide dept dropdown text overflow */
     .tk-chat-header-actions select { max-width: 130px; font-size: 11px; }
 
     /* Bubbles */
@@ -433,14 +440,17 @@
     .tk-filters { grid-template-columns: 1fr !important; }
     .tk-sidebar-header { padding: 10px 12px 8px; }
 }
+@media (min-width: 769px) {
+    .tk-mob-back { display: none !important; }
+}
 </style>
 
-<div class="tk-root">
+<div class="tk-root" x-data="{ mobList: true }">
 
     {{-- ═══════════════════
          SIDEBAR — Lista
     ══════════════════════ --}}
-    <aside class="tk-sidebar">
+    <aside class="tk-sidebar" :class="{ 'tk-mob-hidden': !mobList }">
         <div class="tk-sidebar-header">
             <div class="tk-sidebar-title">
                 <span class="tk-sidebar-title-text">🎫 Tickets</span>
@@ -512,6 +522,7 @@
                 @endphp
                 <div class="tk-list-item {{ $active ? 'active' : '' }}"
                      wire:click="selectTicket({{ $ticket->id }})"
+                     @click="mobList = false"
                      wire:key="tl-{{ $ticket->id }}">
                     <div class="tk-li-avatar" style="background:{{ $color }}">
                         {{ strtoupper(substr($ticket->client_name ?? 'V', 0, 1)) }}
@@ -554,7 +565,7 @@
     {{-- ══════════════════════
          MAIN — Panel de chat
     ═══════════════════════════ --}}
-    <main class="tk-main" @if($selectedTicketId) wire:poll.4s @endif>
+    <main class="tk-main" :class="{ 'tk-mob-hidden': mobList }" @if($selectedTicketId) wire:poll.4s @endif>
 
         @if(! $selTicket)
             {{-- Empty state --}}
@@ -572,6 +583,10 @@
             {{-- Header --}}
             <header class="tk-chat-header">
                 <div class="tk-chat-header-top">
+                    <button class="tk-mob-back" @click="mobList = true" aria-label="Volver">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                        Tickets
+                    </button>
                     <div class="tk-li-avatar" style="background:{{ $tc }};width:38px;height:38px;font-size:14px">
                         {{ strtoupper(substr($selTicket->client_name ?? 'V', 0, 1)) }}
                     </div>

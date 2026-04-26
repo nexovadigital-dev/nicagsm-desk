@@ -1097,3 +1097,24 @@ html.nx-switching *::after {
         color 160ms ease,
         box-shadow 200ms ease !important;
 }
+
+
+/* -----------------------------------------
+   MOBILE -- touch targets y sidebar
+----------------------------------------- */
+@media (max-width: 768px) {
+    /* Touch targets mas grandes en sidebar */
+    .fi-sidebar-item-btn {
+        padding: 10px 10px !important;
+        min-height: 44px !important;
+    }
+    /* Topbar hamburger accesible */
+    .fi-topbar .fi-icon-btn {
+        min-width: 44px !important;
+        min-height: 44px !important;
+    }
+    /* Sidebar group labels mas espaciados */
+    .fi-sidebar-group-label {
+        padding: 14px 8px 4px !important;
+    }
+}

@@ -426,13 +426,22 @@ class KnowledgeBasePage extends Page
             return;
         }
 
-        // Eliminar artículos web_scrape anteriores de esta org
-        $this->scopeToOrg(KnowledgeBase::query())->where('source', 'web_scrape')->delete();
+        // Eliminar artículos web_scrape anteriores solo del canal/widget actual
+        $deleteQuery = $this->scopeToOrg(KnowledgeBase::query())->where('source', 'web_scrape');
+        if ($this->selectedChannel === 'telegram') {
+            $deleteQuery->where('channel', 'telegram')->whereNull('widget_id');
+        } else {
+            $deleteQuery->whereNull('channel')->where('widget_id', $this->selectedWidgetId);
+        }
+        $deleteQuery->delete();
 
-        // Guardar nuevos artículos
+        // Guardar nuevos artículos asociados al canal/widget activo
+        $isTelegram = $this->selectedChannel === 'telegram';
         foreach ($results as $page) {
             KnowledgeBase::create([
                 'organization_id' => $orgId,
+                'widget_id'       => $isTelegram ? null : $this->selectedWidgetId,
+                'channel'         => $isTelegram ? 'telegram' : null,
                 'title'           => mb_substr($page['title'], 0, 255),
                 'content'         => $page['content'],
                 'source'          => 'web_scrape',

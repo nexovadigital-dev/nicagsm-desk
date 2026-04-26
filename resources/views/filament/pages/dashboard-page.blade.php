@@ -164,6 +164,14 @@
 .nx-qa:hover { background: #f8fafc; border-color: #22c55e; color: #15803d; }
 .nx-qa svg { color: #64748b; flex-shrink: 0; transition: color .15s; }
 .nx-qa:hover svg { color: #22c55e; }
+@media (max-width: 600px) {
+    .nx-qactions { display: grid; grid-template-columns: 1fr 1fr; }
+    .nx-qa { justify-content: flex-start; }
+}
+@media (max-width: 520px) {
+    .nx-db-hd { flex-direction: column; gap: 6px; }
+    .nx-db-date-block { text-align: left; }
+}
 
 /* ══ Recent tickets ══════════════════════════════════ */
 .nx-recent { display: flex; flex-direction: column; gap: 14px; }
@@ -427,7 +435,7 @@
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         Widget
     </a>
-    <a href="/app/channels-settings" class="nx-qa" wire:navigate>
+    <a href="/app/agent-profile" class="nx-qa" wire:navigate>
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="15" height="15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
         Configuración
     </a>

@@ -54,7 +54,9 @@ class DashboardPage extends Page
     {
         return $this->orgTickets()
             ->with(['messages' => fn ($q) => $q->latest()->limit(1)])
-            ->latest()
+            ->where('is_support_ticket', false)
+            ->whereIn('status', ['bot', 'human'])
+            ->latest('updated_at')
             ->limit(6)
             ->get();
     }
