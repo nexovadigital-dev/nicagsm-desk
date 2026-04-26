@@ -16,8 +16,8 @@ class ChangelogPage extends Page
     protected Width|string|null $maxContentWidth = 'full';
 
     protected static ?string $navigationLabel = 'Novedades';
-    protected static string|\UnitEnum|null $navigationGroup = null;
-    protected static ?int    $navigationSort  = 999;
+    protected static string|\UnitEnum|null $navigationGroup = 'Cuenta';
+    protected static ?int    $navigationSort  = 5;
 
     public static function getNavigationIcon(): string|\BackedEnum|Htmlable|null
     {

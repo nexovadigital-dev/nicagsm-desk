@@ -12,6 +12,7 @@ class KnowledgeBase extends Model
     protected $fillable = [
         'organization_id',
         'widget_id',
+        'channel',
         'title',
         'content',
         'source',

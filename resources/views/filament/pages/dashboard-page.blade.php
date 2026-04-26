@@ -491,7 +491,7 @@
     <div class="nx-card">
         <div class="nx-card__hd">
             <span class="nx-card__title">Conversaciones recientes</span>
-            <a href="/app/tickets" wire:navigate style="font-size:12px;color:#22c55e;font-weight:600;text-decoration:none">Ver todas →</a>
+            <a href="/app/live-inbox" wire:navigate style="font-size:12px;color:#22c55e;font-weight:600;text-decoration:none">Ver todas →</a>
         </div>
         <div class="nx-card__body" style="padding-block:8px">
             @foreach($recentTickets as $rt)

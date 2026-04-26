@@ -51,6 +51,7 @@ class Ticket extends Model
         'store_context',
         'agent_called_at',
         'department_id',
+        'hidden_at',
     ];
 
     protected $casts = [

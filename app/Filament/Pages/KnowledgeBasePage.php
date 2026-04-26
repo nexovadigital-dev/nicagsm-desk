@@ -31,11 +31,12 @@ class KnowledgeBasePage extends Page
     public function getTitle(): string|Htmlable { return ''; }
 
     // ── Estado de listas ──
-    public ?int    $selectedWidgetId = null;   // null = todos / pantalla inicial
-    public bool    $channelSelected  = false;  // true = un canal fue elegido
+    public ?int    $selectedWidgetId = null;   // null = ninguno seleccionado o Telegram
+    public string  $selectedChannel  = '';     // '' = ninguno | 'telegram' | 'widget'
+    public bool    $channelSelected  = false;
     public string  $search           = '';
     public string  $filterSource     = 'all';
-    public bool    $filterActive     = false;  // off por default para ver todo
+    public bool    $filterActive     = false;
 
     // Form: create/edit
     public bool    $showForm      = false;
@@ -45,15 +46,28 @@ class KnowledgeBasePage extends Page
     public string  $formSource    = 'manual';
     public bool    $formActive    = true;
     public ?int    $formWidgetId  = null;
+    public string  $formChannel   = '';
 
     public ?string $msg     = null;
     public string  $msgType = 'success';
     public bool    $isScraping = false;
 
-    /** Selecciona un canal (widget o null=global) y muestra sus artículos. */
-    public function selectChannel(?int $widgetId): void
+    /** Selecciona un widget específico. */
+    public function selectWidget(int $widgetId): void
     {
         $this->selectedWidgetId = $widgetId;
+        $this->selectedChannel  = 'widget';
+        $this->channelSelected  = true;
+        $this->search           = '';
+        $this->filterSource     = 'all';
+        $this->msg              = null;
+    }
+
+    /** Selecciona el canal Telegram. */
+    public function selectTelegram(): void
+    {
+        $this->selectedWidgetId = null;
+        $this->selectedChannel  = 'telegram';
         $this->channelSelected  = true;
         $this->search           = '';
         $this->filterSource     = 'all';
@@ -65,6 +79,7 @@ class KnowledgeBasePage extends Page
     {
         $this->channelSelected  = false;
         $this->selectedWidgetId = null;
+        $this->selectedChannel  = '';
         $this->showForm         = false;
         $this->msg              = null;
     }
@@ -88,12 +103,11 @@ class KnowledgeBasePage extends Page
             ->with('widget:id,name')
             ->orderBy('updated_at', 'desc');
 
-        if ($this->selectedWidgetId === null) {
-            // Canal "Global": solo artículos sin widget asignado
-            $query->whereNull('widget_id');
+        if ($this->selectedChannel === 'telegram') {
+            $query->where('channel', 'telegram')->whereNull('widget_id');
         } else {
-            // Canal específico: artículos asignados a ESE widget
-            $query->where('widget_id', $this->selectedWidgetId);
+            // Widget específico
+            $query->whereNull('channel')->where('widget_id', $this->selectedWidgetId);
         }
 
         return $query->get();
@@ -111,10 +125,11 @@ class KnowledgeBasePage extends Page
             ->get(['id', 'name', 'type']);
     }
 
-    /** Conteo de artículos globales (sin widget). */
-    public function getGlobalArticlesCountProperty(): int
+    /** Conteo de artículos para el bot de Telegram. */
+    public function getTelegramArticlesCountProperty(): int
     {
         return $this->scopeToOrg(KnowledgeBase::query())
+            ->where('channel', 'telegram')
             ->whereNull('widget_id')
             ->where('is_active', true)
             ->count();
@@ -127,7 +142,8 @@ class KnowledgeBasePage extends Page
         $this->formContent  = '';
         $this->formSource   = 'manual';
         $this->formActive   = true;
-        $this->formWidgetId = $this->selectedWidgetId;  // precarga el canal activo
+        $this->formWidgetId = $this->selectedChannel === 'telegram' ? null : $this->selectedWidgetId;
+        $this->formChannel  = $this->selectedChannel === 'telegram' ? 'telegram' : '';
         $this->showForm     = true;
         $this->msg          = null;
     }
@@ -142,6 +158,7 @@ class KnowledgeBasePage extends Page
         $this->formSource   = $item->source ?? 'manual';
         $this->formActive   = $item->is_active;
         $this->formWidgetId = $item->widget_id;
+        $this->formChannel  = $item->channel ?? '';
         $this->showForm     = true;
         $this->msg          = null;
     }
@@ -173,9 +190,10 @@ class KnowledgeBasePage extends Page
                 'title'        => $title,
                 'content'      => $scraped,
                 'source'       => 'scrape',
-                'reference_id' => $content, // store the URL
+                'reference_id' => $content,
                 'is_active'    => $this->formActive,
-                'widget_id'    => $this->formWidgetId ?: null,
+                'widget_id'    => $this->formChannel === 'telegram' ? null : ($this->formWidgetId ?: null),
+                'channel'      => $this->formChannel ?: null,
             ];
         } else {
             if (!$title || !$content) {
@@ -188,7 +206,8 @@ class KnowledgeBasePage extends Page
                 'content'   => $content,
                 'source'    => $this->formSource,
                 'is_active' => $this->formActive,
-                'widget_id' => $this->formWidgetId ?: null,
+                'widget_id' => $this->formChannel === 'telegram' ? null : ($this->formWidgetId ?: null),
+                'channel'   => $this->formChannel ?: null,
             ];
         }
 

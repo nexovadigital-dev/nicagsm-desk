@@ -461,7 +461,7 @@
 ════════════════════════════════════════════════════════════════ --}}
 @if (! $channelSelected)
 
-@php $widgets = $this->widgets; $globalCount = $this->globalArticlesCount; @endphp
+@php $widgets = $this->widgets; $telegramCount = $this->telegramArticlesCount; @endphp
 
 <div class="nx-kb-picker">
     <div class="nx-kb-picker__hero">
@@ -477,23 +477,23 @@
     @endif
 
     <div class="nx-kb-channels">
-        {{-- Tarjeta Global --}}
-        <button wire:click="selectChannel(null)" class="nx-kb-channel-card nx-kb-channel-card--global">
+        {{-- Tarjeta Bot Telegram --}}
+        <button wire:click="selectTelegram()" class="nx-kb-channel-card nx-kb-channel-card--global">
             <div class="nx-kb-channel-card__icon">
-                <svg fill="none" stroke="#7c3aed" viewBox="0 0 24 24" width="20" height="20" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <svg viewBox="0 0 24 24" fill="#2CA5E0" width="20" height="20">
+                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.196 13.68l-2.97-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.962.88z"/>
                 </svg>
             </div>
             <div class="nx-kb-channel-card__body">
-                <p class="nx-kb-channel-card__name">Global</p>
-                <p class="nx-kb-channel-card__meta">Disponible en todos los canales</p>
+                <p class="nx-kb-channel-card__name">Bot Telegram</p>
+                <p class="nx-kb-channel-card__meta">Conocimiento exclusivo para el bot de Telegram</p>
             </div>
-            <span class="nx-kb-channel-card__count">{{ $globalCount }}</span>
+            <span class="nx-kb-channel-card__count">{{ $telegramCount }}</span>
         </button>
 
         {{-- Tarjetas de cada widget --}}
         @foreach ($widgets as $w)
-        <button wire:click="selectChannel({{ $w->id }})" class="nx-kb-channel-card">
+        <button wire:click="selectWidget({{ $w->id }})" class="nx-kb-channel-card">
             <div class="nx-kb-channel-card__icon">
                 <svg fill="none" stroke="#22c55e" viewBox="0 0 24 24" width="20" height="20" stroke-width="1.8">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
@@ -501,7 +501,7 @@
             </div>
             <div class="nx-kb-channel-card__body">
                 <p class="nx-kb-channel-card__name">{{ $w->name }}</p>
-                <p class="nx-kb-channel-card__meta">Solo para este widget</p>
+                <p class="nx-kb-channel-card__meta">Base de conocimiento del widget</p>
             </div>
             <span class="nx-kb-channel-card__count">{{ $w->articles_count ?? 0 }}</span>
         </button>
@@ -528,9 +528,9 @@
     $entries   = $this->entries;
     $stats     = $this->stats;
     $widgets   = $this->widgets;
-    $isGlobal  = $selectedWidgetId === null;
-    $activeWidget = $isGlobal ? null : $widgets->firstWhere('id', $selectedWidgetId);
-    $channelName  = $isGlobal ? 'Global' : ($activeWidget?->name ?? 'Widget');
+    $isTelegram   = $selectedChannel === 'telegram';
+    $activeWidget = $isTelegram ? null : $widgets->firstWhere('id', $selectedWidgetId);
+    $channelName  = $isTelegram ? 'Bot Telegram' : ($activeWidget?->name ?? 'Widget');
     $orgWebsite   = $this->orgWebsite;
     $lastScrape   = $this->lastWebScrape;
 @endphp
@@ -547,9 +547,9 @@
         </button>
         <svg fill="none" stroke="#d1d5db" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         <div class="nx-kb-channel-pill">
-            @if ($isGlobal)
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" stroke-width="1.8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            @if ($isTelegram)
+                <svg viewBox="0 0 24 24" fill="#2CA5E0" width="16" height="16">
+                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.196 13.68l-2.97-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.962.88z"/>
                 </svg>
             @else
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" stroke-width="1.8">
@@ -776,12 +776,20 @@
             <div class="nx-kb-form-row">
                 <div class="nx-kb-form-field">
                     <label>Canal</label>
-                    <select wire:model="formWidgetId">
-                        <option value="">Global (todos los canales)</option>
+                    <select wire:model="formChannel">
+                        <option value="telegram">Bot Telegram</option>
+                        @foreach ($this->widgets as $w)
+                        <option value="">Widget: {{ $w->name }}</option>
+                        @endforeach
+                    </select>
+                    {{-- Widget selector (solo cuando no es Telegram) --}}
+                    @if ($formChannel !== 'telegram' && $this->widgets->count() > 1)
+                    <select wire:model="formWidgetId" style="margin-top:6px">
                         @foreach ($this->widgets as $w)
                         <option value="{{ $w->id }}">{{ $w->name }}</option>
                         @endforeach
                     </select>
+                    @endif
                 </div>
                 <div class="nx-kb-form-field" style="flex:0 0 auto;display:flex;flex-direction:column;justify-content:flex-end">
                     <label style="margin-bottom:10px">Estado</label>

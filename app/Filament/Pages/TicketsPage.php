@@ -36,6 +36,20 @@ class TicketsPage extends Page
         return 'heroicon-o-ticket';
     }
 
+    public static function getNavigationBadge(): ?string
+    {
+        $orgId = auth()->user()?->organization_id;
+        $q = Ticket::where('is_support_ticket', true)->where('status', '!=', 'closed');
+        if ($orgId) $q->where('organization_id', $orgId);
+        $count = $q->count();
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return 'warning';
+    }
+
     public function getTitle(): string|Htmlable { return ''; }
 
     // â”€â”€ Filters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -109,13 +123,31 @@ class TicketsPage extends Page
     public string $newSubject        = '';
     public string $newMessage        = '';
 
-    // â”€â”€ Ticket list query â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Ticket list query ─────────────────────────────────────────────────────
+    public bool $showHidden = false;
+
+    public function hideTicket(int $id): void
+    {
+        Ticket::where('id', $id)->where('organization_id', $this->orgId())
+            ->update(['hidden_at' => now()]);
+
+        if ($this->selectedTicketId === $id) $this->selectedTicketId = null;
+    }
+
+    public function unhideTicket(int $id): void
+    {
+        Ticket::where('id', $id)->where('organization_id', $this->orgId())
+            ->update(['hidden_at' => null]);
+    }
+
     public function getTicketsProperty()
     {
         return $this->scopeToOrg(
                 Ticket::with(['messages' => fn ($q) => $q->orderBy('created_at', 'desc')->limit(1), 'department'])
             )
             ->where('is_support_ticket', true)
+            ->when(! $this->showHidden, fn ($q) => $q->whereNull('hidden_at'))
+            ->when($this->showHidden,   fn ($q) => $q->whereNotNull('hidden_at'))
             ->when(trim($this->search), fn ($q) =>
                 $q->where(fn ($s) =>
                     $s->where('client_name', 'like', '%' . $this->search . '%')

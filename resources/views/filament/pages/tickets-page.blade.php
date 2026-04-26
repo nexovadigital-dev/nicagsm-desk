@@ -444,10 +444,20 @@
         <div class="tk-sidebar-header">
             <div class="tk-sidebar-title">
                 <span class="tk-sidebar-title-text">🎫 Tickets</span>
-                <button class="tk-btn-new" wire:click="openNewModal">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                    Nuevo
-                </button>
+                <div style="display:flex;gap:6px;align-items:center">
+                    <button wire:click="$toggle('showHidden')"
+                            title="{{ $showHidden ? 'Ver activos' : 'Ver archivados' }}"
+                            style="background:{{ $showHidden ? 'rgba(99,102,241,.12)' : 'transparent' }};border:1px solid rgba(128,128,128,.2);border-radius:7px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:11px;color:{{ $showHidden ? '#6366f1' : 'var(--nx-sub,#6b7280)' }};font-family:inherit;transition:all .15s">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12"/></svg>
+                        {{ $showHidden ? 'Activos' : 'Archivados' }}
+                    </button>
+                    @if(! $showHidden)
+                    <button class="tk-btn-new" wire:click="openNewModal">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                        Nuevo
+                    </button>
+                    @endif
+                </div>
             </div>
 
             {{-- Search --}}
@@ -596,6 +606,21 @@
                         @endif
                     </div>
                     <div class="tk-chat-header-actions">
+                        @if(! $showHidden)
+                            <button class="tk-hdr-btn"
+                                    wire:click="hideTicket({{ $selTicket->id }})"
+                                    wire:confirm="¿Archivar este ticket? Desaparecerá de la lista pero se conservará en la base de datos."
+                                    title="Archivar — desaparece de la lista, se conserva en DB"
+                                    style="background:rgba(107,114,128,.08);color:#6b7280;border:1px solid rgba(107,114,128,.2)">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12"/></svg>
+                                Archivar
+                            </button>
+                        @else
+                            <button class="tk-hdr-btn green" wire:click="unhideTicket({{ $selTicket->id }})">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                Restaurar
+                            </button>
+                        @endif
                         @if($selTicket->status !== 'closed')
                             <button class="tk-hdr-btn danger"
                                     wire:click="closeTicket({{ $selTicket->id }})"
