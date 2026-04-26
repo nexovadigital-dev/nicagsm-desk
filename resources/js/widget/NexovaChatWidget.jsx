@@ -2312,7 +2312,23 @@ export default function NexovaChatWidget() {
                 ? { client_name: savedContact.name, client_email: savedContact.email || null }
                 : { client_name: 'Visitante' };
             // initSession se llamará en el siguiente render
-            setTimeout(() => {
+            setTimeout(async () => {
+                // WooCommerce identity + orders
+                if (WOO_CUSTOMER?.id && WOO_CUSTOMER?.token) {
+                    startPayload.woo_customer = { id: WOO_CUSTOMER.id, email: WOO_CUSTOMER.email || null, name: WOO_CUSTOMER.name || null, phone: WOO_CUSTOMER.phone || null, avatar: WOO_CUSTOMER.avatar || null };
+                    startPayload.woo_token    = WOO_CUSTOMER.token;
+                }
+                if (STORE_CONTEXT) startPayload.store_context = STORE_CONTEXT;
+                if (WOO_CUSTOMER?.id && WP_CONFIG?.ajaxUrl && WP_CONFIG?.ordersEnabled) {
+                    try {
+                        const ob = new URLSearchParams({ action: 'nexova_desk_orders', nonce: WP_CONFIG.nonce });
+                        const or = await fetch(WP_CONFIG.ajaxUrl, { method: 'POST', body: ob });
+                        const od = await or.json();
+                        if (od.success && Array.isArray(od.data?.orders) && od.data.orders.length) {
+                            startPayload.woo_orders = od.data.orders;
+                        }
+                    } catch { /* silent */ }
+                }
                 fetch(`${API_BASE}/api/chat/start`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -2429,31 +2445,9 @@ export default function NexovaChatWidget() {
     // ── Iniciar chat desde home screen ────────────────────────────────────────
     // FAQ desde home siempre inicia nueva conversacion
     const handleStartChatFromHome = useCallback((prefillMessage = null) => {
-        const isFaqMsg = typeof prefillMessage === 'string' && prefillMessage;
-        if (isFaqMsg) { startNewChat(prefillMessage); return; }
-        if (!sessionId) {
-            const savedContact = (() => { try { return JSON.parse(localStorage.getItem(CONTACT_KEY) || 'null'); } catch { return null; } })();
-            const skipPreChat = savedContact?.name && savedContact.name !== 'Visitante';
-            if (cfg?.pre_chat_enabled && cfg?.pre_chat_fields?.length > 0 && !skipPreChat) {
-                setScreen('prechat');
-            } else {
-                setScreen('chat');
-                const preChatArg = skipPreChat ? { name: savedContact.name, email: savedContact.email || undefined } : {};
-                initSession(preChatArg).then(() => {
-                    if (typeof prefillMessage === 'string' && prefillMessage) {
-                        setInputValue(prefillMessage);
-                        setTimeout(() => textareaRef.current?.focus(), 200);
-                    }
-                });
-            }
-        } else {
-            setScreen('chat');
-            if (typeof prefillMessage === 'string' && prefillMessage) {
-                setInputValue(prefillMessage);
-                setTimeout(() => textareaRef.current?.focus(), 200);
-            }
-        }
-    }, [sessionId, cfg, initSession]);
+        // Siempre crear nueva sesión — los chats existentes se abren via onSelect
+        startNewChat(prefillMessage || null);
+    }, [startNewChat]);
 
     // ── Calificar ────────────────────────────────────────────────────────────
     const handleRate = async (rating, comment) => {
